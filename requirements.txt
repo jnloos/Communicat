@@ -1,0 +1,6 @@
+google-genai
+google-cloud-aiplatform
+openai
+python-dotenv
+google-auth
+requests
