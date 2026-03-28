@@ -12,9 +12,9 @@ class ProjectChat extends Component
 {
     use WithPagination;
 
-    public int $pageSize = 10;
+    public int $pageSize    = 10;
     public int $incPageSize = 5;
-    public bool $hasMore = true;
+    public bool $hasMore    = true;
 
     #[Locked]
     public int $projectId;
@@ -27,7 +27,7 @@ class ProjectChat extends Component
     }
 
     public function hydrate(): void {
-        $this->project = Project::with('contributors')->findOrFail($this->projectId);
+        $this->project = Project::findOrFail($this->projectId);
         $this->updateHasMore();
     }
 
@@ -38,7 +38,7 @@ class ProjectChat extends Component
     }
 
     private function updateHasMore(): void {
-        $total = $this->project->messages()->count();
+        $total         = $this->project->messages()->count();
         $this->hasMore = $this->pageSize < $total;
     }
 
@@ -49,7 +49,7 @@ class ProjectChat extends Component
             ->reverse();
     }
 
-    #[On(['contributors_modified', 'project_edited', 'message_sent', 'ticked'])]
+    #[On(['contributors_modified', 'project_edited', 'message_sent', 'message_generated'])]
     public function render(): mixed {
         return view('livewire.projects.project-chat', [
             'project'  => $this->project,

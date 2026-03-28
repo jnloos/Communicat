@@ -24,8 +24,8 @@
                 </flux:navlist.group>
 
                 @php
-                    $projects = Project::whereHas('contributors', function ($q) {
-                        $q->where('user_id', auth()->id());
+                    $projects = Project::whereHas('users', function ($q) {
+                        $q->where('users.id', auth()->id());
                     })->orderBy('updated_at', 'desc')->get()
                 @endphp
                 @if ($projects->isNotEmpty())
@@ -102,6 +102,10 @@
         </flux:header>
 
         {{ $slot }}
+
+        @if(config('app.debug'))
+            <livewire:debug.job-debug-panel />
+        @endif
 
         @fluxScripts
     </body>

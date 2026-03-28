@@ -1,9 +1,9 @@
 <?php
+
 namespace App\Livewire\Projects;
 
 use App\Jobs\Dependencies\ProjectJob;
 use App\Jobs\MessageGenerator;
-use App\Jobs\SummaryGenerator;
 use App\Models\Project;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -18,20 +18,18 @@ class ControlChat extends Component
     protected Project $project;
 
     public bool $keepGenerating = false;
-    public bool $isSummarizing = false;
-    public bool $isDispatching = false;
+    public bool $isDispatching  = false;
 
     #[Validate('required|string|min:3|max:1000')]
     public string $msgContent = '';
 
-
     public function mount(Project $project): void {
-        $this->project = $project;
+        $this->project   = $project;
         $this->projectId = $project->id;
     }
 
     public function hydrate(): void {
-        $this->project = Project::with('contributors')->findOrFail($this->projectId);
+        $this->project = Project::findOrFail($this->projectId);
     }
 
     public function startGenerate(): void {
@@ -39,9 +37,8 @@ class ControlChat extends Component
             return;
         }
 
-        $this->isSummarizing = false;
         $this->keepGenerating = true;
-        $this->isDispatching = true;
+        $this->isDispatching  = true;
 
         MessageGenerator::dispatch($this->projectId);
     }
@@ -50,37 +47,18 @@ class ControlChat extends Component
         $this->keepGenerating = false;
     }
 
-    public function generateSummary(): void {
-        if (ProjectJob::isRunningFor($this->projectId)) {
-            return;
-        }
+    #[On('echo-private:projects.{projectId},.MessageGenerated')]
+    public function onMessageGenerated(): void {
+        $this->isDispatching = false;
 
-        $this->keepGenerating = false;
-        $this->isSummarizing = true;
-        $this->isDispatching = true;
+        // Notify ProjectChat to reload messages
+        $this->dispatch('message_generated');
 
-        SummaryGenerator::dispatch($this->projectId);
-    }
-
-    public function tick(): void {
-        $jobRunning = ProjectJob::isRunningFor($this->projectId);
-
-        // Job was successfully dispatched
-        if ($jobRunning) {
-            $this->isDispatching = false;
-        }
-
-        // Clear summarizing flag once execution finished
-        if (! $jobRunning) {
-            $this->isSummarizing = false;
-        }
-
-        // Schedule the next generator job if requested
-        if ($this->keepGenerating && ! $jobRunning) {
+        // Continue the generation loop if requested
+        if ($this->keepGenerating) {
+            $this->isDispatching = true;
             MessageGenerator::dispatch($this->projectId);
         }
-
-        $this->dispatch('ticked');
     }
 
     public function sendMessage(): void {
@@ -89,7 +67,7 @@ class ControlChat extends Component
         }
 
         $this->validate();
-        $this->project->addMessage($this->msgContent, contributor: auth()->user());
+        $this->project->addMessage($this->msgContent, auth()->user());
         $this->dispatch('message_sent');
         $this->reset('msgContent');
     }
@@ -99,11 +77,9 @@ class ControlChat extends Component
         $jobRunning = ProjectJob::isRunningFor($this->projectId);
 
         return view('livewire.projects.control-chat', [
-            'shouldPoll' => $this->keepGenerating || $this->isSummarizing || $jobRunning,
-            'disableAll' => $jobRunning || $this->isDispatching,
-            'showGenerate' => ! $this->keepGenerating,
-            'showStop' => $this->keepGenerating,
-            'isSummarizing' => $this->isSummarizing,
+            'disableInput'    => $jobRunning || $this->isDispatching,
+            'disableGenerate' => $jobRunning || $this->isDispatching,
+            'showGenerate'    => !$this->keepGenerating,
         ]);
     }
 }

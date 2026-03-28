@@ -1,74 +1,49 @@
 @props([
-    // polling
-    'shouldPoll' => false,
-
-    // execution
-    'disableAll' => false,
-
-    // generation UI
-    'showGenerate' => true,
-    'showStop' => false,
+    'disableInput'    => false,
+    'disableGenerate' => false,
+    'showGenerate'    => true,
 ])
 
-<div class="fixed bottom-0 left-[15vw] w-[85vw] justify-center z-50 bg-none">
-    <div class="max-w-[1120px] justify-center mx-auto">
-        <div class="text-center">
+<div class="fixed bottom-0 left-[15vw] w-[85vw] justify-center z-50">
+    <div class="max-w-[1120px] justify-center mx-auto pb-4">
+        <div class="flex items-end gap-2">
+            @if($showGenerate)
+                <flux:button
+                    type="button"
+                    size="sm"
+                    variant="subtle"
+                    icon="play"
+                    wire:click.debounce="startGenerate"
+                    :disabled="$disableGenerate"
+                />
+            @else
+                <flux:button
+                    type="button"
+                    size="sm"
+                    variant="subtle"
+                    icon="pause"
+                    wire:click.debounce="stopGenerate"
+                />
+            @endif
 
-            <!-- Textarea -->
-            <div class="bg-white dark:bg-zinc-800 rounded-md">
-                <flux:textarea
+            <form wire:submit="sendMessage" class="flex-1">
+                <flux:composer
                     wire:model="msgContent"
-                    resize="none"
-                    rows="5"
-                    class="w-full rounded-md"
+                    rows="3"
+                    max-rows="8"
                     :placeholder="__('Contribute to the specification...')"
-                    :disabled="$disableAll"
-                />
-            </div>
-
-            <!-- Controls -->
-            <div class="flex gap-2 my-3">
-
-                <!-- Summary -->
-                <flux:button
-                    class="basis-1/5 cursor-pointer"
-                    wire:click.debounce="generateSummary"
-                    icon="numbered-list"
-                    :disabled="$disableAll"
-                />
-
-                <!-- Send message -->
-                <flux:button
-                    wire:click.debounce="sendMessage"
-                    variant="primary"
-                    class="basis-4/5 cursor-pointer"
-                    :disabled="$disableAll"
                 >
-                    {{ __('Send Message') }}
-                </flux:button>
-
-                <!-- Generate -->
-@if($showGenerate)
-    <flux:button class="basis-1/5 cursor-pointer"
-        wire:click.debounce="startGenerate"
-        icon="play"
-        :disabled="$disableAll"
-    />
-@endif
-
-@if($showStop)
-    <flux:button class="basis-1/5 cursor-pointer"
-        wire:click.debounce="stopGenerate"
-        icon="pause"
-    />
-@endif
-
-
-            </div>
+                    <x-slot name="actionsTrailing">
+                        <flux:button
+                            type="submit"
+                            size="sm"
+                            variant="primary"
+                            icon="paper-airplane"
+                            :disabled="$disableInput"
+                        />
+                    </x-slot>
+                </flux:composer>
+            </form>
         </div>
     </div>
-
-    @if($shouldPoll)
-        <div wire:poll.2s="tick"></div>
-    @endif
 </div>

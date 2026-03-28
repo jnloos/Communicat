@@ -2,22 +2,20 @@
 
 namespace App\Console\Commands;
 
-use App\Facades\Specification;
-use App\Jobs\MessageGenerator;
 use App\Models\Project;
+use App\Services\Assistant;
 use Illuminate\Console\Command;
 
 class GenMessage extends Command
 {
     protected $signature = 'spec:gen-message {projectId? : The ID of the project}';
 
-    protected $description = 'Test the MessageGenerator job in the console';
+    protected $description = 'Test the MessageGenerator job synchronously in the console';
 
     public function handle(): int
     {
         $projectId = $this->argument('projectId');
 
-        // If no project ID provided, show available projects
         if (!$projectId) {
             $projects = Project::all(['id', 'title']);
 
@@ -34,38 +32,29 @@ class GenMessage extends Command
             $projectId = $this->ask('Enter the project ID to test');
         }
 
-        // Verify project exists
         $project = Project::find($projectId);
         if (!$project) {
             $this->error("Project with ID {$projectId} not found.");
             return 1;
         }
 
-        $this->info("Testing MessageGenerator for project: {$project->title}");
-        $this->line('');
+        $this->info("Running Assistant for project: {$project->title}");
 
         try {
-            // Execute job synchronously
-            Specification::forProject($project)->generateNextMessage();
+            Assistant::forProject($project)->genNextMessage();
 
-            $this->info('✓ Job executed successfully!');
-            $this->line('');
+            $this->info('✓ Done!');
 
-            // Show the latest message
             $latestMessage = $project->messages()->latest()->first();
             if ($latestMessage) {
-                $this->info('Latest message created:');
+                $this->info('Latest message:');
                 $this->line($latestMessage->content);
             }
 
             return 0;
         } catch (\Exception $e) {
-            $this->error('✗ Job failed with error:');
-            $this->error($e->getMessage());
-            $this->line('');
-            $this->line('Stack trace:');
+            $this->error('✗ Failed: ' . $e->getMessage());
             $this->line($e->getTraceAsString());
-
             return 1;
         }
     }

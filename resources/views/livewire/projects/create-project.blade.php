@@ -13,11 +13,6 @@
                 <option value="20">{{ __('Low') }}</option>
             </flux:select>
 
-            <flux:select wire:model.defer="strategy" :label="__('Prompting Strategy')" description="Single-threaded prompting uses a single prompt to generate the next message. Multi-threaded uses one prompt for each expert, which drastically increases token usage.">
-                <option value="single">{{ __('Single-Threaded') }}</option>
-                <option value="multiple">{{ __('Multi-Threaded') }}</option>
-            </flux:select>
-
             <div class="flex">
                 <flux:spacer />
                 <flux:button type="submit" variant="primary" class="cursor-pointer">

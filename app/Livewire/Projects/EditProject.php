@@ -3,8 +3,6 @@
 namespace App\Livewire\Projects;
 
 use App\Models\Project;
-use App\Services\MultiplePrompting;
-use App\Services\SinglePrompting;
 use Flux\Flux;
 use Illuminate\Support\Facades\Cookie;
 use Livewire\Attributes\Locked;
@@ -26,20 +24,11 @@ class EditProject extends Component
     #[Validate('required|in:5,10,20')]
     public int $frequency = 10;
 
-    #[Validate('required|in:multiple,single')]
-    public string $strategy = 'multiple';
-
     public function mount(Project $project): void {
         $this->forProjectId = $project->id;
-        $this->title = $project->title;
-        $this->description = $project->description;
-        $this->frequency = $project->summary_frequency;
-
-        if ($project->prompting_strategy == MultiplePrompting::class) {
-            $this->strategy = 'multiple';
-        } else {
-            $this->strategy = 'single';
-        }
+        $this->title        = $project->title;
+        $this->description  = $project->description;
+        $this->frequency    = $project->settings['summary_frequency'] ?? 10;
     }
 
     #[On('edit_project')]
@@ -50,17 +39,10 @@ class EditProject extends Component
     public function save(): void {
         $this->validate();
 
-        $project = Project::findOrFail($this->forProjectId);
-        $project->title = $this->title;
+        $project              = Project::findOrFail($this->forProjectId);
+        $project->title       = $this->title;
         $project->description = $this->description;
-        $project->summary_frequency = $this->frequency;
-
-        if($this->strategy == 'multiple') {
-            $project->prompting_strategy = MultiplePrompting::class;
-        } else {
-            $project->prompting_strategy = SinglePrompting::class;
-        }
-
+        $project->settings    = ['summary_frequency' => $this->frequency];
         $project->save();
 
         $this->dispatch('project_edited');

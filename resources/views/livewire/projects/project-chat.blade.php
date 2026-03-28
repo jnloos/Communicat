@@ -17,7 +17,7 @@
             </flux:heading>
         </div>
 
-        <x-projects.contributor-group :contributors="$project->contributors" :label="__('Set Contributors')" @click="$wire.dispatch('select_contributors')">
+        <x-projects.contributor-group :contributors="$project->experts()->get()->merge($project->users()->get())" :label="__('Set Contributors')" @click="$wire.dispatch('select_contributors')">
             {{ __('Add ') }}
         </x-projects.contributor-group>
     </div>
@@ -28,6 +28,14 @@
             x-data="{
                 loading: false,
                 hasMore: @entangle('hasMore'),
+                scrollThreshold: 300,
+                isNearBottom() {
+                    const el = this.$el;
+                    return el.scrollHeight - el.scrollTop - el.clientHeight <= this.scrollThreshold;
+                },
+                scrollToBottom() {
+                    this.$el.scrollTop = this.$el.scrollHeight;
+                },
                 init() {
                     const el    = this.$el;
                     let locked  = false;
@@ -37,7 +45,7 @@
                         el.scrollTop = el.scrollHeight;
                     });
 
-                    const nearTop = () => el.scrollTop <= 50; // kleiner Puffer oben
+                    const nearTop = () => el.scrollTop <= 50;
 
                     // Scrollback Pagination: ältere Nachrichten laden
                     el.addEventListener('scroll', async () => {
@@ -49,12 +57,19 @@
                             await $wire.loadMore();
 
                             this.$nextTick(() => {
-                                // Scroll-Position halten
                                 el.scrollTop = el.scrollHeight - before;
                                 this.loading = false;
                                 locked       = false;
                             });
                         }
+                    });
+
+                    // Auto-scroll on new message, only if already near the bottom
+                    window.addEventListener('message_generated', () => {
+                        const wasNearBottom = this.isNearBottom();
+                        this.$nextTick(() => {
+                            if (wasNearBottom) this.scrollToBottom();
+                        });
                     });
                 }
             }"

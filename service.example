@@ -1,0 +1,31 @@
+[Unit]
+Description=Laravel Reverb WebSocket Server
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/communicat
+ExecStart=php artisan reverb:start --host=0.0.0.0 --port=8010
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+---
+
+[Unit]
+Description=Laravel Queue Worker
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/communicat
+ExecStart=php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

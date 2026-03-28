@@ -2,24 +2,21 @@
 
 namespace App\Models;
 
-use App\Observers\ExpertObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[ObservedBy([ExpertObserver::class])]
 class Expert extends Model
 {
-    function summaries(): HasMany {
+    public function summaries(): HasMany {
         return $this->hasMany(Summary::class);
     }
 
-    public function contributor(): HasOne {
-        return $this->hasOne(Contributor::class);
+    public function projects(): BelongsToMany {
+        return $this->belongsToMany(Project::class, 'expert_project');
     }
 
-    function thoughtsAbout(int|Project $project): ?Summary {
+    public function thoughtsAbout(int|Project $project): Summary {
         if ($project instanceof Project) {
             $project = $project->id;
         }
@@ -31,18 +28,18 @@ class Expert extends Model
     }
 
     public function isContributing(Project $project): bool {
-        return $this->contributor?->projects()->whereKey($project->id)->exists() ?? false;
+        return $this->projects()->whereKey($project->id)->exists();
     }
 
     public function asPromptArray(Project $project): array {
         $summary = $this->thoughtsAbout($project);
 
         return [
-            'name' => $this->name,
-            'expert_id' => $this->id,
-            'job' => $this->job,
+            'name'        => $this->name,
+            'expert_id'   => $this->id,
+            'job'         => $this->job,
             'description' => $this->prompt,
-            'thoughts' => $summary
+            'thoughts'    => $summary,
         ];
     }
 }

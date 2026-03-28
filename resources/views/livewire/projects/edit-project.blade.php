@@ -16,12 +16,6 @@
                 <option value="20">{{ __('Low') }}</option>
             </flux:select>
 
-            <flux:select wire:model.defer="strategy" :label="__('Prompting Strategy')">
-                <option value="single">{{ __('Single-Threaded') }}</option>
-                <option value="multiple">{{ __('Multi-Threaded') }}</option>
-            </flux:select>
-
-
             <div class="flex items-center justify-between">
                 <flux:button wire:click.debounce="delete" type="button" variant="danger" class="cursor-pointer">
                     {{ __('Delete Project') }}

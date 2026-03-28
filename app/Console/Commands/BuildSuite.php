@@ -2,9 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Facades\Python;
 use App\Models\User;
-use App\Services\ExpertParser;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 
@@ -21,12 +19,10 @@ class BuildSuite extends Command
             return 0;
         }
 
-        // Wipe the database tables
         $this->comment('Destroying the database...');
         $this->call('db:wipe', ['--force' => true]);
         $this->info('Database wiped successfully.');
 
-        // Run all migrations to reset the database
         $this->comment('Running migrations...');
         $this->call('migrate', ['--force' => true]);
         $this->info('Migrations completed successfully.');
@@ -34,7 +30,6 @@ class BuildSuite extends Command
         $this->comment('Load default experts...');
         $this->call('init:experts');
 
-        // Create a default user
         $this->comment('Creating a admin user...');
         $user = new User();
         $user->id = 1;
@@ -43,13 +38,6 @@ class BuildSuite extends Command
         $user->password = Hash::make('admin');
         $user->save();
         $this->info("Default admin created: $user->name ($user->email)");
-
-        // Rebuild the Python environment
-        $this->comment('Clearing Python environment...');
-        Python::clear();
-        $this->comment('Building Python environment...');
-        Python::build();
-        $this->info('Python environment successfully rebuilt.');
 
         return 0;
     }
