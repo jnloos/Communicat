@@ -8,18 +8,20 @@ use Illuminate\Support\ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void {
         Gate::define('access-project', function (User $user, Project $project) {
             return $project->hasContributor($user);
         });
+
+        Gate::define('manage-project', function (User $user, Project $project) {
+            return $project->isOwner($user);
+        });
+
+        Gate::define('manage-contributors', function (User $user, Project $project) {
+            return $project->isOwner($user);
+        });
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void {
         //
     }

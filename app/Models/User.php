@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -32,8 +33,12 @@ class User extends Authenticatable
         ];
     }
 
-    public function projects(): BelongsToMany {
-        return $this->belongsToMany(Project::class, 'user_project');
+    public function projects(): MorphToMany {
+        return $this->morphToMany(Project::class, 'contributor', 'project_contributors');
+    }
+
+    public function ownedProjects(): HasMany {
+        return $this->hasMany(Project::class, 'user_id');
     }
 
     public function initials(): string {

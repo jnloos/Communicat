@@ -41,7 +41,7 @@
             <flux:spacer />
 
             <flux:navlist variant="outline">
-                <flux:navlist.item icon="folder-git-2" href="https://gitlab.uni-trier.de/s4jaloos/specificat" target="_blank">
+                <flux:navlist.item icon="folder-git-2" href="https://gitlab.uni-trier.de/s4jaloos/discussicat" target="_blank">
                     {{ __('Repository') }}
                 </flux:navlist.item>
 

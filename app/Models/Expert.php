@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Expert extends Model
 {
@@ -12,8 +12,8 @@ class Expert extends Model
         return $this->hasMany(Summary::class);
     }
 
-    public function projects(): BelongsToMany {
-        return $this->belongsToMany(Project::class, 'expert_project');
+    public function projects(): MorphToMany {
+        return $this->morphToMany(Project::class, 'contributor', 'project_contributors');
     }
 
     public function thoughtsAbout(int|Project $project): Summary {

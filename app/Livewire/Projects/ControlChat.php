@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Projects;
 
+use App\Events\UserMessageSent;
 use App\Jobs\Dependencies\ProjectJob;
 use App\Jobs\MessageGenerator;
 use App\Models\Project;
@@ -51,10 +52,8 @@ class ControlChat extends Component
     public function onMessageGenerated(): void {
         $this->isDispatching = false;
 
-        // Notify ProjectChat to reload messages
         $this->dispatch('message_generated');
 
-        // Continue the generation loop if requested
         if ($this->keepGenerating) {
             $this->isDispatching = true;
             MessageGenerator::dispatch($this->projectId);
@@ -68,6 +67,7 @@ class ControlChat extends Component
 
         $this->validate();
         $this->project->addMessage($this->msgContent, auth()->user());
+        UserMessageSent::dispatch($this->projectId);
         $this->dispatch('message_sent');
         $this->reset('msgContent');
     }

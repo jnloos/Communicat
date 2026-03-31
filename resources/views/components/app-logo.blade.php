@@ -2,5 +2,5 @@
     <x-app-logo-icon class="size-8 fill-current text-black dark:text-white" />
 </div>
 <div class="ms-1 grid flex-1 text-start text-sm">
-    <span class="mb-0.5 text-lg truncate leading-none font-semibold">Specificat</span>
+    <span class="mb-0.5 text-lg truncate leading-none font-semibold">Discussicat</span>
 </div>

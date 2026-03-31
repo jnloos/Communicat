@@ -2,9 +2,12 @@
 
 namespace App\Livewire\Projects;
 
+use App\Events\ContributorsChanged;
 use App\Models\Expert;
 use App\Models\Project;
+use App\Models\User;
 use Flux\Flux;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -36,19 +39,38 @@ class SelectContributors extends Component
     public function addExpert(int $expertId): void {
         $expert = Expert::findOrFail($expertId);
         $this->forProject->addContributingExpert($expert);
+        ContributorsChanged::dispatch($this->forProjectId);
         $this->dispatch('contributors_modified');
     }
 
     public function removeExpert(int $expertId): void {
         $expert = Expert::findOrFail($expertId);
         $this->forProject->removeContributingExpert($expert);
+        ContributorsChanged::dispatch($this->forProjectId);
+        $this->dispatch('contributors_modified');
+    }
+
+    public function addUser(int $userId): void {
+        Gate::authorize('manage-contributors', $this->forProject);
+        $user = User::findOrFail($userId);
+        $this->forProject->addContributingUser($user);
+        ContributorsChanged::dispatch($this->forProjectId);
+        $this->dispatch('contributors_modified');
+    }
+
+    public function removeUser(int $userId): void {
+        Gate::authorize('manage-contributors', $this->forProject);
+        $user = User::findOrFail($userId);
+        $this->forProject->removeContributingUser($user);
+        ContributorsChanged::dispatch($this->forProjectId);
         $this->dispatch('contributors_modified');
     }
 
     public function render(): mixed {
         return view('livewire.projects.select-contributors', [
-            'experts' => Expert::all(),
-            'project' => $this->forProject,
+            'experts'  => Expert::all(),
+            'users'    => User::where('id', '!=', $this->forProject->user_id)->get(),
+            'project'  => $this->forProject,
         ]);
     }
 }

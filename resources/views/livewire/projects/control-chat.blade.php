@@ -4,7 +4,7 @@
     'showGenerate'    => true,
 ])
 
-<div class="fixed bottom-0 left-[15vw] w-[85vw] justify-center z-50">
+<div class="fixed bottom-0 left-0 w-full lg:left-[15vw] lg:w-[85vw] justify-center z-50">
     <div class="max-w-[1120px] justify-center mx-auto pb-4">
         <div class="flex items-end gap-2">
             @if($showGenerate)

@@ -16,7 +16,7 @@
             <div class="flex">
                 <flux:spacer />
                 <flux:button type="submit" variant="primary" class="cursor-pointer">
-                    {{ __('Start Specification') }}
+                    {{ __('Start Discussion') }}
                 </flux:button>
             </div>
         </form>

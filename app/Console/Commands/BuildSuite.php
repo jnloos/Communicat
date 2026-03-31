@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
@@ -31,13 +32,31 @@ class BuildSuite extends Command
         $this->call('init:experts');
 
         $this->comment('Creating a admin user...');
-        $user = new User();
-        $user->id = 1;
-        $user->name = 'admin';
-        $user->email = 'admin@localhost';
-        $user->password = Hash::make('admin');
-        $user->save();
-        $this->info("Default admin created: $user->name ($user->email)");
+        $admin = new User();
+        $admin->id = 1;
+        $admin->name = 'admin';
+        $admin->email = 'admin@localhost';
+        $admin->password = Hash::make('admin');
+        $admin->save();
+        $this->info("Default admin created: $admin->name ($admin->email)");
+
+        $this->comment('Creating test user...');
+        $test = new User();
+        $test->name = 'test';
+        $test->email = 'test@localhost';
+        $test->password = Hash::make('test');
+        $test->save();
+        $this->info("Test user created: $test->name ($test->email)");
+
+        $this->comment('Creating demo project...');
+        $project = new Project();
+        $project->user_id = $admin->id;
+        $project->title = 'World Conqueror';
+        $project->description = 'Strategic discussion on global domination: Which country should we attack first, and who should we ally with to get started?';
+        $project->settings = ['summary_frequency' => 10];
+        $project->save();
+        $project->users()->syncWithoutDetaching($admin->id);
+        $this->info("Demo project created: {$project->title}");
 
         return 0;
     }

@@ -9,15 +9,19 @@
     <livewire:projects.edit-project :project="$project" />
 
     <!-- Project Management -->
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between flex-wrap gap-2">
         <div class="flex">
-            <flux:button variant="primary" icon="cog" class="me-3 cursor-pointer" @click="$wire.dispatch('edit_project')"/>
+            @can('manage-project', $project)
+                <flux:button variant="primary" icon="cog" class="me-3 cursor-pointer" @click="$wire.dispatch('edit_project')"/>
+            @else
+                <flux:button variant="primary" icon="arrow-left-end-on-rectangle" class="me-3 cursor-pointer" wire:click="leaveProject" wire:confirm="{{ __('Are you sure you want to leave this project?') }}"/>
+            @endcan
             <flux:heading size="xl" class="my-auto">
                 {{ __('Project') . ': ' . $project->title }}
             </flux:heading>
         </div>
 
-        <x-projects.contributor-group :contributors="$project->experts()->get()->merge($project->users()->get())" :label="__('Set Contributors')" @click="$wire.dispatch('select_contributors')">
+        <x-projects.contributor-group :contributors="$project->experts()->get()->concat($project->users()->get())" :label="__('Set Contributors')" @click="$wire.dispatch('select_contributors')">
             {{ __('Add ') }}
         </x-projects.contributor-group>
     </div>

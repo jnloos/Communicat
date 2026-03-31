@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Collection;
 
 class Project extends Model
 {
-    protected $fillable = ['title', 'description', 'settings'];
+    protected $fillable = ['title', 'description', 'settings', 'user_id'];
 
     protected $casts = ['settings' => 'array'];
 
@@ -21,12 +22,20 @@ class Project extends Model
         return $this->hasMany(Summary::class);
     }
 
-    public function experts(): BelongsToMany {
-        return $this->belongsToMany(Expert::class, 'expert_project');
+    public function owner(): BelongsTo {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function users(): BelongsToMany {
-        return $this->belongsToMany(User::class, 'user_project');
+    public function experts(): MorphToMany {
+        return $this->morphedByMany(Expert::class, 'contributor', 'project_contributors');
+    }
+
+    public function users(): MorphToMany {
+        return $this->morphedByMany(User::class, 'contributor', 'project_contributors');
+    }
+
+    public function isOwner(User $user): bool {
+        return $this->user_id === $user->id;
     }
 
     public function isPersistent(): bool {
@@ -58,10 +67,16 @@ class Project extends Model
     }
 
     public function hasContributor(User $user): bool {
-        return $this->users()->whereKey($user->id)->exists();
+        return $this->isOwner($user) || $this->users()->whereKey($user->id)->exists();
     }
 
     protected static function booted(): void {
+        static::creating(function (Project $project): void {
+            if (auth()->check()) {
+                $project->user_id = auth()->id();
+            }
+        });
+
         static::created(function (Project $project): void {
             if (auth()->check()) {
                 $project->users()->syncWithoutDetaching(auth()->id());

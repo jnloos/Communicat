@@ -5,6 +5,7 @@ namespace App\Livewire\Projects;
 use App\Models\Project;
 use Flux\Flux;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
@@ -37,9 +38,10 @@ class EditProject extends Component
     }
 
     public function save(): void {
+        $project = Project::findOrFail($this->forProjectId);
+        Gate::authorize('manage-project', $project);
         $this->validate();
 
-        $project              = Project::findOrFail($this->forProjectId);
         $project->title       = $this->title;
         $project->description = $this->description;
         $project->settings    = ['summary_frequency' => $this->frequency];
@@ -50,7 +52,9 @@ class EditProject extends Component
     }
 
     public function delete(): void {
-        Project::findOrFail($this->forProjectId)->delete();
+        $project = Project::findOrFail($this->forProjectId);
+        Gate::authorize('manage-project', $project);
+        $project->delete();
         Cookie::forget('curr_project');
         Flux::modal('edit-project')->close();
         $this->redirectRoute('dashboard');

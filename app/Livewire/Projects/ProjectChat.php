@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Projects;
 
+use App\Events\ContributorsChanged;
 use App\Models\Project;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -35,6 +36,26 @@ class ProjectChat extends Component
     public function loadMore(): void {
         $this->pageSize += $this->incPageSize;
         $this->updateHasMore();
+    }
+
+    public function leaveProject(): void {
+        abort_if($this->project->isOwner(auth()->user()), 403);
+        $this->project->removeContributingUser(auth()->user());
+        ContributorsChanged::dispatch($this->projectId);
+        $this->redirectRoute('project.new');
+    }
+
+    #[On('echo-private:projects.{projectId},.UserMessageSent')]
+    public function onUserMessageSent(): void {
+        $this->updateHasMore();
+        $this->dispatch('message_generated');
+    }
+
+    #[On('echo-private:projects.{projectId},.ContributorsChanged')]
+    public function onContributorsChanged(): void {
+        $this->project = Project::findOrFail($this->projectId);
+        $this->updateHasMore();
+        $this->dispatch('contributors_modified');
     }
 
     private function updateHasMore(): void {
