@@ -27,7 +27,7 @@
     </div>
 
     <!-- Chat -->
-    <div class="py-6">
+    <div class="py-12">
         <div id="chat" class="relative w-full mx-auto overflow-y-auto marker" style="max-height: 84vh;"
             x-data="{
                 loading: false,

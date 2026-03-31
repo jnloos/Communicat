@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Projects;
 
+use App\Events\GenerationStarted;
+use App\Events\GenerationStopped;
 use App\Events\UserMessageSent;
 use App\Jobs\Dependencies\ProjectJob;
 use App\Jobs\MessageGenerator;
@@ -41,11 +43,23 @@ class ControlChat extends Component
         $this->keepGenerating = true;
         $this->isDispatching  = true;
 
+        GenerationStarted::dispatch($this->projectId);
         MessageGenerator::dispatch($this->projectId);
     }
 
     public function stopGenerate(): void {
+        GenerationStopped::dispatch($this->projectId);
+    }
+
+    #[On('echo-private:projects.{projectId},.GenerationStarted')]
+    public function onGenerationStarted(): void {
+        $this->isDispatching = true;
+    }
+
+    #[On('echo-private:projects.{projectId},.GenerationStopped')]
+    public function onGenerationStopped(): void {
         $this->keepGenerating = false;
+        $this->isDispatching  = false;
     }
 
     #[On('echo-private:projects.{projectId},.MessageGenerated')]
@@ -79,7 +93,7 @@ class ControlChat extends Component
         return view('livewire.projects.control-chat', [
             'disableInput'    => $jobRunning || $this->isDispatching,
             'disableGenerate' => $jobRunning || $this->isDispatching,
-            'showGenerate'    => !$this->keepGenerating,
+            'showGenerate'    => !$this->keepGenerating && !$this->isDispatching,
         ]);
     }
 }
