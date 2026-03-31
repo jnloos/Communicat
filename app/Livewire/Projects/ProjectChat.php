@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Projects;
 
+use App\Livewire\Concerns\NeedsConfirmation;
 use App\Events\ContributorsChanged;
 use App\Models\Project;
 use Livewire\Attributes\Locked;
@@ -11,7 +12,7 @@ use Livewire\WithPagination;
 
 class ProjectChat extends Component
 {
-    use WithPagination;
+    use NeedsConfirmation, WithPagination;
 
     public int $pageSize    = 10;
     public int $incPageSize = 5;

@@ -8,7 +8,6 @@
             {{ $isUpdate ? __('Update Expert') : __('Create Expert') }}
         </flux:heading>
 
-
         <div class="flex justify-center items-center text-center">
             <input type="file" class="hidden" wire:model="avatarUpload" accept="image/*" x-ref="fileInput"/>
             <div @click="$refs.fileInput.click()" class="cursor-pointer">
@@ -36,7 +35,8 @@
         <flux:spacer/>
         <div class="flex items-center justify-between">
             @if ($isUpdate)
-                <flux:button type="button" variant="danger" wire:click="delete" class="cursor-pointer">
+                <flux:button type="button" variant="danger" class="cursor-pointer"
+                    wire:click="needsConfirmation('delete')">
                     {{ __('Delete Expert') }}
                 </flux:button>
             @else

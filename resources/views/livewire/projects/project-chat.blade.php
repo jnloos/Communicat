@@ -14,7 +14,8 @@
             @can('manage-project', $project)
                 <flux:button variant="primary" icon="cog" class="me-3 cursor-pointer" @click="$wire.dispatch('edit_project')"/>
             @else
-                <flux:button variant="primary" icon="arrow-left-end-on-rectangle" class="me-3 cursor-pointer" wire:click="leaveProject" wire:confirm="{{ __('Are you sure you want to leave this project?') }}"/>
+                <flux:button variant="primary" icon="arrow-left-end-on-rectangle" class="me-3 cursor-pointer"
+                    wire:click="needsConfirmation('leaveProject')"/>
             @endcan
             <flux:heading size="xl" class="my-auto">
                 {{ __('Project') . ': ' . $project->title }}
@@ -27,7 +28,9 @@
     </div>
 
     <!-- Chat -->
-    <div class="py-12">
+    <div class="relative py-6">
+        <!-- Fade top -->
+        <div class="absolute top-6 left-0 right-0 h-2 bg-linear-to-b from-white dark:from-zinc-800 to-transparent z-10 pointer-events-none"></div>
         <div id="chat" class="relative w-full mx-auto overflow-y-auto marker" style="max-height: 84vh;"
             x-data="{
                 loading: false,
@@ -84,7 +87,7 @@
             </div>
 
             <!-- Nachrichten -->
-            <div class="space-y-8 pb-36 max-w-[1080px] mx-auto">
+            <div class="space-y-8 pb-24 max-w-220 mx-auto">
                 @foreach ($messages as $msg)
                     <x-projects.chat-message :id="$msg->id" :msg="$msg" />
                 @endforeach

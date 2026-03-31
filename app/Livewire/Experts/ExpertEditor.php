@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Experts;
 
+use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Expert;
 use Flux\Flux;
 use Illuminate\Support\Facades\Storage;
@@ -13,7 +14,7 @@ use Livewire\WithFileUploads;
 
 class ExpertEditor extends Component
 {
-    use WithFileUploads;
+    use NeedsConfirmation, WithFileUploads;
 
     #[Locked]
     public int|null $expertId = null;

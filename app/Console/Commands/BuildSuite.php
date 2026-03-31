@@ -37,6 +37,7 @@ class BuildSuite extends Command
         $admin->name = 'admin';
         $admin->email = 'admin@localhost';
         $admin->password = Hash::make('admin');
+        $admin->is_admin = true;
         $admin->save();
         $this->info("Default admin created: $admin->name ($admin->email)");
 

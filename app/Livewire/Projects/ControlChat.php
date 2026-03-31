@@ -4,7 +4,7 @@ namespace App\Livewire\Projects;
 
 use App\Events\GenerationStarted;
 use App\Events\GenerationStopped;
-use App\Events\UserMessageSent;
+use App\Events\MessageSent;
 use App\Jobs\Dependencies\ProjectJob;
 use App\Jobs\MessageGenerator;
 use App\Models\Project;
@@ -81,7 +81,7 @@ class ControlChat extends Component
 
         $this->validate();
         $this->project->addMessage($this->msgContent, auth()->user());
-        UserMessageSent::dispatch($this->projectId);
+        MessageSent::dispatch($this->projectId);
         $this->dispatch('message_sent');
         $this->reset('msgContent');
     }

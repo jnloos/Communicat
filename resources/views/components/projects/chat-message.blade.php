@@ -18,8 +18,8 @@
             </div>
         </div>
     @elseif($msg->isAssistant())
-        <div class="flex justify-center">
-            <div id="{{ $id }}" wire:key="{{ $id }}" class="rounded-lg w-full sm:w-auto sm:min-w-sm z-0 px-5 pt-4 pb-8 break-words bg-zinc-200">
+        <div class="flex justify-center mt-2">
+            <div id="{{ $id }}" wire:key="{{ $id }}" class="rounded-lg w-full sm:w-auto sm:min-w-sm z-0 px-5 py-4 break-words bg-zinc-200">
                 <span class="markdown-html text-zinc-900">
                     {!! Markdown::parse($msg->content) !!}
                 </span>

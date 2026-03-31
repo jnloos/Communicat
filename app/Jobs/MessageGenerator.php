@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Events\JobLogUpdated;
+use App\Events\JobLogged;
 use App\Events\MessageGenerated;
 use App\Jobs\Dependencies\ProjectJob;
 use App\Models\JobLog;
@@ -34,12 +34,12 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
                 'status'     => 'running',
                 'started_at' => now(),
             ]);
-            JobLogUpdated::dispatch($log);
+            JobLogged::dispatch($log);
 
             try {
                 Assistant::forProject($project)->genNextMessage();
                 $log->update(['status' => 'success', 'finished_at' => now()]);
-                JobLogUpdated::dispatch($log->fresh());
+                JobLogged::dispatch($log->fresh());
             } catch (Exception $e) {
                 Log::error(sprintf("%s: %s", $e->getMessage(), $e->getTraceAsString()));
                 $log->update([
@@ -47,7 +47,7 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
                     'finished_at' => now(),
                     'payload'     => ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()],
                 ]);
-                JobLogUpdated::dispatch($log->fresh());
+                JobLogged::dispatch($log->fresh());
             }
 
             MessageGenerated::dispatch($project->id);

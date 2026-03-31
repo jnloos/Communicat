@@ -13,7 +13,7 @@
         <flux:sidebar sticky stashable class="border-r border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 w-[15vw] min-w-[15vw]">
             <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
 
-            <a href="{{ route('dashboard') }}" class="me-5 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
+            <a href="{{ route('dashboard') }}" class="ms-2 flex items-center space-x-2 rtl:space-x-reverse" wire:navigate>
                 <x-app-logo />
             </a>
 
@@ -41,7 +41,7 @@
             <flux:spacer />
 
             <flux:navlist variant="outline">
-                <flux:navlist.item icon="folder-git-2" href="https://gitlab.uni-trier.de/s4jaloos/discussicat" target="_blank">
+                <flux:navlist.item icon="folder-git-2" href="https://github.com/jnloos/Communicat" target="_blank">
                     {{ __('Repository') }}
                 </flux:navlist.item>
 
@@ -107,6 +107,7 @@
             <livewire:debug.job-debug-panel />
         @endif
 
+        <x-confirm-modal />
         @fluxScripts
     </body>
 </html>

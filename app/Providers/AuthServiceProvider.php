@@ -20,6 +20,10 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('manage-contributors', function (User $user, Project $project) {
             return $project->isOwner($user);
         });
+
+        Gate::define('admin', function (User $user) {
+            return $user->is_admin;
+        });
     }
 
     public function boot(): void {

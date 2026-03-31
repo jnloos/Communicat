@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Projects;
 
+use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Project;
 use Flux\Flux;
 use Illuminate\Support\Facades\Cookie;
@@ -13,6 +14,7 @@ use Livewire\Component;
 
 class EditProject extends Component
 {
+    use NeedsConfirmation;
     #[Locked]
     public int $forProjectId;
 

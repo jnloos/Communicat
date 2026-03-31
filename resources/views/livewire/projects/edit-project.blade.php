@@ -17,7 +17,8 @@
             </flux:select>
 
             <div class="flex items-center justify-between">
-                <flux:button wire:click.debounce="delete" type="button" variant="danger" class="cursor-pointer">
+                <flux:button type="button" variant="danger" class="cursor-pointer"
+                    wire:click="needsConfirmation('delete')">
                     {{ __('Delete Project') }}
                 </flux:button>
                 <flux:button type="submit" variant="primary" class="cursor-pointer">
