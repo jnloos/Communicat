@@ -21,49 +21,57 @@ class ControlChat extends Component
     protected Project $project;
 
     public bool $keepGenerating = false;
-    public bool $isDispatching  = false;
+
+    public bool $isDispatching = false;
 
     #[Validate('required|string|min:3|max:1000')]
     public string $msgContent = '';
 
-    public function mount(Project $project): void {
-        $this->project   = $project;
+    public function mount(Project $project): void
+    {
+        $this->project = $project;
         $this->projectId = $project->id;
     }
 
-    public function hydrate(): void {
+    public function hydrate(): void
+    {
         $this->project = Project::findOrFail($this->projectId);
     }
 
-    public function startGenerate(): void {
+    public function startGenerate(): void
+    {
         if (ProjectJob::isRunningFor($this->projectId)) {
             return;
         }
 
         $this->keepGenerating = true;
-        $this->isDispatching  = true;
+        $this->isDispatching = true;
 
         GenerationStarted::dispatch($this->projectId);
         MessageGenerator::dispatch($this->projectId);
     }
 
-    public function stopGenerate(): void {
+    public function stopGenerate(): void
+    {
         GenerationStopped::dispatch($this->projectId);
     }
 
     #[On('echo-private:projects.{projectId},.GenerationStarted')]
-    public function onGenerationStarted(): void {
+    public function onGenerationStarted(): void
+    {
         $this->isDispatching = true;
     }
 
     #[On('echo-private:projects.{projectId},.GenerationStopped')]
-    public function onGenerationStopped(): void {
+    public function onGenerationStopped(): void
+    {
         $this->keepGenerating = false;
-        $this->isDispatching  = false;
+        $this->isDispatching = false;
     }
 
     #[On('echo-private:projects.{projectId},.MessageGenerated')]
-    public function onMessageGenerated(): void {
+    public function onMessageGenerated(): void
+    {
         $this->isDispatching = false;
 
         $this->dispatch('message_generated');
@@ -74,7 +82,8 @@ class ControlChat extends Component
         }
     }
 
-    public function sendMessage(): void {
+    public function sendMessage(): void
+    {
         if (ProjectJob::isRunningFor($this->projectId)) {
             return;
         }
@@ -87,13 +96,22 @@ class ControlChat extends Component
     }
 
     #[On(['contributors_modified'])]
-    public function render(): mixed {
+    public function render(): mixed
+    {
         $jobRunning = ProjectJob::isRunningFor($this->projectId);
 
+        $disabledControlsHint = null;
+        if ($jobRunning) {
+            $disabledControlsHint = __('Another operation is in progress. Try again in a moment.');
+        } elseif ($this->isDispatching) {
+            $disabledControlsHint = __('Waiting for the current expert message…');
+        }
+
         return view('livewire.projects.control-chat', [
-            'disableInput'    => $jobRunning || $this->isDispatching,
+            'disableInput' => $jobRunning || $this->isDispatching,
             'disableGenerate' => $jobRunning || $this->isDispatching,
-            'showGenerate'    => !$this->keepGenerating && !$this->isDispatching,
+            'showGenerate' => ! $this->keepGenerating && ! $this->isDispatching,
+            'disabledControlsHint' => $disabledControlsHint,
         ]);
     }
 }

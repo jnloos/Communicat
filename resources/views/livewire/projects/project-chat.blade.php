@@ -12,10 +12,25 @@
     <div class="flex items-center justify-between flex-wrap gap-2">
         <div class="flex">
             @can('manage-project', $project)
-                <flux:button variant="primary" icon="cog" class="me-3 cursor-pointer" @click="$wire.dispatch('edit_project')"/>
+                <flux:tooltip :content="__('Project settings')" position="bottom">
+                    <flux:button
+                        variant="primary"
+                        icon="cog"
+                        class="me-3 cursor-pointer"
+                        :aria-label="__('Project settings')"
+                        @click="$wire.dispatch('edit_project')"
+                    />
+                </flux:tooltip>
             @else
-                <flux:button variant="primary" icon="arrow-left-end-on-rectangle" class="me-3 cursor-pointer"
-                    wire:click="needsConfirmation('leaveProject')"/>
+                <flux:tooltip :content="__('Leave project')" position="bottom">
+                    <flux:button
+                        variant="primary"
+                        icon="arrow-left-end-on-rectangle"
+                        class="me-3 cursor-pointer"
+                        :aria-label="__('Leave project')"
+                        wire:click="needsConfirmation('leaveProject')"
+                    />
+                </flux:tooltip>
             @endcan
             <flux:heading size="xl" class="my-auto">
                 {{ __('Project') . ': ' . $project->title }}
