@@ -1,0 +1,441 @@
+# Multi-Persona AI Discussion Pipeline — Implementation Plan
+
+## Source of Truth
+
+- **System architecture**: the pipeline description in this document (user-provided)
+- **Prompt framework**: `doc/Expose-New.pdf` (5-layer framework for prompt content)
+- **Diagram**: `doc/Diagram.png` (visual reference — resolves ambiguities)
+
+---
+
+## Current State
+
+`Assistant::genNextMessage()` runs ALL contributing experts concurrently, each producing `{statement, importance}`. The highest-importance message wins. No moderator, no THINK/SPEAK separation, no adjacency pair tracking, no turn-taking rules.
+
+`Assistant::genExpertSummaries()` periodically summarizes oldest N messages into a JSON blob in `summaries.content`.
+
+Two Blade templates: `prompts/multiple/next-message.blade.php` and `prompts/multiple/expert-summaries.blade.php`.
+
+---
+
+## Target Pipeline (per turn)
+
+```
+Step 1 — MODERATOR (routing)
+  Input:  full chat history, participant list, optional moderation instructions
+  Output: PATH A or PATH B + selected agents
+
+  PATH A (specific agent addressed):
+    → agent runs THINK only → SPEAK
+    → min 3 LLM calls total
+
+  PATH B (no specific agent addressed):
+    → moderator selects subset of agents
+    → each selected agent runs THINK+PRIORITIZE independently (parallel, isolated)
+    → MODERATOR runs again to select winner
+    → winner runs SPEAK
+    → max n+3 LLM calls total (n = number of selected agents)
+
+Step 2 — THINK  (PATH A)  /  THINK+PRIORITIZE  (PATH B)
+  PATH A — THINK only:
+    Input:  persona, memory, chat history, moderation context
+    Output: updated memory (knowledge about other agents & user, open questions)
+    Not visible in chat.
+
+  PATH B — THINK+PRIORITIZE (one combined prompt per agent, run in parallel):
+    Input:  persona, memory, chat history, moderation context
+    Output: updated memory + priority score (1–5) + intended response type + reasoning
+    Not visible in chat. Agents must NOT see each other's output.
+
+Step 3 — MODERATOR selects winner  (PATH B only)
+  Input:  chat history, participant list, all THINK+PRIORITIZE outputs
+  Applies selection rules in order:
+    1. Open adjacency pair (unanswered question) → addressed agent wins
+    2. Anti-monopoly → halve score of agent who dominated last 2 turns
+    3. Diversity → prefer agent with different response type than recent turns
+    4. Highest priority score wins
+    5. Tiebreaker → random
+
+Step 4 — SPEAK  (winner agent only)
+  Input:  persona, memory, chat, moderation context, own THINK/THINK+PRIORITIZE output
+  Instructions: Präferenzorganisation, Reparaturmechanismen
+  Output: visible chat message + invisible metadata block:
+    NEXT_SPEAKER:        [agent name or "user"]
+    ADJACENCY_PAIR_TYPE: [question→answer / assertion→reaction / ...]
+    REASON:              [1 sentence]
+
+Step 5 — SUMMARIZER  (conditional)
+  Trigger: number of raw messages > threshold T
+  Action:  summarize oldest messages into compressed context block,
+           trim raw buffer to most recent K messages,
+           recompute per-agent memory blocks from trimmed buffer + new summary.
+  Between updates: memory blocks carried forward as-is from previous turn.
+```
+
+### LLM Call Budget
+| Path | Calls |
+|------|-------|
+| PATH A | 3 (Moderator route + THINK + SPEAK) |
+| PATH B | n+3 (Moderator route + n×THINK+PRIORITIZE + Moderator select + SPEAK) |
+
+---
+
+## Moderation Triggers
+
+Moderator injects an instruction if any trigger fires:
+- Agent silent for 2+ consecutive turns
+- User question was ignored
+- No progress after 5 turns on same topic
+- Direct conflict unresolved after 3 turns
+- One agent dominates turn count
+
+---
+
+## Architecture
+
+### New Services
+
+| Class | File | Responsibility |
+|-------|------|----------------|
+| `PipelineModerator` | `app/Services/PipelineModerator.php` | Top-level coordinator; replaces `Assistant::genNextMessage()` |
+| `ModeratorService` | `app/Services/ModeratorService.php` | Routing call, winner-selection call, trigger checking, state updates |
+| `AgentService` | `app/Services/AgentService.php` | `think()`, `thinkAndPrioritize()`, `speak()` |
+| `Summarizer` | `app/Services/Summarizer.php` | Buffer threshold check, compression, memory recomputation |
+
+Keep as-is: `OpenAIClient`, `PromptBuilder` (extend with new methods).
+
+### DB Changes
+
+**Migration 1** — `messages` table:
+```sql
+ALTER TABLE messages ADD COLUMN adjacency_pair_type VARCHAR(50) NULL;
+ALTER TABLE messages ADD COLUMN next_speaker VARCHAR(100) NULL;
+```
+
+**`project.settings` JSON** — extend with:
+```json
+{
+  "recent_speakers":       [],
+  "recent_response_types": [],
+  "silence_counters":      {},
+  "topic_turn_count":      0,
+  "buffer_threshold":      20,
+  "buffer_keep":           8,
+  "chat_summary":          ""
+}
+```
+
+`chat_summary` stores a system-wide compressed summary of messages older than `last_summarized_id`. It is regenerated by the Summarizer on each buffer update and passed into every prompt alongside the recent raw message window.
+
+### Model Updates
+- `Message::toPromptArray()` — add speaker `name` (eager-load expert/user relation)
+- `Project::asPromptArray()` — include speaker names in message array; include `chat_summary` from settings
+
+---
+
+## Prompt Templates
+
+### New file structure
+```
+resources/views/prompts/
+├── agent/
+│   ├── think.blade.php              ← PATH A: THINK only (no priority)
+│   ├── think-prioritize.blade.php   ← PATH B: THINK+PRIORITIZE combined
+│   └── speak.blade.php              ← SPEAK (both paths, winner only)
+├── moderator/
+│   ├── route.blade.php              ← Step 1: routing decision
+│   └── select.blade.php             ← Step 3: winner selection (PATH B only)
+└── shorten-chat.blade.php
+```
+
+### Template specs (all templates in German, following Expose-New.pdf)
+
+#### `agent/think.blade.php` (PATH A)
+Props: `$expert`, `$project`, `$agents`
+`$project` includes: `title`, `description`, `chat_summary` (compressed older history), `messages` (recent K raw messages)
+
+- Block 1: Persona-Kern (name, bio, Kernüberzeugungen, Wissensgrenzen, Stil)
+- Block 2: Gedächtnis (this agent's current thoughts from Summary)
+- Chat summary (if present — compressed context of messages beyond the raw window)
+- Recent conversation history (last K raw messages)
+- Task: output ONLY updated Gedächtnis block. No conversation text.
+
+Output format:
+```
+GEDÄCHTNIS-UPDATE:
+Was ich über den Nutzer weiß: ...
+Was ich über [Agent X] weiß: ...
+Offene Fragen: ...
+Letzter Gesprächsstand: ...
+```
+
+#### `agent/think-prioritize.blade.php` (PATH B)
+Props: `$expert`, `$project`, `$agents`
+`$project` includes: `title`, `description`, `chat_summary`, `messages` (recent K raw messages)
+
+- Block 1: Persona-Kern
+- Block 2: Gedächtnis (this agent's current thoughts from Summary)
+- Chat summary (if present)
+- Recent conversation history (last K raw messages)
+- Task: output ONLY the combined THINK+PRIORITIZE block. No conversation text.
+
+Output format:
+```
+THINK:
+  GEDÄCHTNIS-UPDATE: [updated memory as above]
+
+PRIORITIZE:
+  PRIORITÄT:    [1–5]
+  ANTWORT-TYP:  [Frage / Zustimmung / Widerspruch / neue Information / Klärung]
+  BEGRÜNDUNG:   [1 sentence]
+```
+
+#### `agent/speak.blade.php` (both paths, winner only)
+Props: `$expert`, `$project`, `$agents`, `$think_output` (string), `$moderation_note` (string, optional)
+`$project` includes: `title`, `description`, `chat_summary`, `messages` (recent K raw messages)
+
+- Block 1: Persona-Kern
+- Block 2: Gedächtnis (this agent's current thoughts — already updated by the preceding THINK call)
+- Block 3: Reaktions-Typen (Präferenzorganisation, from Expose-New.pdf §6.2.1)
+- Block 4: Reparaturmechanismen (from Expose-New.pdf §6.2.2)
+- Chat summary (if present)
+- Recent conversation history (last K raw messages)
+- Injected `$think_output` as private context
+- `$moderation_note` if set
+- Task: generate conversation turn.
+
+Output: visible message text followed by:
+```
+[METADATEN — nicht sichtbar]
+NEXT_SPEAKER:        [agent name or "Nutzer"]
+ADJACENCY_PAIR_TYPE: [Frage→Antwort / Assertion→Reaktion / Einladung→Annahme]
+REASON:              [1 sentence]
+```
+
+#### `moderator/route.blade.php` (Step 1)
+Props: `$agents`, `$project`, `$moderation_note` (optional)
+
+- Neutral coordinator role (no persona)
+- Conversation history
+- Participant list
+- Moderation instructions if any
+- Task: decide PATH A or PATH B; if PATH A identify which agent; if PATH B identify relevant subset.
+
+Output (JSON):
+```json
+{
+  "path": "A or B",
+  "addressed_agent": "agent name, or null if PATH B",
+  "selected_agents": ["name1", "name2"],
+  "reasoning": "1 sentence"
+}
+```
+
+#### `moderator/select.blade.php` (Step 3, PATH B only)
+Props: `$agents`, `$project`, `$think_prioritize_outputs` (array keyed by agent name)
+
+- Neutral coordinator role
+- Conversation history
+- All THINK+PRIORITIZE outputs
+- Selection rules 1–5
+- Recent speaker history and response types (for anti-monopoly and diversity)
+
+Output (JSON):
+```json
+{
+  "winner": "agent name",
+  "reasoning": "1 sentence"
+}
+```
+
+#### `shorten-chat.blade.php` (Summarizer only)
+Props: `$project`
+`$project` includes: `title`, `description`, `messages` (the oldest messages being compressed)
+
+- Neutral summarizer role (no persona)
+- Task: produce a concise, information-dense summary of the provided messages for use as chat context.
+- Output: plain text chat summary. No agent perspective. Factual only.
+
+This summary is stored in `project.settings['chat_summary']` and injected into all subsequent prompts as compressed context for older conversation history. It replaces those messages in the prompt window — agents are not expected to re-read them as raw turns.
+
+---
+
+## Updated `PromptBuilder` Methods
+
+```php
+// New methods
+think(Project $project, Expert $expert): string
+thinkAndPrioritize(Project $project, Expert $expert): string
+speak(Project $project, Expert $expert, string $thinkOutput, string $moderationNote = ''): string
+moderatorRoute(Project $project, array $agents, string $moderationNote = ''): string
+moderatorSelect(Project $project, array $agents, array $thinkPrioritizeOutputs, array $state): string
+// $state = ['recent_speakers' => [...], 'recent_response_types' => [...]] from $project->settings
+shortenChat(Project $project, array $messages): string
+// $messages = the oldest messages being compressed (not the full history)
+
+// Removed: expertSummaries() — per-agent Gedächtnis is now updated exclusively via THINK/THINK+PRIORITIZE output
+```
+
+All methods pass `$agents` array (keyed by expert id → `['name', 'job']`) so templates can resolve speaker names in conversation history.
+
+---
+
+## New Service Details
+
+### `AgentService`
+```php
+__construct(Project $project, OpenAIClient $client, PromptBuilder $prompts)
+
+think(Expert $expert): string
+  // PATH A: calls think prompt, returns raw memory-update block
+
+thinkAndPrioritize(Expert $expert): string
+  // PATH B: calls think-prioritize prompt, returns raw THINK+PRIORITIZE block
+
+speak(Expert $expert, string $thinkOutput, string $moderationNote = ''): array
+  // calls speak prompt, parses and returns:
+  // ['content' => '...', 'next_speaker' => '...', 'adjacency_pair_type' => '...', 'reason' => '...']
+```
+
+### `ModeratorService`
+```php
+__construct(Project $project, OpenAIClient $client, PromptBuilder $prompts)
+
+checkTriggers(): string
+  // inspects project.settings, returns moderation instruction string (may be empty)
+
+route(string $moderationNote = ''): array
+  // calls moderator/route prompt, returns ['path', 'addressed_agent', 'selected_agents', 'reasoning']
+
+selectWinner(array $thinkPrioritizeOutputs): string
+  // calls moderator/select prompt with project.settings state (recent_speakers, recent_response_types)
+  // returns winning agent name
+
+updateState(Expert $winner, string $adjacencyType): void
+  // updates recent_speakers, silence_counters, recent_response_types in project.settings
+```
+
+### `Summarizer`
+```php
+__construct(Project $project, OpenAIClient $client, PromptBuilder $prompts)
+
+maybeRun(): void
+  // if unsummarized message count > buffer_threshold:
+  //   fetch oldest (count - buffer_keep) messages
+  //   call shortenChat() → store result in project.settings['chat_summary']
+  //   advance last_summarized_id watermark so those messages are excluded from future prompt windows
+  //   (no DB deletion — messages remain in database for history/audit purposes)
+  //
+  // Per-agent Gedächtnis is NOT touched here.
+  // Each agent's Summary.content is updated exclusively by AgentService when that agent runs THINK or THINK+PRIORITIZE.
+```
+
+### `PipelineModerator`
+```php
+__construct(Project $project)
+
+run(): void
+  $experts    = $project->contributingExperts()
+  $moderator  = new ModeratorService(...)
+  $agent      = new AgentService(...)
+  $summarizer = new Summarizer(...)
+
+  $modNote    = $moderator->checkTriggers()
+  $route      = $moderator->route($modNote)
+
+  if PATH A:
+    $winner      = Expert::findByName($route['addressed_agent'])
+    $thinkOutput = $agent->think($winner)
+    $result      = $agent->speak($winner, $thinkOutput, $modNote)
+
+  if PATH B:
+    $selected    = Expert::findManyByName($route['selected_agents'])
+    $tpOutputs   = sendMany: thinkAndPrioritize() for each selected agent (parallel, isolated)
+    $winnerName  = $moderator->selectWinner($tpOutputs)
+    $winner      = Expert::findByName($winnerName)
+    $thinkOutput = $tpOutputs[$winnerName]
+    $result      = $agent->speak($winner, $thinkOutput, $modNote)
+
+  $message = $project->addMessage($result['content'], $winner)
+  $message->adjacency_pair_type = $result['adjacency_pair_type']
+  $message->next_speaker        = $result['next_speaker']
+  $message->save()
+
+  $moderator->updateState($winner, $result['adjacency_pair_type'])
+  $summarizer->maybeRun($experts)
+```
+
+---
+
+## Expert Persona Updates (`experts.json`)
+
+The current `prompt` field is a flat first-person English paragraph. Restructure to the Block 1 Persona-Kern format from Expose-New.pdf:
+
+```
+Du bist [Name], [Kurzbiografie 2–3 Sätze].
+
+KERNÜBERZEUGUNGEN (in absteigender Priorität):
+1. [Stärkste Überzeugung — wird niemals aufgegeben]
+2. [Zweite Überzeugung — kann unter Druck nachgeben]
+3. [Dritte Überzeugung — verhandelbar]
+
+WISSENSGRENZEN:
+- Du weißt nicht: [explizit]
+- Du weigerst dich zu spekulieren über: [Domänen außerhalb der Rolle]
+
+SPRACHLICHER STIL:
+- Satzlänge: [kurz / mittel / lang]
+- Typische Eröffnung: [Charakteristischer Satzanfang]
+- Verbotene Ausdrücke: [generische KI-Phrasen explizit ausschließen]
+```
+
+---
+
+## Implementation Stages
+
+> Stages 1, 2, 5 can start immediately in parallel. Stage 3 requires Stage 2. Stage 4 requires all prior stages.
+
+### Stage 1 — Database & Models  *(parallel with 2, 5)*
+1. Migration: add `adjacency_pair_type`, `next_speaker` to `messages`
+2. Update `Message::toPromptArray()` to include speaker `name` (eager-load expert/user)
+3. Update `Project::asPromptArray()` to include names in message array
+4. Add `Expert::findByName(string $name): Expert` static helper
+5. Add `Expert::findManyByName(array $names): Collection` static helper
+
+### Stage 2 — Prompt Templates  *(parallel with 1, 5)*
+1. Create `resources/views/prompts/agent/think.blade.php`
+2. Create `resources/views/prompts/agent/think-prioritize.blade.php`
+3. Create `resources/views/prompts/agent/speak.blade.php`
+4. Create `resources/views/prompts/moderator/route.blade.php`
+5. Create `resources/views/prompts/moderator/select.blade.php`
+6. Create `resources/views/prompts/shorten-chat.blade.php`
+7. Delete `resources/views/prompts/multiple/expert-summaries.blade.php` (superseded)
+8. Update `app/Services/PromptBuilder.php` with all new methods; remove `expertSummaries()`
+
+### Stage 3 — New Services  *(requires Stage 2)*
+1. Create `app/Services/AgentService.php`
+2. Create `app/Services/ModeratorService.php`
+3. Create `app/Services/Summarizer.php`
+4. Create `app/Services/PipelineModerator.php`
+
+### Stage 4 — Integration  *(requires Stages 1, 2, 3)*
+1. Update `app/Jobs/MessageGenerator.php` to call `PipelineModerator::run()`
+2. Update `Summary.content` handling: store plain text (not JSON array); fix any callers
+3. Run `php artisan migrate`
+4. Run `php artisan init:experts --file=database/experts.json`
+5. Mark `Assistant::genNextMessage()` as deprecated
+
+### Stage 5 — Expert Persona Restructure  *(parallel with 1, 2)*
+1. Rewrite all 5 expert `prompt` fields in `database/experts.json` to Block 1 format (German)
+2. Keep `description` field unchanged (English bio summary)
+
+---
+
+## Constraints
+
+- Do not modify `OpenAIClient` — existing `send()`/`sendMany()` interface is sufficient.
+- `next-message.blade.php` must not be deleted until Stage 4 is complete.
+- `Assistant.php` must remain functional throughout Stages 1–3.
+- All prompt templates must be in German (matching Expose-New.pdf language).
+- All PHP service/class code in English.
+- THINK+PRIORITIZE agents in PATH B must never see each other's outputs (enforced by running them as isolated parallel calls via `sendMany`).
