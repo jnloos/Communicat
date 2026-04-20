@@ -7,14 +7,124 @@ use App\Models\Project;
 
 class PromptBuilder
 {
-    public function expertSummaries(Project $project, Expert $expert): string {
-        return view('prompts.multiple.expert-summaries', [
-            'project' => $project->asPromptArray(),
-            'expert'  => $expert->asPromptArray($project),
+    /**
+     * PATH A — THINK only.
+     * Returns a prompt asking the agent to output an updated Gedächtnis block.
+     */
+    public function think(Project $project, Expert $expert): string
+    {
+        $agents = $project->contributingExperts()
+            ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job]])
+            ->all();
+
+        return view('prompts.agent.think', [
+            'expert'   => $expert->asPromptArray($project),
+            'project'  => $project->asPromptArray(),
+            'agents'   => $agents,
         ])->render();
     }
 
-    public function nextMessage(Project $project, Expert $expert): string {
+    /**
+     * PATH B — THINK+PRIORITIZE combined.
+     * Returns a prompt asking the agent to output an updated Gedächtnis block plus a priority score.
+     */
+    public function thinkAndPrioritize(Project $project, Expert $expert): string
+    {
+        $agents = $project->contributingExperts()
+            ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job]])
+            ->all();
+
+        return view('prompts.agent.think-prioritize', [
+            'expert'   => $expert->asPromptArray($project),
+            'project'  => $project->asPromptArray(),
+            'agents'   => $agents,
+        ])->render();
+    }
+
+    /**
+     * SPEAK — winner agent only (both paths).
+     * Returns a prompt asking the agent to generate a visible conversation turn.
+     *
+     * @param string $thinkOutput    The raw THINK or THINK+PRIORITIZE output from the preceding step.
+     * @param string $moderationNote Optional moderation instruction injected by ModeratorService.
+     */
+    public function speak(Project $project, Expert $expert, string $thinkOutput, string $moderationNote = ''): string
+    {
+        $agents = $project->contributingExperts()
+            ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job]])
+            ->all();
+
+        return view('prompts.agent.speak', [
+            'expert'           => $expert->asPromptArray($project),
+            'project'          => $project->asPromptArray(),
+            'agents'           => $agents,
+            'think_output'     => $thinkOutput,
+            'moderation_note'  => $moderationNote,
+        ])->render();
+    }
+
+    /**
+     * MODERATOR ROUTE — Step 1.
+     * Returns a prompt asking the moderator to decide PATH A or PATH B and select agents.
+     *
+     * @param array  $agents          Keyed by expert id → ['name', 'job'].
+     * @param string $moderationNote  Optional moderation instruction from trigger checks.
+     */
+    public function moderatorRoute(Project $project, array $agents, string $moderationNote = ''): string
+    {
+        return view('prompts.moderator.route', [
+            'project'          => $project->asPromptArray(),
+            'agents'           => $agents,
+            'moderation_note'  => $moderationNote,
+        ])->render();
+    }
+
+    /**
+     * MODERATOR SELECT — Step 3, PATH B only.
+     * Returns a prompt asking the moderator to select the winning agent from THINK+PRIORITIZE outputs.
+     *
+     * @param array $agents                  Keyed by expert id → ['name', 'job'].
+     * @param array $thinkPrioritizeOutputs  Keyed by agent name → raw THINK+PRIORITIZE output string.
+     * @param array $state                   ['recent_speakers' => [...], 'recent_response_types' => [...]].
+     */
+    public function moderatorSelect(Project $project, array $agents, array $thinkPrioritizeOutputs, array $state): string
+    {
+        return view('prompts.moderator.select', [
+            'project'                   => $project->asPromptArray(),
+            'agents'                    => $agents,
+            'think_prioritize_outputs'  => $thinkPrioritizeOutputs,
+            'state'                     => $state,
+        ])->render();
+    }
+
+    /**
+     * SHORTEN CHAT — Summarizer only.
+     * Returns a prompt asking the summarizer to compress a set of messages into a plain-text summary.
+     *
+     * @param array $messages  The oldest messages being compressed (not the full history).
+     *                         Each entry: ['expert_id' => ..., 'name' => ..., 'content' => ...].
+     */
+    public function shortenChat(Project $project, array $messages): string
+    {
+        // Build a lightweight project array containing only the messages to compress,
+        // rather than the full recent window from asPromptArray().
+        $projectData = [
+            'title'       => $project->title,
+            'description' => $project->description,
+            'messages'    => $messages,
+        ];
+
+        return view('prompts.shorten-chat', [
+            'project' => $projectData,
+        ])->render();
+    }
+
+    /**
+     * @deprecated Use think() + speak() (PATH A) or thinkAndPrioritize() + speak() (PATH B) instead.
+     *             This method remains functional until Stage 4 integration is complete.
+     */
+    public function nextMessage(Project $project, Expert $expert): string
+    {
         return view('prompts.multiple.next-message', [
             'project' => $project->asPromptArray(),
             'expert'  => $expert->asPromptArray($project),

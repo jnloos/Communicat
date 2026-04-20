@@ -66,10 +66,10 @@ Step 4 — SPEAK  (winner agent only)
 
 Step 5 — SUMMARIZER  (conditional)
   Trigger: number of raw messages > threshold T
-  Action:  summarize oldest messages into compressed context block,
-           trim raw buffer to most recent K messages,
-           recompute per-agent memory blocks from trimmed buffer + new summary.
-  Between updates: memory blocks carried forward as-is from previous turn.
+  Action:  summarize oldest messages into a compressed chat summary,
+           advance the watermark so those messages leave the prompt window.
+  Per-agent Gedächtnis is NOT touched — each agent's memory evolves only
+  through their own THINK / THINK+PRIORITIZE calls.
 ```
 
 ### LLM Call Budget
@@ -100,7 +100,7 @@ Moderator injects an instruction if any trigger fires:
 | `PipelineModerator` | `app/Services/PipelineModerator.php` | Top-level coordinator; replaces `Assistant::genNextMessage()` |
 | `ModeratorService` | `app/Services/ModeratorService.php` | Routing call, winner-selection call, trigger checking, state updates |
 | `AgentService` | `app/Services/AgentService.php` | `think()`, `thinkAndPrioritize()`, `speak()` |
-| `Summarizer` | `app/Services/Summarizer.php` | Buffer threshold check, compression, memory recomputation |
+| `Summarizer` | `app/Services/Summarizer.php` | Buffer threshold check; compresses old messages into chat summary |
 
 Keep as-is: `OpenAIClient`, `PromptBuilder` (extend with new methods).
 
@@ -287,13 +287,15 @@ All methods pass `$agents` array (keyed by expert id → `['name', 'job']`) so t
 __construct(Project $project, OpenAIClient $client, PromptBuilder $prompts)
 
 think(Expert $expert): string
-  // PATH A: calls think prompt, returns raw memory-update block
+  // PATH A: calls think prompt, saves updated Gedächtnis to Summary.content, returns the raw block
 
 thinkAndPrioritize(Expert $expert): string
-  // PATH B: calls think-prioritize prompt, returns raw THINK+PRIORITIZE block
+  // PATH B: calls think-prioritize prompt, saves updated Gedächtnis to Summary.content, returns raw block
+  // Saving happens before returning so speak() reads the fresh Gedächtnis from Summary
 
 speak(Expert $expert, string $thinkOutput, string $moderationNote = ''): array
-  // calls speak prompt, parses and returns:
+  // calls speak prompt (Block 2 re-fetches Summary.content which is now up-to-date)
+  // parses and returns:
   // ['content' => '...', 'next_speaker' => '...', 'adjacency_pair_type' => '...', 'reason' => '...']
 ```
 
@@ -362,7 +364,7 @@ run(): void
   $message->save()
 
   $moderator->updateState($winner, $result['adjacency_pair_type'])
-  $summarizer->maybeRun($experts)
+  $summarizer->maybeRun()
 ```
 
 ---
@@ -418,7 +420,7 @@ SPRACHLICHER STIL:
 3. Create `app/Services/Summarizer.php`
 4. Create `app/Services/PipelineModerator.php`
 
-### Stage 4 — Integration  *(requires Stages 1, 2, 3)*
+### Stage 4 — Integration  *(requires Stages 1, 2, 3, and 5)*
 1. Update `app/Jobs/MessageGenerator.php` to call `PipelineModerator::run()`
 2. Update `Summary.content` handling: store plain text (not JSON array); fix any callers
 3. Run `php artisan migrate`

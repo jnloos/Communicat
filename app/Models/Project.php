@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,8 @@ use Illuminate\Support\Collection;
 
 class Project extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['title', 'description', 'settings', 'user_id'];
 
     protected $casts = ['settings' => 'array'];
@@ -121,9 +124,10 @@ class Project extends Model
         $messages = $query->get()->map(fn(Message $msg) => $msg->toPromptArray())->values()->all();
 
         return [
-            'title'       => $this->title,
-            'description' => $this->description,
-            'messages'    => $messages,
+            'title'        => $this->title,
+            'description'  => $this->description,
+            'chat_summary' => $this->settings['chat_summary'] ?? '',
+            'messages'     => $messages,
         ];
     }
 }

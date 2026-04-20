@@ -9,23 +9,33 @@ use OpenAI\Client;
 class OpenAIClient
 {
     protected Client $client;
-    protected string $model;
+    protected string $modelFast;
+    protected string $modelSlow;
 
     public function __construct() {
-        $this->model  = config('apis.openai.model');
-        $this->client = OpenAI::client(config('apis.openai.api_key'));
+        $this->modelFast = config('apis.openai.model_fast');
+        $this->modelSlow = config('apis.openai.model_slow');
+        $this->client    = OpenAI::client(config('apis.openai.api_key'));
     }
 
-    public function send(string $prompt): string {
+    public function send(string $prompt, ?string $model = null): string {
         return $this->client->responses()->create([
-            'model' => $this->model,
+            'model' => $model ?? $this->modelFast,
             'input' => $prompt,
         ])->outputText;
     }
 
+    public function sendFast(string $prompt): string {
+        return $this->send($prompt, $this->modelFast);
+    }
+
+    public function sendSlow(string $prompt): string {
+        return $this->send($prompt, $this->modelSlow);
+    }
+
     public function sendMany(array $prompts): array {
         $apiKey = config('apis.openai.api_key');
-        $model  = $this->model;
+        $model  = $this->modelFast;
 
         $tasks = [];
         foreach ($prompts as $prompt) {

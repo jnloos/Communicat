@@ -7,7 +7,7 @@ use App\Events\MessageGenerated;
 use App\Jobs\Dependencies\ProjectJob;
 use App\Models\JobLog;
 use App\Models\Project;
-use App\Services\Assistant;
+use App\Services\PipelineModerator;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,7 +20,7 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 120;
+    public int $timeout = 280;
 
     public function __construct(int $projectId) {
         $this->setProject($projectId);
@@ -37,7 +37,7 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
             JobLogged::dispatch($log);
 
             try {
-                Assistant::forProject($project)->genNextMessage();
+                (new PipelineModerator($project))->run();
                 $log->update(['status' => 'success', 'finished_at' => now()]);
                 JobLogged::dispatch($log->fresh());
             } catch (Exception $e) {

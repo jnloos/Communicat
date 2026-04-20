@@ -42,8 +42,19 @@ class Message extends Model
     }
 
     public function toPromptArray(): array {
+        if ($this->expert_id !== null) {
+            $this->loadMissing('expert');
+            $name = $this->expert->name;
+        } elseif ($this->user_id !== null) {
+            $this->loadMissing('user');
+            $name = $this->user->name;
+        } else {
+            $name = 'System';
+        }
+
         return [
             'expert_id' => $this->expert_id,
+            'name'      => $name,
             'content'   => $this->content,
         ];
     }

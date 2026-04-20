@@ -74,6 +74,7 @@ class Assistant
         $this->project->save();
     }
 
+    /** @deprecated Use PipelineModerator::run() instead */
     public function genNextMessage(): void {
         $experts = $this->project->contributingExperts();
         $indexed = $experts->values();

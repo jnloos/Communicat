@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Expert extends Model
 {
+    use HasFactory;
     public function summaries(): HasMany {
         return $this->hasMany(Summary::class);
     }
@@ -29,6 +31,16 @@ class Expert extends Model
 
     public function isContributing(Project $project): bool {
         return $this->projects()->whereKey($project->id)->exists();
+    }
+
+    public static function findByName(string $name): self
+    {
+        return static::where('name', trim($name))->firstOrFail();
+    }
+
+    public static function findManyByName(array $names): \Illuminate\Support\Collection
+    {
+        return static::whereIn('name', array_map('trim', $names))->get();
     }
 
     public function asPromptArray(Project $project): array {
