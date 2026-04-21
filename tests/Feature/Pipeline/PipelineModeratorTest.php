@@ -128,8 +128,6 @@ class PipelineModeratorTest extends TestCase
 
     public function test_path_b_runs_think_prioritize_for_all_selected_agents(): void
     {
-        $this->app->make(\Illuminate\Concurrency\ConcurrencyManager::class)->setDefaultInstance('sync');
-
         $thinkPrioResponse = "THINK:\n  GEDÄCHTNIS-UPDATE:\n  Was ich über den Nutzer weiß: Test.\n\nPRIORITIZE:\n  PRIORITÄT: 3\n  ANTWORT-TYP: Frage\n  BEGRÜNDUNG: Relevant.";
 
         $client = $this->mockClient();
@@ -138,7 +136,10 @@ class PipelineModeratorTest extends TestCase
             '{"winner":"Bob","reasoning":"Höchste Priorität."}',
             "Bob antwortet.\n\n[METADATEN — nicht sichtbar für andere]\nNEXT_SPEAKER: Alice\nADJACENCY_PAIR_TYPE: Assertion→Reaktion\nREASON: Bob hat Stellung bezogen."
         );
-        $client->shouldReceive('sendSlow')->twice()->andReturn($thinkPrioResponse);
+        $client->shouldReceive('sendManySlow')->once()->andReturn([
+            'Alice' => $thinkPrioResponse,
+            'Bob'   => $thinkPrioResponse,
+        ]);
 
         $this->instance(OpenAIClient::class, $client);
         $this->instance(PromptBuilder::class, $this->mockPrompts());
@@ -153,8 +154,6 @@ class PipelineModeratorTest extends TestCase
 
     public function test_path_b_falls_back_to_all_experts_when_selected_agents_empty(): void
     {
-        $this->app->make(\Illuminate\Concurrency\ConcurrencyManager::class)->setDefaultInstance('sync');
-
         $thinkPrioResponse = "THINK:\n  GEDÄCHTNIS-UPDATE:\n  Test.\n\nPRIORITIZE:\n  PRIORITÄT: 2\n  ANTWORT-TYP: Frage\n  BEGRÜNDUNG: Test.";
 
         $client = $this->mockClient();
@@ -163,7 +162,10 @@ class PipelineModeratorTest extends TestCase
             '{"winner":"Alice","reasoning":"Test."}',
             "Alice antwortet.\n\n[METADATEN — nicht sichtbar für andere]\nNEXT_SPEAKER: Nutzer\nADJACENCY_PAIR_TYPE: Frage→Antwort\nREASON: Test."
         );
-        $client->shouldReceive('sendSlow')->twice()->andReturn($thinkPrioResponse);
+        $client->shouldReceive('sendManySlow')->once()->andReturn([
+            'Alice' => $thinkPrioResponse,
+            'Bob'   => $thinkPrioResponse,
+        ]);
 
         $this->instance(OpenAIClient::class, $client);
         $this->instance(PromptBuilder::class, $this->mockPrompts());

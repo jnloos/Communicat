@@ -53,12 +53,12 @@ class ModeratorService
      *
      * @return array{path: string, addressed_agent: string|null, selected_agents: array, reasoning: string}
      */
-    public function route(string $moderationNote = ''): array
+    public function route(string $moderationNote = '', ?string $directAddressHint = null): array
     {
         $agents = $this->buildAgentsArray();
 
-        $prompt   = $this->prompts->moderatorRoute($this->project, $agents, $moderationNote);
-        $response = $this->client->sendFast($prompt);
+        $prompt   = $this->prompts->moderatorRoute($this->project, $agents, $moderationNote, $directAddressHint);
+        $response = $this->client->sendFast($prompt, 'moderator:route');
 
         $decoded = $this->parseJson($response);
 
@@ -93,8 +93,9 @@ class ModeratorService
      * Ask the moderator LLM to pick the winner from a set of THINK+PRIORITIZE outputs.
      *
      * @param  array<string, string> $thinkPrioritizeOutputs  agent name → raw output
+     * @param  array{addressee: string, pair_type?: string, from?: string}|null $openAdjacencyPair
      */
-    public function selectWinner(array $thinkPrioritizeOutputs): string
+    public function selectWinner(array $thinkPrioritizeOutputs, ?array $openAdjacencyPair = null): string
     {
         $agents = $this->buildAgentsArray();
 
@@ -103,8 +104,8 @@ class ModeratorService
             'recent_response_types'  => $this->project->settings['recent_response_types']  ?? [],
         ];
 
-        $prompt   = $this->prompts->moderatorSelect($this->project, $agents, $thinkPrioritizeOutputs, $state);
-        $response = $this->client->sendFast($prompt);
+        $prompt   = $this->prompts->moderatorSelect($this->project, $agents, $thinkPrioritizeOutputs, $state, $openAdjacencyPair);
+        $response = $this->client->sendFast($prompt, 'moderator:select');
 
         $decoded = $this->parseJson($response);
 

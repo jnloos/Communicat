@@ -4,9 +4,11 @@ namespace App\Jobs;
 
 use App\Events\JobLogged;
 use App\Events\MessageGenerated;
+use App\Events\UserInputRequested;
 use App\Jobs\Dependencies\ProjectJob;
 use App\Models\JobLog;
 use App\Models\Project;
+use App\Services\OpenAIClient;
 use App\Services\PipelineModerator;
 use Exception;
 use Illuminate\Bus\Queueable;
@@ -36,10 +38,16 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
             ]);
             JobLogged::dispatch($log);
 
+            OpenAIClient::bindJobLog($log->id);
+
             try {
-                (new PipelineModerator($project))->run();
+                $pipelineResult = (new PipelineModerator($project, $log->id))->run();
                 $log->update(['status' => 'success', 'finished_at' => now()]);
                 JobLogged::dispatch($log->fresh());
+
+                if (!empty($pipelineResult['stop'])) {
+                    UserInputRequested::dispatch($project->id, $pipelineResult['reason'] ?? 'stop');
+                }
             } catch (Exception $e) {
                 Log::error(sprintf("%s: %s", $e->getMessage(), $e->getTraceAsString()));
                 $log->update([
@@ -48,6 +56,8 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
                     'payload'     => ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()],
                 ]);
                 JobLogged::dispatch($log->fresh());
+            } finally {
+                OpenAIClient::bindJobLog(null);
             }
 
             MessageGenerated::dispatch($project->id);

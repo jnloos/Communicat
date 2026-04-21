@@ -24,6 +24,8 @@ class ControlChat extends Component
 
     public bool $isDispatching = false;
 
+    public bool $userInputRequested = false;
+
     #[Validate('required|string|min:3|max:1000')]
     public string $msgContent = '';
 
@@ -46,6 +48,7 @@ class ControlChat extends Component
 
         $this->keepGenerating = true;
         $this->isDispatching = true;
+        $this->userInputRequested = false;
 
         GenerationStarted::dispatch($this->projectId);
         MessageGenerator::dispatch($this->projectId);
@@ -76,10 +79,18 @@ class ControlChat extends Component
 
         $this->dispatch('message_generated');
 
-        if ($this->keepGenerating) {
+        if ($this->keepGenerating && !$this->userInputRequested) {
             $this->isDispatching = true;
             MessageGenerator::dispatch($this->projectId);
         }
+    }
+
+    #[On('echo-private:projects.{projectId},.UserInputRequested')]
+    public function onUserInputRequested(): void
+    {
+        $this->userInputRequested = true;
+        $this->keepGenerating = false;
+        $this->isDispatching = false;
     }
 
     public function sendMessage(): void
@@ -93,6 +104,14 @@ class ControlChat extends Component
         MessageSent::dispatch($this->projectId);
         $this->dispatch('message_sent');
         $this->reset('msgContent');
+        $this->userInputRequested = false;
+    }
+
+    public function updatedMsgContent(string $value): void
+    {
+        if ($this->userInputRequested && trim($value) !== '') {
+            $this->userInputRequested = false;
+        }
     }
 
     #[On(['contributors_modified'])]
@@ -112,6 +131,7 @@ class ControlChat extends Component
             'disableGenerate' => $jobRunning || $this->isDispatching,
             'showGenerate' => ! $this->keepGenerating && ! $this->isDispatching,
             'disabledControlsHint' => $disabledControlsHint,
+            'userInputRequested' => $this->userInputRequested,
         ]);
     }
 }

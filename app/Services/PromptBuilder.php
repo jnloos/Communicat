@@ -70,12 +70,13 @@ class PromptBuilder
      * @param array  $agents          Keyed by expert id → ['name', 'job'].
      * @param string $moderationNote  Optional moderation instruction from trigger checks.
      */
-    public function moderatorRoute(Project $project, array $agents, string $moderationNote = ''): string
+    public function moderatorRoute(Project $project, array $agents, string $moderationNote = '', ?string $directAddressHint = null): string
     {
         return view('prompts.moderator.route', [
-            'project'          => $project->asPromptArray(),
-            'agents'           => $agents,
-            'moderation_note'  => $moderationNote,
+            'project'             => $project->asPromptArray(),
+            'agents'              => $agents,
+            'moderation_note'     => $moderationNote,
+            'direct_address_hint' => $directAddressHint,
         ])->render();
     }
 
@@ -87,13 +88,19 @@ class PromptBuilder
      * @param array $thinkPrioritizeOutputs  Keyed by agent name → raw THINK+PRIORITIZE output string.
      * @param array $state                   ['recent_speakers' => [...], 'recent_response_types' => [...]].
      */
-    public function moderatorSelect(Project $project, array $agents, array $thinkPrioritizeOutputs, array $state): string
-    {
+    public function moderatorSelect(
+        Project $project,
+        array $agents,
+        array $thinkPrioritizeOutputs,
+        array $state,
+        ?array $openAdjacencyPair = null,
+    ): string {
         return view('prompts.moderator.select', [
             'project'                   => $project->asPromptArray(),
             'agents'                    => $agents,
             'think_prioritize_outputs'  => $thinkPrioritizeOutputs,
             'state'                     => $state,
+            'open_adjacency_pair'       => $openAdjacencyPair,
         ])->render();
     }
 

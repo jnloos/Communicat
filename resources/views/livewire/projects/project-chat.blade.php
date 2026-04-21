@@ -7,6 +7,7 @@
     <!-- Modals -->
     <livewire:projects.select-contributors :project="$project" />
     <livewire:projects.edit-project :project="$project" />
+    <livewire:projects.expert-thoughts-flyout :project="$project" />
 
     <!-- Project Management -->
     <div class="flex items-center justify-between flex-wrap gap-2">

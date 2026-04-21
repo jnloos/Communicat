@@ -20,7 +20,7 @@ class AgentService
     public function think(Expert $expert): string
     {
         $prompt   = $this->prompts->think($this->project, $expert);
-        $response = $this->client->sendSlow($prompt);
+        $response = $this->client->sendSlow($prompt, "think:{$expert->name}");
 
         $memoryBlock = $this->extractMemoryUpdate($response);
 
@@ -37,9 +37,27 @@ class AgentService
      */
     public function thinkAndPrioritize(Expert $expert): string
     {
-        $prompt   = $this->prompts->thinkAndPrioritize($this->project, $expert);
-        $response = $this->client->sendSlow($prompt);
+        $prompt   = $this->thinkAndPrioritizePrompt($expert);
+        $response = $this->client->sendSlow($prompt, "think+prioritize:{$expert->name}");
 
+        return $this->consumeThinkAndPrioritize($expert, $response);
+    }
+
+    /**
+     * Build the THINK+PRIORITIZE prompt for one expert without calling the LLM.
+     * Used by PipelineModerator PATH B to batch-send prompts concurrently.
+     */
+    public function thinkAndPrioritizePrompt(Expert $expert): string
+    {
+        return $this->prompts->thinkAndPrioritize($this->project, $expert);
+    }
+
+    /**
+     * Post-process a raw THINK+PRIORITIZE response: persist the GEDÄCHTNIS block
+     * for $expert and return the raw response for downstream selection.
+     */
+    public function consumeThinkAndPrioritize(Expert $expert, string $response): string
+    {
         $memoryBlock = $this->extractMemoryUpdate($response, 'PRIORITIZE:');
 
         $summary          = $expert->thoughtsAbout($this->project);
@@ -57,7 +75,7 @@ class AgentService
     public function speak(Expert $expert, string $thinkOutput, string $moderationNote = ''): array
     {
         $prompt   = $this->prompts->speak($this->project, $expert, $thinkOutput, $moderationNote);
-        $response = $this->client->sendFast($prompt);
+        $response = $this->client->sendFast($prompt, "speak:{$expert->name}");
 
         // Split off the [METADATEN block so we can parse metadata separately
         $metadataPos = strpos($response, '[METADATEN');

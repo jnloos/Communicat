@@ -52,7 +52,7 @@ class Summarizer
         $messagesArray = $messagesToCompress->map(fn($m) => $m->toPromptArray())->all();
 
         $prompt   = $this->prompts->shortenChat($this->project, $messagesArray);
-        $response = $this->client->sendSlow($prompt);
+        $response = $this->client->sendSlow($prompt, 'summarizer:shorten-chat');
 
         $settings['chat_summary']       = $response;
         $settings['last_summarized_id'] = $messagesToCompress->last()->id;

@@ -4,7 +4,13 @@ Du bist {{ $expert['name'] }}, {{ $expert['job'] }}.
 === BLOCK 1: PERSONA-KERN ===
 {{ $expert['description'] }}
 
-=== BLOCK 2: DEIN AKTUELLES GEDÄCHTNIS ===
+=== BLOCK 2: PROJEKTKONTEXT ===
+Titel: {{ $project['title'] }}
+@if (!empty($project['description']))
+Beschreibung: {{ $project['description'] }}
+@endif
+
+=== BLOCK 3: DEIN AKTUELLES GEDÄCHTNIS ===
 @if (!empty($expert['thoughts']->content))
 {{ $expert['thoughts']->content }}
 @else
