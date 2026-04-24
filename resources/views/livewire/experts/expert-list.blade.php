@@ -1,5 +1,6 @@
 @props([
     'experts' => [],
+    'hasFilters' => false,
 ])
 
 <div>
@@ -10,18 +11,31 @@
         </flux:button>
     </div>
 
-    <div class="my-5">
+    <div class="my-5 space-y-5">
         <livewire:experts.expert-editor/>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            @foreach ($experts as $expert)
-                <x-contributors.contributors-card @click="$wire.dispatch('edit_expert', { id: {{ $expert->id }} })"
-                    :name="$expert->name"
-                    :job="$expert->job"
-                    :avatar-url="$expert->avatar_url ?? null"
-                    :description="$expert->description"
-                    :seed="$expert->id"
-                />
-            @endforeach
-        </div>
+
+        <x-experts.filter-bar />
+
+        @if($experts->isEmpty())
+            <div class="text-center py-12 text-sm text-zinc-500 dark:text-zinc-400">
+                @if($hasFilters)
+                    {{ __('No experts match the current filters.') }}
+                @else
+                    {{ __('No experts yet.') }}
+                @endif
+            </div>
+        @else
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach ($experts as $expert)
+                    <x-contributors.contributors-card @click="$wire.dispatch('edit_expert', { id: {{ $expert->id }} })"
+                        :name="$expert->name"
+                        :job="$expert->job"
+                        :avatar-url="$expert->avatar_url ?? null"
+                        :description="$expert->description"
+                        :seed="$expert->id"
+                    />
+                @endforeach
+            </div>
+        @endif
     </div>
 </div>

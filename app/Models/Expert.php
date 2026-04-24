@@ -4,21 +4,39 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 class Expert extends Model
 {
     use HasFactory;
-    public function summaries(): HasMany {
+
+    protected $fillable = [
+        'name',
+        'avatar_url',
+        'job',
+        'description',
+        'prompt',
+    ];
+
+    public function summaries(): HasMany
+    {
         return $this->hasMany(Summary::class);
     }
 
-    public function projects(): MorphToMany {
+    public function projects(): MorphToMany
+    {
         return $this->morphToMany(Project::class, 'contributor', 'project_contributors');
     }
 
-    public function thoughtsAbout(int|Project $project): Summary {
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class);
+    }
+
+    public function thoughtsAbout(int|Project $project): Summary
+    {
         if ($project instanceof Project) {
             $project = $project->id;
         }
@@ -29,7 +47,8 @@ class Expert extends Model
         );
     }
 
-    public function isContributing(Project $project): bool {
+    public function isContributing(Project $project): bool
+    {
         return $this->projects()->whereKey($project->id)->exists();
     }
 
@@ -43,15 +62,16 @@ class Expert extends Model
         return static::whereIn('name', array_map('trim', $names))->get();
     }
 
-    public function asPromptArray(Project $project): array {
+    public function asPromptArray(Project $project): array
+    {
         $summary = $this->thoughtsAbout($project);
 
         return [
-            'name'        => $this->name,
-            'expert_id'   => $this->id,
-            'job'         => $this->job,
+            'name' => $this->name,
+            'expert_id' => $this->id,
+            'job' => $this->job,
             'description' => $this->prompt,
-            'thoughts'    => $summary,
+            'thoughts' => $summary,
         ];
     }
 }

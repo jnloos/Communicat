@@ -29,6 +29,11 @@
 
         <flux:input :label="__('Name')" wire:model.defer="name" />
         <flux:input :label="__('Job')" wire:model.defer="job" />
+        <flux:input
+            :label="__('Tags')"
+            :description="__('Comma-separated, e.g. Engineering, AI, Design')"
+            wire:model.defer="tagsInput"
+        />
         <flux:textarea :label="__('Description')" wire:model.defer="description" rows="10" />
         <flux:textarea :label="__('Prompt')" wire:model.defer="prompt" rows="10" />
 

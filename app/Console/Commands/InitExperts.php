@@ -3,9 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\Expert;
+use App\Models\Tag;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Storage;
 
 class InitExperts extends Command
 {
@@ -21,16 +20,18 @@ class InitExperts extends Command
      *
      * @var string
      */
-    protected $description = 'Initialize the experts table with data from a JSON file';
+    protected $description = 'Initialize or update the experts table with data from a JSON file (idempotent).';
 
     /**
      * Execute the console command.
      */
-    public function handle(): int {
+    public function handle(): int
+    {
         $file = $this->option('file');
 
-        if (!file_exists($file)) {
+        if (! file_exists($file)) {
             $this->error("File $file not found.");
+
             return 1;
         }
 
@@ -38,25 +39,41 @@ class InitExperts extends Command
         $experts = json_decode($json, true);
 
         if ($experts === null) {
-            $this->error("Failed to decode JSON.");
+            $this->error('Failed to decode JSON.');
+
             return 1;
         }
 
+        $created = 0;
+        $updated = 0;
+
         foreach ($experts as $expert) {
-            $model = new Expert();
+            $avatarUrl = ! empty($expert['avatar_url']) ? asset($expert['avatar_url']) : null;
 
-            $model->name = $expert['name'];
-            $model->description = $expert['description'];
-            $model->job = $expert['job'];
-            $model->prompt = $expert['prompt'];
+            $model = Expert::updateOrCreate(
+                ['name' => $expert['name']],
+                [
+                    'description' => $expert['description'],
+                    'job' => $expert['job'],
+                    'prompt' => $expert['prompt'],
+                    'avatar_url' => $avatarUrl,
+                ]
+            );
 
-            $url = asset($expert['avatar_url']);
-            $model->avatar_url = $url;
+            $tagIds = collect($expert['tags'] ?? [])
+                ->filter(fn ($name) => is_string($name) && trim($name) !== '')
+                ->map(fn (string $name) => Tag::firstOrCreateByName($name)->id)
+                ->unique()
+                ->values()
+                ->all();
 
-            $model->save();
+            $model->tags()->sync($tagIds);
+
+            $model->wasRecentlyCreated ? $created++ : $updated++;
         }
 
-        $this->info("Experts have been successfully initialized.");
+        $this->info("Experts initialized: {$created} created, {$updated} updated.");
+
         return 0;
     }
 }

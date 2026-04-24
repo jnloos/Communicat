@@ -4,6 +4,7 @@ namespace App\Livewire\Experts;
 
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Expert;
+use App\Models\Tag;
 use Flux\Flux;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
@@ -17,7 +18,7 @@ class ExpertEditor extends Component
     use NeedsConfirmation, WithFileUploads;
 
     #[Locked]
-    public int|null $expertId = null;
+    public ?int $expertId = null;
 
     #[Validate('required|string|max:255')]
     public string $name = '';
@@ -37,12 +38,16 @@ class ExpertEditor extends Component
     #[Validate('nullable|string')]
     public string $prompt = '';
 
+    #[Validate('nullable|string|max:500')]
+    public string $tagsInput = '';
+
     #[On('edit_expert')]
-    public function edit($id = null): void {
+    public function edit($id = null): void
+    {
         $this->resetForm();
 
         $expert = null;
-        if (!is_null($id)) {
+        if (! is_null($id)) {
             $expert = Expert::findOrFail($id);
             $this->expertId = $id;
         }
@@ -52,14 +57,18 @@ class ExpertEditor extends Component
         $this->job = $expert->job ?? '';
         $this->description = $expert->description ?? '';
         $this->prompt = $expert->prompt ?? '';
+        $this->tagsInput = $expert
+            ? $expert->tags()->orderBy('name')->pluck('name')->implode(', ')
+            : '';
 
         Flux::modal('edit-expert')->show();
     }
 
-    public function save(): void {
+    public function save(): void
+    {
         $this->validate();
 
-        $expert = $this->expertId ? Expert::findOrFail($this->expertId) : new Expert();
+        $expert = $this->expertId ? Expert::findOrFail($this->expertId) : new Expert;
 
         $expert->name = $this->name;
         $expert->job = $this->job;
@@ -67,11 +76,22 @@ class ExpertEditor extends Component
         $expert->prompt = $this->prompt;
         $expert->save();
 
-        if (!is_null($this->avatarUpload)) {
+        if (! is_null($this->avatarUpload)) {
             $this->deleteAvatar($expert->avatar_url);
             $expert->avatar_url = $this->storeAvatar($expert->id);
             $expert->save();
         }
+
+        $tagIds = collect(explode(',', $this->tagsInput))
+            ->map(fn ($name) => trim($name))
+            ->filter(fn ($name) => $name !== '')
+            ->unique()
+            ->map(fn (string $name) => Tag::firstOrCreateByName($name)->id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $expert->tags()->sync($tagIds);
 
         $this->expertId = $expert->id;
         $this->avatarUrl = $expert->avatar_url;
@@ -81,22 +101,26 @@ class ExpertEditor extends Component
         $this->dispatch('expert_modified');
     }
 
-    public function updatedAvatarUpload(): void {
-        if(!is_null($this->avatarUpload)) {
+    public function updatedAvatarUpload(): void
+    {
+        if (! is_null($this->avatarUpload)) {
             $this->avatarUrl = $this->avatarUpload->temporaryUrl();
             $this->dispatch('$refresh');
         }
     }
 
-    protected function storeAvatar(int $expertId): string {
+    protected function storeAvatar(int $expertId): string
+    {
         $extension = $this->avatarUpload->getClientOriginalExtension();
-        $filename = "expert-$expertId-avatar-" . time() . ".$extension";
+        $filename = "expert-$expertId-avatar-".time().".$extension";
         $path = $this->avatarUpload->storeAs(path: '/avatars/custom', name: $filename, options: 'public');
+
         return Storage::url($path);
     }
 
-    public function delete(): void {
-        if (!is_null($this->expertId)) {
+    public function delete(): void
+    {
+        if (! is_null($this->expertId)) {
             $expert = Expert::findOrFail($this->expertId);
             $this->deleteAvatar($expert->avatar_url);
             $expert->delete();
@@ -107,24 +131,30 @@ class ExpertEditor extends Component
         }
     }
 
-    protected function deleteAvatar(?string $url): void {
-        if(is_null($url)) return;
-        if (str_contains($url, 'public/avatars/static')) return;
+    protected function deleteAvatar(?string $url): void
+    {
+        if (is_null($url)) {
+            return;
+        }
+        if (str_contains($url, 'public/avatars/static')) {
+            return;
+        }
         $filename = basename(parse_url($url, PHP_URL_PATH));
-        $path = '/avatars/custom/' . $filename;
+        $path = '/avatars/custom/'.$filename;
         Storage::disk('public')->delete($path);
     }
 
-    protected function resetForm(): void {
-        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'job', 'description', 'prompt']);
+    protected function resetForm(): void
+    {
+        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'job', 'description', 'prompt', 'tagsInput']);
     }
 
-    public function render(): mixed {
-        $isUpdate = !is_null($this->expertId);
+    public function render(): mixed
+    {
+        $isUpdate = ! is_null($this->expertId);
+
         return view('livewire.experts.expert-editor', [
-            'isUpdate' => $isUpdate
+            'isUpdate' => $isUpdate,
         ]);
     }
 }
-
-
