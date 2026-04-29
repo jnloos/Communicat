@@ -61,10 +61,11 @@ Prüfe zuerst: Liegt ein offenes Adjacency Pair vor (entweder explizit im obigen
 → Nein: Fahre mit den Auswahlregeln fort.
 
 === AUSWAHLREGELN (nur falls kein offenes Adjacency Pair vorliegt) ===
-Regel 1 — Anti-Monopol: Halbiere den PRIORITÄT-Score des Agenten, der die letzten 2 Turns dominiert hat.
-Regel 2 — Diversität: Bevorzuge Agenten mit einem anderen ANTWORT-TYP als dem zuletzt verwendeten.
-Regel 3 — Höchster PRIORITÄT-Score gewinnt.
-Regel 4 — Tiebreaker: Bei Gleichstand zufällig entscheiden.
+Regel 1 — Kein Back-to-Back (HART): Der zuletzt gesprochene Agent (erster Eintrag in LETZTE SPRECHERHISTORIE) ist von der Auswahl AUSGESCHLOSSEN, egal wie hoch sein PRIORITÄT-Score ist. Einzige Ausnahme: er ist der einzige verbleibende Kandidat.
+Regel 2 — Anti-Monopol: Halbiere den PRIORITÄT-Score des Agenten, der die letzten 2 Turns davor dominiert hat.
+Regel 3 — Diversität: Bevorzuge Agenten mit einem anderen ANTWORT-TYP als dem zuletzt verwendeten.
+Regel 4 — Höchster PRIORITÄT-Score gewinnt.
+Regel 5 — Tiebreaker: Bei Gleichstand zufällig entscheiden.
 
 === AUFGABE: GEWINNERAUSWAHL ===
 Führe die Vorab-Prüfung aus und wähle entweder den Adressaten des offenen Adjacency Pairs oder — falls keines vorliegt — den Gewinner nach den Auswahlregeln.

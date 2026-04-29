@@ -110,18 +110,27 @@ class Project extends Model
     public function asPromptArray(int $numMsg = -1): array {
         $lastSummarizedId = $this->settings['last_summarized_id'] ?? 0;
 
+        // Pull newest-first so an optional take($numMsg) yields the most
+        // recent window, then reverse to chronological order before handing
+        // the list to prompts — LLMs read top-down and treat the last line
+        // as the most recent turn, so the user's latest message must be
+        // last in the rendered list.
         $query = $this->messages()
             ->where(function ($q) {
                 $q->whereNotNull('expert_id')->orWhereNotNull('user_id');
             })
             ->where('id', '>', $lastSummarizedId)
-            ->latest();
+            ->orderBy('id', 'desc');
 
         if ($numMsg > -1) {
             $query->take($numMsg);
         }
 
-        $messages = $query->get()->map(fn(Message $msg) => $msg->toPromptArray())->values()->all();
+        $messages = $query->get()
+            ->reverse()
+            ->map(fn(Message $msg) => $msg->toPromptArray())
+            ->values()
+            ->all();
 
         return [
             'title'        => $this->title,

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Expert;
 use App\Models\Project;
+use Illuminate\Support\Facades\Log;
 
 class AgentService
 {
@@ -23,10 +24,7 @@ class AgentService
         $response = $this->client->sendSlow($prompt, "think:{$expert->name}");
 
         $memoryBlock = $this->extractMemoryUpdate($response);
-
-        $summary          = $expert->thoughtsAbout($this->project);
-        $summary->content = $memoryBlock;
-        $summary->save();
+        $this->persistMemoryBlock($expert, $memoryBlock, $response, "think:{$expert->name}");
 
         return $response;
     }
@@ -59,12 +57,32 @@ class AgentService
     public function consumeThinkAndPrioritize(Expert $expert, string $response): string
     {
         $memoryBlock = $this->extractMemoryUpdate($response, 'PRIORITIZE:');
-
-        $summary          = $expert->thoughtsAbout($this->project);
-        $summary->content = $memoryBlock;
-        $summary->save();
+        $this->persistMemoryBlock($expert, $memoryBlock, $response, "think+prioritize:{$expert->name}");
 
         return $response;
+    }
+
+    /**
+     * Save the extracted GEDÄCHTNIS block, but never overwrite an existing memory
+     * with an empty value — that happens when the LLM refuses or returns a
+     * malformed response without the GEDÄCHTNIS-UPDATE marker.
+     */
+    protected function persistMemoryBlock(Expert $expert, string $memoryBlock, string $rawResponse, string $context): void
+    {
+        $summary = $expert->thoughtsAbout($this->project);
+
+        if ($memoryBlock === '') {
+            Log::warning('GEDÄCHTNIS-UPDATE marker missing in LLM response', [
+                'context'        => $context,
+                'project_id'     => $this->project->id,
+                'expert_id'      => $expert->id,
+                'response_first' => mb_substr($rawResponse, 0, 200),
+            ]);
+            return;
+        }
+
+        $summary->content = $memoryBlock;
+        $summary->save();
     }
 
     /**

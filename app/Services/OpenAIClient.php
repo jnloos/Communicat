@@ -15,6 +15,23 @@ class OpenAIClient
 
     protected static ?int $jobLogId = null;
 
+    /**
+     * System-level framing applied to every call. Prevents content-policy refusals
+     * on legitimate but politically/ethically charged debate topics by clarifying
+     * the simulation context. This is NOT a content filter bypass — the model still
+     * follows OpenAI policy; it just knows the personas are fictional.
+     */
+    protected const SYSTEM_INSTRUCTIONS = <<<'TXT'
+Du bist Teil einer akademischen Diskussionssimulation. Mehrere fiktive Experten mit klar definierten Rollen erörtern ein vom Nutzer vorgegebenes Thema.
+
+Wichtig:
+- Alle Personas sind erfunden und nehmen vorgegebene fachliche Perspektiven ein.
+- Die behandelten Themen — auch kontroverse, politische, ökonomische oder ethische — sind Gegenstand legitimer akademischer Diskussion und Lehre.
+- Verweigere keinen Beitrag wegen Kontroversität des Themas. Folge stattdessen strikt dem Format und der Persona, die im Nutzerprompt vorgegeben sind.
+- Halte dich an die im Prompt verlangte Ausgabestruktur (z.B. GEDÄCHTNIS-UPDATE, METADATEN-Block) wortwörtlich.
+- Vertritt Standpunkte, ohne als KI zu sprechen oder dich zu distanzieren.
+TXT;
+
     public function __construct() {
         $this->modelFast = config('apis.openai.model_fast');
         $this->modelSlow = config('apis.openai.model_slow');
@@ -31,8 +48,9 @@ class OpenAIClient
         $start = microtime(true);
 
         $response = $this->client->responses()->create([
-            'model' => $model,
-            'input' => $prompt,
+            'model'        => $model,
+            'instructions' => self::SYSTEM_INSTRUCTIONS,
+            'input'        => $prompt,
         ])->outputText;
 
         $this->logCall($label, $model, $prompt, $response, $start);
@@ -52,15 +70,17 @@ class OpenAIClient
         $apiKey = config('apis.openai.api_key');
         $model  = $model ?? $this->modelFast;
 
-        $keys  = array_keys($prompts);
-        $tasks = [];
+        $keys         = array_keys($prompts);
+        $instructions = self::SYSTEM_INSTRUCTIONS;
+        $tasks        = [];
         foreach ($prompts as $prompt) {
-            $tasks[] = static function () use ($apiKey, $model, $prompt) {
+            $tasks[] = static function () use ($apiKey, $model, $prompt, $instructions) {
                 $client = OpenAI::client($apiKey);
                 $start  = microtime(true);
                 $text   = $client->responses()->create([
-                    'model' => $model,
-                    'input' => $prompt,
+                    'model'        => $model,
+                    'instructions' => $instructions,
+                    'input'        => $prompt,
                 ])->outputText;
                 return ['response' => $text, 'latency_ms' => (int) round((microtime(true) - $start) * 1000)];
             };
@@ -72,7 +92,8 @@ class OpenAIClient
 
         foreach ($keys as $i => $key) {
             $results[$key] = $raw[$i]['response'];
-            $this->recordCall($label, $model, $promptArr[$i], $raw[$i]['response'], $raw[$i]['latency_ms']);
+            $entryLabel    = $label !== '' ? "{$label}:{$key}" : (string) $key;
+            $this->recordCall($entryLabel, $model, $promptArr[$i], $raw[$i]['response'], $raw[$i]['latency_ms']);
         }
 
         return $results;

@@ -17,11 +17,11 @@ class PromptBuilder
             ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job]])
             ->all();
 
-        return view('prompts.agent.think', [
+        return $this->decode(view('prompts.agent.think', [
             'expert'   => $expert->asPromptArray($project),
             'project'  => $project->asPromptArray(),
             'agents'   => $agents,
-        ])->render();
+        ])->render());
     }
 
     /**
@@ -34,11 +34,11 @@ class PromptBuilder
             ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job]])
             ->all();
 
-        return view('prompts.agent.think-prioritize', [
+        return $this->decode(view('prompts.agent.think-prioritize', [
             'expert'   => $expert->asPromptArray($project),
             'project'  => $project->asPromptArray(),
             'agents'   => $agents,
-        ])->render();
+        ])->render());
     }
 
     /**
@@ -54,13 +54,13 @@ class PromptBuilder
             ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job]])
             ->all();
 
-        return view('prompts.agent.speak', [
+        return $this->decode(view('prompts.agent.speak', [
             'expert'           => $expert->asPromptArray($project),
             'project'          => $project->asPromptArray(),
             'agents'           => $agents,
             'think_output'     => $thinkOutput,
             'moderation_note'  => $moderationNote,
-        ])->render();
+        ])->render());
     }
 
     /**
@@ -72,12 +72,12 @@ class PromptBuilder
      */
     public function moderatorRoute(Project $project, array $agents, string $moderationNote = '', ?string $directAddressHint = null): string
     {
-        return view('prompts.moderator.route', [
+        return $this->decode(view('prompts.moderator.route', [
             'project'             => $project->asPromptArray(),
             'agents'              => $agents,
             'moderation_note'     => $moderationNote,
             'direct_address_hint' => $directAddressHint,
-        ])->render();
+        ])->render());
     }
 
     /**
@@ -95,13 +95,13 @@ class PromptBuilder
         array $state,
         ?array $openAdjacencyPair = null,
     ): string {
-        return view('prompts.moderator.select', [
+        return $this->decode(view('prompts.moderator.select', [
             'project'                   => $project->asPromptArray(),
             'agents'                    => $agents,
             'think_prioritize_outputs'  => $thinkPrioritizeOutputs,
             'state'                     => $state,
             'open_adjacency_pair'       => $openAdjacencyPair,
-        ])->render();
+        ])->render());
     }
 
     /**
@@ -121,9 +121,9 @@ class PromptBuilder
             'messages'    => $messages,
         ];
 
-        return view('prompts.shorten-chat', [
+        return $this->decode(view('prompts.shorten-chat', [
             'project' => $projectData,
-        ])->render();
+        ])->render());
     }
 
     /**
@@ -132,9 +132,20 @@ class PromptBuilder
      */
     public function nextMessage(Project $project, Expert $expert): string
     {
-        return view('prompts.multiple.next-message', [
+        return $this->decode(view('prompts.multiple.next-message', [
             'project' => $project->asPromptArray(),
             'expert'  => $expert->asPromptArray($project),
-        ])->render();
+        ])->render());
+    }
+
+    /**
+     * Blade's `{{ }}` HTML-escapes values, which turns apostrophes into &#039;
+     * and ampersands into &amp; inside the rendered prompt. Some LLMs refuse
+     * personas whose names look corrupted ("Devil&#039;s Advocate"), so we
+     * decode entities once after rendering. Prompts are plain text, never HTML.
+     */
+    protected function decode(string $rendered): string
+    {
+        return html_entity_decode($rendered, ENT_QUOTES | ENT_HTML5, 'UTF-8');
     }
 }

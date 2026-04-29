@@ -35,6 +35,18 @@ class PipelineModerator
 
         $modNote = $moderator->checkTriggers();
 
+        // If the user just spoke and no expert has answered yet, this takes
+        // precedence over any other moderation trigger. The agents must
+        // address the user's latest message directly.
+        $pendingUser = $this->pendingUserMessage();
+        if ($pendingUser !== null) {
+            $excerpt = mb_substr(trim($pendingUser->content), 0, 240);
+            $userNote = "Die zuletzt eingegangene Nachricht stammt vom Nutzer und ist noch unbeantwortet: \""
+                . $excerpt
+                . "\". Der nächste Experten-Beitrag MUSS direkt darauf eingehen — als Antwort auf die Nutzeräußerung, nicht als Fortsetzung der vorherigen Experten-Diskussion.";
+            $modNote = $modNote === '' ? $userNote : $userNote . ' ' . $modNote;
+        }
+
         // Surface any deterministically detected direct addressee as a hint
         // to the moderator. The moderator still owns the final routing decision.
         $openPair   = $this->detectOpenAdjacencyPair();
@@ -70,7 +82,7 @@ class PipelineModerator
                 fn(Expert $e) => [$e->name => $agent->thinkAndPrioritizePrompt($e)]
             )->all();
 
-            $responses = $client->sendManySlow($promptMap);
+            $responses = $client->sendManySlow($promptMap, 'think+prioritize');
 
             // Persist per-expert GEDÄCHTNIS updates back on the main thread.
             $merged       = [];
@@ -108,6 +120,25 @@ class PipelineModerator
     {
         $normalized = mb_strtolower(trim($nextSpeaker));
         return in_array($normalized, ['nutzer', 'user'], true);
+    }
+
+    /**
+     * Returns the most recent message if it was sent by a user (i.e. no expert
+     * has spoken since). Used to inject a high-priority moderation note that
+     * forces the next expert turn to address the user directly.
+     */
+    protected function pendingUserMessage(): ?Message
+    {
+        $latest = $this->project->messages()
+            ->where(fn($q) => $q->whereNotNull('expert_id')->orWhereNotNull('user_id'))
+            ->latest('id')
+            ->first();
+
+        if ($latest === null || $latest->user_id === null) {
+            return null;
+        }
+
+        return $latest;
     }
 
     /**

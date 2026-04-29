@@ -120,6 +120,21 @@ class ModeratorService
             return (string) array_key_first($thinkPrioritizeOutputs);
         }
 
+        // Hard back-to-back guard: if the LLM picked the immediately previous
+        // speaker despite the moderator rule, swap to any other candidate.
+        // Skip the guard if the open-adjacency-pair path already mandates this
+        // speaker, or if there is no other candidate available.
+        $lastSpeaker = ($state['recent_speakers'][0] ?? null);
+        $isMandated  = $openAdjacencyPair !== null
+            && ($openAdjacencyPair['addressee'] ?? null) === $winner;
+
+        if (!$isMandated && $lastSpeaker !== null && $winner === $lastSpeaker) {
+            $alternatives = array_diff(array_keys($thinkPrioritizeOutputs), [$lastSpeaker]);
+            if (!empty($alternatives)) {
+                return (string) reset($alternatives);
+            }
+        }
+
         return $winner;
     }
 
