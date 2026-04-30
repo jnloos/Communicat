@@ -136,7 +136,7 @@ class ModeratorServiceTest extends TestCase
 
     public function test_route_parses_json_wrapped_in_markdown_fence(): void
     {
-        $response = "```json\n{\"path\":\"B\",\"addressed_agent\":null,\"selected_agents\":[\"Alice\"],\"reasoning\":\"Test.\"}\n```";
+        $response = "```json\n{\"path\":\"B\",\"addressed_agent\":null,\"selected_agents\":[\"Alice\",\"Bob\"],\"reasoning\":\"Test.\"}\n```";
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -147,6 +147,53 @@ class ModeratorServiceTest extends TestCase
 
         $this->assertSame('B', $result['path']);
         $this->assertContains('Alice', $result['selected_agents']);
+    }
+
+    public function test_route_normalizes_addressed_agent_case(): void
+    {
+        $json = '{"path":"A","addressed_agent":"alice","selected_agents":[],"reasoning":"Alice wurde angesprochen."}';
+
+        $client  = Mockery::mock(OpenAIClient::class);
+        $prompts = Mockery::mock(PromptBuilder::class);
+        $client->shouldReceive('sendFast')->once()->andReturn($json);
+        $prompts->shouldReceive('moderatorRoute')->once()->andReturn('prompt');
+
+        $result = (new ModeratorService($this->project, $client, $prompts))->route();
+
+        $this->assertSame('A', $result['path']);
+        $this->assertSame('Alice', $result['addressed_agent']);
+        $this->assertSame([], $result['selected_agents']);
+    }
+
+    public function test_route_promotes_single_selected_agent_to_path_a(): void
+    {
+        $json = '{"path":"B","addressed_agent":null,"selected_agents":["Bob"],"reasoning":"Bob passt fachlich am besten."}';
+
+        $client  = Mockery::mock(OpenAIClient::class);
+        $prompts = Mockery::mock(PromptBuilder::class);
+        $client->shouldReceive('sendFast')->once()->andReturn($json);
+        $prompts->shouldReceive('moderatorRoute')->once()->andReturn('prompt');
+
+        $result = (new ModeratorService($this->project, $client, $prompts))->route();
+
+        $this->assertSame('A', $result['path']);
+        $this->assertSame('Bob', $result['addressed_agent']);
+        $this->assertSame([], $result['selected_agents']);
+    }
+
+    public function test_route_uses_direct_address_hint_when_json_is_invalid(): void
+    {
+        $client  = Mockery::mock(OpenAIClient::class);
+        $prompts = Mockery::mock(PromptBuilder::class);
+        $client->shouldReceive('sendFast')->once()->andReturn('kein gültiges JSON');
+        $prompts->shouldReceive('moderatorRoute')->once()->andReturn('prompt');
+
+        $result = (new ModeratorService($this->project, $client, $prompts))
+            ->route('', 'Die letzte Nutzernachricht richtet eine Frage an Bob.');
+
+        $this->assertSame('A', $result['path']);
+        $this->assertSame('Bob', $result['addressed_agent']);
+        $this->assertSame([], $result['selected_agents']);
     }
 
     // -------------------------------------------------------------------------

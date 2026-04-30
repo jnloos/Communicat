@@ -56,35 +56,49 @@ class ModeratorService
     public function route(string $moderationNote = '', ?string $directAddressHint = null): array
     {
         $agents = $this->buildAgentsArray();
+        $knownNames = array_column(array_values($agents), 'name');
 
         $prompt   = $this->prompts->moderatorRoute($this->project, $agents, $moderationNote, $directAddressHint);
         $response = $this->client->sendFast($prompt, 'moderator:route');
 
         $decoded = $this->parseJson($response);
+        $hintedAgent = $this->findKnownNameInText($directAddressHint, $knownNames);
 
         if ($decoded === null) {
+            if ($hintedAgent !== null) {
+                return [
+                    'path'            => 'A',
+                    'addressed_agent' => $hintedAgent,
+                    'selected_agents' => [],
+                    'reasoning'       => 'Deterministischer Adresshinweis wurde angewendet.',
+                ];
+            }
+
             return [
                 'path'            => 'B',
                 'addressed_agent' => null,
-                'selected_agents' => array_column(array_values($agents), 'name'),
+                'selected_agents' => $knownNames,
                 'reasoning'       => '',
             ];
         }
 
-        $knownNames     = array_column(array_values($agents), 'name');
         $addressedAgent = isset($decoded['addressed_agent'])
-            ? trim((string) $decoded['addressed_agent'])
+            ? $this->normalizeKnownName((string) $decoded['addressed_agent'], $knownNames)
             : null;
+        $selectedAgents = $this->normalizeKnownNames($decoded['selected_agents'] ?? $knownNames, $knownNames);
 
-        // Reject addressed_agent if it isn't a known participant — fall back to PATH B
-        if ($addressedAgent !== null && !in_array($addressedAgent, $knownNames, true)) {
-            $addressedAgent = null;
+        if ($addressedAgent === null && $hintedAgent !== null) {
+            $addressedAgent = $hintedAgent;
+        }
+
+        if ($addressedAgent === null && count($selectedAgents) === 1) {
+            $addressedAgent = $selectedAgents[0];
         }
 
         return [
-            'path'            => ($addressedAgent !== null) ? 'A' : ($decoded['path'] ?? 'B'),
+            'path'            => ($addressedAgent !== null) ? 'A' : $this->normalizePath($decoded['path'] ?? 'B'),
             'addressed_agent' => $addressedAgent,
-            'selected_agents' => $decoded['selected_agents'] ?? $knownNames,
+            'selected_agents' => ($addressedAgent !== null) ? [] : $selectedAgents,
             'reasoning'       => $decoded['reasoning']       ?? '',
         ];
     }
@@ -179,6 +193,73 @@ class ModeratorService
         return $this->project->contributingExperts()
             ->mapWithKeys(fn(Expert $e) => [$e->id => ['name' => $e->name, 'job' => $e->job]])
             ->all();
+    }
+
+    protected function normalizePath(mixed $path): string
+    {
+        return strtoupper(trim((string) $path)) === 'A' ? 'A' : 'B';
+    }
+
+    /**
+     * Match LLM-provided names case-insensitively and return the canonical
+     * participant name used by the database.
+     *
+     * @param array<int, string> $knownNames
+     */
+    protected function normalizeKnownName(?string $name, array $knownNames): ?string
+    {
+        $normalized = mb_strtolower(trim((string) $name));
+        if ($normalized === '' || $normalized === 'null') {
+            return null;
+        }
+
+        foreach ($knownNames as $knownName) {
+            if (mb_strtolower($knownName) === $normalized) {
+                return $knownName;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param mixed $names
+     * @param array<int, string> $knownNames
+     * @return array<int, string>
+     */
+    protected function normalizeKnownNames(mixed $names, array $knownNames): array
+    {
+        if (!is_array($names)) {
+            return $knownNames;
+        }
+
+        $normalized = [];
+        foreach ($names as $name) {
+            $knownName = $this->normalizeKnownName((string) $name, $knownNames);
+            if ($knownName !== null && !in_array($knownName, $normalized, true)) {
+                $normalized[] = $knownName;
+            }
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * @param array<int, string> $knownNames
+     */
+    protected function findKnownNameInText(?string $text, array $knownNames): ?string
+    {
+        if ($text === null || trim($text) === '') {
+            return null;
+        }
+
+        foreach ($knownNames as $knownName) {
+            if (preg_match('/\b' . preg_quote($knownName, '/') . '\b/iu', $text)) {
+                return $knownName;
+            }
+        }
+
+        return null;
     }
 
     /**

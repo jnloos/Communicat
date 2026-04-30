@@ -38,8 +38,13 @@ DU MUSST PFAD A wählen und den genannten Agenten in "addressed_agent" setzen, e
 === AUFGABE: ROUTING-ENTSCHEIDUNG ===
 Analysiere das Gespräch und entscheide:
 
-PFAD A: Ein bestimmter Agent wurde direkt angesprochen oder eine eindeutige Frage richtet sich an eine konkrete Person.
-PFAD B: Kein bestimmter Agent wurde adressiert — mehrere Agenten könnten sinnvoll beitragen.
+PFAD A (Standardfall): Ein einzelner Agent soll als Nächstes sprechen. Wähle PFAD A nicht nur bei direkter Ansprache, sondern auch dann, wenn ein Agent den besten fachlichen Fit hat, ein offenes Argument fortführen kann oder ein klarer nächster Diskussionsschritt reicht.
+PFAD B (Ausnahmefall): Mehrere Agenten müssen vor der nächsten sichtbaren Antwort konkurrierend priorisiert werden, weil wirklich unklar ist, wer führen soll, oder weil zwei bis drei Perspektiven annähernd gleich zwingend sind.
+
+Zielverteilung über viele Turns: ungefähr 70% PFAD A, 30% PFAD B.
+Das ist keine harte Quote pro Einzelfall, aber ein Bias: Wenn PFAD A und PFAD B beide vertretbar sind, wähle PFAD A.
+
+Wähle PFAD B NICHT nur deshalb, weil mehrere Agenten theoretisch etwas beitragen könnten. In einer Diskussion spricht normalerweise erst der beste nächste Agent, danach kann er per NEXT_SPEAKER weitergeben.
 
 Für PFAD A: Benenne den adressierten Agenten in "addressed_agent". "selected_agents" bleibt ein leeres Array.
 Für PFAD B: Setze "addressed_agent" auf null. Benenne in "selected_agents" alle Agenten, die plausibel beitragen könnten.
@@ -47,8 +52,8 @@ Für PFAD B: Setze "addressed_agent" auf null. Benenne in "selected_agents" alle
 Gib AUSSCHLIESSLICH valides JSON aus. Kein erklärender Text davor oder danach.
 
 {
-  "path": "A oder B",
-  "addressed_agent": "Agentenname oder null",
-  "selected_agents": ["Name1", "Name2"],
+  "path": "A",
+  "addressed_agent": "Agentenname",
+  "selected_agents": [],
   "reasoning": "1 Satz Begründung"
 }
