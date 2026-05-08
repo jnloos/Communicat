@@ -32,7 +32,7 @@
     x-data="{
         speakingId: null,
         userTalking: false,
-        lastPlayedId: null,
+        lastPlayedId: @js($lastExpert?->id ?? null),
         latestMessage: @js($lastExpert ? [
             'id' => $lastExpert->id,
             'expert_id' => $lastExpert->expert_id,
@@ -48,8 +48,6 @@
             });
             this.updateStageWidth();
             window.addEventListener('resize', () => this.updateStageWidth());
-
-            this.playLatest();
         },
         updateStageWidth() {
             this.stageWidth = this.$el.getBoundingClientRect().width || 920;

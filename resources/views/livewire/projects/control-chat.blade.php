@@ -51,25 +51,24 @@
                         .join(' ')
                         .trim();
 
-                    this.transcript = text;
-                    $wire.set('msgContent', text);
+                    const rewritten = this.rewriteVoiceMentions(text);
+
+                    this.transcript = rewritten;
+                    $wire.set('msgContent', rewritten);
                     window.dispatchEvent(new CustomEvent('user-speaking', {
                         detail: { recording: this.recording, transcript: this.transcript },
                     }));
                 };
 
-                this.recognition.onend = async () => {
-                    const shouldSend = this.recording;
+                this.recognition.onend = () => {
                     this.recording = false;
 
                     window.dispatchEvent(new CustomEvent('user-speaking', {
                         detail: { recording: false, transcript: this.transcript },
                     }));
 
-                    if (shouldSend && this.transcript !== '') {
-                        await $wire.sendMessage();
-                        this.transcript = '';
-                    }
+                    // Kein Auto-Send mehr — der Nutzer bestätigt die erkannte
+                    // Eingabe manuell mit dem Senden-Button im Voice-Mode.
                 };
             }
         },
@@ -111,6 +110,32 @@
             } catch (_) {
                 return [];
             }
+        },
+        rewriteVoiceMentions(text) {
+            // Convert spoken contributor names into @-mentions so the
+            // backend PATH-A shortcut behaves identically to the text mode.
+            // Longest names first (full name wins over first-name partials).
+            // Lookbehind avoids double-prefixing already mentioned names;
+            // Unicode-aware boundaries protect against substring hits.
+            if (!text) return text;
+            const mentionables = this.readMentionables();
+            if (mentionables.length === 0) return text;
+
+            const sorted = [...mentionables].sort(
+                (a, b) => (b.name?.length ?? 0) - (a.name?.length ?? 0)
+            );
+
+            let out = text;
+            for (const item of sorted) {
+                if (!item?.name) continue;
+                const escaped = item.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const re = new RegExp(
+                    `(?<!@)(?<![\\p{L}\\p{M}\\p{Nd}])${escaped}(?![\\p{L}\\p{M}\\p{Nd}])`,
+                    'giu',
+                );
+                out = out.replace(re, `@${item.name}`);
+            }
+            return out;
         },
         onComposerInput(event) {
             const el = event.target;
@@ -359,6 +384,19 @@
                                 />
                             </flux:tooltip>
                         @endif
+
+                        <flux:tooltip :content="$sendTooltip" position="top">
+                            <flux:button
+                                type="button"
+                                size="base"
+                                variant="primary"
+                                icon="paper-airplane"
+                                x-on:click="$wire.sendMessage()"
+                                x-bind:disabled="@js($disableInput) || !($wire.msgContent ?? '').trim()"
+                                :aria-label="$sendTooltip"
+                                class="w-20 h-20 rounded-full cursor-pointer"
+                            />
+                        </flux:tooltip>
 
                         <flux:button
                             x-show="supportsSpeech"
