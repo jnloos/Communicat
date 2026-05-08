@@ -20,13 +20,33 @@ class AgentService
      */
     public function think(Expert $expert): string
     {
-        $prompt   = $this->prompts->think($this->project, $expert);
+        $prompt   = $this->thinkPrompt($expert);
         $response = $this->client->sendSlow($prompt, "think:{$expert->name}");
 
-        $memoryBlock = $this->extractMemoryUpdate($response);
-        $this->persistMemoryBlock($expert, $memoryBlock, $response, "think:{$expert->name}");
+        $this->consumeThink($expert, $response);
 
         return $response;
+    }
+
+    /**
+     * Build the THINK prompt for one expert without calling the LLM.
+     * Used by PipelineModerator's post-turn memory refresh to batch and run
+     * many THINKs concurrently via OpenAIClient::sendManySlow().
+     */
+    public function thinkPrompt(Expert $expert): string
+    {
+        return $this->prompts->think($this->project, $expert);
+    }
+
+    /**
+     * Post-process a raw THINK response: persist the GEDÄCHTNIS block for the
+     * given expert. No return value — caller already has the raw response if
+     * downstream steps need it (e.g. PATH A SPEAK).
+     */
+    public function consumeThink(Expert $expert, string $response, string $context = 'think'): void
+    {
+        $memoryBlock = $this->extractMemoryUpdate($response);
+        $this->persistMemoryBlock($expert, $memoryBlock, $response, "{$context}:{$expert->name}");
     }
 
     /**

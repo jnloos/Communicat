@@ -3,7 +3,23 @@
     'messages'
 ])
 
-<div class="w-full">
+<div
+    class="w-full"
+    x-data="{
+        mode: 'text',
+        init() {
+            this.$store.discussionMode.initForProject('{{ $project->id }}');
+            this.mode = this.$store.discussionMode.value;
+
+            this.$watch('$store.discussionMode.value', (value) => {
+                this.mode = value;
+            });
+        },
+        setMode(value) {
+            this.$store.discussionMode.setMode(value);
+        }
+    }"
+>
     <!-- Modals -->
     <livewire:projects.select-contributors :project="$project" />
     <livewire:projects.edit-project :project="$project" />
@@ -43,8 +59,15 @@
         </x-projects.contributor-group>
     </div>
 
+    <div class="mt-4 flex justify-end">
+        <flux:radio.group variant="segmented" x-model="mode" x-on:change="setMode(mode)">
+            <flux:radio value="text" icon="chat-bubble-left-right">{{ __('Text') }}</flux:radio>
+            <flux:radio value="voice" icon="microphone">{{ __('Voice') }}</flux:radio>
+        </flux:radio.group>
+    </div>
+
     <!-- Chat -->
-    <div class="relative py-6">
+    <div class="relative py-6" x-show="mode === 'text'">
         <!-- Fade top -->
         <div class="absolute top-6 left-0 right-0 h-2 bg-linear-to-b from-white dark:from-zinc-800 to-transparent z-10 pointer-events-none"></div>
         <div id="chat" class="relative w-full mx-auto overflow-y-auto marker" style="max-height: 84vh;"
@@ -109,6 +132,10 @@
                 @endforeach
             </div>
         </div>
+    </div>
+
+    <div x-show="mode === 'voice'" class="py-6">
+        <x-projects.voice-stage :project="$project" :messages="$messages" />
     </div>
 
     <!-- Chat Control -->

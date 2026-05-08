@@ -50,9 +50,35 @@ class PromptBuilder
      */
     public function speak(Project $project, Expert $expert, string $thinkOutput, string $moderationNote = ''): string
     {
-        $agents = $project->contributingExperts()
+        $contributors = $project->contributingExperts();
+
+        $agents = $contributors
             ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job]])
             ->all();
+
+        // Recent opening fragments per expert (kept by ModeratorService::updateState).
+        // Split into "own" (current expert) and "others" so the template can render
+        // both blocks separately and forbid wholesale repetition of any opener that
+        // appeared in the recent past — across all participants.
+        $allOpenings = $project->settings['recent_openings'] ?? [];
+
+        $ownOpenings = array_values($allOpenings[$expert->id] ?? []);
+
+        $otherOpenings = [];
+        foreach ($contributors as $contributor) {
+            if ($contributor->id === $expert->id) {
+                continue;
+            }
+            $list = $allOpenings[$contributor->id] ?? [];
+            if (empty($list)) {
+                continue;
+            }
+            // Only the most recent two openers per other expert.
+            $otherOpenings[] = [
+                'name'     => $contributor->name,
+                'openings' => array_slice(array_values($list), 0, 2),
+            ];
+        }
 
         return $this->decode(view('prompts.agent.speak', [
             'expert'           => $expert->asPromptArray($project),
@@ -60,6 +86,8 @@ class PromptBuilder
             'agents'           => $agents,
             'think_output'     => $thinkOutput,
             'moderation_note'  => $moderationNote,
+            'own_openings'     => $ownOpenings,
+            'other_openings'   => $otherOpenings,
         ])->render());
     }
 

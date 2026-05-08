@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Expert;
 use App\Models\Message;
 use App\Models\Project;
+use Illuminate\Support\Collection;
 
 class PipelineModerator
 {
@@ -49,9 +50,24 @@ class PipelineModerator
 
         // Surface any deterministically detected direct addressee as a hint
         // to the moderator. The moderator still owns the final routing decision.
-        $openPair   = $this->detectOpenAdjacencyPair();
-        $directHint = $this->detectDirectAddressHint();
-        $route      = $moderator->route($modNote, $directHint);
+        $openPair = $this->detectOpenAdjacencyPair();
+
+        // SHORTCUT — explicit "@Persona" mention in the latest user message:
+        // skip the moderator routing LLM call entirely and force PATH A on the
+        // mentioned expert. Saves a full LLM round-trip when the user already
+        // told us who should answer.
+        $mention = $this->extractUserMention($pendingUser, $this->project->contributingExperts());
+        if ($mention !== null) {
+            $route = [
+                'path'            => 'A',
+                'addressed_agent' => $mention->name,
+                'selected_agents' => [],
+                'reasoning'       => 'Direkte @-Ansprache durch Nutzer.',
+            ];
+        } else {
+            $directHint = $this->detectDirectAddressHint();
+            $route      = $moderator->route($modNote, $directHint);
+        }
 
         if ($route['path'] === 'A' && !empty($route['addressed_agent'])) {
             // ----------------------------------------------------------------
@@ -104,7 +120,11 @@ class PipelineModerator
         $message->job_log_id          = $this->jobLogId;
         $message->save();
 
-        $moderator->updateState($winner, $result['adjacency_pair_type']);
+        // Refresh the GEDÄCHTNIS of every persona that didn't already think
+        // this turn so all participants stay in sync with the latest message.
+        $this->postTurnThink($agent, $client, $winner, $route);
+
+        $moderator->updateState($winner, $result['adjacency_pair_type'], $result['content'] ?? '');
         $summarizer->maybeRun();
 
         $stop = $this->isUserAddressed($result['next_speaker'] ?? '');
@@ -120,6 +140,52 @@ class PipelineModerator
     {
         $normalized = mb_strtolower(trim($nextSpeaker));
         return in_array($normalized, ['nutzer', 'user'], true);
+    }
+
+    /**
+     * Refresh the GEDÄCHTNIS of every contributing expert that didn't already
+     * run THINK during the current turn. Speaker (PATH A and B) and PATH B
+     * candidates are skipped because their memory was already updated as part
+     * of the routing/selection step. All others are batched into a single
+     * concurrent LLM call so the cost stays bounded by one round-trip.
+     */
+    protected function postTurnThink(
+        AgentService $agent,
+        OpenAIClient $client,
+        Expert $winner,
+        array $route,
+    ): void {
+        $contributors = $this->project->contributingExperts();
+
+        $alreadyThought = collect([$winner->name]);
+        if (($route['path'] ?? null) === 'B') {
+            $alreadyThought = $alreadyThought->merge($route['selected_agents'] ?? []);
+        }
+        $alreadyThought = $alreadyThought
+            ->map(fn($name) => mb_strtolower(trim((string) $name)))
+            ->filter()
+            ->unique();
+
+        $todo = $contributors->reject(
+            fn(Expert $e) => $alreadyThought->contains(mb_strtolower($e->name))
+        );
+
+        if ($todo->isEmpty()) {
+            return;
+        }
+
+        $promptMap = $todo->mapWithKeys(
+            fn(Expert $e) => [$e->name => $agent->thinkPrompt($e)]
+        )->all();
+
+        $responses = $client->sendManySlow($promptMap, 'post-turn-think');
+
+        $byName = $todo->keyBy('name');
+        foreach ($responses as $name => $response) {
+            if (isset($byName[$name])) {
+                $agent->consumeThink($byName[$name], $response, 'post-turn-think');
+            }
+        }
     }
 
     /**
@@ -160,6 +226,61 @@ class PipelineModerator
             'user_mention'     => "Die letzte Nutzernachricht erwähnt {$pair['addressee']} namentlich.",
             default            => "Offenes Adjacency Pair adressiert {$pair['addressee']}.",
         };
+    }
+
+    /**
+     * Extract an explicit "@PersonaName" mention from the latest user message
+     * and resolve it against the project's contributing experts.
+     *
+     * Multi-word names are matched greedily up to three tokens (e.g. "@Sophie
+     * Wagner"). The longest match wins, so "@Sophie Wagner" is preferred over
+     * "@Sophie" when both are in the contributor list.
+     */
+    protected function extractUserMention(?Message $userMsg, Collection $contributors): ?Expert
+    {
+        if ($userMsg === null || $userMsg->user_id === null || empty($userMsg->content)) {
+            return null;
+        }
+
+        if ($contributors->isEmpty()) {
+            return null;
+        }
+
+        // Greedy: 1-3 whitespace-separated tokens of letters/digits/underscore/dash.
+        // Anchored to start-of-string or whitespace so '@' inside email-like
+        // text ("name@example.com") is ignored.
+        $pattern = '/(?:^|\s)@([\p{L}\p{M}\p{Nd}_\-]+(?:[ ][\p{L}\p{M}\p{Nd}_\-]+){0,2})/u';
+        if (!preg_match_all($pattern, $userMsg->content, $matches)) {
+            return null;
+        }
+
+        // Try every captured candidate; prefer the longest contributor name
+        // that still matches the candidate (so "@Sophie Wagner" wins over
+        // "@Sophie" if both exist).
+        foreach ($matches[1] as $candidate) {
+            $candidateLower = mb_strtolower(trim($candidate));
+            if ($candidateLower === '') {
+                continue;
+            }
+
+            $best = null;
+            foreach ($contributors as $expert) {
+                $nameLower = mb_strtolower($expert->name);
+                if ($candidateLower === $nameLower
+                    || str_starts_with($candidateLower, $nameLower . ' ')) {
+                    if ($best === null
+                        || mb_strlen($expert->name) > mb_strlen($best->name)) {
+                        $best = $expert;
+                    }
+                }
+            }
+
+            if ($best !== null) {
+                return $best;
+            }
+        }
+
+        return null;
     }
 
     /**

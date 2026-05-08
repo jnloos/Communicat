@@ -4,8 +4,10 @@ use App\Livewire\Settings\Users;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
+use App\Http\Controllers\MessageAudioController;
 use App\Models\Project;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function (Request $request) {
@@ -37,6 +39,10 @@ Route::middleware(['auth', 'verified'])
             return view('project', compact('project'));
         })->name('show');
     });
+
+Route::middleware(['auth', 'verified'])
+    ->get('messages/{message}/audio', [MessageAudioController::class, 'show'])
+    ->name('messages.audio');
 
 
 Route::get('experts', function () {

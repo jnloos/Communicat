@@ -18,6 +18,7 @@ class Expert extends Model
         'job',
         'description',
         'prompt',
+        'voice_id',
     ];
 
     public function summaries(): HasMany

@@ -296,4 +296,41 @@ class ModeratorServiceTest extends TestCase
         $this->assertSame(0, $counters[$this->expert1->id]);
         $this->assertSame(1, $counters[$this->expert2->id]);
     }
+
+    public function test_update_state_records_recent_opening_for_winner(): void
+    {
+        $content = "Aus architektonischer Sicht ist das problematisch.\nWeitere Details folgen.";
+
+        $this->makeService()->updateState($this->expert1, 'Frage→Antwort', $content);
+
+        $this->project->refresh();
+        $openings = $this->project->settings['recent_openings'][$this->expert1->id] ?? [];
+        $this->assertCount(1, $openings);
+        $this->assertStringStartsWith('Aus architektonischer Sicht', $openings[0]);
+    }
+
+    public function test_update_state_caps_recent_openings_per_expert_at_three(): void
+    {
+        $service = $this->makeService();
+
+        $service->updateState($this->expert1, 'type', 'Erstens kommt die Idee.');
+        $service->updateState($this->expert1, 'type', 'Zweitens muss man messen.');
+        $service->updateState($this->expert1, 'type', 'Drittens braucht es Tests.');
+        $service->updateState($this->expert1, 'type', 'Viertens dann erst skalieren.');
+
+        $this->project->refresh();
+        $openings = $this->project->settings['recent_openings'][$this->expert1->id] ?? [];
+        $this->assertCount(3, $openings);
+        $this->assertStringStartsWith('Viertens', $openings[0]);
+        $this->assertStringStartsWith('Drittens', $openings[1]);
+        $this->assertStringStartsWith('Zweitens', $openings[2]);
+    }
+
+    public function test_update_state_skips_recent_openings_when_content_empty(): void
+    {
+        $this->makeService()->updateState($this->expert1, 'type', '');
+
+        $this->project->refresh();
+        $this->assertArrayNotHasKey('recent_openings', $this->project->settings ?? []);
+    }
 }

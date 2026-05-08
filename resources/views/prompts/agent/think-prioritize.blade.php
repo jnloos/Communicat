@@ -35,19 +35,31 @@ Du hast soeben die aktuellen Nachrichten gelesen. Führe nun zwei Schritte durch
 
 Gib AUSSCHLIESSLICH den kombinierten THINK+PRIORITIZE-Block aus. Kein Gesprächstext, keine Begrüßung, keine Erklärung.
 
+Formatregeln (verbindlich):
+- Jede Gedächtnis-Sektion beginnt mit ihrem Marker in eckigen Klammern in einer eigenen Zeile.
+- Inhalt steht in den Folgezeilen bis zum nächsten Marker.
+- Die Marker [NUTZER], [EXPERTE: <Name>], [OFFENE_FRAGEN], [STAND] werden wörtlich übernommen — auch die eckigen Klammern.
+- Bei [OFFENE_FRAGEN] eine Liste mit "- " pro Eintrag; "keine" wenn nichts offen ist.
+- Keine zusätzlichen Marker, keine Markdown-Überschriften, keine Aufzählungen außerhalb von [OFFENE_FRAGEN].
+
 Pflichtformat:
 THINK:
-  GEDÄCHTNIS-UPDATE:
-  Was ich über den Nutzer weiß: ...
+GEDÄCHTNIS-UPDATE:
+[NUTZER]
+...
 @foreach ($agents as $agentId => $agent)
 @if ($agentId !== $expert['expert_id'])
-  Was ich über {{ $agent['name'] }} weiß: ...
+[EXPERTE: {{ $agent['name'] }}]
+...
 @endif
 @endforeach
-  Offene Fragen: ...
-  Letzter Gesprächsstand: ...
+[OFFENE_FRAGEN]
+- ...
+- ...
+[STAND]
+...
 
 PRIORITIZE:
-  PRIORITÄT: [1-5]
-  ANTWORT-TYP: [Frage / Zustimmung / Widerspruch / neue Information / Klärung]
-  BEGRÜNDUNG: [1 Satz]
+PRIORITÄT: [1-5]
+ANTWORT-TYP: [Frage / Zustimmung / Widerspruch / neue Information / Klärung]
+BEGRÜNDUNG: [1 Satz]

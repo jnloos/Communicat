@@ -16,3 +16,24 @@ if (reverbKey) {
         enabledTransports: ['ws', 'wss'],
     });
 }
+
+document.addEventListener('alpine:init', () => {
+    window.Alpine.store('discussionMode', {
+        value: 'text',
+        projectId: null,
+        initForProject(projectId) {
+            this.projectId = String(projectId);
+            const saved = window.localStorage.getItem(this.storageKey());
+            this.value = saved === 'voice' ? 'voice' : 'text';
+        },
+        storageKey() {
+            return `discussionMode:${this.projectId ?? 'global'}`;
+        },
+        setMode(mode) {
+            this.value = mode === 'voice' ? 'voice' : 'text';
+            if (this.projectId !== null) {
+                window.localStorage.setItem(this.storageKey(), this.value);
+            }
+        },
+    });
+});

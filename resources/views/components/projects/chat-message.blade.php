@@ -20,6 +20,28 @@
             $addressed = null;
         }
     }
+
+    // Render the message body and rewrite "@PersonaName" into clickable badges
+    // that open the matching expert's thoughts flyout. Longest contributor name
+    // first so "@Sophie Wagner" wins over a partial "@Sophie" match.
+    $renderedContent = Markdown::parse($msg->content);
+
+    $projectContributors = \App\Models\Expert::whereHas(
+            'projects',
+            fn($q) => $q->whereKey($msg->project_id)
+        )
+        ->get(['id', 'name'])
+        ->sortByDesc(fn($e) => mb_strlen($e->name));
+
+    foreach ($projectContributors as $contributor) {
+        $pattern = '/(?<![\w@])@' . preg_quote($contributor->name, '/') . '(?!\w)/u';
+        $replacement = sprintf(
+            '<button type="button" class="inline-flex items-center rounded px-1 -mx-1 text-amber-700 dark:text-amber-300 font-medium hover:bg-amber-100 dark:hover:bg-amber-900/30 cursor-pointer" onclick="this.dispatchEvent(new CustomEvent(\'open-expert-thoughts\', { detail: { expertId: %d }, bubbles: true, composed: true }))">@%s</button>',
+            $contributor->id,
+            e($contributor->name),
+        );
+        $renderedContent = preg_replace($pattern, $replacement, $renderedContent);
+    }
 @endphp
 
 <div class="block">
@@ -28,7 +50,7 @@
             <div id="{{ $id }}" wire:key="{{ $id }}" class="rounded-lg w-full sm:w-auto sm:min-w-sm z-0 px-5 pt-4 pb-8 break-words ms-2 sm:ms-30 bg-zinc-300 dark:bg-zinc-600">
                 <flux:heading size="lg" class="mb-2 font-bold">{{ $sender->name }}</flux:heading>
                 <span class="markdown-html">
-                    {!! Markdown::parse($msg->content) !!}
+                    {!! $renderedContent !!}
                 </span>
             </div>
         </div>
@@ -36,7 +58,7 @@
         <div class="flex justify-center mt-2">
             <div id="{{ $id }}" wire:key="{{ $id }}" class="rounded-lg w-full sm:w-auto sm:min-w-sm z-0 px-5 py-4 break-words bg-zinc-200">
                 <span class="markdown-html text-zinc-900">
-                    {!! Markdown::parse($msg->content) !!}
+                    {!! $renderedContent !!}
                 </span>
             </div>
         </div>
@@ -45,7 +67,7 @@
             <div id="{{ $id }}" wire:key="{{ $id }}" class="rounded-lg w-full sm:w-auto sm:min-w-sm z-0 px-5 pt-4 pb-8 break-words me-2 sm:me-30 bg-zinc-100 dark:bg-zinc-700">
                 <flux:heading size="lg" class="mb-2 font-bold">{{ $sender->name }}</flux:heading>
                 <span class="markdown-html">
-                    {!! Markdown::parse($msg->content) !!}
+                    {!! $renderedContent !!}
                 </span>
             </div>
         </div>

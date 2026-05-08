@@ -126,12 +126,22 @@ class ControlChat extends Component
             $disabledControlsHint = __('Waiting for the current expert message…');
         }
 
+        $mentionables = $this->project->contributingExperts()
+            ->map(fn($expert) => [
+                'name'       => $expert->name,
+                'job'        => $expert->job,
+                'avatar_url' => $expert->avatar_url,
+            ])
+            ->values()
+            ->all();
+
         return view('livewire.projects.control-chat', [
             'disableInput' => $jobRunning || $this->isDispatching,
             'disableGenerate' => $jobRunning || $this->isDispatching,
             'showGenerate' => ! $this->keepGenerating && ! $this->isDispatching,
             'disabledControlsHint' => $disabledControlsHint,
             'userInputRequested' => $this->userInputRequested,
+            'mentionables' => $mentionables,
         ]);
     }
 }

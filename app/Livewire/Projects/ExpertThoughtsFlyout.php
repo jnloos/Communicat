@@ -4,6 +4,7 @@ namespace App\Livewire\Projects;
 
 use App\Models\Expert;
 use App\Models\Project;
+use App\Services\MemoryFormatter;
 use Flux\Flux;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -34,9 +35,28 @@ class ExpertThoughtsFlyout extends Component
         $project  = Project::find($this->projectId);
         $thoughts = $expert && $project ? $expert->thoughtsAbout($project) : null;
 
+        $memory = app(MemoryFormatter::class)->parse($thoughts?->content);
+
+        // Resolve avatars for the experts mentioned inside the memory so the
+        // view can show a small face next to each "Über X"-card.
+        $expertAvatars = [];
+        if (!empty($memory['experts']) && $project !== null) {
+            $names = array_keys($memory['experts']);
+            $expertAvatars = Expert::whereIn('name', $names)
+                ->whereHas('projects', fn($q) => $q->whereKey($project->id))
+                ->get(['id', 'name', 'avatar_url'])
+                ->mapWithKeys(fn(Expert $e) => [$e->name => [
+                    'id'         => $e->id,
+                    'avatar_url' => $e->avatar_url,
+                ]])
+                ->all();
+        }
+
         return view('livewire.projects.expert-thoughts-flyout', [
-            'expert'   => $expert,
-            'thoughts' => $thoughts,
+            'expert'        => $expert,
+            'thoughts'      => $thoughts,
+            'memory'        => $memory,
+            'expertAvatars' => $expertAvatars,
         ]);
     }
 }

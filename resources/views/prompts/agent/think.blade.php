@@ -32,13 +32,25 @@ Du hast soeben die aktuellen Nachrichten gelesen. Aktualisiere nun dein persönl
 
 Gib AUSSCHLIESSLICH den aktualisierten GEDÄCHTNIS-UPDATE-Block aus. Kein Gesprächstext, keine Begrüßung, keine Erklärung.
 
+Formatregeln (verbindlich):
+- Jede Sektion beginnt mit ihrem Marker in eckigen Klammern in einer eigenen Zeile.
+- Inhalt steht in den Folgezeilen bis zum nächsten Marker.
+- Die Marker [NUTZER], [EXPERTE: <Name>], [OFFENE_FRAGEN], [STAND] werden wörtlich übernommen — auch die eckigen Klammern.
+- Bei [OFFENE_FRAGEN] eine Liste mit "- " pro Eintrag; "keine" wenn nichts offen ist.
+- Keine zusätzlichen Marker, keine Markdown-Überschriften, keine Aufzählungen außerhalb von [OFFENE_FRAGEN].
+
 Pflichtformat:
 GEDÄCHTNIS-UPDATE:
-Was ich über den Nutzer weiß: ...
+[NUTZER]
+...
 @foreach ($agents as $agentId => $agent)
 @if ($agentId !== $expert['expert_id'])
-Was ich über {{ $agent['name'] }} weiß: ...
+[EXPERTE: {{ $agent['name'] }}]
+...
 @endif
 @endforeach
-Offene Fragen: ...
-Letzter Gesprächsstand: ...
+[OFFENE_FRAGEN]
+- ...
+- ...
+[STAND]
+...

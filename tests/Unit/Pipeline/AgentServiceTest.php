@@ -76,6 +76,51 @@ class AgentServiceTest extends TestCase
         $this->assertSame('', $this->expert->thoughtsAbout($this->project)->content);
     }
 
+    public function test_think_prompt_does_not_call_llm(): void
+    {
+        $client  = Mockery::mock(OpenAIClient::class);
+        $prompts = Mockery::mock(PromptBuilder::class);
+        $prompts->shouldReceive('think')->once()->andReturn('rendered prompt');
+        $client->shouldNotReceive('sendSlow');
+        $client->shouldNotReceive('sendFast');
+
+        $prompt = (new AgentService($this->project, $client, $prompts))->thinkPrompt($this->expert);
+
+        $this->assertSame('rendered prompt', $prompt);
+    }
+
+    public function test_consume_think_persists_memory_block_without_llm_call(): void
+    {
+        $raw = "[NUTZER]\nLiebt PHP.\n[STAND]\nDiskussion über Laravel.";
+
+        $client  = Mockery::mock(OpenAIClient::class);
+        $prompts = Mockery::mock(PromptBuilder::class);
+        $client->shouldNotReceive('sendSlow');
+        $client->shouldNotReceive('sendFast');
+
+        (new AgentService($this->project, $client, $prompts))
+            ->consumeThink($this->expert, "GEDÄCHTNIS-UPDATE:\n{$raw}");
+
+        $content = $this->expert->thoughtsAbout($this->project)->content;
+        $this->assertStringContainsString('[NUTZER]', $content);
+        $this->assertStringContainsString('Liebt PHP.', $content);
+    }
+
+    public function test_consume_think_does_not_overwrite_existing_memory_with_empty(): void
+    {
+        $existing = $this->expert->thoughtsAbout($this->project);
+        $existing->content = "[NUTZER]\nVorhandene Notiz.";
+        $existing->save();
+
+        $client  = Mockery::mock(OpenAIClient::class);
+        $prompts = Mockery::mock(PromptBuilder::class);
+
+        (new AgentService($this->project, $client, $prompts))
+            ->consumeThink($this->expert, 'kein marker hier');
+
+        $this->assertStringContainsString('Vorhandene Notiz.', $this->expert->thoughtsAbout($this->project)->content);
+    }
+
     public function test_think_and_prioritize_strips_prioritize_section_from_memory(): void
     {
         $raw = "THINK:\n  GEDÄCHTNIS-UPDATE:\n  Was ich über den Nutzer weiß: Er liebt PHP.\n\nPRIORITIZE:\n  PRIORITÄT: 4\n  ANTWORT-TYP: Frage\n  BEGRÜNDUNG: Relevant.";

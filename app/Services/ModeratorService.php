@@ -153,9 +153,11 @@ class ModeratorService
     }
 
     /**
-     * Update project settings after a turn: recent speakers, response types, silence counters.
+     * Update project settings after a turn: recent speakers, response types,
+     * silence counters and (when $content is provided) the rolling list of
+     * each expert's recent opening fragments.
      */
-    public function updateState(Expert $winner, string $adjacencyType): void
+    public function updateState(Expert $winner, string $adjacencyType, string $content = ''): void
     {
         $settings = $this->project->settings ?? [];
 
@@ -177,8 +179,45 @@ class ModeratorService
         $silenceCounters[$winner->id] = 0;
         $settings['silence_counters'] = $silenceCounters;
 
+        // Recent openings per expert — short fragment of the opening sentence,
+        // kept as a ring buffer of the last 3 own turns. Used in speak.blade.php
+        // to prevent the same persona from re-using the same sentence opener.
+        $opening = $this->extractOpeningFragment($content);
+        if ($opening !== '') {
+            $recentOpenings = $settings['recent_openings'] ?? [];
+            $perExpert      = $recentOpenings[$winner->id] ?? [];
+            array_unshift($perExpert, $opening);
+            $recentOpenings[$winner->id] = array_slice($perExpert, 0, 3);
+            $settings['recent_openings'] = $recentOpenings;
+        }
+
         $this->project->settings = $settings;
         $this->project->save();
+    }
+
+    /**
+     * Extract the first ~10 words of the first non-empty line of a turn so
+     * the next prompt can show the agent which openers are now off-limits.
+     */
+    protected function extractOpeningFragment(string $content): string
+    {
+        $content = trim($content);
+        if ($content === '') {
+            return '';
+        }
+
+        $firstLine = preg_split('/\r?\n/u', $content)[0] ?? '';
+        $firstLine = trim($firstLine);
+        if ($firstLine === '') {
+            return '';
+        }
+
+        // Limit to first ~10 whitespace-separated tokens so we capture the
+        // opener style without storing whole sentences.
+        $tokens = preg_split('/\s+/u', $firstLine) ?: [];
+        $opener = implode(' ', array_slice($tokens, 0, 10));
+
+        return mb_substr($opener, 0, 120);
     }
 
     // -------------------------------------------------------------------------
