@@ -29,15 +29,12 @@
 
 <div
     class="max-w-240 mx-auto px-6 sm:px-10 lg:px-14"
+    data-last-expert-message-id="{{ $lastExpert?->id ?? '' }}"
+    data-last-expert-speaker-id="{{ $lastExpert?->expert_id ?? '' }}"
     x-data="{
         speakingId: null,
         userTalking: false,
-        lastPlayedId: @js($lastExpert?->id ?? null),
-        latestMessage: @js($lastExpert ? [
-            'id' => $lastExpert->id,
-            'expert_id' => $lastExpert->expert_id,
-            'content' => $lastExpert->content,
-        ] : null),
+        lastPlayedId: null,
         participantsCount: {{ $participants->count() }},
         stageWidth: 920,
         audio: new Audio(),
@@ -75,16 +72,17 @@
             return `left: 50%; top: 50%; transform: translate(calc(-50% + ${x}px), calc(-50% + ${y}px));`;
         },
         async playLatest() {
-            const msg = this.latestMessage;
-            if (!msg || !msg.id || !msg.expert_id || this.lastPlayedId === msg.id) {
+            const messageId = parseInt(this.$root.dataset.lastExpertMessageId || '', 10);
+            const speakerId = parseInt(this.$root.dataset.lastExpertSpeakerId || '', 10);
+            if (!messageId || !speakerId || this.lastPlayedId === messageId) {
                 return;
             }
 
-            this.lastPlayedId = msg.id;
-            this.audio.src = `{{ route('messages.audio', ['message' => '__MESSAGE__']) }}`.replace('__MESSAGE__', msg.id);
+            this.lastPlayedId = messageId;
+            this.audio.src = `{{ route('messages.audio', ['message' => '__MESSAGE__']) }}`.replace('__MESSAGE__', messageId);
 
             this.audio.onplay = () => {
-                this.speakingId = `expert-${msg.expert_id}`;
+                this.speakingId = `expert-${speakerId}`;
             };
             this.audio.onended = () => {
                 this.speakingId = null;
