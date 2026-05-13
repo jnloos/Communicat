@@ -50,14 +50,23 @@ class InitExperts extends Command
         foreach ($experts as $expert) {
             $avatarUrl = ! empty($expert['avatar_url']) ? asset($expert['avatar_url']) : null;
 
+            $attributes = [
+                'description' => $expert['description'],
+                'job' => $expert['job'],
+                'prompt' => $expert['prompt'],
+                'avatar_url' => $avatarUrl,
+            ];
+
+            if (array_key_exists('voice_id', $expert)) {
+                $voiceId = $expert['voice_id'];
+                $attributes['voice_id'] = is_string($voiceId) && trim($voiceId) !== ''
+                    ? trim($voiceId)
+                    : null;
+            }
+
             $model = Expert::updateOrCreate(
                 ['name' => $expert['name']],
-                [
-                    'description' => $expert['description'],
-                    'job' => $expert['job'],
-                    'prompt' => $expert['prompt'],
-                    'avatar_url' => $avatarUrl,
-                ]
+                $attributes
             );
 
             $tagIds = collect($expert['tags'] ?? [])
