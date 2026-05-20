@@ -64,7 +64,10 @@ class ProjectChat extends Component
     public function onMessageGenerated(): void
     {
         $this->updateHasMore();
-        $this->dispatch('message_generated');
+        // Dispatched AFTER this component re-renders, so the voice-stage's
+        // data-last-expert-* attributes already reflect the new turn when
+        // the listener fires playLatest().
+        $this->dispatch('message_generated', projectId: $this->projectId);
     }
 
     #[On('echo-private:projects.{projectId},.ContributorsChanged')]

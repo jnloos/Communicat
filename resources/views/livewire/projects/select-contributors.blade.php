@@ -6,6 +6,9 @@
     'suggestedIdSet' => [],
     'suggestionReasons' => [],
     'hasSuggestions' => false,
+    'canAddExpert' => true,
+    'expertLimit' => 5,
+    'limitWarning' => null,
 ])
 
 <flux:modal name="select-contributors" variant="flyout" class="md:w-[28rem]">
@@ -67,6 +70,16 @@
                     <p class="text-xs text-red-500 dark:text-red-400">{{ $suggestionError }}</p>
                 @endif
 
+                @if($limitWarning)
+                    <p class="text-xs rounded-md bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700/60 text-amber-800 dark:text-amber-200 px-3 py-2">
+                        {{ $limitWarning }}
+                    </p>
+                @elseif(!$canAddExpert)
+                    <p class="text-xs text-zinc-500 dark:text-zinc-400">
+                        {{ __('Limit erreicht: maximal :n Experten pro Projekt.', ['n' => $expertLimit]) }}
+                    </p>
+                @endif
+
                 <x-experts.filter-bar />
 
                 @if($experts->isEmpty())
@@ -81,8 +94,9 @@
                     @foreach ($experts as $expert)
                         @php($active = $expert->isContributing($project))
                         @php($isSuggested = isset($suggestedIdSet[$expert->id]))
+                        @php($limitBlocked = !$active && !$canAddExpert)
                         <x-contributors.contributors-card
-                            class="cursor-pointer {{ $active ? 'ring-2 ring-primary' : '' }}"
+                            class="cursor-pointer {{ $limitBlocked ? 'opacity-50' : '' }} {{ $active ? 'ring-2 ring-primary' : '' }}"
                             :name="$expert->name"
                             :job="$expert->job"
                             :avatar-url="$expert->avatar_url ?? null"

@@ -80,28 +80,64 @@
             {{-- No avatar for assistant messages --}}
         @elseif($msg->isExpert())
             <div class="flex items-center ms-5 gap-2">
-                <button
-                    type="button"
-                    title="{{ __('Gedanken von') }} {{ $sender->name }}"
-                    @click="$dispatch('open-expert-thoughts', { expertId: {{ $sender->id }} })"
-                    class="rounded-full cursor-pointer transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-                >
-                    <x-contributors.contributors-avatar :name="$sender->name" :avatar-url="$sender->avatar_url" class="w-12 h-12"/>
-                </button>
+                <div class="relative">
+                    <button
+                        type="button"
+                        title="{{ __('Gedanken von') }} {{ $sender->name }}"
+                        @click="$dispatch('open-expert-thoughts', { expertId: {{ $sender->id }} })"
+                        class="rounded-full cursor-pointer transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                    >
+                        <x-contributors.contributors-avatar :name="$sender->name" :avatar-url="$sender->avatar_url" class="w-12 h-12"/>
+                    </button>
+                    <button
+                        type="button"
+                        title="{{ __('Gedächtnis anzeigen') }}"
+                        @click="$dispatch('open-expert-thoughts', { expertId: {{ $sender->id }} })"
+                        class="absolute -bottom-1 -right-1 inline-flex items-center justify-center
+                               w-5 h-5 rounded-full
+                               bg-white dark:bg-zinc-800
+                               ring-2 ring-white dark:ring-zinc-800
+                               text-zinc-500 dark:text-zinc-300
+                               hover:text-amber-600 dark:hover:text-amber-400
+                               cursor-pointer transition-colors
+                               focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                        aria-label="{{ __('Gedächtnis anzeigen') }}"
+                    >
+                        <x-icons.brain class="w-3 h-3"/>
+                    </button>
+                </div>
 
                 @if ($addressed)
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-zinc-400 dark:text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <line x1="5" y1="12" x2="19" y2="12"/>
                         <polyline points="13 6 19 12 13 18"/>
                     </svg>
-                    <button
-                        type="button"
-                        title="{{ __('Angesprochen') }}: {{ $addressed->name }}"
-                        @click="$dispatch('open-expert-thoughts', { expertId: {{ $addressed->id }} })"
-                        class="rounded-full cursor-pointer transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-                    >
-                        <x-contributors.contributors-avatar :name="$addressed->name" :avatar-url="$addressed->avatar_url" class="w-9 h-9 opacity-90"/>
-                    </button>
+                    <div class="relative">
+                        <button
+                            type="button"
+                            title="{{ __('Angesprochen') }}: {{ $addressed->name }}"
+                            @click="$dispatch('open-expert-thoughts', { expertId: {{ $addressed->id }} })"
+                            class="rounded-full cursor-pointer transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                        >
+                            <x-contributors.contributors-avatar :name="$addressed->name" :avatar-url="$addressed->avatar_url" class="w-9 h-9 opacity-90"/>
+                        </button>
+                        <button
+                            type="button"
+                            title="{{ __('Gedächtnis anzeigen') }}"
+                            @click="$dispatch('open-expert-thoughts', { expertId: {{ $addressed->id }} })"
+                            class="absolute -bottom-0.5 -right-0.5 inline-flex items-center justify-center
+                                   w-4 h-4 rounded-full
+                                   bg-white dark:bg-zinc-800
+                                   ring-2 ring-white dark:ring-zinc-800
+                                   text-zinc-500 dark:text-zinc-300
+                                   hover:text-amber-600 dark:hover:text-amber-400
+                                   cursor-pointer transition-colors
+                                   focus:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
+                            aria-label="{{ __('Gedächtnis anzeigen') }}"
+                        >
+                            <x-icons.brain class="w-2.5 h-2.5"/>
+                        </button>
+                    </div>
                 @endif
             </div>
         @else {{-- Other user --}}

@@ -120,10 +120,6 @@ class PipelineModerator
         $message->job_log_id          = $this->jobLogId;
         $message->save();
 
-        // Refresh the GEDÄCHTNIS of every persona that didn't already think
-        // this turn so all participants stay in sync with the latest message.
-        $this->postTurnThink($agent, $client, $winner, $route);
-
         $moderator->updateState($winner, $result['adjacency_pair_type'], $result['content'] ?? '');
         $summarizer->maybeRun();
 
@@ -140,52 +136,6 @@ class PipelineModerator
     {
         $normalized = mb_strtolower(trim($nextSpeaker));
         return in_array($normalized, ['nutzer', 'user'], true);
-    }
-
-    /**
-     * Refresh the GEDÄCHTNIS of every contributing expert that didn't already
-     * run THINK during the current turn. Speaker (PATH A and B) and PATH B
-     * candidates are skipped because their memory was already updated as part
-     * of the routing/selection step. All others are batched into a single
-     * concurrent LLM call so the cost stays bounded by one round-trip.
-     */
-    protected function postTurnThink(
-        AgentService $agent,
-        OpenAIClient $client,
-        Expert $winner,
-        array $route,
-    ): void {
-        $contributors = $this->project->contributingExperts();
-
-        $alreadyThought = collect([$winner->name]);
-        if (($route['path'] ?? null) === 'B') {
-            $alreadyThought = $alreadyThought->merge($route['selected_agents'] ?? []);
-        }
-        $alreadyThought = $alreadyThought
-            ->map(fn($name) => mb_strtolower(trim((string) $name)))
-            ->filter()
-            ->unique();
-
-        $todo = $contributors->reject(
-            fn(Expert $e) => $alreadyThought->contains(mb_strtolower($e->name))
-        );
-
-        if ($todo->isEmpty()) {
-            return;
-        }
-
-        $promptMap = $todo->mapWithKeys(
-            fn(Expert $e) => [$e->name => $agent->thinkPrompt($e)]
-        )->all();
-
-        $responses = $client->sendManySlow($promptMap, 'post-turn-think');
-
-        $byName = $todo->keyBy('name');
-        foreach ($responses as $name => $response) {
-            if (isset($byName[$name])) {
-                $agent->consumeThink($byName[$name], $response, 'post-turn-think');
-            }
-        }
     }
 
     /**

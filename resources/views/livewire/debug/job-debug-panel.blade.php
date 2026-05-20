@@ -1,4 +1,4 @@
-<div>
+<div wire:poll.1000ms>
     <!-- Trigger Button (fixed bottom-right) -->
     <button
         wire:click="open"

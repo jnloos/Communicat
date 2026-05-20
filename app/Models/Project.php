@@ -17,6 +17,8 @@ class Project extends Model
 
     protected $casts = ['settings' => 'array'];
 
+    public const MAX_CONTRIBUTING_EXPERTS = 5;
+
     public function messages(): HasMany {
         return $this->hasMany(Message::class);
     }
@@ -55,6 +57,10 @@ class Project extends Model
 
     public function contributingExperts(): Collection {
         return $this->experts()->get();
+    }
+
+    public function canAddExpert(): bool {
+        return $this->experts()->count() < self::MAX_CONTRIBUTING_EXPERTS;
     }
 
     public function addContributingUser(User $user): void {

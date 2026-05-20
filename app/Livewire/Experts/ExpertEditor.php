@@ -5,6 +5,7 @@ namespace App\Livewire\Experts;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Expert;
 use App\Models\Tag;
+use App\Support\VoiceCatalog;
 use Flux\Flux;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
@@ -41,6 +42,12 @@ class ExpertEditor extends Component
     #[Validate('nullable|string|max:500')]
     public string $tagsInput = '';
 
+    #[Validate('required|in:female,male')]
+    public string $voiceGender = 'female';
+
+    #[Validate('nullable|string|max:64')]
+    public string $voiceId = '';
+
     #[On('edit_expert')]
     public function edit($id = null): void
     {
@@ -61,7 +68,24 @@ class ExpertEditor extends Component
             ? $expert->tags()->orderBy('name')->pluck('name')->implode(', ')
             : '';
 
+        $this->voiceId = $expert->voice_id ?? '';
+        $this->voiceGender = $this->resolveGenderForVoice($this->voiceId) ?? 'female';
+
         Flux::modal('edit-expert')->show();
+    }
+
+    public function updatedVoiceGender(): void
+    {
+        // Reset voice selection so the dropdown doesn't show a value from the
+        // other gender's list. The user actively picks a new voice.
+        if ($this->voiceId !== '' && $this->resolveGenderForVoice($this->voiceId) !== $this->voiceGender) {
+            $this->voiceId = '';
+        }
+    }
+
+    protected function resolveGenderForVoice(?string $voiceId): ?string
+    {
+        return VoiceCatalog::genderFor($voiceId);
     }
 
     public function save(): void
@@ -74,6 +98,7 @@ class ExpertEditor extends Component
         $expert->job = $this->job;
         $expert->description = $this->description;
         $expert->prompt = $this->prompt;
+        $expert->voice_id = $this->voiceId !== '' ? $this->voiceId : null;
         $expert->save();
 
         if (! is_null($this->avatarUpload)) {
@@ -146,15 +171,27 @@ class ExpertEditor extends Component
 
     protected function resetForm(): void
     {
-        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'job', 'description', 'prompt', 'tagsInput']);
+        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'job', 'description', 'prompt', 'tagsInput', 'voiceId', 'voiceGender']);
     }
 
     public function render(): mixed
     {
         $isUpdate = ! is_null($this->expertId);
 
+        $voices = (array) config("voices.$this->voiceGender", []);
+
+        // Preserve a current value that is not in the active gender's list
+        // (legacy data or gender mismatch) so saving doesn't drop it silently.
+        if ($this->voiceId !== '' && ! collect($voices)->contains(fn($v) => ($v['id'] ?? null) === $this->voiceId)) {
+            $voices = array_merge(
+                [['id' => $this->voiceId, 'label' => __('— aktuelle Stimme: ') . $this->voiceId]],
+                $voices
+            );
+        }
+
         return view('livewire.experts.expert-editor', [
             'isUpdate' => $isUpdate,
+            'voices' => $voices,
         ]);
     }
 }

@@ -1,5 +1,6 @@
 @props([
-    '$isUpdate' => false
+    '$isUpdate' => false,
+    'voices' => [],
 ])
 
 <flux:modal name="edit-expert" variant="flyout" class="md:w-96">
@@ -36,6 +37,28 @@
         />
         <flux:textarea :label="__('Description')" wire:model.defer="description" rows="10" />
         <flux:textarea :label="__('Prompt')" wire:model.defer="prompt" rows="10" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <flux:select
+                :label="__('Geschlecht')"
+                wire:model.live="voiceGender"
+                class="sm:col-span-1"
+            >
+                <flux:select.option value="female">{{ __('Weiblich') }}</flux:select.option>
+                <flux:select.option value="male">{{ __('Männlich') }}</flux:select.option>
+            </flux:select>
+
+            <flux:select
+                :label="__('Stimme')"
+                wire:model.defer="voiceId"
+                class="sm:col-span-2"
+            >
+                <flux:select.option value="">{{ __('— keine Stimme —') }}</flux:select.option>
+                @foreach ($voices as $voice)
+                    <flux:select.option value="{{ $voice['id'] }}">{{ $voice['label'] }}</flux:select.option>
+                @endforeach
+            </flux:select>
+        </div>
 
         <flux:spacer/>
         <div class="flex items-center justify-between">

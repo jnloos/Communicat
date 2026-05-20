@@ -77,7 +77,10 @@ class ControlChat extends Component
     {
         $this->isDispatching = false;
 
-        $this->dispatch('message_generated');
+        // The browser-side `message_generated` event is dispatched by
+        // ProjectChat after IT re-rendered (so voice-stage's data-*
+        // attributes are fresh). Duplicating the dispatch here would race
+        // ahead of the DOM morph.
 
         if ($this->keepGenerating && !$this->userInputRequested) {
             $this->isDispatching = true;
@@ -91,6 +94,8 @@ class ControlChat extends Component
         $this->userInputRequested = true;
         $this->keepGenerating = false;
         $this->isDispatching = false;
+
+        $this->dispatch('user-input-requested', projectId: $this->projectId);
     }
 
     public function sendMessage(): void
@@ -103,6 +108,7 @@ class ControlChat extends Component
         $this->project->addMessage($this->msgContent, auth()->user());
         MessageSent::dispatch($this->projectId);
         $this->dispatch('message_sent');
+        $this->dispatch('user-input-cleared', projectId: $this->projectId);
         $this->reset('msgContent');
         $this->userInputRequested = false;
     }
@@ -111,6 +117,7 @@ class ControlChat extends Component
     {
         if ($this->userInputRequested && trim($value) !== '') {
             $this->userInputRequested = false;
+            $this->dispatch('user-input-cleared', projectId: $this->projectId);
         }
     }
 

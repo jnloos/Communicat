@@ -150,3 +150,11 @@ select:focus[data-flux-control] {
 .markdown-html hr {
   @apply my-5 border-t-2;
 }
+
+/* Voice stage tiles: animate filter/transform/ring/shadow together so the
+   transition between grayscale-default and full-color speaker/addressed
+   states feels fluid instead of snapping. */
+.voice-tile {
+  transition: filter 400ms ease, transform 300ms ease,
+              box-shadow 300ms ease, --tw-ring-color 300ms ease;
+}

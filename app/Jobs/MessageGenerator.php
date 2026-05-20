@@ -60,7 +60,12 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
                 OpenAIClient::bindJobLog(null);
             }
 
-            MessageGenerated::dispatch($project->id);
+            $latestMessageId = $project->messages()
+                ->whereNotNull('expert_id')
+                ->latest('id')
+                ->value('id');
+
+            MessageGenerated::dispatch($project->id, $latestMessageId);
         });
     }
 }

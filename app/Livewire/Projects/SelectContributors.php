@@ -36,6 +36,8 @@ class SelectContributors extends Component
 
     public ?string $suggestionError = null;
 
+    public ?string $limitWarning = null;
+
     public function hasActiveFilters(): bool
     {
         return trim($this->search) !== '';
@@ -67,8 +69,17 @@ class SelectContributors extends Component
 
     public function addExpert(int $expertId): void
     {
+        if (! $this->forProject->canAddExpert()) {
+            $this->limitWarning = __(
+                'Maximal :n Experten pro Projekt.',
+                ['n' => Project::MAX_CONTRIBUTING_EXPERTS]
+            );
+            return;
+        }
+
         $expert = Expert::findOrFail($expertId);
         $this->forProject->addContributingExpert($expert);
+        $this->limitWarning = null;
         ContributorsChanged::dispatch($this->forProjectId);
         $this->dispatch('contributors_modified');
     }
@@ -77,6 +88,7 @@ class SelectContributors extends Component
     {
         $expert = Expert::findOrFail($expertId);
         $this->forProject->removeContributingExpert($expert);
+        $this->limitWarning = null;
         ContributorsChanged::dispatch($this->forProjectId);
         $this->dispatch('contributors_modified');
     }
@@ -211,6 +223,8 @@ class SelectContributors extends Component
             ->orderBy('name')
             ->get();
 
+        $canAddExpert = $this->forProject->canAddExpert();
+
         return view('livewire.projects.select-contributors', [
             'experts' => $experts,
             'users' => $users,
@@ -219,6 +233,9 @@ class SelectContributors extends Component
             'suggestedIdSet' => array_flip($existingSuggestedIds),
             'suggestionReasons' => $this->suggestionReasons,
             'hasSuggestions' => ! empty($existingSuggestedIds),
+            'canAddExpert' => $canAddExpert,
+            'expertLimit' => Project::MAX_CONTRIBUTING_EXPERTS,
+            'limitWarning' => $this->limitWarning,
         ]);
     }
 }

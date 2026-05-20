@@ -5,6 +5,7 @@ use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Http\Controllers\MessageAudioController;
+use App\Http\Controllers\ProjectExportController;
 use App\Models\Project;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Gate;
@@ -38,6 +39,9 @@ Route::middleware(['auth', 'verified'])
             Cookie::queue('curr_project', str($project->id), minutes: 60 * 24 * 31);
             return view('project', compact('project'));
         })->name('show');
+
+        Route::get('{project}/export/json', [ProjectExportController::class, 'json'])
+            ->name('export.json');
     });
 
 Route::middleware(['auth', 'verified'])
