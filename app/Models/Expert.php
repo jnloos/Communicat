@@ -39,6 +39,7 @@ class Expert extends Model
     public function thoughtsAbout(int|Project $project): Summary
     {
         if ($project instanceof Project) {
+
             $project = $project->id;
         }
 
