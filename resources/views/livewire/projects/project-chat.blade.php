@@ -26,14 +26,15 @@
     <livewire:projects.expert-thoughts-flyout :project="$project" />
 
     <!-- Project Management -->
-    <div class="flex items-center justify-between flex-wrap gap-2">
-        <div class="flex">
+    <div class="flex items-center gap-2">
+        {{-- Left: settings/leave + title (equal flex so the tabs stay centered) --}}
+        <div class="flex-1 min-w-0 flex items-center">
             @can('manage-project', $project)
                 <flux:tooltip :content="__('Project settings')" position="bottom">
                     <flux:button
                         variant="primary"
                         icon="cog"
-                        class="me-3 cursor-pointer"
+                        class="me-3 cursor-pointer shrink-0"
                         :aria-label="__('Project settings')"
                         @click="$wire.dispatch('edit_project')"
                     />
@@ -43,26 +44,29 @@
                     <flux:button
                         variant="primary"
                         icon="arrow-left-end-on-rectangle"
-                        class="me-3 cursor-pointer"
+                        class="me-3 cursor-pointer shrink-0"
                         :aria-label="__('Leave project')"
                         wire:click="needsConfirmation('leaveProject')"
                     />
                 </flux:tooltip>
             @endcan
-            <flux:heading size="xl" class="my-auto">
-                {{ __('Project') . ': ' . $project->title }}
+            <flux:heading size="xl" class="my-auto truncate">
+                {{ $project->title }}
             </flux:heading>
         </div>
 
-        <flux:radio.group variant="segmented" x-model="mode" x-on:change="setMode(mode)"
-            class="order-last w-full justify-center md:order-none md:w-auto">
+        {{-- Center: tab selection — always exactly centered --}}
+        <flux:radio.group variant="segmented" x-model="mode" x-on:change="setMode(mode)" class="shrink-0">
             <flux:radio value="text" icon="chat-bubble-left-right">{{ __('Text') }}</flux:radio>
             <flux:radio value="voice" icon="microphone">{{ __('Voice') }}</flux:radio>
         </flux:radio.group>
 
-        <x-projects.contributor-group :contributors="$project->experts()->get()->concat($project->users()->get())" :label="__('Set Contributors')" @click="$wire.dispatch('select_contributors')">
-            {{ __('Add ') }}
-        </x-projects.contributor-group>
+        {{-- Right: contributors (equal flex, right-aligned) --}}
+        <div class="flex-1 min-w-0 flex justify-end">
+            <x-projects.contributor-group :contributors="$project->experts()->get()->concat($project->users()->whereKeyNot(auth()->id())->get())" :label="__('Set Contributors')" @click="$wire.dispatch('select_contributors')">
+                {{ __('Add ') }}
+            </x-projects.contributor-group>
+        </div>
     </div>
 
     <!-- Chat -->

@@ -1,6 +1,7 @@
 @props([
     'disableInput'         => false,
     'disableGenerate'      => false,
+    'disableStop'          => false,
     'showGenerate'         => true,
     'disabledControlsHint' => null,
     'userInputRequested'   => false,
@@ -15,6 +16,7 @@
 
 <div
     class="fixed bottom-0 left-0 w-full lg:left-[15vw] lg:w-[85vw] z-50"
+    @unless($showGenerate) wire:poll.30s="heartbeat" @endunless
     :data-mentionables="@js(json_encode(array_values($mentionables), JSON_UNESCAPED_UNICODE))"
     x-data="{
         mode: 'text',
@@ -28,6 +30,9 @@
         mentionMatches: [],
         mentionIndex: 0,
         activeInput: null,
+        popEnabled: true,
+        audioCtx: null,
+        popListener: null,
         init() {
             this.mode = this.$store.discussionMode?.value ?? 'text';
             this.$watch('$store.discussionMode.value', (value) => {
@@ -37,6 +42,22 @@
                 }
                 this.closeMention();
             });
+
+            // Chat message 'pop' sound — opt-in, persisted per browser. Plays a
+            // short blip when a new message arrives while the Text tab is open.
+            this.popEnabled = localStorage.getItem('chatPop') !== '0';
+            this.popListener = (event) => {
+                if (!this.popEnabled) return;
+                if ((this.$store.discussionMode?.value ?? 'text') !== 'text') return;
+                // Pop only for messages of THIS project.
+                if (String(event.detail?.projectId ?? '') !== '{{ $projectId }}') return;
+                // Skip the user's OWN message: user-sent messages carry a
+                // senderId; an expert/AI message carries none (→ always pops).
+                if (String(event.detail?.senderId ?? '') === '{{ auth()->id() }}') return;
+                if (document.visibilityState !== 'visible') return;
+                this.playPop();
+            };
+            window.addEventListener('message_generated', this.popListener);
 
             if (this.supportsSpeech) {
                 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -91,6 +112,37 @@
             }
 
             this.recognition.stop();
+        },
+        destroy() {
+            if (this.popListener) {
+                window.removeEventListener('message_generated', this.popListener);
+            }
+        },
+        playPop() {
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (!Ctx) return;
+                this.audioCtx = this.audioCtx || new Ctx();
+                const ctx = this.audioCtx;
+                if (ctx.state === 'suspended') ctx.resume();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(760, now + 0.06);
+                gain.gain.setValueAtTime(0.0001, now);
+                gain.gain.exponentialRampToValueAtTime(0.22, now + 0.012);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+                osc.connect(gain).connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } catch (e) {}
+        },
+        togglePop() {
+            this.popEnabled = !this.popEnabled;
+            localStorage.setItem('chatPop', this.popEnabled ? '1' : '0');
+            if (this.popEnabled) this.playPop(); // audible feedback on enable
         },
         closeMention() {
             this.mentionOpen = false;
@@ -180,6 +232,20 @@
         },
         onComposerKeydown(event) {
             if (!this.mentionOpen) {
+                // Enter (without Shift) sends the message; Shift+Enter keeps the
+                // newline. Only inside the composer fields, and not mid-IME.
+                if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+                    const el = event.target;
+                    if (!(el instanceof HTMLTextAreaElement) && !(el instanceof HTMLInputElement)) {
+                        return;
+                    }
+                    event.preventDefault();
+                    event.stopPropagation();
+                    // Flush the (debounced) value before validating server-side,
+                    // otherwise a fast Enter can submit a stale/empty msgContent.
+                    Promise.resolve($wire.set('msgContent', el.value))
+                        .then(() => $wire.sendMessage());
+                }
                 return;
             }
             if (event.key === 'ArrowDown') {
@@ -299,6 +365,33 @@
                 >
                     <x-slot name="actionsTrailing">
                         <div class="flex items-center gap-2">
+                            <span x-show="popEnabled">
+                                <flux:tooltip :content="__('Nachrichtenton ausschalten')" position="top">
+                                    <flux:button
+                                        type="button"
+                                        size="sm"
+                                        variant="subtle"
+                                        icon="bell"
+                                        x-on:click="togglePop()"
+                                        :aria-label="__('Nachrichtenton ausschalten')"
+                                        class="cursor-pointer"
+                                    />
+                                </flux:tooltip>
+                            </span>
+                            <span x-show="!popEnabled" x-cloak>
+                                <flux:tooltip :content="__('Nachrichtenton einschalten')" position="top">
+                                    <flux:button
+                                        type="button"
+                                        size="sm"
+                                        variant="subtle"
+                                        icon="bell-slash"
+                                        x-on:click="togglePop()"
+                                        :aria-label="__('Nachrichtenton einschalten')"
+                                        class="cursor-pointer"
+                                    />
+                                </flux:tooltip>
+                            </span>
+
                             @if($showGenerate)
                                 <flux:tooltip :content="$aiRunTooltip" position="top">
                                     <flux:button
@@ -319,8 +412,8 @@
                                         size="sm"
                                         variant="filled"
                                         icon="pause"
-                                        wire:click.debounce="stopGenerate"
-                                        :disabled="$disableGenerate"
+                                        wire:click="stopGenerate"
+                                        :disabled="$disableStop"
                                         :aria-label="$aiPauseTooltip"
                                         class="cursor-pointer"
                                     />
@@ -377,8 +470,8 @@
                                     size="base"
                                     variant="filled"
                                     icon="pause"
-                                    wire:click.debounce="stopGenerate"
-                                    :disabled="$disableGenerate"
+                                    wire:click="stopGenerate"
+                                    :disabled="$disableStop"
                                     :aria-label="$aiPauseTooltip"
                                     class="w-20 h-20 rounded-full cursor-pointer"
                                 />

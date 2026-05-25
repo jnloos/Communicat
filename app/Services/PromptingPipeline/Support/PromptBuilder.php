@@ -19,10 +19,21 @@ class PromptBuilder
             ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job]])
             ->all();
 
+        // Every human participant gets its own [NUTZER: <Name>] memory block,
+        // so the expert keeps a note per person (not one merged "user").
+        $users = $project->users()->get()
+            ->push($project->owner)
+            ->filter()
+            ->unique('id')
+            ->map(fn($u) => ['name' => $u->name])
+            ->values()
+            ->all();
+
         return $this->decode(view('prompts.agent.think', [
             'expert'   => $expert->asPromptArray($project),
             'project'  => $project->asPromptArray(),
             'agents'   => $agents,
+            'users'    => $users,
         ])->render());
     }
 
@@ -101,8 +112,8 @@ class PromptBuilder
      * contribution intent.
      *
      * @param array $agents  Keyed by expert id → ['name', 'job'].
-     * @param array<string, string> $intents  agent name → BEITRAGSABSICHT text.
-     * @param array $state   ['recent_speakers' => [...], 'recent_response_types' => [...]].
+     * @param array<int, string> $intents  expert id → BEITRAGSABSICHT text.
+     * @param array $state   ['recent_speakers' => [expert id, ...], 'recent_response_types' => [...]].
      */
     public function moderatorSelect(
         Project $project,

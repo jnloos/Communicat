@@ -17,7 +17,7 @@ class Project extends Model
 
     protected $casts = ['settings' => 'array'];
 
-    public const MAX_CONTRIBUTING_EXPERTS = 5;
+    public const MAX_CONTRIBUTING_EXPERTS = 4;
 
     /** Per-instance cache for contributingExperts() (hit several times per turn). */
     private ?Collection $cachedContributingExperts = null;
@@ -62,6 +62,17 @@ class Project extends Model
         return $this->cachedContributingExperts ??= $this->experts()->get();
     }
 
+    /**
+     * Contributing experts keyed by id. The single source for resolving an
+     * id the moderator returned back to its Expert — always project-scoped,
+     * never a global name lookup.
+     *
+     * @return Collection<int, Expert>
+     */
+    public function contributorMap(): Collection {
+        return $this->contributingExperts()->keyBy('id');
+    }
+
     public function canAddExpert(): bool {
         return $this->experts()->count() < self::MAX_CONTRIBUTING_EXPERTS;
     }
@@ -80,6 +91,20 @@ class Project extends Model
 
     public function hasContributor(User $user): bool {
         return $this->isOwner($user) || $this->users()->whereKey($user->id)->exists();
+    }
+
+    /**
+     * Resolve the concrete user a turn hands the floor back to: the author of
+     * the pending (unanswered) user message when there is one, otherwise the
+     * project owner. Replaces the generic 'Nutzer' sentinel so multi-user
+     * projects know which human is addressed.
+     */
+    public function handoffUser(?Message $pendingUser = null): ?User {
+        if ($pendingUser !== null && $pendingUser->user_id !== null) {
+            return $pendingUser->user;
+        }
+
+        return $this->owner;
     }
 
     protected static function booted(): void {

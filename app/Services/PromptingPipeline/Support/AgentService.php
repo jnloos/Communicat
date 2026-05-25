@@ -26,7 +26,7 @@ class AgentService
     public function think(Expert $expert): array
     {
         $prompt   = $this->thinkPrompt($expert);
-        $response = $this->client->sendSlow($prompt, "think:{$expert->name}");
+        $response = $this->client->sendSlow($prompt, "think:{$expert->id}");
 
         return $this->consumeThink($expert, $response);
     }
@@ -50,7 +50,7 @@ class AgentService
     public function consumeThink(Expert $expert, string $response, string $context = 'think'): array
     {
         $memoryBlock = $this->extractMemoryUpdate($response, 'BEITRAGSABSICHT:');
-        $this->persistMemoryBlock($expert, $memoryBlock, $response, "{$context}:{$expert->name}");
+        $this->persistMemoryBlock($expert, $memoryBlock, $response, "{$context}:{$expert->id}");
 
         return [
             'memory'          => $memoryBlock,
@@ -95,7 +95,7 @@ class AgentService
     public function speak(Expert $expert, array $thinkOutput, Directive $directive): array
     {
         $prompt   = $this->prompts->speak($this->project, $expert, $thinkOutput, $directive);
-        $response = $this->client->sendFast($prompt, "speak:{$expert->name}");
+        $response = $this->client->sendFast($prompt, "speak:{$expert->id}");
 
         return ['content' => trim($response)];
     }

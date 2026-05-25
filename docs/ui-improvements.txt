@@ -1,0 +1,9 @@
+UI Changes:
+
+1. @ References schon im Textfeld dick markieren.
+2. @ References im Text nur dick markieren. Dann unten mit einem Adjacency Pair Arrow anzeigen?
+3. Enter nachricht abschicken.
+4. Benachrichtigungston auch wenn ein Benutzer was schreibt.
+5. Die Memory von den Experten unterscheiden nicht unter unterschiedlichen Nutzern.
+6. Da steht jetzt Ständig These: oder sowas vorne!
+7. Der Button um den Chat anzuhalten funktioniert nicht richtig. Er synchronisiert sich nicht anständig zwischen mehreren Bentzern und gleichzeitig kann ich nicht stoppem.

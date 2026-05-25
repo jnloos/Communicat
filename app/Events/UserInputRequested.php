@@ -15,6 +15,9 @@ class UserInputRequested implements ShouldBroadcastNow
     public function __construct(
         public readonly int $projectId,
         public readonly string $reason = 'user_addressed',
+        // The specific user the expert handed off to. Null = unresolved
+        // (e.g. no candidates) → every client falls back to prompting.
+        public readonly ?int $targetUserId = null,
     ) {}
 
     public function broadcastOn(): array
@@ -29,6 +32,6 @@ class UserInputRequested implements ShouldBroadcastNow
 
     public function broadcastWith(): array
     {
-        return ['reason' => $this->reason];
+        return ['reason' => $this->reason, 'targetUserId' => $this->targetUserId];
     }
 }

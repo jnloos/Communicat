@@ -14,6 +14,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Adjacency-pair generation
+    |--------------------------------------------------------------------------
+    | When true, the moderator may instruct the next speaker (via the Directive)
+    | to OPEN an adjacency pair (pose a direct question/request to a named peer)
+    | or CLOSE one (answer/react to whoever addressed them). Turning it off
+    | reverts to the prior behaviour (no explicit pair steering).
+    */
+    'generate_pairs' => env('DISCUSSION_GENERATE_PAIRS', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Summarizer thresholds
     |--------------------------------------------------------------------------
     | summary_trigger_at  — compression runs only when the number of unsummarized

@@ -9,13 +9,13 @@ Beschreibung: {{ $project['description'] }}
 
 === TEILNEHMERLISTE ===
 @foreach ($agents as $agentId => $agent)
-- {{ $agent['name'] }} ({{ $agent['job'] }})
+- [#{{ $agentId }}] {{ $agent['name'] }} ({{ $agent['job'] }})
 @endforeach
 
 === LETZTE SPRECHERHISTORIE ===
 @if (!empty($state['recent_speakers']))
 @foreach ($state['recent_speakers'] as $speaker)
-- {{ $speaker }}
+- [#{{ $speaker }}] {{ $agents[$speaker]['name'] ?? $speaker }}
 @endforeach
 @else
 Noch keine Sprecherhistorie vorhanden.
@@ -31,8 +31,8 @@ Noch keine Antwort-Typen aufgezeichnet.
 @endif
 
 === BEITRAGSABSICHTEN DER KANDIDATEN ===
-@foreach ($intents as $agentName => $intent)
---- {{ $agentName }} ---
+@foreach ($intents as $agentId => $intent)
+--- [#{{ $agentId }}] {{ $agents[$agentId]['name'] ?? $agentId }} ---
 {{ $intent }}
 
 @endforeach
@@ -62,11 +62,11 @@ Verbindliche Leitplanken:
 - Offenes Adjacency Pair: Liegt eines vor (oben genannt oder klar aus den AKTUELLEN NACHRICHTEN ableitbar) und steht der adressierte Agent zur Auswahl, gewinnt dieser.
 - Kein Back-to-Back (HART): Der zuletzt gesprochene Agent (erster Eintrag in LETZTE SPRECHERHISTORIE) ist von der Auswahl ausgeschlossen. Einzige Ausnahme: er ist der einzige verbleibende Kandidat.
 
-Der Gewinner MUSS einer der exakten Namen aus den BEITRAGSABSICHTEN sein.
+Der Gewinner MUSS eine der IDs (Zahl in eckigen Klammern, z. B. 7) aus den BEITRAGSABSICHTEN sein.
 
 Gib AUSSCHLIESSLICH valides JSON aus. Kein erklärender Text davor oder danach.
 
 {
-  "winner": "Agentenname",
+  "winner": 7,
   "reasoning": "1 Satz Begründung"
 }

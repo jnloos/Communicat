@@ -15,5 +15,11 @@ readonly class Directive
         public string $convergenceIntent,  // what convergence move the turn should make
         public bool   $addressUser,        // true → turn hands back to the user
         public string $reasoning = '',
+        // Adjacency-pair steering for this turn:
+        //   'open'  → speaker poses a first-pair-part (question/request) to pairWithName
+        //   'close' → speaker delivers the second-pair-part (answer/reaction) to pairWithName
+        //   'none'  → no explicit pair move
+        public string $pairAction = 'none',
+        public string $pairWithName = '',  // name of the addressed peer (resolved from id)
     ) {}
 }

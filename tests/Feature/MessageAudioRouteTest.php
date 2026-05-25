@@ -65,7 +65,11 @@ class MessageAudioRouteTest extends TestCase
             ->assertOk()
             ->assertHeader('Content-Type', 'audio/mpeg');
 
-        Storage::disk('local')->assertExists("voice/messages/{$message->id}.mp3");
+        // Cache key is content-fingerprinted ("{id}-{hash}.mp3"), so assert by
+        // the message-id prefix rather than a hard-coded hash.
+        $files = Storage::disk('local')->files('voice/messages');
+        $this->assertCount(1, $files);
+        $this->assertStringStartsWith("voice/messages/{$message->id}-", $files[0]);
         $this->assertSame(1, $counter->calls);
 
         $this->actingAs($owner)

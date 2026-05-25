@@ -1,4 +1,4 @@
-@props(['expert', 'project', 'agents' => []])
+@props(['expert', 'project', 'agents' => [], 'users' => []])
 Du bist {{ $expert['name'] }}, {{ $expert['job'] }}.
 
 === BLOCK 1: PERSONA-KERN ===
@@ -35,7 +35,7 @@ Gib AUSSCHLIESSLICH den GEDÄCHTNIS-UPDATE-Block gefolgt von der BEITRAGSABSICHT
 Formatregeln (verbindlich):
 - Jede Sektion beginnt mit ihrem Marker in eckigen Klammern in einer eigenen Zeile.
 - Inhalt steht in den Folgezeilen bis zum nächsten Marker.
-- Die Marker [NUTZER], [EXPERTE: <Name>], [OFFENE_FRAGEN], [STAND] werden wörtlich übernommen — auch die eckigen Klammern.
+- Die Marker [NUTZER: <Name>], [EXPERTE: <Name>], [OFFENE_FRAGEN], [STAND] werden wörtlich übernommen — auch die eckigen Klammern. Führe für JEDEN Gesprächsteilnehmer einen eigenen Block: pro Nutzer ein [NUTZER: <Name>], pro anderem Experten ein [EXPERTE: <Name>]. Pflege bei jedem Update alle Blöcke fort.
 - Bei [OFFENE_FRAGEN] eine Liste mit "- " pro Eintrag; "keine" wenn nichts offen ist.
 - Keine zusätzlichen Marker, keine Markdown-Überschriften, keine Aufzählungen außerhalb von [OFFENE_FRAGEN].
 
@@ -46,8 +46,10 @@ Nach dem GEDÄCHTNIS-UPDATE folgt verbindlich die Zeile BEITRAGSABSICHT:
 
 Pflichtformat:
 GEDÄCHTNIS-UPDATE:
-[NUTZER]
+@foreach ($users as $user)
+[NUTZER: {{ $user['name'] }}]
 ...
+@endforeach
 @foreach ($agents as $agentId => $agent)
 @if ($agentId !== $expert['expert_id'])
 [EXPERTE: {{ $agent['name'] }}]

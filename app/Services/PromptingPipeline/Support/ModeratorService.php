@@ -66,12 +66,12 @@ class ModeratorService
      * Directive (role, agenda step, convergence intent, address_user).
      *
      * @param  array{open_adjacency_pair?: array, agenda_phase?: string, pending_user?: string}|null $context
-     * @return array{candidates: string[], directive: Directive, reasoning: string}
+     * @return array{candidates: int[], directive: Directive, reasoning: string}
      */
     public function route(string $moderationNote = '', ?array $context = null): array
     {
-        $agents     = $this->buildAgentsArray();
-        $knownNames = array_column(array_values($agents), 'name');
+        $agents   = $this->buildAgentsArray();
+        $knownIds = array_map('intval', array_keys($agents));
 
         $prompt   = $this->prompts->moderatorRoute($this->project, $agents, $moderationNote, $context);
         $response = $this->client->sendFast($prompt, 'moderator:route');
@@ -80,15 +80,15 @@ class ModeratorService
 
         if ($decoded === null) {
             return [
-                'candidates' => $knownNames,
+                'candidates' => $knownIds,
                 'directive'  => $this->fallbackDirective(),
                 'reasoning'  => '',
             ];
         }
 
-        $candidates = $this->normalizeKnownNames($decoded['candidates'] ?? $knownNames, $knownNames);
+        $candidates = $this->normalizeKnownIds($decoded['candidates'] ?? $knownIds, $knownIds);
         if (empty($candidates)) {
-            $candidates = $knownNames;
+            $candidates = $knownIds;
         }
 
         return [
@@ -103,10 +103,11 @@ class ModeratorService
      * judging their BEITRAGSABSICHT (no score). Back-to-back guard and the
      * open-adjacency-pair mandate are preserved.
      *
-     * @param  array<string, array{memory: string, beitragsabsicht: string}> $thinkOutputs
-     * @param  array{addressee: string, pair_type?: string, from?: string}|null $openAdjacencyPair
+     * @param  array<int, array{memory: string, beitragsabsicht: string}> $thinkOutputs  keyed by expert id
+     * @param  array{addressee_id?: int, pair_type?: string, from?: string}|null $openAdjacencyPair
+     * @return int  the winning expert id
      */
-    public function selectWinner(array $thinkOutputs, ?array $openAdjacencyPair = null): string
+    public function selectWinner(array $thinkOutputs, ?array $openAdjacencyPair = null): int
     {
         $agents = $this->buildAgentsArray();
 
@@ -115,7 +116,7 @@ class ModeratorService
             'recent_response_types' => $this->project->settings['recent_response_types']  ?? [],
         ];
 
-        // Expose only the contribution intents to the selection prompt.
+        // Expose only the contribution intents to the selection prompt (keyed by id).
         $intents = array_map(fn(array $o) => $o['beitragsabsicht'], $thinkOutputs);
 
         $prompt   = $this->prompts->moderatorSelect($this->project, $agents, $intents, $state, $openAdjacencyPair);
@@ -123,26 +124,27 @@ class ModeratorService
 
         $decoded = $this->parseJson($response);
 
-        if ($decoded === null || empty($decoded['winner'])) {
-            return (string) array_key_first($thinkOutputs);
+        if ($decoded === null || !isset($decoded['winner'])) {
+            return (int) array_key_first($thinkOutputs);
         }
 
-        $winner = trim((string) $decoded['winner']);
+        $winner = (int) $decoded['winner'];
 
         if (!array_key_exists($winner, $thinkOutputs)) {
-            return (string) array_key_first($thinkOutputs);
+            return (int) array_key_first($thinkOutputs);
         }
 
         // Hard back-to-back guard: never let the immediately previous speaker go
         // twice in a row unless the open-adjacency-pair path mandates it.
-        $lastSpeaker = ($state['recent_speakers'][0] ?? null);
+        $lastSpeaker = $state['recent_speakers'][0] ?? null;
+        $lastSpeaker = $lastSpeaker !== null ? (int) $lastSpeaker : null;
         $isMandated  = $openAdjacencyPair !== null
-            && ($openAdjacencyPair['addressee'] ?? null) === $winner;
+            && (int) ($openAdjacencyPair['addressee_id'] ?? 0) === $winner;
 
         if (!$isMandated && $lastSpeaker !== null && $winner === $lastSpeaker) {
             $alternatives = array_diff(array_keys($thinkOutputs), [$lastSpeaker]);
             if (!empty($alternatives)) {
-                return (string) reset($alternatives);
+                return (int) reset($alternatives);
             }
         }
 
@@ -157,9 +159,9 @@ class ModeratorService
     {
         $settings = $this->project->settings ?? [];
 
-        // Recent speakers — prepend winner, keep last 6
+        // Recent speakers — prepend winner id, keep last 6
         $recentSpeakers = $settings['recent_speakers'] ?? [];
-        array_unshift($recentSpeakers, $winner->name);
+        array_unshift($recentSpeakers, $winner->id);
         $settings['recent_speakers'] = array_slice($recentSpeakers, 0, 6);
 
         // Recent response types — prepend type, keep last 6. The detected
@@ -246,12 +248,31 @@ class ModeratorService
             $phase = $this->agendaPhase();
         }
 
+        // Adjacency-pair steering. Resolve the target expert id → name so SPEAK
+        // can address the peer by name. An invalid/missing target degrades to
+        // 'none'. Disabled entirely when the feature flag is off.
+        $pairAction   = 'none';
+        $pairWithName = '';
+        if (config('discussion.generate_pairs', true)) {
+            $action = mb_strtolower(trim((string) ($d['pair_action'] ?? 'none')));
+            if (in_array($action, ['open', 'close'], true)) {
+                $targetId = (int) ($d['pair_with'] ?? 0);
+                $name     = $this->project->contributorMap()[$targetId]->name ?? '';
+                if ($name !== '') {
+                    $pairAction   = $action;
+                    $pairWithName = $name;
+                }
+            }
+        }
+
         return new Directive(
             role:              (string) ($d['role'] ?? ''),
             agendaStep:        $phase,
             convergenceIntent: (string) ($d['convergence_intent'] ?? ''),
             addressUser:       (bool)   ($d['address_user'] ?? false),
             reasoning:         $reasoning,
+            pairAction:        $pairAction,
+            pairWithName:      $pairWithName,
         );
     }
 
@@ -299,42 +320,23 @@ class ModeratorService
     }
 
     /**
-     * Match an LLM-provided name case-insensitively to the canonical DB name.
+     * Keep only ids that belong to the project's contributors, deduplicated and
+     * order-preserving. Anything the LLM invents (unknown ids, names) is dropped.
      *
-     * @param array<int, string> $knownNames
+     * @param  int[] $knownIds
+     * @return int[]
      */
-    protected function normalizeKnownName(?string $name, array $knownNames): ?string
+    protected function normalizeKnownIds(mixed $ids, array $knownIds): array
     {
-        $normalized = mb_strtolower(trim((string) $name));
-        if ($normalized === '' || $normalized === 'null') {
-            return null;
-        }
-
-        foreach ($knownNames as $knownName) {
-            if (mb_strtolower($knownName) === $normalized) {
-                return $knownName;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @param mixed $names
-     * @param array<int, string> $knownNames
-     * @return array<int, string>
-     */
-    protected function normalizeKnownNames(mixed $names, array $knownNames): array
-    {
-        if (!is_array($names)) {
-            return $knownNames;
+        if (!is_array($ids)) {
+            return $knownIds;
         }
 
         $normalized = [];
-        foreach ($names as $name) {
-            $knownName = $this->normalizeKnownName((string) $name, $knownNames);
-            if ($knownName !== null && !in_array($knownName, $normalized, true)) {
-                $normalized[] = $knownName;
+        foreach ($ids as $id) {
+            $id = (int) $id;
+            if (in_array($id, $knownIds, true) && !in_array($id, $normalized, true)) {
+                $normalized[] = $id;
             }
         }
 

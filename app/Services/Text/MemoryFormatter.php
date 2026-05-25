@@ -26,6 +26,7 @@ class MemoryFormatter
      * @return array{
      *     structured: bool,
      *     user: ?string,
+     *     users: array<string, string>,
      *     experts: array<string, string>,
      *     open_questions: string[],
      *     state: ?string,
@@ -39,6 +40,7 @@ class MemoryFormatter
         $empty = [
             'structured'     => false,
             'user'           => null,
+            'users'          => [],
             'experts'        => [],
             'open_questions' => [],
             'state'          => null,
@@ -53,8 +55,9 @@ class MemoryFormatter
         // attached when the parser is called with raw LLM output.
         $body = preg_replace('/^\s*GEDÄCHTNIS-UPDATE:\s*\n?/u', '', $raw) ?? $raw;
 
-        // Match either a known header or [EXPERTE: <name>] (preserving the name).
-        $sectionPattern = '/^\s*\[(NUTZER|OFFENE_FRAGEN|STAND|EXPERTE:\s*[^\]]+)\]\s*$/mu';
+        // Match a known header, a per-user [NUTZER: <name>], or a per-expert
+        // [EXPERTE: <name>] (both preserving the name). Bare [NUTZER] is legacy.
+        $sectionPattern = '/^\s*\[(NUTZER:\s*[^\]]+|NUTZER|OFFENE_FRAGEN|STAND|EXPERTE:\s*[^\]]+)\]\s*$/mu';
 
         if (preg_match_all($sectionPattern, $body, $headerMatches, PREG_OFFSET_CAPTURE) === 0
             || empty($headerMatches[0])) {
@@ -64,6 +67,7 @@ class MemoryFormatter
         $result = [
             'structured'     => true,
             'user'           => null,
+            'users'          => [],
             'experts'        => [],
             'open_questions' => [],
             'state'          => null,
@@ -85,6 +89,16 @@ class MemoryFormatter
             $content = trim(substr($body, $contentStart, $contentEnd - $contentStart));
             $rawLabel = trim($headerMatches[1][$i][0]);
 
+            // Per-user block [NUTZER: <name>].
+            if (str_starts_with($rawLabel, 'NUTZER:')) {
+                $name = trim(substr($rawLabel, strlen('NUTZER:')));
+                if ($name !== '' && $content !== '') {
+                    $result['users'][$name] = $content;
+                }
+                continue;
+            }
+
+            // Legacy single [NUTZER] block (older summaries).
             if ($rawLabel === 'NUTZER') {
                 $result['user'] = $content !== '' ? $content : null;
                 continue;
@@ -111,6 +125,7 @@ class MemoryFormatter
 
         // If nothing meaningful was extracted, treat as unstructured.
         if ($result['user'] === null
+            && empty($result['users'])
             && $result['state'] === null
             && empty($result['experts'])
             && empty($result['open_questions'])) {

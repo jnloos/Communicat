@@ -54,7 +54,7 @@ class ContributorLimitTest extends TestCase
         $this->actingAs($user);
         Livewire::test(SelectContributors::class, ['project' => $project])
             ->call('addExpert', $extra->id)
-            ->assertSet('limitWarning', fn($v) => is_string($v) && str_contains($v, '5'));
+            ->assertSet('limitWarning', fn($v) => is_string($v) && str_contains($v, (string) Project::MAX_CONTRIBUTING_EXPERTS));
 
         $this->assertFalse(
             $project->experts()->whereKey($extra->id)->exists(),

@@ -2,7 +2,6 @@
 
 namespace App\Events;
 
-use App\Models\Expert;
 use App\Models\Message;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -32,23 +31,13 @@ class MessageGenerated implements ShouldBroadcastNow
     public function broadcastWith(): array
     {
         $message = $this->messageId ? Message::find($this->messageId) : null;
-        $addressedId = null;
-
-        if ($message && is_string($message->next_speaker) && trim($message->next_speaker) !== '') {
-            $target = mb_strtolower(trim($message->next_speaker));
-            if (! in_array($target, ['nutzer', 'user'], true)) {
-                $addressedId = Expert::query()
-                    ->whereRaw('LOWER(name) = ?', [$target])
-                    ->whereHas('projects', fn($q) => $q->whereKey($this->projectId))
-                    ->value('id');
-            }
-        }
 
         return [
             'project_id'          => $this->projectId,
             'message_id'          => $this->messageId,
             'expert_id'           => $message?->expert_id,
-            'addressed_expert_id' => $addressedId,
+            'addressed_expert_id' => $message?->next_speaker_expert_id,
+            'addressed_user_id'   => $message?->next_speaker_user_id,
         ];
     }
 }

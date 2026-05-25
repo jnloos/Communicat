@@ -8,17 +8,16 @@
 @php
     $sender = $msg->sender();
 
-    // Resolve "talks-to" target: only when next_speaker names another expert in the project.
+    // Resolve the "speaks to" target from the FK fields (project-scoped by data,
+    // no global name lookup): an expert (next_speaker_expert_id) or a user
+    // (next_speaker_user_id). No self-arrow.
     $addressed = null;
-    if ($msg->isExpert() && !empty($msg->next_speaker)) {
-        $addressed = \App\Models\Expert::where('name', trim($msg->next_speaker))
-            ->whereHas('projects', fn($q) => $q->whereKey($msg->project_id))
-            ->first();
-
-        // Don't draw a self-arrow.
-        if ($addressed && $addressed->id === $msg->expert_id) {
-            $addressed = null;
-        }
+    $addressedIsExpert = false;
+    if ($msg->next_speaker_expert_id && $msg->next_speaker_expert_id !== $msg->expert_id) {
+        $addressed = $msg->nextSpeakerExpert;
+        $addressedIsExpert = true;
+    } elseif ($msg->next_speaker_user_id && !($msg->isUser() && $msg->next_speaker_user_id === $msg->user_id)) {
+        $addressed = $msg->nextSpeakerUser;
     }
 
     // Render the message body and rewrite "@PersonaName" into clickable badges
@@ -35,11 +34,10 @@
 
     foreach ($projectContributors as $contributor) {
         $pattern = '/(?<![\w@])@' . preg_quote($contributor->name, '/') . '(?!\w)/u';
-        $replacement = sprintf(
-            '<button type="button" class="inline-flex items-center rounded px-1 -mx-1 text-amber-700 dark:text-amber-300 font-medium hover:bg-amber-100 dark:hover:bg-amber-900/30 cursor-pointer" onclick="this.dispatchEvent(new CustomEvent(\'open-expert-thoughts\', { detail: { expertId: %d }, bubbles: true, composed: true }))">@%s</button>',
-            $contributor->id,
-            e($contributor->name),
-        );
+        // @-mentions are only emphasised (bold) in the message body. The
+        // adjacency-pair target is shown separately by the arrow below the
+        // bubble, so the mention itself is no longer an interactive button.
+        $replacement = sprintf('<strong class="font-semibold">@%s</strong>', e($contributor->name));
         $renderedContent = preg_replace($pattern, $replacement, $renderedContent);
     }
 @endphp
@@ -75,7 +73,12 @@
 
     <div class="-translate-y-5">
         @if($msg->isCurrUser())
-            <x-contributors.contributors-avatar :name="$sender->name" :avatar-url="$sender->avatar_url" class="ms-auto me-5 w-12 h-12"/>
+            <div class="flex items-center justify-end me-5 gap-2">
+                @if ($addressed)
+                    <x-projects.addressed-arrow :addressed="$addressed" :is-expert="$addressedIsExpert" flip />
+                @endif
+                <x-contributors.contributors-avatar :name="$sender->name" :avatar-url="$sender->avatar_url" class="w-12 h-12"/>
+            </div>
         @elseif($msg->isAssistant())
             {{-- No avatar for assistant messages --}}
         @elseif($msg->isExpert())
@@ -110,42 +113,16 @@
                 </div>
 
                 @if ($addressed)
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-zinc-400 dark:text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <line x1="5" y1="12" x2="19" y2="12"/>
-                        <polyline points="13 6 19 12 13 18"/>
-                    </svg>
-                    <div class="relative group">
-                        <button
-                            type="button"
-                            title="{{ __('Angesprochen') }}: {{ $addressed->name }}"
-                            @click="$dispatch('open-expert-thoughts', { expertId: {{ $addressed->id }} })"
-                            class="rounded-full cursor-pointer transition-transform hover:scale-105 group-hover:scale-105 group-active:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-                        >
-                            <x-contributors.contributors-avatar :name="$addressed->name" :avatar-url="$addressed->avatar_url" class="w-9 h-9 opacity-90"/>
-                        </button>
-                        <button
-                            type="button"
-                            title="{{ __('Gedächtnis anzeigen') }}"
-                            @click="$dispatch('open-expert-thoughts', { expertId: {{ $addressed->id }} })"
-                            class="absolute -bottom-0.5 -right-0.5 inline-flex items-center justify-center
-                                   w-4 h-4 rounded-full
-                                   bg-white dark:bg-zinc-800
-                                   ring-2 ring-white dark:ring-zinc-800
-                                   text-zinc-500 dark:text-zinc-300
-                                   hover:text-amber-600 dark:hover:text-amber-400
-                                   group-hover:text-amber-600 dark:group-hover:text-amber-400
-                                   group-active:text-amber-600 dark:group-active:text-amber-400
-                                   cursor-pointer transition-colors
-                                   focus:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
-                            aria-label="{{ __('Gedächtnis anzeigen') }}"
-                        >
-                            <x-icons.brain class="w-2.5 h-2.5"/>
-                        </button>
-                    </div>
+                    <x-projects.addressed-arrow :addressed="$addressed" :is-expert="$addressedIsExpert" />
                 @endif
             </div>
         @else {{-- Other user --}}
-            <x-contributors.contributors-avatar :name="$sender->name" :avatar-url="$sender->avatar_url" class="ms-5 w-12 h-12"/>
+            <div class="flex items-center ms-5 gap-2">
+                <x-contributors.contributors-avatar :name="$sender->name" :avatar-url="$sender->avatar_url" class="w-12 h-12"/>
+                @if ($addressed)
+                    <x-projects.addressed-arrow :addressed="$addressed" :is-expert="$addressedIsExpert" />
+                @endif
+            </div>
         @endif
     </div>
 </div>

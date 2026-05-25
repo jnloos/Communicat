@@ -26,19 +26,10 @@
         ->filter(fn($msg) => $msg->isExpert())
         ->last();
 
-    // Resolve the addressee id from the last expert message's next_speaker
-    // so the voice stage can highlight them without relying on the
-    // Reverb event payload (which Livewire's echo binding parses unevenly).
-    $lastAddressedId = null;
-    if ($lastExpert && is_string($lastExpert->next_speaker) && trim($lastExpert->next_speaker) !== '') {
-        $target = mb_strtolower(trim($lastExpert->next_speaker));
-        if (! in_array($target, ['nutzer', 'user'], true)) {
-            $lastAddressedId = \App\Models\Expert::query()
-                ->whereRaw('LOWER(name) = ?', [$target])
-                ->whereHas('projects', fn($q) => $q->whereKey($project->id))
-                ->value('id');
-        }
-    }
+    // Addressed expert id from the last expert message's next_speaker FK, so the
+    // voice stage can highlight them without relying on the Reverb event payload
+    // (which Livewire's echo binding parses unevenly).
+    $lastAddressedId = $lastExpert?->next_speaker_expert_id;
 @endphp
 
 <div
@@ -96,6 +87,10 @@
                     return;
                 }
                 if (document.visibilityState !== 'visible') return;
+                // Only speak when the Voice tab is actually on screen. The stage
+                // is hidden via x-show (display:none) on the Text tab, so its
+                // offsetParent is null there — skip audio then.
+                if (this.$root.offsetParent === null) return;
                 this.playLatest();
             };
             this.speakListener = (event) => {
@@ -115,6 +110,11 @@
             window.addEventListener('user-input-cleared', this.inputClrListener);
             window.addEventListener('resize', this.resizeListener);
             document.addEventListener('visibilitychange', this.visibilityListener);
+
+            // Leaving the Voice tab cuts off any ongoing playback immediately.
+            this.$watch('$store.discussionMode.value', (mode) => {
+                if (mode !== 'voice') this.stopAudio();
+            });
 
             this.updateStageWidth();
             // A2: intentionally NO playLatest() here. Audio only fires on a

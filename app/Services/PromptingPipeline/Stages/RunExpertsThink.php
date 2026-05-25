@@ -20,9 +20,18 @@ class RunExpertsThink
         $agent      = app(AgentService::class, ['project' => $ctx->project]);
         $candidates = collect($ctx->candidates);
 
+        // No candidates (e.g. a project without contributing experts): stop the
+        // turn gracefully instead of dereferencing a null first() downstream.
+        if ($candidates->isEmpty()) {
+            $ctx->stop   = true;
+            $ctx->reason = 'no_candidates';
+
+            return $ctx;
+        }
+
         if ($candidates->count() === 1) {
             $expert = $candidates->first();
-            $ctx->thinkOutputs[$expert->name] = $agent->think($expert);
+            $ctx->thinkOutputs[$expert->id] = $agent->think($expert);
 
             return $this->guard($ctx, $next);
         }
@@ -38,13 +47,13 @@ class RunExpertsThink
      * expert back here. Experts whose call failed or returned empty are dropped.
      *
      * @param Collection<int, Expert> $candidates
-     * @return array<string, array{memory: string, beitragsabsicht: string}>
+     * @return array<int, array{memory: string, beitragsabsicht: string}>
      */
     protected function runConcurrent(TurnContext $ctx, AgentService $agent, Collection $candidates): array
     {
         $client    = app(OpenAIClient::class);
         $promptMap = $candidates->mapWithKeys(
-            fn(Expert $e) => [$e->name => $agent->thinkPrompt($e)]
+            fn(Expert $e) => [$e->id => $agent->thinkPrompt($e)]
         )->all();
 
         try {
@@ -57,20 +66,20 @@ class RunExpertsThink
             $responses = [];
         }
 
-        $expertByName = $candidates->keyBy('name');
-        $outputs      = [];
-        foreach ($responses as $name => $response) {
-            if (!isset($expertByName[$name]) || !is_string($response) || trim($response) === '') {
+        $expertById = $candidates->keyBy('id');
+        $outputs    = [];
+        foreach ($responses as $id => $response) {
+            if (!isset($expertById[$id]) || !is_string($response) || trim($response) === '') {
                 continue;
             }
-            $outputs[$name] = $agent->consumeThink($expertByName[$name], $response);
+            $outputs[$id] = $agent->consumeThink($expertById[$id], $response);
         }
 
         // Total failure fallback: run the first candidate inline so the turn
         // can still proceed.
         if (empty($outputs)) {
             $first = $candidates->first();
-            $outputs[$first->name] = $agent->think($first);
+            $outputs[$first->id] = $agent->think($first);
         }
 
         return $outputs;

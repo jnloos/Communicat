@@ -62,16 +62,6 @@ class Expert extends Model
         return $this->projects()->whereKey($project->id)->exists();
     }
 
-    public static function findByName(string $name): self
-    {
-        return static::where('name', trim($name))->firstOrFail();
-    }
-
-    public static function findManyByName(array $names): \Illuminate\Support\Collection
-    {
-        return static::whereIn('name', array_map('trim', $names))->get();
-    }
-
     public function asPromptArray(Project $project): array
     {
         $summary = $this->thoughtsAbout($project);

@@ -7,7 +7,7 @@ use App\Models\Project;
 class ProjectExport
 {
     /** Current export schema version (consumed by ProjectImporter). */
-    public const SCHEMA_VERSION = 2;
+    public const SCHEMA_VERSION = 3;
 
     /**
      * Build the full clone payload for a project: settings, contributing experts,
@@ -50,9 +50,10 @@ class ProjectExport
                     'expert_id'           => $m->expert_id,
                     'is_user'             => $m->user_id !== null,
                     'sender_name'         => $m->expert?->name ?? $m->user?->name,
-                    'adjacency_pair_type' => $m->adjacency_pair_type,
-                    'next_speaker'        => $m->next_speaker,
-                    'created_at'          => optional($m->created_at)->toIso8601String(),
+                    'adjacency_pair_type'    => $m->adjacency_pair_type,
+                    'next_speaker_expert_id' => $m->next_speaker_expert_id,
+                    'next_speaker_user_id'   => $m->next_speaker_user_id,
+                    'created_at'             => optional($m->created_at)->toIso8601String(),
                 ])
                 ->values()
                 ->all(),

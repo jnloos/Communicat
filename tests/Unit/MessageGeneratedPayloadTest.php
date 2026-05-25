@@ -26,7 +26,7 @@ class MessageGeneratedPayloadTest extends TestCase
         $project->addContributingExpert($bob);
 
         $message = $project->addMessage('Hallo Bob.', $alice);
-        $message->next_speaker = 'Bob';
+        $message->next_speaker_expert_id = $bob->id;
         $message->save();
 
         $payload = (new MessageGenerated($project->id, $message->id))->broadcastWith();
@@ -35,9 +35,10 @@ class MessageGeneratedPayloadTest extends TestCase
         $this->assertSame($message->id, $payload['message_id']);
         $this->assertSame($alice->id, $payload['expert_id']);
         $this->assertSame($bob->id, $payload['addressed_expert_id']);
+        $this->assertNull($payload['addressed_user_id']);
     }
 
-    public function test_payload_ignores_user_addressee(): void
+    public function test_payload_carries_user_addressee(): void
     {
         $owner = User::factory()->create();
         $project = Project::withoutEvents(fn() => Project::create([
@@ -47,12 +48,13 @@ class MessageGeneratedPayloadTest extends TestCase
         $project->addContributingExpert($alice);
 
         $message = $project->addMessage('Was meinst du?', $alice);
-        $message->next_speaker = 'Nutzer';
+        $message->next_speaker_user_id = $owner->id;
         $message->save();
 
         $payload = (new MessageGenerated($project->id, $message->id))->broadcastWith();
 
         $this->assertNull($payload['addressed_expert_id']);
+        $this->assertSame($owner->id, $payload['addressed_user_id']);
     }
 
     public function test_payload_handles_missing_message(): void
@@ -67,5 +69,6 @@ class MessageGeneratedPayloadTest extends TestCase
         $this->assertNull($payload['message_id']);
         $this->assertNull($payload['expert_id']);
         $this->assertNull($payload['addressed_expert_id']);
+        $this->assertNull($payload['addressed_user_id']);
     }
 }

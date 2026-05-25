@@ -1,0 +1,24 @@
+● Weil die „spricht-zu"-Verbindung einer Nachricht nicht beim Erstellen der Nachricht gesetzt wird, sondern rückwirkend im nächsten Turn.
+
+  Konkret im Code:
+
+  - Die UI zeichnet den Pfeil in chat-message.blade.php aus den FK-Feldern next_speaker_expert_id / next_speaker_user_id der Nachricht.
+  - Experte→Nutzer (next_speaker_user_id) wird sofort in PersistMessage gesetzt, wenn addressUser greift → dieser Pfeil erscheint direkt mit der Nachricht.
+  - Experte→Experte / Nutzer→Experte (next_speaker_expert_id) wird dagegen in ResolveContext gesetzt — und zwar auf die latestMessage:
+
+  if ($openPair !== null && $ctx->latestMessage !== null && empty(...next_speaker...)) {
+      $ctx->latestMessage->next_speaker_expert_id = $openPair['addressee_id'];
+      $ctx->latestMessage->saveQuietly();
+  }
+
+  ResolveContext läuft aber am Anfang des nächsten Turns. D.h.: Nachricht N adressiert B → der Pfeil N→B wird erst gestempelt, wenn Turn N+1 startet und N als latestMessage
+  rückblickend ausgewertet wird. Dazu kommt saveQuietly() (kein Event/Broadcast), also rendert der Chat den Pfeil erst, wenn der nächste Turn fertig ist und neu gemorpht wird.
+
+  Kurz: Der Adressat wird per Look-back-Detektion des Folge-Turns ermittelt, nicht beim Persistieren der Nachricht → der Pfeil hinkt einen Turn hinterher (und hängt zusätzlich
+  davon ab, dass die Detektion „Name + ?" überhaupt feuert).
+
+  Wenn du es sofort willst: beim neuen pair_action: "open" kennt der Moderator den Adressaten ja schon vor dem Sprechen. Wir könnten die Peer-ID auf der Directive mitführen
+  (aktuell trage ich nur pairWithName) und in PersistMessage direkt next_speaker_expert_id der neuen Nachricht stempeln. Dann erscheint der Pfeil unmittelbar mit der Nachricht —
+  und ist nicht mehr von der „Name+?"-Detektion abhängig.
+
+  Soll ich das so umbauen (Directive um pairWithId ergänzen + Stempeln in PersistMessage)?

@@ -46,6 +46,14 @@ class ControlChat extends Component
             return;
         }
 
+        // Raise the shared flag FIRST so the self-perpetuating job loop knows to
+        // keep going; the per-component flags below are only for this browser's
+        // button state and are kept in sync via broadcasts.
+        ProjectJob::startGenerating($this->projectId);
+        // Seed presence so the very first continuation check sees this viewer
+        // even before the heartbeat poll has fired.
+        ProjectJob::markViewing($this->projectId);
+
         $this->keepGenerating = true;
         $this->isDispatching = true;
         $this->userInputRequested = false;
@@ -56,13 +64,24 @@ class ControlChat extends Component
 
     public function stopGenerate(): void
     {
+        // Authoritative, shared stop: clearing the flag halts the loop after the
+        // current turn for every connected user. Broadcast flips all clients'
+        // buttons back to "start".
+        ProjectJob::stopGenerating($this->projectId);
+        $this->keepGenerating = false;
+        $this->isDispatching = false;
+
         GenerationStopped::dispatch($this->projectId);
     }
 
     #[On('echo-private:projects.{projectId},.GenerationStarted')]
     public function onGenerationStarted(): void
     {
+        // Sync EVERY connected user (not just the one who pressed start) to the
+        // generating state, so their button shows "pause" and they can stop too.
+        $this->keepGenerating = true;
         $this->isDispatching = true;
+        $this->userInputRequested = false;
     }
 
     #[On('echo-private:projects.{projectId},.GenerationStopped')]
@@ -75,26 +94,32 @@ class ControlChat extends Component
     #[On('echo-private:projects.{projectId},.MessageGenerated')]
     public function onMessageGenerated(): void
     {
-        $this->isDispatching = false;
+        // The loop is now driven server-side: MessageGenerator re-dispatches
+        // itself while the shared flag is set, so this listener only reflects
+        // button state. `isDispatching` mirrors whether the loop is still live.
+        $this->isDispatching = $this->keepGenerating;
 
         // The browser-side `message_generated` event is dispatched by
         // ProjectChat after IT re-rendered (so voice-stage's data-*
         // attributes are fresh). Duplicating the dispatch here would race
         // ahead of the DOM morph.
-
-        if ($this->keepGenerating && !$this->userInputRequested) {
-            $this->isDispatching = true;
-            MessageGenerator::dispatch($this->projectId);
-        }
     }
 
     #[On('echo-private:projects.{projectId},.UserInputRequested')]
-    public function onUserInputRequested(): void
+    public function onUserInputRequested(array $event = []): void
     {
-        $this->userInputRequested = true;
+        // Generation has halted for everyone.
         $this->keepGenerating = false;
         $this->isDispatching = false;
 
+        // Only the addressed user gets the "your input is requested" prompt. A
+        // null target (unresolved hand-off) falls back to prompting everyone.
+        $targetUserId = $event['targetUserId'] ?? null;
+        if ($targetUserId !== null && $targetUserId !== auth()->id()) {
+            return;
+        }
+
+        $this->userInputRequested = true;
         $this->dispatch('user-input-requested', projectId: $this->projectId);
     }
 
@@ -106,11 +131,20 @@ class ControlChat extends Component
 
         $this->validate();
         $this->project->addMessage($this->msgContent, auth()->user());
-        MessageSent::dispatch($this->projectId);
+        MessageSent::dispatch($this->projectId, auth()->id());
         $this->dispatch('message_sent');
         $this->dispatch('user-input-cleared', projectId: $this->projectId);
         $this->reset('msgContent');
         $this->userInputRequested = false;
+    }
+
+    /**
+     * Viewer-presence heartbeat. Polled by open discussions while generating so
+     * the server loop knows at least one user still has the chat open.
+     */
+    public function heartbeat(): void
+    {
+        ProjectJob::markViewing($this->projectId);
     }
 
     public function updatedMsgContent(string $value): void
@@ -124,6 +158,11 @@ class ControlChat extends Component
     #[On(['contributors_modified'])]
     public function render(): mixed
     {
+        // The shared cache flag is the source of truth for "is the discussion
+        // generating", so even a user who opened the page mid-run shows the
+        // correct (pause) button and can stop it.
+        $this->keepGenerating = ProjectJob::isGenerating($this->projectId);
+
         $jobRunning = ProjectJob::isRunningFor($this->projectId);
 
         $disabledControlsHint = null;
@@ -144,8 +183,11 @@ class ControlChat extends Component
 
         return view('livewire.projects.control-chat', [
             'disableInput' => $jobRunning || $this->isDispatching,
+            // The START button is disabled while a turn is mid-flight; the STOP
+            // button must ALWAYS be clickable (that was the "can't stop" bug).
             'disableGenerate' => $jobRunning || $this->isDispatching,
-            'showGenerate' => ! $this->keepGenerating && ! $this->isDispatching,
+            'disableStop' => false,
+            'showGenerate' => ! $this->keepGenerating,
             'disabledControlsHint' => $disabledControlsHint,
             'userInputRequested' => $this->userInputRequested,
             'mentionables' => $mentionables,

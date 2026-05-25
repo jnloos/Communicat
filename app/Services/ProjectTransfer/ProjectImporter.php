@@ -61,7 +61,13 @@ class ProjectImporter
                 // otherwise a system message: both ids stay null
 
                 $msg->adjacency_pair_type = $m['adjacency_pair_type'] ?? null;
-                $msg->next_speaker        = $m['next_speaker'] ?? null;
+
+                // Re-link the addressed expert only if it survived re-linking;
+                // a user hand-off is reassigned to the importing owner (the
+                // export carries no stable user id), mirroring user messages.
+                $nsExpert = isset($m['next_speaker_expert_id']) ? (int) $m['next_speaker_expert_id'] : null;
+                $msg->next_speaker_expert_id = ($nsExpert !== null && in_array($nsExpert, $existingIds, true)) ? $nsExpert : null;
+                $msg->next_speaker_user_id   = ! empty($m['next_speaker_user_id']) ? $owner->id : null;
                 if (! empty($m['created_at'])) {
                     $msg->created_at = Carbon::parse($m['created_at']);
                 }

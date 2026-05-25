@@ -7,9 +7,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Message extends Model
 {
-    /** Sentinel next_speaker value handing the floor back to the participant. */
-    public const USER_SENTINEL = 'Nutzer';
-
     /** adjacency_pair_type values. */
     public const PAIR_FRAGE_ANTWORT       = 'Frage→Antwort';
     public const PAIR_ANSPRACHE_REAKTION  = 'Ansprache→Reaktion';
@@ -27,6 +24,20 @@ class Message extends Model
 
     public function project(): BelongsTo {
         return $this->belongsTo(Project::class);
+    }
+
+    /** The expert this message hands the floor to, if any (FK, project-scoped by data). */
+    public function nextSpeakerExpert(): BelongsTo {
+        return $this->belongsTo(Expert::class, 'next_speaker_expert_id');
+    }
+
+    /** The user this message hands the floor back to, if any. */
+    public function nextSpeakerUser(): BelongsTo {
+        return $this->belongsTo(User::class, 'next_speaker_user_id');
+    }
+
+    public function handsBackToUser(): bool {
+        return !is_null($this->next_speaker_user_id);
     }
 
     public function isAssistant(): bool {

@@ -42,6 +42,21 @@
                             </section>
                         @endif
 
+                        @foreach ($memory['users'] as $name => $note)
+                            <section class="rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 overflow-hidden">
+                                <header class="flex items-center gap-2 px-4 py-2 bg-zinc-100/70 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-700">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-zinc-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                    <h4 class="text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300">
+                                        {{ __('Über') }} {{ $name }}
+                                    </h4>
+                                </header>
+                                <p class="px-4 py-3 text-sm whitespace-pre-wrap text-zinc-700 dark:text-zinc-200">{{ $note }}</p>
+                            </section>
+                        @endforeach
+
                         @foreach ($memory['experts'] as $name => $note)
                             @php($avatar = $expertAvatars[$name] ?? null)
                             <section class="rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 overflow-hidden">

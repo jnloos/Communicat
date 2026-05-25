@@ -21,15 +21,18 @@ class PersistMessage
 
         // Single source of truth for the floor outcome. The RunThink failure
         // guard short-circuits before this stage, so its reason is never reached
-        // here.
-        $ctx->nextSpeaker = $addressUser ? Message::USER_SENTINEL : null;
-        $ctx->stop        = $addressUser;
-        $ctx->reason      = $addressUser ? 'user_addressed' : null;
+        // here. Floor hand-off is recorded by FK: when handing back to the human
+        // we resolve the concrete user (pending message author, else owner) so
+        // multi-user projects know exactly who is addressed.
+        $ctx->stop   = $addressUser;
+        $ctx->reason = $addressUser ? 'user_addressed' : null;
 
         $message = $ctx->project->addMessage($ctx->speakResult['content'], $ctx->winner);
         $message->adjacency_pair_type = $this->deriveAdjacencyPairType($ctx, $addressUser);
-        $message->next_speaker        = $ctx->nextSpeaker;
-        $message->job_log_id          = $ctx->jobLogId;
+        if ($addressUser) {
+            $message->next_speaker_user_id = $ctx->project->handoffUser($ctx->latestMessage)?->id;
+        }
+        $message->job_log_id = $ctx->jobLogId;
         $message->save();
 
         $ctx->message = $message;

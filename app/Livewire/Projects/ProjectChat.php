@@ -54,10 +54,16 @@ class ProjectChat extends Component
     }
 
     #[On('echo-private:projects.{projectId},.UserMessageSent')]
-    public function onUserMessageSent(): void
+    public function onUserMessageSent(array $event = []): void
     {
         $this->updateHasMore();
-        $this->dispatch('message_generated');
+        // Carry projectId + senderId so the browser pop listener can ring for
+        // OTHER users' messages while skipping the sender's own (item 4).
+        $this->dispatch(
+            'message_generated',
+            projectId: $this->projectId,
+            senderId: $event['senderId'] ?? null,
+        );
     }
 
     #[On('echo-private:projects.{projectId},.MessageGenerated')]

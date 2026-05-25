@@ -16,7 +16,7 @@ class RunExpertsSpeak
     public function handle(TurnContext $ctx, Closure $next)
     {
         $agent       = app(AgentService::class, ['project' => $ctx->project]);
-        $thinkOutput = $ctx->thinkOutputs[$ctx->winner->name];
+        $thinkOutput = $ctx->thinkOutputs[$ctx->winner->id];
 
         $ctx->speakResult = $agent->speak($ctx->winner, $thinkOutput, $ctx->directive);
 

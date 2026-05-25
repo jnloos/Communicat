@@ -25,7 +25,7 @@ class TurnContext
 
     public ?Directive $directive = null;
 
-    /** @var array<string, array{memory: string, beitragsabsicht: string}> name → THINK output */
+    /** @var array<int, array{memory: string, beitragsabsicht: string}> expert id → THINK output */
     public array $thinkOutputs = [];
 
     public ?Expert $winner = null;
@@ -37,7 +37,6 @@ class TurnContext
 
     public bool $stop = false;
     public ?string $reason = null;
-    public ?string $nextSpeaker = null;
 
     public function __construct(
         public Project $project,

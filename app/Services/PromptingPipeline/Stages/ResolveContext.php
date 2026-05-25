@@ -34,9 +34,24 @@ class ResolveContext
             $note = $note === '' ? $userNote : $userNote . ' ' . $note;
         }
 
+        $openPair = $this->detectOpenAdjacencyPair($ctx);
+
+        // Record the detected addressee on the addressing message so the chat can
+        // draw a "speaks to" arrow (user→expert and expert→expert). The
+        // expert→user hand-back is recorded separately as next_speaker_user_id
+        // by PersistMessage. Don't clobber an existing hand-off.
+        if ($openPair !== null
+            && $ctx->latestMessage !== null
+            && empty($ctx->latestMessage->next_speaker_expert_id)
+            && empty($ctx->latestMessage->next_speaker_user_id)
+        ) {
+            $ctx->latestMessage->next_speaker_expert_id = $openPair['addressee_id'];
+            $ctx->latestMessage->saveQuietly();
+        }
+
         $ctx->moderationNote    = $note;
         $ctx->moderationContext = [
-            'open_adjacency_pair' => $this->detectOpenAdjacencyPair($ctx),
+            'open_adjacency_pair' => $openPair,
             'agenda_phase'        => $moderator->agendaPhase(),
             'pending_user'        => $pendingExcerpt,
         ];
@@ -61,7 +76,7 @@ class ResolveContext
     /**
      * Detect an open adjacency pair from the latest message (advisory only).
      *
-     * @return array{addressee: string, pair_type: string, from: string, source: string}|null
+     * @return array{addressee_id: int, addressee: string, pair_type: string, from: string, source: string}|null
      */
     protected function detectOpenAdjacencyPair(TurnContext $ctx): ?array
     {
@@ -99,10 +114,11 @@ class ResolveContext
             };
 
             return [
-                'addressee' => $expert->name,
-                'pair_type' => $hasQuestion ? Message::PAIR_FRAGE_ANTWORT : Message::PAIR_ANSPRACHE_REAKTION,
-                'from'      => $senderName,
-                'source'    => $source,
+                'addressee_id' => $expert->id,
+                'addressee'    => $expert->name, // display only; logic uses addressee_id
+                'pair_type'    => $hasQuestion ? Message::PAIR_FRAGE_ANTWORT : Message::PAIR_ANSPRACHE_REAKTION,
+                'from'         => $senderName,
+                'source'       => $source,
             ];
         }
 

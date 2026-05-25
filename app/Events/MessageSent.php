@@ -12,7 +12,10 @@ class MessageSent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public function __construct(public readonly int $projectId) {}
+    public function __construct(
+        public readonly int $projectId,
+        public readonly ?int $senderId = null,
+    ) {}
 
     public function broadcastOn(): array {
         return [new PrivateChannel("projects.{$this->projectId}")];

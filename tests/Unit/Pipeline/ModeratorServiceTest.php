@@ -88,9 +88,9 @@ class ModeratorServiceTest extends TestCase
     // route
     // -------------------------------------------------------------------------
 
-    public function test_route_parses_path_a(): void
+    public function test_route_returns_candidate_ids_from_json(): void
     {
-        $json = '{"path":"A","addressed_agent":"Alice","selected_agents":[],"reasoning":"Alice wurde angesprochen."}';
+        $json = '{"candidates":[' . $this->expert2->id . '],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","address_user":false},"reasoning":"Bob passt."}';
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -99,14 +99,13 @@ class ModeratorServiceTest extends TestCase
 
         $result = (new ModeratorService($this->project, $client, $prompts))->route();
 
-        $this->assertSame('A', $result['path']);
-        $this->assertSame('Alice', $result['addressed_agent']);
-        $this->assertSame([], $result['selected_agents']);
+        $this->assertSame([$this->expert2->id], $result['candidates']);
+        $this->assertSame('vertiefen', $result['directive']->role);
     }
 
-    public function test_route_parses_path_b(): void
+    public function test_route_filters_unknown_ids(): void
     {
-        $json = '{"path":"B","addressed_agent":null,"selected_agents":["Alice","Bob"],"reasoning":"Offen."}';
+        $json = '{"candidates":[' . $this->expert1->id . ',999999],"directive":{},"reasoning":"x"}';
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -115,13 +114,10 @@ class ModeratorServiceTest extends TestCase
 
         $result = (new ModeratorService($this->project, $client, $prompts))->route();
 
-        $this->assertSame('B', $result['path']);
-        $this->assertNull($result['addressed_agent']);
-        $this->assertContains('Alice', $result['selected_agents']);
-        $this->assertContains('Bob', $result['selected_agents']);
+        $this->assertSame([$this->expert1->id], $result['candidates']);
     }
 
-    public function test_route_falls_back_to_path_b_on_invalid_json(): void
+    public function test_route_falls_back_to_all_contributors_on_invalid_json(): void
     {
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -130,13 +126,15 @@ class ModeratorServiceTest extends TestCase
 
         $result = (new ModeratorService($this->project, $client, $prompts))->route();
 
-        $this->assertSame('B', $result['path']);
-        $this->assertNull($result['addressed_agent']);
+        $this->assertEqualsCanonicalizing(
+            [$this->expert1->id, $this->expert2->id],
+            $result['candidates']
+        );
     }
 
-    public function test_route_parses_json_wrapped_in_markdown_fence(): void
+    public function test_route_parses_candidate_ids_in_markdown_fence(): void
     {
-        $response = "```json\n{\"path\":\"B\",\"addressed_agent\":null,\"selected_agents\":[\"Alice\",\"Bob\"],\"reasoning\":\"Test.\"}\n```";
+        $response = "```json\n{\"candidates\":[" . $this->expert1->id . ',' . $this->expert2->id . "],\"directive\":{},\"reasoning\":\"Test.\"}\n```";
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -145,13 +143,13 @@ class ModeratorServiceTest extends TestCase
 
         $result = (new ModeratorService($this->project, $client, $prompts))->route();
 
-        $this->assertSame('B', $result['path']);
-        $this->assertContains('Alice', $result['selected_agents']);
+        $this->assertContains($this->expert1->id, $result['candidates']);
+        $this->assertContains($this->expert2->id, $result['candidates']);
     }
 
-    public function test_route_normalizes_addressed_agent_case(): void
+    public function test_route_falls_back_to_all_when_candidates_empty(): void
     {
-        $json = '{"path":"A","addressed_agent":"alice","selected_agents":[],"reasoning":"Alice wurde angesprochen."}';
+        $json = '{"candidates":[],"directive":{},"reasoning":"x"}';
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -160,49 +158,28 @@ class ModeratorServiceTest extends TestCase
 
         $result = (new ModeratorService($this->project, $client, $prompts))->route();
 
-        $this->assertSame('A', $result['path']);
-        $this->assertSame('Alice', $result['addressed_agent']);
-        $this->assertSame([], $result['selected_agents']);
-    }
-
-    public function test_route_promotes_single_selected_agent_to_path_a(): void
-    {
-        $json = '{"path":"B","addressed_agent":null,"selected_agents":["Bob"],"reasoning":"Bob passt fachlich am besten."}';
-
-        $client  = Mockery::mock(OpenAIClient::class);
-        $prompts = Mockery::mock(PromptBuilder::class);
-        $client->shouldReceive('sendFast')->once()->andReturn($json);
-        $prompts->shouldReceive('moderatorRoute')->once()->andReturn('prompt');
-
-        $result = (new ModeratorService($this->project, $client, $prompts))->route();
-
-        $this->assertSame('A', $result['path']);
-        $this->assertSame('Bob', $result['addressed_agent']);
-        $this->assertSame([], $result['selected_agents']);
-    }
-
-    public function test_route_uses_direct_address_hint_when_json_is_invalid(): void
-    {
-        $client  = Mockery::mock(OpenAIClient::class);
-        $prompts = Mockery::mock(PromptBuilder::class);
-        $client->shouldReceive('sendFast')->once()->andReturn('kein gültiges JSON');
-        $prompts->shouldReceive('moderatorRoute')->once()->andReturn('prompt');
-
-        $result = (new ModeratorService($this->project, $client, $prompts))
-            ->route('', 'Die letzte Nutzernachricht richtet eine Frage an Bob.');
-
-        $this->assertSame('A', $result['path']);
-        $this->assertSame('Bob', $result['addressed_agent']);
-        $this->assertSame([], $result['selected_agents']);
+        $this->assertEqualsCanonicalizing(
+            [$this->expert1->id, $this->expert2->id],
+            $result['candidates']
+        );
     }
 
     // -------------------------------------------------------------------------
     // selectWinner
     // -------------------------------------------------------------------------
 
+    /** @return array<int, array{memory: string, beitragsabsicht: string}> */
+    private function thinkOutputs(): array
+    {
+        return [
+            $this->expert1->id => ['memory' => '', 'beitragsabsicht' => 'output A'],
+            $this->expert2->id => ['memory' => '', 'beitragsabsicht' => 'output B'],
+        ];
+    }
+
     public function test_select_winner_returns_parsed_winner(): void
     {
-        $json = '{"winner":"Bob","reasoning":"Höchste Priorität."}';
+        $json = '{"winner":' . $this->expert2->id . ',"reasoning":"Höchste Priorität."}';
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -210,14 +187,14 @@ class ModeratorServiceTest extends TestCase
         $prompts->shouldReceive('moderatorSelect')->once()->andReturn('prompt');
 
         $winner = (new ModeratorService($this->project, $client, $prompts))
-            ->selectWinner(['Alice' => 'output A', 'Bob' => 'output B']);
+            ->selectWinner($this->thinkOutputs());
 
-        $this->assertSame('Bob', $winner);
+        $this->assertSame($this->expert2->id, $winner);
     }
 
     public function test_select_winner_falls_back_when_winner_not_in_candidates(): void
     {
-        $json = '{"winner":"Unknown Expert","reasoning":"Test."}';
+        $json = '{"winner":999999,"reasoning":"Test."}';
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -225,9 +202,9 @@ class ModeratorServiceTest extends TestCase
         $prompts->shouldReceive('moderatorSelect')->once()->andReturn('prompt');
 
         $winner = (new ModeratorService($this->project, $client, $prompts))
-            ->selectWinner(['Alice' => 'output A', 'Bob' => 'output B']);
+            ->selectWinner($this->thinkOutputs());
 
-        $this->assertSame('Alice', $winner);
+        $this->assertSame($this->expert1->id, $winner);
     }
 
     public function test_select_winner_falls_back_to_first_key_on_invalid_json(): void
@@ -238,9 +215,9 @@ class ModeratorServiceTest extends TestCase
         $prompts->shouldReceive('moderatorSelect')->once()->andReturn('prompt');
 
         $winner = (new ModeratorService($this->project, $client, $prompts))
-            ->selectWinner(['Alice' => 'output A', 'Bob' => 'output B']);
+            ->selectWinner($this->thinkOutputs());
 
-        $this->assertSame('Alice', $winner);
+        $this->assertSame($this->expert1->id, $winner);
     }
 
     // -------------------------------------------------------------------------
@@ -249,27 +226,27 @@ class ModeratorServiceTest extends TestCase
 
     public function test_update_state_prepends_speaker_and_type(): void
     {
-        $this->project->settings = ['recent_speakers' => ['Bob'], 'recent_response_types' => ['Frage→Antwort']];
+        $this->project->settings = ['recent_speakers' => [$this->expert2->id], 'recent_response_types' => ['Frage→Antwort']];
         $this->project->save();
 
         $this->makeService()->updateState($this->expert1, 'Assertion→Reaktion');
 
         $this->project->refresh();
-        $this->assertSame('Alice', $this->project->settings['recent_speakers'][0]);
-        $this->assertSame('Bob', $this->project->settings['recent_speakers'][1]);
+        $this->assertSame($this->expert1->id, $this->project->settings['recent_speakers'][0]);
+        $this->assertSame($this->expert2->id, $this->project->settings['recent_speakers'][1]);
         $this->assertSame('Assertion→Reaktion', $this->project->settings['recent_response_types'][0]);
     }
 
     public function test_update_state_keeps_max_six_recent_speakers(): void
     {
-        $this->project->settings = ['recent_speakers' => ['A', 'B', 'C', 'D', 'E', 'F']];
+        $this->project->settings = ['recent_speakers' => [91, 92, 93, 94, 95, 96]];
         $this->project->save();
 
         $this->makeService()->updateState($this->expert1, 'type');
 
         $this->project->refresh();
         $this->assertCount(6, $this->project->settings['recent_speakers']);
-        $this->assertSame('Alice', $this->project->settings['recent_speakers'][0]);
+        $this->assertSame($this->expert1->id, $this->project->settings['recent_speakers'][0]);
     }
 
     public function test_update_state_increments_all_silence_counters_and_resets_winner(): void
