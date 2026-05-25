@@ -4,6 +4,7 @@ namespace App\Livewire\Projects;
 
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Project;
+use App\Services\ProjectImporter;
 use Flux\Flux;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Gate;
@@ -11,12 +12,18 @@ use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class EditProject extends Component
 {
     use NeedsConfirmation;
+    use WithFileUploads;
+
     #[Locked]
     public int $forProjectId;
+
+    #[Validate('nullable|file|max:20480')]
+    public $importFile = null;
 
     #[Validate('required|string|max:255')]
     public string $title = '';
@@ -51,6 +58,29 @@ class EditProject extends Component
 
         $this->dispatch('project_edited');
         Flux::modal('edit-project')->close();
+    }
+
+    /** Import a JSON export as a new project owned by the current user. */
+    public function import(): void {
+        $this->validate(['importFile' => 'required|file|max:20480']);
+
+        $data = json_decode(file_get_contents($this->importFile->getRealPath()), true);
+        if (! is_array($data) || ! isset($data['project'])) {
+            $this->addError('importFile', __('Invalid export file.'));
+            return;
+        }
+
+        $result = app(ProjectImporter::class)->import($data, auth()->user());
+
+        $this->reset('importFile');
+        Cookie::queue('curr_project', $result['project']->id);
+        Flux::modal('edit-project')->close();
+
+        if (! empty($result['missing_experts'])) {
+            session()->flash('import_warning', __('Some experts no longer exist and were skipped.'));
+        }
+
+        $this->redirectRoute('dashboard');
     }
 
     public function delete(): void {

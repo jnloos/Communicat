@@ -12,11 +12,14 @@ class ProjectExportController extends Controller
     {
         abort_unless(Gate::allows('access-project', $project), 403);
 
+        // schema_version 2: full clone payload (settings, expert memory, message
+        // metadata) so a project can be reconstructed via ProjectImporter.
         $payload = [
+            'schema_version' => 2,
             'project' => [
-                'id'          => $project->id,
                 'title'       => $project->title,
                 'description' => $project->description,
+                'settings'    => $project->settings ?? [],
                 'created_at'  => optional($project->created_at)->toIso8601String(),
             ],
             'experts' => $project->contributingExperts()
@@ -25,6 +28,10 @@ class ProjectExportController extends Controller
                     'name'        => $e->name,
                     'job'         => $e->job,
                     'description' => $e->description,
+                    'prompt'      => $e->prompt,
+                    'voice_id'    => $e->voice_id,
+                    'avatar_url'  => $e->avatar_url,
+                    'tags'        => $e->tags->pluck('name')->all(),
                 ])
                 ->values()
                 ->all(),
@@ -32,18 +39,24 @@ class ProjectExportController extends Controller
                 ->with(['expert:id,name', 'user:id,name'])
                 ->orderBy('id')
                 ->get()
-                ->map(function ($m) {
-                    $senderType = $m->expert_id ? 'expert' : ($m->user_id ? 'user' : 'system');
-                    $senderName = $m->expert?->name ?? $m->user?->name;
-                    return [
-                        'id'           => $m->id,
-                        'content'      => $m->content,
-                        'sender_type'  => $senderType,
-                        'sender_name'  => $senderName,
-                        'created_at'   => optional($m->created_at)->toIso8601String(),
-                        'next_speaker' => $m->next_speaker,
-                    ];
-                })
+                ->map(fn($m) => [
+                    'id'                  => $m->id,
+                    'content'             => $m->content,
+                    'expert_id'           => $m->expert_id,
+                    'is_user'             => $m->user_id !== null,
+                    'sender_name'         => $m->expert?->name ?? $m->user?->name,
+                    'adjacency_pair_type' => $m->adjacency_pair_type,
+                    'next_speaker'        => $m->next_speaker,
+                    'created_at'          => optional($m->created_at)->toIso8601String(),
+                ])
+                ->values()
+                ->all(),
+            'summaries' => $project->summaries()
+                ->get()
+                ->map(fn($s) => [
+                    'expert_id' => $s->expert_id,
+                    'content'   => $s->content,
+                ])
                 ->values()
                 ->all(),
         ];
