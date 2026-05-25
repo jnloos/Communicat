@@ -11,7 +11,7 @@
     'limitWarning' => null,
 ])
 
-<flux:modal name="select-contributors" variant="flyout" class="md:w-[28rem]">
+<flux:modal name="select-contributors" variant="flyout" class="md:w-[32rem]">
     <flux:heading size="lg">
         {{ __('Choose Contributors') }}
     </flux:heading>

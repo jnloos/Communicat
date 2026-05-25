@@ -2,7 +2,7 @@
 
 namespace App\Facades;
 
-use App\Services\MarkdownParser;
+use App\Services\Text\MarkdownParser;
 use Illuminate\Support\Facades\Facade;
 
 class Markdown extends Facade

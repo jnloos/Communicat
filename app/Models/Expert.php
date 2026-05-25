@@ -12,12 +12,20 @@ class Expert extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'core_beliefs'     => 'array',
+        'knowledge_limits' => 'array',
+    ];
+
     protected $fillable = [
         'name',
         'avatar_url',
         'job',
         'description',
-        'prompt',
+        'profile',
+        'core_beliefs',
+        'knowledge_limits',
+        'style',
         'voice_id',
     ];
 
@@ -68,12 +76,38 @@ class Expert extends Model
     {
         $summary = $this->thoughtsAbout($project);
 
+        $persona = collect([
+            'Profil'            => $this->profile,
+            'Kernüberzeugungen' => $this->formatPersonaList($this->core_beliefs),
+            'Wissensgrenzen'    => $this->formatPersonaList($this->knowledge_limits),
+            'Stil'              => $this->style,
+        ])
+            ->filter()
+            ->map(fn ($v, $k) => "[$k]\n$v")
+            ->implode("\n\n");
+
         return [
-            'name' => $this->name,
-            'expert_id' => $this->id,
-            'job' => $this->job,
-            'description' => $this->prompt,
-            'thoughts' => $summary,
+            'name'        => $this->name,
+            'expert_id'   => $this->id,
+            'job'         => $this->job,
+            'description' => $persona,
+            'thoughts'    => $summary,
         ];
+    }
+
+    private function formatPersonaList(mixed $items): ?string
+    {
+        if (empty($items)) {
+            return null;
+        }
+        if (is_string($items)) {
+            return $items;
+        }
+        $filtered = array_values(array_filter($items, fn ($v) => trim((string) $v) !== ''));
+        if (empty($filtered)) {
+            return null;
+        }
+
+        return implode("\n", array_map(fn ($v, $i) => ($i + 1) . '. ' . $v, $filtered, array_keys($filtered)));
     }
 }

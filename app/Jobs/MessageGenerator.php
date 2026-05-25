@@ -8,8 +8,8 @@ use App\Events\UserInputRequested;
 use App\Jobs\Dependencies\ProjectJob;
 use App\Models\JobLog;
 use App\Models\Project;
-use App\Services\OpenAIClient;
-use App\Services\PipelineModerator;
+use App\Services\Clients\OpenAIClient;
+use App\Services\PromptingPipeline\DiscussionPipeline;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -41,7 +41,7 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
             OpenAIClient::bindJobLog($log->id);
 
             try {
-                $pipelineResult = (new PipelineModerator($project, $log->id))->run();
+                $pipelineResult = (new DiscussionPipeline($project, $log->id))->run();
                 $log->update(['status' => 'success', 'finished_at' => now()]);
                 JobLogged::dispatch($log->fresh());
 

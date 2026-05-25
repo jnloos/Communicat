@@ -5,6 +5,7 @@ use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Http\Controllers\MessageAudioController;
+use App\Http\Controllers\VoicePreviewController;
 use App\Http\Controllers\ProjectExportController;
 use App\Models\Project;
 use Illuminate\Support\Facades\Cookie;
@@ -47,6 +48,10 @@ Route::middleware(['auth', 'verified'])
 Route::middleware(['auth', 'verified'])
     ->get('messages/{message}/audio', [MessageAudioController::class, 'show'])
     ->name('messages.audio');
+
+Route::middleware(['auth', 'verified'])
+    ->get('voices/{voiceId}/preview', [VoicePreviewController::class, 'show'])
+    ->name('voices.preview');
 
 
 Route::get('experts', function () {

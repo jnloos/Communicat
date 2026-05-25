@@ -37,7 +37,14 @@ class ExpertEditor extends Component
     public string $description = '';
 
     #[Validate('nullable|string')]
-    public string $prompt = '';
+    public string $profile = '';
+
+    public array $coreBeliefs = [];
+
+    public array $knowledgeLimits = [];
+
+    #[Validate('nullable|string')]
+    public string $style = '';
 
     #[Validate('nullable|string|max:500')]
     public string $tagsInput = '';
@@ -63,7 +70,10 @@ class ExpertEditor extends Component
         $this->avatarUrl = $expert->avatar_url ?? null;
         $this->job = $expert->job ?? '';
         $this->description = $expert->description ?? '';
-        $this->prompt = $expert->prompt ?? '';
+        $this->profile = $expert->profile ?? '';
+        $this->coreBeliefs = is_array($expert?->core_beliefs) ? array_values($expert->core_beliefs) : [];
+        $this->knowledgeLimits = is_array($expert?->knowledge_limits) ? array_values($expert->knowledge_limits) : [];
+        $this->style = $expert->style ?? '';
         $this->tagsInput = $expert
             ? $expert->tags()->orderBy('name')->pluck('name')->implode(', ')
             : '';
@@ -97,7 +107,10 @@ class ExpertEditor extends Component
         $expert->name = $this->name;
         $expert->job = $this->job;
         $expert->description = $this->description;
-        $expert->prompt = $this->prompt;
+        $expert->profile = $this->profile;
+        $expert->core_beliefs = array_values(array_filter($this->coreBeliefs, fn ($v) => trim((string) $v) !== ''));
+        $expert->knowledge_limits = array_values(array_filter($this->knowledgeLimits, fn ($v) => trim((string) $v) !== ''));
+        $expert->style = $this->style;
         $expert->voice_id = $this->voiceId !== '' ? $this->voiceId : null;
         $expert->save();
 
@@ -169,16 +182,49 @@ class ExpertEditor extends Component
         Storage::disk('public')->delete($path);
     }
 
+    public function addCoreBelief(): void
+    {
+        $this->coreBeliefs[] = '';
+    }
+
+    public function removeCoreBelief(int $index): void
+    {
+        array_splice($this->coreBeliefs, $index, 1);
+        $this->coreBeliefs = array_values($this->coreBeliefs);
+    }
+
+    public function addKnowledgeLimit(): void
+    {
+        $this->knowledgeLimits[] = '';
+    }
+
+    public function removeKnowledgeLimit(int $index): void
+    {
+        array_splice($this->knowledgeLimits, $index, 1);
+        $this->knowledgeLimits = array_values($this->knowledgeLimits);
+    }
+
     protected function resetForm(): void
     {
-        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'job', 'description', 'prompt', 'tagsInput', 'voiceId', 'voiceGender']);
+        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'job', 'description', 'profile', 'style', 'tagsInput', 'voiceId', 'voiceGender']);
+        $this->coreBeliefs = [];
+        $this->knowledgeLimits = [];
     }
 
     public function render(): mixed
     {
         $isUpdate = ! is_null($this->expertId);
 
-        $voices = (array) config("voices.$this->voiceGender", []);
+        // Show only the voice's traits in the dropdown: strip the name prefix
+        // before the en-dash ("Sarah – warm, ruhig" → "warm, ruhig").
+        $voices = collect((array) config("voices.$this->voiceGender", []))
+            ->map(fn ($v) => [
+                'id'    => $v['id'] ?? '',
+                'label' => str_contains((string) ($v['label'] ?? ''), '–')
+                    ? trim(\Illuminate\Support\Str::after((string) $v['label'], '–'))
+                    : (string) ($v['label'] ?? ''),
+            ])
+            ->all();
 
         // Preserve a current value that is not in the active gender's list
         // (legacy data or gender mismatch) so saving doesn't drop it silently.

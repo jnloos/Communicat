@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Services;
 
-use App\Services\MemoryFormatter;
+use App\Services\Text\MemoryFormatter;
 use Tests\TestCase;
 
 class MemoryFormatterTest extends TestCase

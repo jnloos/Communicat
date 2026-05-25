@@ -19,7 +19,7 @@
         }
     }"
 >
-    <flux:modal name="confirm-action" class="md:w-96">
+    <flux:modal name="confirm-action" class="md:w-[28rem]">
         <div class="space-y-6">
             <flux:heading size="lg" x-text="title"></flux:heading>
             <flux:text x-text="message"></flux:text>

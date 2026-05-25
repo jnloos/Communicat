@@ -6,7 +6,7 @@ use App\Models\Expert;
 use App\Models\Message;
 use App\Models\Project;
 use App\Models\User;
-use App\Services\PipelineModerator;
+use App\Services\PromptingPipeline\DiscussionPipeline;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use ReflectionMethod;
 use Tests\TestCase;
@@ -50,7 +50,7 @@ class PipelineModeratorMentionTest extends TestCase
 
     private function callExtract(?Message $msg): ?Expert
     {
-        $pipeline = new PipelineModerator($this->project);
+        $pipeline = new DiscussionPipeline($this->project);
         $method   = new ReflectionMethod($pipeline, 'extractUserMention');
         $method->setAccessible(true);
 

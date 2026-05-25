@@ -54,7 +54,7 @@
         </div>
 
         <!-- Create / Edit Modal -->
-        <flux:modal name="user-form" class="md:w-96">
+        <flux:modal name="user-form" class="md:w-[32rem]">
             <div class="space-y-6">
                 <flux:heading size="lg">
                     {{ $editingUserId ? __('Edit User') : __('Create User') }}

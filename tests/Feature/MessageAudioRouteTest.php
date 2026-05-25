@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\User;
-use App\Services\ElevenLabsClient;
+use App\Services\Clients\ElevenLabsClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;

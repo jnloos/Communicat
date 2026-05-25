@@ -23,7 +23,10 @@ class InitExpertsCommandTest extends TestCase
                 'job' => 'QA',
                 'voice_id' => 'elevenlabs-test-voice-id',
                 'description' => 'Short description.',
-                'prompt' => 'Prompt text.',
+                'profile' => 'Profile text.',
+                'core_beliefs' => ['Belief one.'],
+                'knowledge_limits' => ['Limit one.'],
+                'style' => 'Style text.',
                 'tags' => [],
             ],
         ], JSON_THROW_ON_ERROR));
@@ -48,7 +51,6 @@ class InitExpertsCommandTest extends TestCase
             'voice_id' => 'existing-voice',
             'job' => 'Old job',
             'description' => 'Old description.',
-            'prompt' => 'Old prompt.',
         ]);
 
         $path = storage_path('framework/testing-init-experts-preserve.json');
@@ -59,7 +61,10 @@ class InitExpertsCommandTest extends TestCase
                 'avatar_url' => '',
                 'job' => 'New job',
                 'description' => 'New description.',
-                'prompt' => 'New prompt.',
+                'profile' => 'New profile.',
+                'core_beliefs' => ['New belief.'],
+                'knowledge_limits' => ['New limit.'],
+                'style' => 'New style.',
                 'tags' => [],
             ],
         ], JSON_THROW_ON_ERROR));

@@ -5,9 +5,9 @@ namespace Tests\Feature\Pipeline;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\User;
-use App\Services\OpenAIClient;
-use App\Services\PipelineModerator;
-use App\Services\PromptBuilder;
+use App\Services\Clients\OpenAIClient;
+use App\Services\PromptingPipeline\DiscussionPipeline;
+use App\Services\PromptingPipeline\Support\PromptBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;
@@ -72,7 +72,7 @@ class PipelineModeratorTest extends TestCase
         $this->instance(OpenAIClient::class, $client);
         $this->instance(PromptBuilder::class, $this->mockPrompts());
 
-        (new PipelineModerator($this->project))->run();
+        (new DiscussionPipeline($this->project))->run();
 
         $msg = $this->project->messages()->whereNotNull('expert_id')->latest()->first();
         $this->assertSame($this->expert1->id, $msg->expert_id);
@@ -94,7 +94,7 @@ class PipelineModeratorTest extends TestCase
         $this->instance(OpenAIClient::class, $client);
         $this->instance(PromptBuilder::class, $this->mockPrompts());
 
-        (new PipelineModerator($this->project))->run();
+        (new DiscussionPipeline($this->project))->run();
 
         $summary = $this->expert1->thoughtsAbout($this->project);
         $this->assertStringContainsString('Neugierig', $summary->content);
@@ -112,7 +112,7 @@ class PipelineModeratorTest extends TestCase
         $this->instance(OpenAIClient::class, $client);
         $this->instance(PromptBuilder::class, $this->mockPrompts());
 
-        (new PipelineModerator($this->project))->run();
+        (new DiscussionPipeline($this->project))->run();
 
         $this->project->refresh();
         $settings = $this->project->settings;
@@ -144,7 +144,7 @@ class PipelineModeratorTest extends TestCase
         $this->instance(OpenAIClient::class, $client);
         $this->instance(PromptBuilder::class, $this->mockPrompts());
 
-        (new PipelineModerator($this->project))->run();
+        (new DiscussionPipeline($this->project))->run();
 
         $msg = $this->project->messages()->whereNotNull('expert_id')->latest()->first();
         $this->assertSame($this->expert2->id, $msg->expert_id);
@@ -170,7 +170,7 @@ class PipelineModeratorTest extends TestCase
         $this->instance(OpenAIClient::class, $client);
         $this->instance(PromptBuilder::class, $this->mockPrompts());
 
-        (new PipelineModerator($this->project))->run();
+        (new DiscussionPipeline($this->project))->run();
 
         // Both experts were given think+prioritize (twice) and Alice won
         $msg = $this->project->messages()->whereNotNull('expert_id')->latest()->first();

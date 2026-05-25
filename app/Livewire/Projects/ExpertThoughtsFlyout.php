@@ -4,7 +4,7 @@ namespace App\Livewire\Projects;
 
 use App\Models\Expert;
 use App\Models\Project;
-use App\Services\MemoryFormatter;
+use App\Services\Text\MemoryFormatter;
 use Flux\Flux;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;

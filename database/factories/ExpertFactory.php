@@ -12,11 +12,14 @@ class ExpertFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'        => fake()->name(),
-            'job'         => fake()->jobTitle(),
-            'description' => fake()->paragraph(),
-            'prompt'      => fake()->paragraph(),
-            'avatar_url'  => null,
+            'name'             => fake()->name(),
+            'job'              => fake()->jobTitle(),
+            'description'      => fake()->sentence(),
+            'profile'          => fake()->paragraph(),
+            'core_beliefs'     => fake()->paragraph(),
+            'knowledge_limits' => fake()->paragraph(),
+            'style'            => fake()->sentence(),
+            'avatar_url'       => null,
         ];
     }
 }

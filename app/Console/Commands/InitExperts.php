@@ -51,10 +51,13 @@ class InitExperts extends Command
             $avatarUrl = ! empty($expert['avatar_url']) ? asset($expert['avatar_url']) : null;
 
             $attributes = [
-                'description' => $expert['description'],
-                'job' => $expert['job'],
-                'prompt' => $expert['prompt'],
-                'avatar_url' => $avatarUrl,
+                'description'      => $expert['description'],
+                'job'              => $expert['job'],
+                'profile'          => $expert['profile'] ?? null,
+                'core_beliefs'     => $expert['core_beliefs'] ?? null,
+                'knowledge_limits' => $expert['knowledge_limits'] ?? null,
+                'style'            => $expert['style'] ?? null,
+                'avatar_url'       => $avatarUrl,
             ];
 
             if (array_key_exists('voice_id', $expert)) {

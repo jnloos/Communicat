@@ -2,7 +2,7 @@
 
 namespace Tests\Unit;
 
-use App\Services\ElevenLabsClient;
+use App\Services\Clients\ElevenLabsClient;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;

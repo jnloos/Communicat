@@ -54,30 +54,15 @@
             </flux:heading>
         </div>
 
-        <x-projects.contributor-group :contributors="$project->experts()->get()->concat($project->users()->get())" :label="__('Set Contributors')" @click="$wire.dispatch('select_contributors')">
-            {{ __('Add ') }}
-        </x-projects.contributor-group>
-    </div>
-
-    <div class="mt-4 flex justify-end items-center gap-3">
-        <flux:tooltip :content="__('Chat-Verlauf als JSON exportieren')" position="bottom">
-            <flux:button
-                as="a"
-                href="{{ route('project.export.json', $project) }}"
-                icon="arrow-down-tray"
-                variant="ghost"
-                size="sm"
-                class="cursor-pointer"
-                :aria-label="__('Export JSON')"
-            >
-                {{ __('Export') }}
-            </flux:button>
-        </flux:tooltip>
-
-        <flux:radio.group variant="segmented" x-model="mode" x-on:change="setMode(mode)">
+        <flux:radio.group variant="segmented" x-model="mode" x-on:change="setMode(mode)"
+            class="order-last w-full justify-center md:order-none md:w-auto">
             <flux:radio value="text" icon="chat-bubble-left-right">{{ __('Text') }}</flux:radio>
             <flux:radio value="voice" icon="microphone">{{ __('Voice') }}</flux:radio>
         </flux:radio.group>
+
+        <x-projects.contributor-group :contributors="$project->experts()->get()->concat($project->users()->get())" :label="__('Set Contributors')" @click="$wire.dispatch('select_contributors')">
+            {{ __('Add ') }}
+        </x-projects.contributor-group>
     </div>
 
     <!-- Chat -->

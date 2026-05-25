@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Expert;
 use App\Models\Project;
+use App\Services\Clients\OpenAIClient;
 use RuntimeException;
 
 class ExpertSuggester

@@ -2,7 +2,7 @@
 
 namespace App\Providers;
 
-use App\Services\MarkdownParser;
+use App\Services\Text\MarkdownParser;
 use Illuminate\Support\ServiceProvider;
 use Parsedown;
 
