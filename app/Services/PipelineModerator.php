@@ -2,10 +2,17 @@
 
 namespace App\Services;
 
-use App\Models\Expert;
-use App\Models\Message;
 use App\Models\Project;
-use Illuminate\Support\Collection;
+use App\Pipeline\Stages\MaybeSummarize;
+use App\Pipeline\Stages\PersistMessage;
+use App\Pipeline\Stages\ResolveModerationContext;
+use App\Pipeline\Stages\RunThink;
+use App\Pipeline\Stages\SelectCandidates;
+use App\Pipeline\Stages\SelectWinner;
+use App\Pipeline\Stages\Speak;
+use App\Pipeline\Stages\UpdateState;
+use App\Pipeline\TurnContext;
+use Illuminate\Pipeline\Pipeline;
 
 class PipelineModerator
 {
@@ -15,303 +22,32 @@ class PipelineModerator
     ) {}
 
     /**
-     * Run one full pipeline turn:
-     *   1. Check moderation triggers
-     *   2. Route (PATH A = direct address, PATH B = competitive selection)
-     *   3. Think → Speak (PATH A) or ThinkAndPrioritize in parallel → SelectWinner → Speak (PATH B)
-     *   4. Persist the message + metadata
-     *   5. Update moderator state
-     *   6. Maybe compress old messages
-     */
-    /**
+     * Run one moderator-driven funnel turn through the pipeline:
+     *   ResolveModerationContext → SelectCandidates → RunThink → SelectWinner
+     *   → Speak → PersistMessage → UpdateState → MaybeSummarize
+     *
      * @return array{stop: bool, reason: ?string, next_speaker: ?string}
      */
     public function run(): array
     {
-        $client     = app(OpenAIClient::class);
-        $prompts    = app(PromptBuilder::class);
-        $moderator  = new ModeratorService($this->project, $client, $prompts);
-        $agent      = new AgentService($this->project, $client, $prompts);
-        $summarizer = new Summarizer($this->project, $client, $prompts);
-
-        $modNote = $moderator->checkTriggers();
-
-        // If the user just spoke and no expert has answered yet, this takes
-        // precedence over any other moderation trigger. The agents must
-        // address the user's latest message directly.
-        $pendingUser = $this->pendingUserMessage();
-        if ($pendingUser !== null) {
-            $excerpt = mb_substr(trim($pendingUser->content), 0, 240);
-            $userNote = "Die zuletzt eingegangene Nachricht stammt vom Nutzer und ist noch unbeantwortet: \""
-                . $excerpt
-                . "\". Der nächste Experten-Beitrag MUSS direkt darauf eingehen — als Antwort auf die Nutzeräußerung, nicht als Fortsetzung der vorherigen Experten-Diskussion.";
-            $modNote = $modNote === '' ? $userNote : $userNote . ' ' . $modNote;
-        }
-
-        // Surface any deterministically detected direct addressee as a hint
-        // to the moderator. The moderator still owns the final routing decision.
-        $openPair = $this->detectOpenAdjacencyPair();
-
-        // SHORTCUT — explicit "@Persona" mention in the latest user message:
-        // skip the moderator routing LLM call entirely and force PATH A on the
-        // mentioned expert. Saves a full LLM round-trip when the user already
-        // told us who should answer.
-        $mention = $this->extractUserMention($pendingUser, $this->project->contributingExperts());
-        if ($mention !== null) {
-            $route = [
-                'path'            => 'A',
-                'addressed_agent' => $mention->name,
-                'selected_agents' => [],
-                'reasoning'       => 'Direkte @-Ansprache durch Nutzer.',
-            ];
-        } else {
-            $directHint = $this->detectDirectAddressHint();
-            $route      = $moderator->route($modNote, $directHint);
-        }
-
-        if ($route['path'] === 'A' && !empty($route['addressed_agent'])) {
-            // ----------------------------------------------------------------
-            // PATH A — single addressed agent
-            // ----------------------------------------------------------------
-            $winner      = Expert::findByName($route['addressed_agent']);
-            $thinkOutput = $agent->think($winner);
-            $result      = $agent->speak($winner, $thinkOutput, $modNote);
-        } else {
-            // ----------------------------------------------------------------
-            // PATH B — competitive: all (or selected) agents think+prioritize,
-            //          moderator picks the winner
-            // ----------------------------------------------------------------
-            $selectedNames = $route['selected_agents'] ?? [];
-
-            $selected = !empty($selectedNames)
-                ? Expert::findManyByName($selectedNames)
-                : $this->project->contributingExperts();
-
-            // Fallback to all contributing experts if selected is empty
-            if ($selected->isEmpty()) {
-                $selected = $this->project->contributingExperts();
-            }
-
-            // Build prompts on the main thread (closures must only capture primitives
-            // so they survive serialization in Laravel's process concurrency driver).
-            $promptMap = $selected->mapWithKeys(
-                fn(Expert $e) => [$e->name => $agent->thinkAndPrioritizePrompt($e)]
-            )->all();
-
-            $responses = $client->sendManySlow($promptMap, 'think+prioritize');
-
-            // Persist per-expert GEDÄCHTNIS updates back on the main thread.
-            $merged       = [];
-            $expertByName = $selected->keyBy('name');
-            foreach ($responses as $name => $response) {
-                $merged[$name] = $agent->consumeThinkAndPrioritize($expertByName[$name], $response);
-            }
-
-            $winnerName  = $moderator->selectWinner($merged, $openPair);
-            $winner      = Expert::findByName($winnerName);
-            $thinkOutput = $merged[$winnerName];
-            $result      = $agent->speak($winner, $thinkOutput, $modNote);
-        }
-
-        // Store the message
-        $message = $this->project->addMessage($result['content'], $winner);
-        $message->adjacency_pair_type = $result['adjacency_pair_type'];
-        $message->next_speaker        = $result['next_speaker'];
-        $message->job_log_id          = $this->jobLogId;
-        $message->save();
-
-        $moderator->updateState($winner, $result['adjacency_pair_type'], $result['content'] ?? '');
-        $summarizer->maybeRun();
-
-        $stop = $this->isUserAddressed($result['next_speaker'] ?? '');
+        $ctx = app(Pipeline::class)
+            ->send(new TurnContext($this->project, $this->jobLogId))
+            ->through([
+                ResolveModerationContext::class,
+                SelectCandidates::class,
+                RunThink::class,
+                SelectWinner::class,
+                Speak::class,
+                PersistMessage::class,
+                UpdateState::class,
+                MaybeSummarize::class,
+            ])
+            ->thenReturn();
 
         return [
-            'stop'         => $stop,
-            'reason'       => $stop ? 'user_addressed' : null,
-            'next_speaker' => $result['next_speaker'] ?? null,
+            'stop'         => $ctx->stop,
+            'reason'       => $ctx->reason,
+            'next_speaker' => $ctx->nextSpeaker,
         ];
-    }
-
-    protected function isUserAddressed(string $nextSpeaker): bool
-    {
-        $normalized = mb_strtolower(trim($nextSpeaker));
-        return in_array($normalized, ['nutzer', 'user'], true);
-    }
-
-    /**
-     * Returns the most recent message if it was sent by a user (i.e. no expert
-     * has spoken since). Used to inject a high-priority moderation note that
-     * forces the next expert turn to address the user directly.
-     */
-    protected function pendingUserMessage(): ?Message
-    {
-        $latest = $this->project->messages()
-            ->where(fn($q) => $q->whereNotNull('expert_id')->orWhereNotNull('user_id'))
-            ->latest('id')
-            ->first();
-
-        if ($latest === null || $latest->user_id === null) {
-            return null;
-        }
-
-        return $latest;
-    }
-
-    /**
-     * Build a hint string for the moderator about deterministically detected
-     * direct addressees in the latest message. Derived from the structured
-     * open-adjacency-pair detection so both signals stay consistent.
-     */
-    protected function detectDirectAddressHint(): ?string
-    {
-        $pair = $this->detectOpenAdjacencyPair();
-        if ($pair === null) {
-            return null;
-        }
-
-        return match ($pair['source'] ?? '') {
-            'next_speaker'     => "Der vorherige Sprecher ({$pair['from']}) hat explizit an {$pair['addressee']} übergeben (NEXT_SPEAKER).",
-            'expert_question'  => "Im letzten Turn hat {$pair['from']} eine Frage direkt an {$pair['addressee']} gestellt.",
-            'user_question'    => "Die letzte Nutzernachricht richtet eine Frage an {$pair['addressee']}.",
-            'user_mention'     => "Die letzte Nutzernachricht erwähnt {$pair['addressee']} namentlich.",
-            default            => "Offenes Adjacency Pair adressiert {$pair['addressee']}.",
-        };
-    }
-
-    /**
-     * Extract an explicit "@PersonaName" mention from the latest user message
-     * and resolve it against the project's contributing experts.
-     *
-     * Multi-word names are matched greedily up to three tokens (e.g. "@Sophie
-     * Wagner"). The longest match wins, so "@Sophie Wagner" is preferred over
-     * "@Sophie" when both are in the contributor list.
-     */
-    protected function extractUserMention(?Message $userMsg, Collection $contributors): ?Expert
-    {
-        if ($userMsg === null || $userMsg->user_id === null || empty($userMsg->content)) {
-            return null;
-        }
-
-        if ($contributors->isEmpty()) {
-            return null;
-        }
-
-        // Greedy: 1-3 whitespace-separated tokens of letters/digits/underscore/dash.
-        // Anchored to start-of-string or whitespace so '@' inside email-like
-        // text ("name@example.com") is ignored.
-        $pattern = '/(?:^|\s)@([\p{L}\p{M}\p{Nd}_\-]+(?:[ ][\p{L}\p{M}\p{Nd}_\-]+){0,2})/u';
-        if (!preg_match_all($pattern, $userMsg->content, $matches)) {
-            return null;
-        }
-
-        // Try every captured candidate; prefer the longest contributor name
-        // that still matches the candidate (so "@Sophie Wagner" wins over
-        // "@Sophie" if both exist).
-        foreach ($matches[1] as $candidate) {
-            $candidateLower = mb_strtolower(trim($candidate));
-            if ($candidateLower === '') {
-                continue;
-            }
-
-            $best = null;
-            foreach ($contributors as $expert) {
-                $nameLower = mb_strtolower($expert->name);
-                if ($candidateLower === $nameLower
-                    || str_starts_with($candidateLower, $nameLower . ' ')) {
-                    if ($best === null
-                        || mb_strlen($expert->name) > mb_strlen($best->name)) {
-                        $best = $expert;
-                    }
-                }
-            }
-
-            if ($best !== null) {
-                return $best;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Detect an open adjacency pair from the latest message.
-     *
-     * Detection priority:
-     *   1. Prior expert turn's NEXT_SPEAKER pointing at a contributing expert.
-     *   2. Latest expert message containing a question plus a contributor's name
-     *      (e.g. "Was denkst du, Jana?") — excludes the sender.
-     *   3. Latest user message containing a question plus a contributor's name.
-     *   4. Latest user message mentioning a contributor by name (no question mark).
-     *
-     * @return array{addressee: string, pair_type: string, from: string, source: string}|null
-     */
-    protected function detectOpenAdjacencyPair(): ?array
-    {
-        $latest = $this->project->messages()
-            ->where(fn($q) => $q->whereNotNull('expert_id')->orWhereNotNull('user_id'))
-            ->latest('id')
-            ->first();
-
-        if ($latest === null) {
-            return null;
-        }
-
-        $contributors = $this->project->contributingExperts();
-
-        // 1. Explicit NEXT_SPEAKER handoff from prior expert turn
-        if ($latest->expert_id !== null && !empty($latest->next_speaker)) {
-            $target = mb_strtolower(trim($latest->next_speaker));
-            if (!in_array($target, ['nutzer', 'user'], true)) {
-                $match = $contributors->first(fn(Expert $e) => mb_strtolower($e->name) === $target);
-                if ($match !== null) {
-                    return [
-                        'addressee' => $match->name,
-                        'pair_type' => (string) ($latest->adjacency_pair_type ?: 'Frage→Antwort'),
-                        'from'      => (string) ($latest->expert?->name ?? ''),
-                        'source'    => 'next_speaker',
-                    ];
-                }
-            }
-        }
-
-        if (empty($latest->content)) {
-            return null;
-        }
-
-        $hasQuestion = str_contains($latest->content, '?');
-        $senderExpertId = $latest->expert_id;
-        $senderName = $latest->expert?->name ?? $latest->user?->name ?? 'Nutzer';
-
-        // 2./3. Name mention in latest message content
-        foreach ($contributors as $expert) {
-            // Skip self-mentions by the same expert
-            if ($senderExpertId !== null && $expert->id === $senderExpertId) {
-                continue;
-            }
-            if (!preg_match('/\b' . preg_quote($expert->name, '/') . '\b/iu', $latest->content)) {
-                continue;
-            }
-
-            // For expert-to-expert: require a question mark to avoid false positives
-            // from neutral references. For user messages: a plain mention is enough.
-            if ($senderExpertId !== null && !$hasQuestion) {
-                continue;
-            }
-
-            $source = match (true) {
-                $senderExpertId !== null => 'expert_question',
-                $hasQuestion             => 'user_question',
-                default                  => 'user_mention',
-            };
-
-            return [
-                'addressee' => $expert->name,
-                'pair_type' => $hasQuestion ? 'Frage→Antwort' : 'Ansprache→Reaktion',
-                'from'      => $senderName,
-                'source'    => $source,
-            ];
-        }
-
-        return null;
     }
 }

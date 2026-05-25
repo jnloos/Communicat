@@ -19,6 +19,9 @@ class Project extends Model
 
     public const MAX_CONTRIBUTING_EXPERTS = 5;
 
+    /** Per-instance cache for contributingExperts() (hit several times per turn). */
+    private ?Collection $cachedContributingExperts = null;
+
     public function messages(): HasMany {
         return $this->hasMany(Message::class);
     }
@@ -56,7 +59,7 @@ class Project extends Model
     }
 
     public function contributingExperts(): Collection {
-        return $this->experts()->get();
+        return $this->cachedContributingExperts ??= $this->experts()->get();
     }
 
     public function canAddExpert(): bool {
@@ -113,6 +116,17 @@ class Project extends Model
         return $message;
     }
 
+    /** Messages from participants (expert or user), excluding system/assistant. */
+    private function participantMessages(): HasMany {
+        return $this->messages()->where(function ($q) {
+            $q->whereNotNull('expert_id')->orWhereNotNull('user_id');
+        });
+    }
+
+    public function latestParticipantMessage(): ?Message {
+        return $this->participantMessages()->latest('id')->first();
+    }
+
     public function asPromptArray(int $numMsg = -1): array {
         $lastSummarizedId = $this->settings['last_summarized_id'] ?? 0;
 
@@ -121,10 +135,7 @@ class Project extends Model
         // the list to prompts — LLMs read top-down and treat the last line
         // as the most recent turn, so the user's latest message must be
         // last in the rendered list.
-        $query = $this->messages()
-            ->where(function ($q) {
-                $q->whereNotNull('expert_id')->orWhereNotNull('user_id');
-            })
+        $query = $this->participantMessages()
             ->where('id', '>', $lastSummarizedId)
             ->orderBy('id', 'desc');
 

@@ -28,9 +28,9 @@ Noch kein Gedächtnis vorhanden.
 @endforeach
 
 === AUFGABE ===
-Du hast soeben die aktuellen Nachrichten gelesen. Aktualisiere nun dein persönliches Gedächtnis.
+Du hast soeben die aktuellen Nachrichten gelesen. Aktualisiere nun dein persönliches Gedächtnis und benenne anschließend deine eine konkrete Beitragsabsicht.
 
-Gib AUSSCHLIESSLICH den aktualisierten GEDÄCHTNIS-UPDATE-Block aus. Kein Gesprächstext, keine Begrüßung, keine Erklärung.
+Gib AUSSCHLIESSLICH den GEDÄCHTNIS-UPDATE-Block gefolgt von der BEITRAGSABSICHT-Zeile aus. Kein Gesprächstext, keine Begrüßung, keine Erklärung.
 
 Formatregeln (verbindlich):
 - Jede Sektion beginnt mit ihrem Marker in eckigen Klammern in einer eigenen Zeile.
@@ -38,6 +38,11 @@ Formatregeln (verbindlich):
 - Die Marker [NUTZER], [EXPERTE: <Name>], [OFFENE_FRAGEN], [STAND] werden wörtlich übernommen — auch die eckigen Klammern.
 - Bei [OFFENE_FRAGEN] eine Liste mit "- " pro Eintrag; "keine" wenn nichts offen ist.
 - Keine zusätzlichen Marker, keine Markdown-Überschriften, keine Aufzählungen außerhalb von [OFFENE_FRAGEN].
+
+Nach dem GEDÄCHTNIS-UPDATE folgt verbindlich die Zeile BEITRAGSABSICHT:
+- Genau EIN Satz. Er benennt die EINE konkrete inhaltliche Absicht — den nächsten Zug, den du als {{ $expert['name'] }} jetzt beitragen würdest (z. B. eine These, einen Einwand mit Begründung, ein Beispiel, eine Zahl, eine offene Folgefrage).
+- Inhaltlich und konkret, kein Meta-Kommentar ("ich würde etwas sagen"), keine Bewertung der Diskussion, KEIN Score, KEINE Priorität.
+- Dieser Satz dient dem Moderator als Auswahlsignal; er ist NICHT der spätere Gesprächsbeitrag selbst.
 
 Pflichtformat:
 GEDÄCHTNIS-UPDATE:
@@ -54,3 +59,4 @@ GEDÄCHTNIS-UPDATE:
 - ...
 [STAND]
 ...
+BEITRAGSABSICHT: <ein konkreter Satz>

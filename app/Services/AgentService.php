@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Expert;
 use App\Models\Project;
+use App\Pipeline\Directive;
 use Illuminate\Support\Facades\Log;
 
 class AgentService
@@ -15,23 +16,23 @@ class AgentService
     ) {}
 
     /**
-     * PATH A — runs THINK for a single addressed agent.
-     * Saves the GEDÄCHTNIS-UPDATE block to the expert's Summary and returns the raw response.
+     * THINK — runs the single think step for one candidate: updates the expert's
+     * memory and states a contribution intent. Persists the GEDÄCHTNIS-UPDATE
+     * block and returns the parsed result.
+     *
+     * @return array{memory: string, beitragsabsicht: string}
      */
-    public function think(Expert $expert): string
+    public function think(Expert $expert): array
     {
         $prompt   = $this->thinkPrompt($expert);
         $response = $this->client->sendSlow($prompt, "think:{$expert->name}");
 
-        $this->consumeThink($expert, $response);
-
-        return $response;
+        return $this->consumeThink($expert, $response);
     }
 
     /**
-     * Build the THINK prompt for one expert without calling the LLM.
-     * Used by PipelineModerator's post-turn memory refresh to batch and run
-     * many THINKs concurrently via OpenAIClient::sendManySlow().
+     * Build the THINK prompt for one expert without calling the LLM. Used to
+     * batch many THINKs concurrently via OpenAIClient::sendManySlow().
      */
     public function thinkPrompt(Expert $expert): string
     {
@@ -40,46 +41,20 @@ class AgentService
 
     /**
      * Post-process a raw THINK response: persist the GEDÄCHTNIS block for the
-     * given expert. No return value — caller already has the raw response if
-     * downstream steps need it (e.g. PATH A SPEAK).
+     * expert and return both the memory block and the parsed BEITRAGSABSICHT
+     * (the contribution intent the moderator judges in SelectWinner).
+     *
+     * @return array{memory: string, beitragsabsicht: string}
      */
-    public function consumeThink(Expert $expert, string $response, string $context = 'think'): void
+    public function consumeThink(Expert $expert, string $response, string $context = 'think'): array
     {
-        $memoryBlock = $this->extractMemoryUpdate($response);
+        $memoryBlock = $this->extractMemoryUpdate($response, 'BEITRAGSABSICHT:');
         $this->persistMemoryBlock($expert, $memoryBlock, $response, "{$context}:{$expert->name}");
-    }
 
-    /**
-     * PATH B — runs THINK+PRIORITIZE for a single candidate agent.
-     * Saves the GEDÄCHTNIS-UPDATE block from within the THINK section and returns the raw response.
-     */
-    public function thinkAndPrioritize(Expert $expert): string
-    {
-        $prompt   = $this->thinkAndPrioritizePrompt($expert);
-        $response = $this->client->sendSlow($prompt, "think+prioritize:{$expert->name}");
-
-        return $this->consumeThinkAndPrioritize($expert, $response);
-    }
-
-    /**
-     * Build the THINK+PRIORITIZE prompt for one expert without calling the LLM.
-     * Used by PipelineModerator PATH B to batch-send prompts concurrently.
-     */
-    public function thinkAndPrioritizePrompt(Expert $expert): string
-    {
-        return $this->prompts->thinkAndPrioritize($this->project, $expert);
-    }
-
-    /**
-     * Post-process a raw THINK+PRIORITIZE response: persist the GEDÄCHTNIS block
-     * for $expert and return the raw response for downstream selection.
-     */
-    public function consumeThinkAndPrioritize(Expert $expert, string $response): string
-    {
-        $memoryBlock = $this->extractMemoryUpdate($response, 'PRIORITIZE:');
-        $this->persistMemoryBlock($expert, $memoryBlock, $response, "think+prioritize:{$expert->name}");
-
-        return $response;
+        return [
+            'memory'          => $memoryBlock,
+            'beitragsabsicht' => $this->extractBeitragsabsicht($response),
+        ];
     }
 
     /**
@@ -89,8 +64,6 @@ class AgentService
      */
     protected function persistMemoryBlock(Expert $expert, string $memoryBlock, string $rawResponse, string $context): void
     {
-        $summary = $expert->thoughtsAbout($this->project);
-
         if ($memoryBlock === '') {
             Log::warning('GEDÄCHTNIS-UPDATE marker missing in LLM response', [
                 'context'        => $context,
@@ -101,40 +74,29 @@ class AgentService
             return;
         }
 
+        $summary = $expert->thoughtsAbout($this->project);
         $summary->content = $memoryBlock;
         $summary->save();
     }
 
     /**
-     * SPEAK — generates the visible conversation turn for the winning agent.
+     * SPEAK — generates the visible conversation turn for the winning agent,
+     * executing the moderator's Directive in persona.
      *
-     * @return array{content: string, next_speaker: string, adjacency_pair_type: string, reason: string}
+     * Floor authority lives with the moderator: SPEAK output is ONLY the visible
+     * contribution text. The agent no longer names its successor — next speaker
+     * and adjacency-pair type are derived downstream from the Directive/detection
+     * (see PersistMessage), never parsed from this output.
+     *
+     * @param  array{memory: string, beitragsabsicht: string} $thinkOutput
+     * @return array{content: string}
      */
-    public function speak(Expert $expert, string $thinkOutput, string $moderationNote = ''): array
+    public function speak(Expert $expert, array $thinkOutput, Directive $directive): array
     {
-        $prompt   = $this->prompts->speak($this->project, $expert, $thinkOutput, $moderationNote);
+        $prompt   = $this->prompts->speak($this->project, $expert, $thinkOutput, $directive);
         $response = $this->client->sendFast($prompt, "speak:{$expert->name}");
 
-        // Split off the [METADATEN block so we can parse metadata separately
-        $metadataPos = strpos($response, '[METADATEN');
-        if ($metadataPos !== false) {
-            $content      = trim(substr($response, 0, $metadataPos));
-            $metadataBlock = substr($response, $metadataPos);
-        } else {
-            $content      = trim($response);
-            $metadataBlock = '';
-        }
-
-        $nextSpeaker       = $this->parseMetaField($metadataBlock, 'NEXT_SPEAKER');
-        $adjacencyPairType = $this->parseMetaField($metadataBlock, 'ADJACENCY_PAIR_TYPE');
-        $reason            = $this->parseMetaField($metadataBlock, 'REASON');
-
-        return [
-            'content'             => $content,
-            'next_speaker'        => $nextSpeaker,
-            'adjacency_pair_type' => $adjacencyPairType,
-            'reason'              => $reason,
-        ];
+        return ['content' => trim($response)];
     }
 
     // -------------------------------------------------------------------------
@@ -142,9 +104,8 @@ class AgentService
     // -------------------------------------------------------------------------
 
     /**
-     * Extract the content after "GEDÄCHTNIS-UPDATE:", stopping at an optional stop marker.
-     * Pass $stopAt = 'PRIORITIZE:' when parsing THINK+PRIORITIZE output to avoid
-     * including the priority score in the saved Gedächtnis.
+     * Extract the content after "GEDÄCHTNIS-UPDATE:", stopping at $stopAt
+     * (e.g. 'BEITRAGSABSICHT:') so the intent isn't folded into saved memory.
      */
     protected function extractMemoryUpdate(string $text, ?string $stopAt = null): string
     {
@@ -168,14 +129,17 @@ class AgentService
     }
 
     /**
-     * Extract the value of a single-line metadata field (e.g. "NEXT_SPEAKER: Alice").
+     * Extract the contribution intent following the "BEITRAGSABSICHT:" marker.
      */
-    protected function parseMetaField(string $block, string $field): string
+    protected function extractBeitragsabsicht(string $text): string
     {
-        if (preg_match('/^' . preg_quote($field, '/') . ':\s*(.+)$/m', $block, $matches)) {
-            return trim($matches[1]);
+        $marker = 'BEITRAGSABSICHT:';
+        $pos    = strpos($text, $marker);
+
+        if ($pos === false) {
+            return '';
         }
 
-        return '';
+        return trim(substr($text, $pos + strlen($marker)));
     }
 }

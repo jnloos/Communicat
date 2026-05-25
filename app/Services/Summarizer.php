@@ -13,15 +13,24 @@ class Summarizer
     ) {}
 
     /**
-     * Compress old messages into a chat summary when the unsummarized buffer exceeds the threshold.
-     * Advances the last_summarized_id watermark and stores the summary in project settings.
+     * Compress old messages into a chat summary. Runs ONLY when the number of
+     * unsummarized expert/user messages EXCEEDS summary_trigger_at; then every
+     * message except the newest summary_keep_recent is compressed into the
+     * rolling chat summary, advancing the last_summarized_id watermark.
+     *
+     * Resolution order per knob: project.settings (new key, then legacy key) →
+     * config('discussion.*'). Legacy keys: buffer_threshold / buffer_keep.
      */
     public function maybeRun(): void
     {
         $settings  = $this->project->settings ?? [];
-        $threshold = $settings['buffer_threshold']   ?? 20;
-        $keep      = $settings['buffer_keep']         ?? 8;
-        $lastId    = $settings['last_summarized_id']  ?? 0;
+        $threshold = $settings['summary_trigger_at']
+            ?? $settings['buffer_threshold']
+            ?? config('discussion.summary_trigger_at', 100);
+        $keep      = $settings['summary_keep_recent']
+            ?? $settings['buffer_keep']
+            ?? config('discussion.summary_keep_recent', 30);
+        $lastId    = $settings['last_summarized_id'] ?? 0;
 
         // Count unsummarized expert/user messages after the watermark
         $count = $this->project->messages()

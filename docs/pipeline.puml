@@ -1,0 +1,93 @@
+@startuml
+title Multi-Agent-Diskussions-Pipeline (Funnel-Modell)\nEin Turn — TurnContext fliesst durch 8 Stages (Pipes & Filters)
+
+legend top right
+  | Farbe | Akteur |
+  |<#E8F0FE> Moderator (LLM)|
+  |<#E6F4EA> Agent / Experte (LLM)|
+  |<#FFFFFF> Deterministisch / System|
+endlegend
+
+start
+
+partition "1. ResolveModerationContext" {
+  :Trigger / pendingUser-Note lesen;
+  :Adjacency-Pairs deterministisch erkennen
+  (Experten- + Nutzer-Faelle)
+  -> advisory Signal;
+  :Agenda-Phase lesen;
+  note right: rein deterministisch
+}
+
+partition "2. SelectCandidates" {
+  if (@-Mention vorhanden?) then (ja)
+    #FFFFFF:Override (deterministisch):
+    Pool = genannte Experten;
+    note right: route-LLM uebersprungen
+  else (nein)
+    #E8F0FE:CandidateStrategy
+    (Default: FunnelStrategy)
+    -> Moderator engt Pool ein;
+    note right
+      Moderator (LLM)
+      nutzt Adjacency-Signal (advisory)
+    end note
+  endif
+  :Directive setzen
+  (Rolle / Agenda-Schritt /
+   Konvergenz / address_user);
+  :Kandidaten-Set {1..n};
+}
+
+partition "3. RunThink" {
+  #E6F4EA:THINK je Kandidat (parallel bei n>1):
+  - GEDAECHTNIS-UPDATE (persistiert)
+  - BEITRAGSABSICHT (nur Auswahlsignal);
+  note right: Agenten / Experten (LLM)
+}
+
+partition "4. SelectWinner" {
+  if (n == 1?) then (ja)
+    :Stage uebersprungen
+    -> einziger Kandidat ist Gewinner;
+  else (n > 1)
+    #E8F0FE:Moderator bewertet
+    Beitragsabsichten qualitativ
+    -> bester Beitrag;
+    note right
+      Moderator (LLM)
+      nutzt Adjacency-Signal (advisory)
+    end note
+  endif
+}
+
+partition "5. Speak" {
+  #E6F4EA:Gewinner fuehrt Directive
+  in Persona aus;
+  note right: Agent / Experte (LLM)
+}
+
+partition "6. PersistMessage" {
+  :Nachricht speichern
+  + adjacency_pair_type (fuer UI);
+}
+
+partition "7. UpdateState" {
+  :recent_speakers / response_types /
+  silence / openings fortschreiben;
+  :Agenda-Phase fortschreiben;
+}
+
+partition "8. MaybeSummarize" {
+  if (unsummierte Nachrichten > summary_trigger_at\n(Default 100)?) then (ja)
+    :Summary erzeugen
+    (neuste summary_keep_recent
+     = Default 30 bleiben roh);
+  else (nein)
+    :keine Summary;
+  endif
+}
+
+stop
+
+@enduml

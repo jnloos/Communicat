@@ -246,12 +246,12 @@
             >
                 <div class="flex flex-col items-center text-center">
                     @if ($participant['is_expert'])
-                        <div class="relative">
+                        <div class="relative group">
                             <button
                                 type="button"
                                 title="{{ __('Gedanken von') }} {{ $participant['name'] }}"
                                 @click="$dispatch('open-expert-thoughts', { expertId: {{ $participant['expert_id'] }} })"
-                                class="cursor-pointer rounded-full transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                                class="cursor-pointer rounded-full transition-transform hover:scale-105 group-hover:scale-105 group-active:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                             >
                                 <div
                                     class="voice-tile w-28 h-28 rounded-full flex items-center justify-center ring-2 ring-zinc-200 dark:ring-zinc-700"
@@ -279,6 +279,8 @@
                                        ring-2 ring-white dark:ring-zinc-800
                                        text-zinc-500 dark:text-zinc-300
                                        hover:text-amber-600 dark:hover:text-amber-400
+                                       group-hover:text-amber-600 dark:group-hover:text-amber-400
+                                       group-active:text-amber-600 dark:group-active:text-amber-400
                                        cursor-pointer transition-colors
                                        focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 z-10"
                                 aria-label="{{ __('Gedächtnis anzeigen') }}"

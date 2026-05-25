@@ -4,9 +4,13 @@ namespace App\Services;
 
 use App\Models\Expert;
 use App\Models\Project;
+use App\Pipeline\Directive;
 
 class ModeratorService
 {
+    /** Agenda phases, in order. The discussion mechanically advances through them. */
+    public const AGENDA_PHASES = ['divergenz', 'konvergenz', 'abschluss'];
+
     public function __construct(
         protected Project $project,
         protected OpenAIClient $client,
@@ -14,14 +18,16 @@ class ModeratorService
     ) {}
 
     /**
-     * Check project settings for moderation triggers.
-     * Returns a German instruction string if any trigger fires, empty string otherwise.
+     * Derive a moderation note from mechanical, settings-based signals: silence
+     * counters, and the agenda phase the discussion has reached. Returns a German
+     * instruction string (empty if nothing to flag).
      */
     public function checkTriggers(): string
     {
         $settings        = $this->project->settings ?? [];
         $silenceCounters = $settings['silence_counters'] ?? [];
-        $topicTurnCount  = $settings['topic_turn_count'] ?? 0;
+        $phase           = $this->agendaPhase();
+        $turnsInPhase    = $settings['phase_turn_count'] ?? 0;
 
         $notes = [];
 
@@ -39,111 +45,101 @@ class ModeratorService
             }
         }
 
-        // Topic stagnation trigger
-        if ($topicTurnCount >= 5) {
-            $notes[] = 'Die Diskussion dreht sich seit mehreren Turns ohne erkennbaren Fortschritt.'
-                . ' Bringe einen neuen Aspekt oder einen Themenwechsel ein.';
-        }
+        // Agenda/convergence signal: nudge the discussion toward the next phase
+        // once the current one has run for several turns.
+        $notes[] = match ($phase) {
+            'divergenz' => $turnsInPhase >= 4
+                ? 'Genug Perspektiven gesammelt. Lenke die Diskussion von der Sammlung (Divergenz) hin zur Bündelung gemeinsamer Linien (Konvergenz).'
+                : 'Phase Divergenz: Sammle weiterhin unterschiedliche Perspektiven und Argumente.',
+            'konvergenz' => $turnsInPhase >= 4
+                ? 'Die Konvergenz ist weit fortgeschritten. Steuere auf einen Abschluss/eine Synthese zu.'
+                : 'Phase Konvergenz: Arbeite Gemeinsamkeiten heraus und gleiche Differenzen ab.',
+            default => 'Phase Abschluss: Fasse die gemeinsame Position zusammen und schließe die Diskussion ab.',
+        };
 
-        return implode(' ', $notes);
+        return implode(' ', array_filter($notes));
     }
 
     /**
-     * Ask the moderator LLM to decide PATH A or PATH B and which agents to involve.
+     * Ask the moderator LLM to narrow the candidate pool and define the turn's
+     * Directive (role, agenda step, convergence intent, address_user).
      *
-     * @return array{path: string, addressed_agent: string|null, selected_agents: array, reasoning: string}
+     * @param  array{open_adjacency_pair?: array, agenda_phase?: string, pending_user?: string}|null $context
+     * @return array{candidates: string[], directive: Directive, reasoning: string}
      */
-    public function route(string $moderationNote = '', ?string $directAddressHint = null): array
+    public function route(string $moderationNote = '', ?array $context = null): array
     {
-        $agents = $this->buildAgentsArray();
+        $agents     = $this->buildAgentsArray();
         $knownNames = array_column(array_values($agents), 'name');
 
-        $prompt   = $this->prompts->moderatorRoute($this->project, $agents, $moderationNote, $directAddressHint);
+        $prompt   = $this->prompts->moderatorRoute($this->project, $agents, $moderationNote, $context);
         $response = $this->client->sendFast($prompt, 'moderator:route');
 
         $decoded = $this->parseJson($response);
-        $hintedAgent = $this->findKnownNameInText($directAddressHint, $knownNames);
 
         if ($decoded === null) {
-            if ($hintedAgent !== null) {
-                return [
-                    'path'            => 'A',
-                    'addressed_agent' => $hintedAgent,
-                    'selected_agents' => [],
-                    'reasoning'       => 'Deterministischer Adresshinweis wurde angewendet.',
-                ];
-            }
-
             return [
-                'path'            => 'B',
-                'addressed_agent' => null,
-                'selected_agents' => $knownNames,
-                'reasoning'       => '',
+                'candidates' => $knownNames,
+                'directive'  => $this->fallbackDirective(),
+                'reasoning'  => '',
             ];
         }
 
-        $addressedAgent = isset($decoded['addressed_agent'])
-            ? $this->normalizeKnownName((string) $decoded['addressed_agent'], $knownNames)
-            : null;
-        $selectedAgents = $this->normalizeKnownNames($decoded['selected_agents'] ?? $knownNames, $knownNames);
-
-        if ($addressedAgent === null && $hintedAgent !== null) {
-            $addressedAgent = $hintedAgent;
-        }
-
-        if ($addressedAgent === null && count($selectedAgents) === 1) {
-            $addressedAgent = $selectedAgents[0];
+        $candidates = $this->normalizeKnownNames($decoded['candidates'] ?? $knownNames, $knownNames);
+        if (empty($candidates)) {
+            $candidates = $knownNames;
         }
 
         return [
-            'path'            => ($addressedAgent !== null) ? 'A' : $this->normalizePath($decoded['path'] ?? 'B'),
-            'addressed_agent' => $addressedAgent,
-            'selected_agents' => ($addressedAgent !== null) ? [] : $selectedAgents,
-            'reasoning'       => $decoded['reasoning']       ?? '',
+            'candidates' => $candidates,
+            'directive'  => $this->directiveFromArray($decoded['directive'] ?? [], (string) ($decoded['reasoning'] ?? '')),
+            'reasoning'  => (string) ($decoded['reasoning'] ?? ''),
         ];
     }
 
     /**
-     * Ask the moderator LLM to pick the winner from a set of THINK+PRIORITIZE outputs.
+     * Pick the winning candidate from the set of THINK outputs by qualitatively
+     * judging their BEITRAGSABSICHT (no score). Back-to-back guard and the
+     * open-adjacency-pair mandate are preserved.
      *
-     * @param  array<string, string> $thinkPrioritizeOutputs  agent name → raw output
+     * @param  array<string, array{memory: string, beitragsabsicht: string}> $thinkOutputs
      * @param  array{addressee: string, pair_type?: string, from?: string}|null $openAdjacencyPair
      */
-    public function selectWinner(array $thinkPrioritizeOutputs, ?array $openAdjacencyPair = null): string
+    public function selectWinner(array $thinkOutputs, ?array $openAdjacencyPair = null): string
     {
         $agents = $this->buildAgentsArray();
 
         $state = [
-            'recent_speakers'        => $this->project->settings['recent_speakers']        ?? [],
-            'recent_response_types'  => $this->project->settings['recent_response_types']  ?? [],
+            'recent_speakers'       => $this->project->settings['recent_speakers']       ?? [],
+            'recent_response_types' => $this->project->settings['recent_response_types']  ?? [],
         ];
 
-        $prompt   = $this->prompts->moderatorSelect($this->project, $agents, $thinkPrioritizeOutputs, $state, $openAdjacencyPair);
+        // Expose only the contribution intents to the selection prompt.
+        $intents = array_map(fn(array $o) => $o['beitragsabsicht'], $thinkOutputs);
+
+        $prompt   = $this->prompts->moderatorSelect($this->project, $agents, $intents, $state, $openAdjacencyPair);
         $response = $this->client->sendFast($prompt, 'moderator:select');
 
         $decoded = $this->parseJson($response);
 
         if ($decoded === null || empty($decoded['winner'])) {
-            return (string) array_key_first($thinkPrioritizeOutputs);
+            return (string) array_key_first($thinkOutputs);
         }
 
         $winner = trim((string) $decoded['winner']);
 
-        // Reject winner if it isn't among the candidates
-        if (!array_key_exists($winner, $thinkPrioritizeOutputs)) {
-            return (string) array_key_first($thinkPrioritizeOutputs);
+        if (!array_key_exists($winner, $thinkOutputs)) {
+            return (string) array_key_first($thinkOutputs);
         }
 
-        // Hard back-to-back guard: if the LLM picked the immediately previous
-        // speaker despite the moderator rule, swap to any other candidate.
-        // Skip the guard if the open-adjacency-pair path already mandates this
-        // speaker, or if there is no other candidate available.
+        // Hard back-to-back guard: never let the immediately previous speaker go
+        // twice in a row unless the open-adjacency-pair path mandates it.
         $lastSpeaker = ($state['recent_speakers'][0] ?? null);
         $isMandated  = $openAdjacencyPair !== null
             && ($openAdjacencyPair['addressee'] ?? null) === $winner;
 
         if (!$isMandated && $lastSpeaker !== null && $winner === $lastSpeaker) {
-            $alternatives = array_diff(array_keys($thinkPrioritizeOutputs), [$lastSpeaker]);
+            $alternatives = array_diff(array_keys($thinkOutputs), [$lastSpeaker]);
             if (!empty($alternatives)) {
                 return (string) reset($alternatives);
             }
@@ -154,19 +150,19 @@ class ModeratorService
 
     /**
      * Update project settings after a turn: recent speakers, response types,
-     * silence counters and (when $content is provided) the rolling list of
-     * each expert's recent opening fragments.
+     * silence counters, recent opening fragments, and the agenda phase.
      */
     public function updateState(Expert $winner, string $adjacencyType, string $content = ''): void
     {
         $settings = $this->project->settings ?? [];
 
         // Recent speakers — prepend winner, keep last 6
-        $recentSpeakers   = $settings['recent_speakers'] ?? [];
+        $recentSpeakers = $settings['recent_speakers'] ?? [];
         array_unshift($recentSpeakers, $winner->name);
         $settings['recent_speakers'] = array_slice($recentSpeakers, 0, 6);
 
-        // Recent response types — prepend type, keep last 6
+        // Recent response types — prepend type, keep last 6. The detected
+        // adjacency-pair type feeds this rolling list directly.
         $recentTypes = $settings['recent_response_types'] ?? [];
         array_unshift($recentTypes, $adjacencyType);
         $settings['recent_response_types'] = array_slice($recentTypes, 0, 6);
@@ -179,9 +175,8 @@ class ModeratorService
         $silenceCounters[$winner->id] = 0;
         $settings['silence_counters'] = $silenceCounters;
 
-        // Recent openings per expert — short fragment of the opening sentence,
-        // kept as a ring buffer of the last 3 own turns. Used in speak.blade.php
-        // to prevent the same persona from re-using the same sentence opener.
+        // Recent openings per expert — ring buffer of the last 3 own turns,
+        // consumed by speak.blade.php to forbid reusing the same opener.
         $opening = $this->extractOpeningFragment($content);
         if ($opening !== '') {
             $recentOpenings = $settings['recent_openings'] ?? [];
@@ -191,13 +186,88 @@ class ModeratorService
             $settings['recent_openings'] = $recentOpenings;
         }
 
+        // Agenda phase — advance mechanically: divergenz → konvergenz → abschluss
+        // after PHASE_LENGTH turns each. Tracks turns spent in the current phase.
+        $settings = $this->advanceAgenda($settings);
+
         $this->project->settings = $settings;
         $this->project->save();
     }
 
     /**
-     * Extract the first ~10 words of the first non-empty line of a turn so
-     * the next prompt can show the agent which openers are now off-limits.
+     * Current agenda phase from settings; defaults to the first phase.
+     */
+    public function agendaPhase(): string
+    {
+        $phase = $this->project->settings['agenda_phase'] ?? self::AGENDA_PHASES[0];
+        return in_array($phase, self::AGENDA_PHASES, true) ? $phase : self::AGENDA_PHASES[0];
+    }
+
+    protected const PHASE_LENGTH = 5;
+
+    /**
+     * Increment the phase turn counter and roll over to the next agenda phase
+     * once PHASE_LENGTH turns have elapsed. Abschluss is terminal.
+     */
+    protected function advanceAgenda(array $settings): array
+    {
+        $phase = $settings['agenda_phase'] ?? self::AGENDA_PHASES[0];
+        if (!in_array($phase, self::AGENDA_PHASES, true)) {
+            $phase = self::AGENDA_PHASES[0];
+        }
+
+        $turns = (int) ($settings['phase_turn_count'] ?? 0) + 1;
+
+        $index = array_search($phase, self::AGENDA_PHASES, true);
+        if ($turns >= self::PHASE_LENGTH && $index < count(self::AGENDA_PHASES) - 1) {
+            $phase = self::AGENDA_PHASES[$index + 1];
+            $turns = 0;
+        }
+
+        $settings['agenda_phase']     = $phase;
+        $settings['phase_turn_count'] = $turns;
+
+        return $settings;
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Build a Directive from the LLM's decoded `directive` object, tolerating
+     * missing keys.
+     */
+    protected function directiveFromArray(array $d, string $reasoning): Directive
+    {
+        $phase = mb_strtolower(trim((string) ($d['agenda_step'] ?? $this->agendaPhase())));
+        if (!in_array($phase, self::AGENDA_PHASES, true)) {
+            $phase = $this->agendaPhase();
+        }
+
+        return new Directive(
+            role:              (string) ($d['role'] ?? ''),
+            agendaStep:        $phase,
+            convergenceIntent: (string) ($d['convergence_intent'] ?? ''),
+            addressUser:       (bool)   ($d['address_user'] ?? false),
+            reasoning:         $reasoning,
+        );
+    }
+
+    protected function fallbackDirective(): Directive
+    {
+        return new Directive(
+            role:              '',
+            agendaStep:        $this->agendaPhase(),
+            convergenceIntent: '',
+            addressUser:       false,
+            reasoning:         '',
+        );
+    }
+
+    /**
+     * Extract the first ~10 words of the first non-empty line of a turn so the
+     * next prompt can show the agent which openers are now off-limits.
      */
     protected function extractOpeningFragment(string $content): string
     {
@@ -206,23 +276,16 @@ class ModeratorService
             return '';
         }
 
-        $firstLine = preg_split('/\r?\n/u', $content)[0] ?? '';
-        $firstLine = trim($firstLine);
+        $firstLine = trim(preg_split('/\r?\n/u', $content)[0] ?? '');
         if ($firstLine === '') {
             return '';
         }
 
-        // Limit to first ~10 whitespace-separated tokens so we capture the
-        // opener style without storing whole sentences.
         $tokens = preg_split('/\s+/u', $firstLine) ?: [];
         $opener = implode(' ', array_slice($tokens, 0, 10));
 
         return mb_substr($opener, 0, 120);
     }
-
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
 
     /**
      * Build the agents array keyed by expert id → ['name', 'job'].
@@ -234,14 +297,8 @@ class ModeratorService
             ->all();
     }
 
-    protected function normalizePath(mixed $path): string
-    {
-        return strtoupper(trim((string) $path)) === 'A' ? 'A' : 'B';
-    }
-
     /**
-     * Match LLM-provided names case-insensitively and return the canonical
-     * participant name used by the database.
+     * Match an LLM-provided name case-insensitively to the canonical DB name.
      *
      * @param array<int, string> $knownNames
      */
@@ -284,39 +341,19 @@ class ModeratorService
     }
 
     /**
-     * @param array<int, string> $knownNames
-     */
-    protected function findKnownNameInText(?string $text, array $knownNames): ?string
-    {
-        if ($text === null || trim($text) === '') {
-            return null;
-        }
-
-        foreach ($knownNames as $knownName) {
-            if (preg_match('/\b' . preg_quote($knownName, '/') . '\b/iu', $text)) {
-                return $knownName;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Parse JSON from a response string that may be wrapped in a markdown code block.
+     * Parse JSON from a response that may be wrapped in a markdown code block.
      */
     protected function parseJson(string $response): ?array
     {
-        // Strip markdown code fences if present
         $cleaned = preg_replace('/^```(?:json)?\s*/i', '', trim($response));
         $cleaned = preg_replace('/\s*```$/i', '', $cleaned);
 
         $decoded = json_decode(trim($cleaned), true);
-
         if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
             return $decoded;
         }
 
-        // Fallback: try to find a JSON object anywhere in the string
+        // Fallback: grab the first JSON object anywhere in the string.
         if (preg_match('/\{.*\}/s', $response, $matches)) {
             $decoded = json_decode($matches[0], true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {

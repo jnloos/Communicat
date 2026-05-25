@@ -4,12 +4,14 @@ namespace App\Services;
 
 use App\Models\Expert;
 use App\Models\Project;
+use App\Pipeline\Directive;
 
 class PromptBuilder
 {
     /**
-     * PATH A — THINK only.
-     * Returns a prompt asking the agent to output an updated Gedächtnis block.
+     * THINK — memory update + contribution intent for one expert.
+     * Returns a prompt asking the agent to output a GEDÄCHTNIS-UPDATE block and
+     * a BEITRAGSABSICHT line.
      */
     public function think(Project $project, Expert $expert): string
     {
@@ -25,30 +27,13 @@ class PromptBuilder
     }
 
     /**
-     * PATH B — THINK+PRIORITIZE combined.
-     * Returns a prompt asking the agent to output an updated Gedächtnis block plus a priority score.
-     */
-    public function thinkAndPrioritize(Project $project, Expert $expert): string
-    {
-        $agents = $project->contributingExperts()
-            ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job]])
-            ->all();
-
-        return $this->decode(view('prompts.agent.think-prioritize', [
-            'expert'   => $expert->asPromptArray($project),
-            'project'  => $project->asPromptArray(),
-            'agents'   => $agents,
-        ])->render());
-    }
-
-    /**
-     * SPEAK — winner agent only (both paths).
-     * Returns a prompt asking the agent to generate a visible conversation turn.
+     * SPEAK — winning agent only.
+     * Returns a prompt asking the agent to generate a visible turn that executes
+     * the moderator's Directive in persona.
      *
-     * @param string $thinkOutput    The raw THINK or THINK+PRIORITIZE output from the preceding step.
-     * @param string $moderationNote Optional moderation instruction injected by ModeratorService.
+     * @param array{memory: string, beitragsabsicht: string} $thinkOutput
      */
-    public function speak(Project $project, Expert $expert, string $thinkOutput, string $moderationNote = ''): string
+    public function speak(Project $project, Expert $expert, array $thinkOutput, Directive $directive): string
     {
         $contributors = $project->contributingExperts();
 
@@ -85,50 +70,53 @@ class PromptBuilder
             'project'          => $project->asPromptArray(),
             'agents'           => $agents,
             'think_output'     => $thinkOutput,
-            'moderation_note'  => $moderationNote,
+            'directive'        => $directive,
             'own_openings'     => $ownOpenings,
             'other_openings'   => $otherOpenings,
         ])->render());
     }
 
     /**
-     * MODERATOR ROUTE — Step 1.
-     * Returns a prompt asking the moderator to decide PATH A or PATH B and select agents.
+     * MODERATOR ROUTE — funnel step.
+     * Returns a prompt asking the moderator to narrow the candidate pool and
+     * emit the turn Directive (role, agenda step, convergence intent, address_user).
      *
-     * @param array  $agents          Keyed by expert id → ['name', 'job'].
-     * @param string $moderationNote  Optional moderation instruction from trigger checks.
+     * @param array $agents  Keyed by expert id → ['name', 'job'].
+     * @param array{open_adjacency_pair?: array, agenda_phase?: string, pending_user?: string}|null $context
+     *               Advisory signals: detected adjacency pair, agenda phase, pending user excerpt.
      */
-    public function moderatorRoute(Project $project, array $agents, string $moderationNote = '', ?string $directAddressHint = null): string
+    public function moderatorRoute(Project $project, array $agents, string $moderationNote = '', ?array $context = null): string
     {
         return $this->decode(view('prompts.moderator.route', [
-            'project'             => $project->asPromptArray(),
-            'agents'              => $agents,
-            'moderation_note'     => $moderationNote,
-            'direct_address_hint' => $directAddressHint,
+            'project'            => $project->asPromptArray(),
+            'agents'             => $agents,
+            'moderation_note'    => $moderationNote,
+            'moderation_context' => $context,
         ])->render());
     }
 
     /**
-     * MODERATOR SELECT — Step 3, PATH B only.
-     * Returns a prompt asking the moderator to select the winning agent from THINK+PRIORITIZE outputs.
+     * MODERATOR SELECT — winner step (only when more than one candidate).
+     * Returns a prompt asking the moderator to qualitatively pick the best
+     * contribution intent.
      *
-     * @param array $agents                  Keyed by expert id → ['name', 'job'].
-     * @param array $thinkPrioritizeOutputs  Keyed by agent name → raw THINK+PRIORITIZE output string.
-     * @param array $state                   ['recent_speakers' => [...], 'recent_response_types' => [...]].
+     * @param array $agents  Keyed by expert id → ['name', 'job'].
+     * @param array<string, string> $intents  agent name → BEITRAGSABSICHT text.
+     * @param array $state   ['recent_speakers' => [...], 'recent_response_types' => [...]].
      */
     public function moderatorSelect(
         Project $project,
         array $agents,
-        array $thinkPrioritizeOutputs,
+        array $intents,
         array $state,
         ?array $openAdjacencyPair = null,
     ): string {
         return $this->decode(view('prompts.moderator.select', [
-            'project'                   => $project->asPromptArray(),
-            'agents'                    => $agents,
-            'think_prioritize_outputs'  => $thinkPrioritizeOutputs,
-            'state'                     => $state,
-            'open_adjacency_pair'       => $openAdjacencyPair,
+            'project'             => $project->asPromptArray(),
+            'agents'              => $agents,
+            'intents'             => $intents,
+            'state'               => $state,
+            'open_adjacency_pair' => $openAdjacencyPair,
         ])->render());
     }
 
@@ -155,8 +143,8 @@ class PromptBuilder
     }
 
     /**
-     * @deprecated Use think() + speak() (PATH A) or thinkAndPrioritize() + speak() (PATH B) instead.
-     *             This method remains functional until Stage 4 integration is complete.
+     * @deprecated Legacy single-shot prompt used only by the old Assistant service.
+     *             The funnel pipeline uses think() + speak() instead.
      */
     public function nextMessage(Project $project, Expert $expert): string
     {

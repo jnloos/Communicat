@@ -7,6 +7,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Message extends Model
 {
+    /** Sentinel next_speaker value handing the floor back to the participant. */
+    public const USER_SENTINEL = 'Nutzer';
+
+    /** adjacency_pair_type values. */
+    public const PAIR_FRAGE_ANTWORT       = 'Frage→Antwort';
+    public const PAIR_ANSPRACHE_REAKTION  = 'Ansprache→Reaktion';
+    public const PAIR_BEITRAG_DISKUSSION  = 'Beitrag→Diskussion';
+    public const PAIR_SYNTHESE_DISKUSSION = 'Synthese→Diskussion';
+    public const PAIR_ABSCHLUSS_NUTZER    = 'Abschluss→Nutzer';
+
     public function expert(): BelongsTo {
         return $this->belongsTo(Expert::class);
     }
