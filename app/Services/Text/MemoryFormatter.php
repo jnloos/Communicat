@@ -33,7 +33,11 @@ class MemoryFormatter
      *     raw: string,
      * }
      */
-    public function parse(?string $memoryBlock): array
+    /**
+     * @param array<string, string> $tokenNames Maps prompt tokens (E7/U3) from the
+     *        memory block headers to display names. Empty = show the bare token.
+     */
+    public function parse(?string $memoryBlock, array $tokenNames = []): array
     {
         $raw = trim((string) $memoryBlock);
 
@@ -57,7 +61,7 @@ class MemoryFormatter
 
         // Match a known header, a per-user [NUTZER: <name>], or a per-expert
         // [EXPERTE: <name>] (both preserving the name). Bare [NUTZER] is legacy.
-        $sectionPattern = '/^\s*\[(NUTZER:\s*[^\]]+|NUTZER|OFFENE_FRAGEN|STAND|EXPERTE:\s*[^\]]+)\]\s*$/mu';
+        $sectionPattern = '/^\s*\[(E\d+|U\d+|NUTZER:\s*[^\]]+|NUTZER|OFFENE_FRAGEN|STAND|EXPERTE:\s*[^\]]+)\]\s*$/mu';
 
         if (preg_match_all($sectionPattern, $body, $headerMatches, PREG_OFFSET_CAPTURE) === 0
             || empty($headerMatches[0])) {
@@ -88,6 +92,22 @@ class MemoryFormatter
 
             $content = trim(substr($body, $contentStart, $contentEnd - $contentStart));
             $rawLabel = trim($headerMatches[1][$i][0]);
+
+            // Token block for a peer expert [E<id>]: resolve to a display name.
+            if (preg_match('/^E\d+$/', $rawLabel)) {
+                if ($content !== '') {
+                    $result['experts'][$tokenNames[$rawLabel] ?? $rawLabel] = $content;
+                }
+                continue;
+            }
+
+            // Token block for a participant [U<id>].
+            if (preg_match('/^U\d+$/', $rawLabel)) {
+                if ($content !== '') {
+                    $result['users'][$tokenNames[$rawLabel] ?? $rawLabel] = $content;
+                }
+                continue;
+            }
 
             // Per-user block [NUTZER: <name>].
             if (str_starts_with($rawLabel, 'NUTZER:')) {

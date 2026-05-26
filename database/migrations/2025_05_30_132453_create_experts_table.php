@@ -6,9 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('experts', function (Blueprint $table) {
@@ -17,14 +14,17 @@ return new class extends Migration
             $table->string('avatar_url')->nullable();
             $table->string('job');
             $table->text('description');
-            $table->text('prompt');
+            // Structured persona fields. core_beliefs/knowledge_limits hold JSON
+            // arrays (cast in the model); profile/style are free text.
+            $table->text('profile')->nullable();
+            $table->text('core_beliefs')->nullable();
+            $table->text('knowledge_limits')->nullable();
+            $table->text('style')->nullable();
+            $table->string('voice_id', 64)->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('experts');

@@ -5,7 +5,6 @@ namespace App\Services\PromptingPipeline;
 use App\Models\Project;
 use App\Services\PromptingPipeline\Stages\MaybeRunSummarize;
 use App\Services\PromptingPipeline\Stages\PersistMessage;
-use App\Services\PromptingPipeline\Stages\ResolveContext;
 use App\Services\PromptingPipeline\Stages\RunExpertsThink;
 use App\Services\PromptingPipeline\Stages\RunModeratorSelect;
 use App\Services\PromptingPipeline\Stages\SelectWinner;
@@ -23,8 +22,8 @@ class DiscussionPipeline
 
     /**
      * Run one moderator-driven funnel turn through the pipeline:
-     *   ResolveModerationContext → SelectCandidates → RunThink → SelectWinner
-     *   → Speak → PersistMessage → UpdateState → MaybeSummarize
+     *   RunModeratorSelect → RunThink → SelectWinner → Speak
+     *   → PersistMessage → UpdateState → MaybeSummarize
      *
      * @return array{stop: bool, reason: ?string, user_id: ?int}
      */
@@ -33,7 +32,6 @@ class DiscussionPipeline
         $ctx = app(Pipeline::class)
             ->send(new TurnContext($this->project, $this->jobLogId))
             ->through([
-                ResolveContext::class,
                 RunModeratorSelect::class,
                 RunExpertsThink::class,
                 SelectWinner::class,
@@ -49,7 +47,9 @@ class DiscussionPipeline
             'reason'  => $ctx->reason,
             // The concrete user the expert handed off to (if any), so only that
             // user is prompted for input — not everyone in the project.
-            'user_id' => $ctx->message?->next_speaker_user_id,
+            'user_id' => $ctx->message?->handsBackToUser()
+                ? $ctx->message->adjacency_partner_id
+                : null,
         ];
     }
 }

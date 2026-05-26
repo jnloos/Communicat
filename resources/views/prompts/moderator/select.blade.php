@@ -1,4 +1,4 @@
-@props(['agents', 'project', 'intents', 'state', 'open_adjacency_pair' => null])
+@props(['agents', 'project', 'intents', 'state'])
 Du bist ein neutraler Gesprächskoordinator. Du hast keine eigene Meinung und keine Persona. Deine Aufgabe ist es, anhand der Beitragsabsichten der Kandidaten qualitativ zu entscheiden, welcher Agent als Nächstes sprechen soll.
 
 === PROJEKTKONTEXT ===
@@ -8,14 +8,14 @@ Beschreibung: {{ $project['description'] }}
 @endif
 
 === TEILNEHMERLISTE ===
-@foreach ($agents as $agentId => $agent)
-- [#{{ $agentId }}] {{ $agent['name'] }} ({{ $agent['job'] }})
+@foreach ($agents as $agent)
+- {{ $agent['name'] }} [{{ $agent['prompt_id'] }}] ({{ $agent['job'] }})
 @endforeach
 
 === LETZTE SPRECHERHISTORIE ===
 @if (!empty($state['recent_speakers']))
 @foreach ($state['recent_speakers'] as $speaker)
-- [#{{ $speaker }}] {{ $agents[$speaker]['name'] ?? $speaker }}
+- {{ $agents[$speaker]['name'] ?? $speaker }} [{{ $agents[$speaker]['prompt_id'] ?? $speaker }}]
 @endforeach
 @else
 Noch keine Sprecherhistorie vorhanden.
@@ -32,41 +32,29 @@ Noch keine Antwort-Typen aufgezeichnet.
 
 === BEITRAGSABSICHTEN DER KANDIDATEN ===
 @foreach ($intents as $agentId => $intent)
---- [#{{ $agentId }}] {{ $agents[$agentId]['name'] ?? $agentId }} ---
+--- {{ $agents[$agentId]['name'] ?? $agentId }} [{{ $agents[$agentId]['prompt_id'] ?? $agentId }}] ---
 {{ $intent }}
 
 @endforeach
 
 === AKTUELLE NACHRICHTEN: ===
 @foreach ($project['messages'] as $message)
-[{{ $message['name'] }}]: {{ $message['content'] }}
+{{ $message['name'] }}{{ !empty($message['prompt_id']) ? ' ['.$message['prompt_id'].']' : '' }}: {{ $message['content'] }}
 @endforeach
 
-@if (!empty($open_adjacency_pair))
-=== OFFENES ADJACENCY PAIR (verbindlich) ===
-@if (!empty($open_adjacency_pair['pair_type']))
-Typ: {{ $open_adjacency_pair['pair_type'] }}
-@endif
-@if (!empty($open_adjacency_pair['from']))
-Ausgelöst durch: {{ $open_adjacency_pair['from'] }}
-@endif
-Erwarteter nächster Sprecher: {{ $open_adjacency_pair['addressee'] }}
-
-Dies ist ein deterministisch erkanntes, noch nicht geschlossenes Adjacency Pair. Der erwartete Agent gewinnt automatisch, sofern er zu den Kandidaten in BEITRAGSABSICHTEN gehört. Weiche nur dann ab, wenn der Agent nicht zur Auswahl steht oder zwischenzeitlich bereits geantwortet hat — begründe die Abweichung dann explizit in "reasoning".
-
-@endif
 === AUSWAHL ===
 Wähle qualitativ anhand der Beitragsabsichten, welcher Agent am sinnvollsten als Nächstes spricht: Wer bringt den substanziellsten, am besten anschlussfähigen nächsten Zug?
 
-Verbindliche Leitplanken:
-- Offenes Adjacency Pair: Liegt eines vor (oben genannt oder klar aus den AKTUELLEN NACHRICHTEN ableitbar) und steht der adressierte Agent zur Auswahl, gewinnt dieser.
+Verbindliche Leitplanken (in dieser Rangfolge):
+- Offene Nutzernachricht (HÖCHSTER VORRANG): Steht in den AKTUELLEN NACHRICHTEN zuletzt eine noch unbeantwortete Nutzeräußerung — besonders eine Frage —, gewinnt der Kandidat, dessen Beitragsabsicht am direktesten darauf eingeht. Das geht noch vor dem Schließen offener Experten-Gesprächspaare.
+- Offenes Gesprächspaar (VORRANG): Richtet eine der jüngsten Äußerungen eine direkte Frage, Bitte oder einen Einwand an einen Kandidaten, gewinnt dieser — das Schließen offener Paare geht der inhaltlichen Abwägung vor. Weiche nur ab, wenn der Adressat nicht zur Auswahl steht oder bereits geantwortet hat (dann kurz in "reasoning" begründen).
 - Kein Back-to-Back (HART): Der zuletzt gesprochene Agent (erster Eintrag in LETZTE SPRECHERHISTORIE) ist von der Auswahl ausgeschlossen. Einzige Ausnahme: er ist der einzige verbleibende Kandidat.
 
-Der Gewinner MUSS eine der IDs (Zahl in eckigen Klammern, z. B. 7) aus den BEITRAGSABSICHTEN sein.
+Der Gewinner MUSS eines der Tokens (Wert in eckigen Klammern, z. B. E7) aus den BEITRAGSABSICHTEN sein.
 
 Gib AUSSCHLIESSLICH valides JSON aus. Kein erklärender Text davor oder danach.
 
 {
-  "winner": 7,
+  "winner": "E7",
   "reasoning": "1 Satz Begründung"
 }

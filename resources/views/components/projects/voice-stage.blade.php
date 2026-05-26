@@ -26,10 +26,13 @@
         ->filter(fn($msg) => $msg->isExpert())
         ->last();
 
-    // Addressed expert id from the last expert message's next_speaker FK, so the
-    // voice stage can highlight them without relying on the Reverb event payload
-    // (which Livewire's echo binding parses unevenly).
-    $lastAddressedId = $lastExpert?->next_speaker_expert_id;
+    // Addressed expert id from the last expert message's adjacency_partner, so
+    // the voice stage can highlight them without relying on the Reverb event
+    // payload (which Livewire's echo binding parses unevenly). Only an expert
+    // partner highlights a tile; a user hand-back does not.
+    $lastAddressedId = $lastExpert?->adjacency_partner_type === \App\Models\Expert::class
+        ? $lastExpert?->adjacency_partner_id
+        : null;
 @endphp
 
 <div

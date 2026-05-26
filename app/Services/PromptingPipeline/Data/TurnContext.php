@@ -17,7 +17,7 @@ class TurnContext
 
     public string $moderationNote = '';
 
-    /** Advisory signals for the moderator (open adjacency pair, agenda phase, pending user). */
+    /** Advisory signals for the moderator (agenda phase, pending/unanswered user). */
     public ?array $moderationContext = null;
 
     /** @var Expert[] candidate pool for this turn */

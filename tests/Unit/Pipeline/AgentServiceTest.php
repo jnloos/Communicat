@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\User;
 use App\Services\PromptingPipeline\Support\AgentService;
 use App\Services\Clients\OpenAIClient;
+use App\Services\PromptingPipeline\Data\Directive;
 use App\Services\PromptingPipeline\Support\PromptBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
@@ -50,9 +51,9 @@ class AgentServiceTest extends TestCase
         $this->assertStringNotContainsString('Vorüberlegung', $content);
     }
 
-    public function test_think_returns_full_raw_response(): void
+    public function test_think_returns_memory_and_beitragsabsicht(): void
     {
-        $raw = "GEDÄCHTNIS-UPDATE:\nTest.";
+        $raw = "GEDÄCHTNIS-UPDATE:\n[STAND]\nDiskussion läuft.\nBEITRAGSABSICHT: Ich bringe ein Beispiel.";
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -61,7 +62,11 @@ class AgentServiceTest extends TestCase
 
         $result = (new AgentService($this->project, $client, $prompts))->think($this->expert);
 
-        $this->assertSame($raw, $result);
+        $this->assertArrayHasKey('memory', $result);
+        $this->assertArrayHasKey('beitragsabsicht', $result);
+        $this->assertStringContainsString('Diskussion läuft.', $result['memory']);
+        $this->assertStringNotContainsString('BEITRAGSABSICHT', $result['memory']);
+        $this->assertSame('Ich bringe ein Beispiel.', $result['beitragsabsicht']);
     }
 
     public function test_think_saves_empty_string_when_marker_missing(): void
@@ -121,65 +126,65 @@ class AgentServiceTest extends TestCase
         $this->assertStringContainsString('Vorhandene Notiz.', $this->expert->thoughtsAbout($this->project)->content);
     }
 
-    public function test_think_and_prioritize_strips_prioritize_section_from_memory(): void
+    public function test_speak_parses_content_and_steuerung_trailer(): void
     {
-        $raw = "THINK:\n  GEDÄCHTNIS-UPDATE:\n  Was ich über den Nutzer weiß: Er liebt PHP.\n\nPRIORITIZE:\n  PRIORITÄT: 4\n  ANTWORT-TYP: Frage\n  BEGRÜNDUNG: Relevant.";
+        $bob = Expert::factory()->create(['name' => 'Bob']);
+        $this->project->addContributingExpert($bob);
 
-        $client  = Mockery::mock(OpenAIClient::class);
-        $prompts = Mockery::mock(PromptBuilder::class);
-        $client->shouldReceive('sendSlow')->once()->andReturn($raw);
-        $prompts->shouldReceive('thinkAndPrioritize')->once()->andReturn('prompt');
-
-        (new AgentService($this->project, $client, $prompts))->thinkAndPrioritize($this->expert);
-
-        $content = $this->expert->thoughtsAbout($this->project)->content;
-        $this->assertStringContainsString('Was ich über den Nutzer weiß', $content);
-        $this->assertStringNotContainsString('PRIORITÄT', $content);
-        $this->assertStringNotContainsString('ANTWORT-TYP', $content);
-    }
-
-    public function test_speak_parses_content_and_metadata(): void
-    {
-        $raw = "Das ist mein Beitrag.\n\n[METADATEN — nicht sichtbar für andere]\nNEXT_SPEAKER: Bob\nADJACENCY_PAIR_TYPE: Frage→Antwort\nREASON: Eine Frage wurde gestellt.";
+        $raw = "Das ist mein Beitrag, Bob.\n---STEUERUNG---\nADRESSAT: E{$bob->id}\nPAARTYP: Frage→Antwort";
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendFast')->once()->andReturn($raw);
         $prompts->shouldReceive('speak')->once()->andReturn('prompt');
 
-        $result = (new AgentService($this->project, $client, $prompts))->speak($this->expert, 'think output');
+        $result = (new AgentService($this->project, $client, $prompts))
+            ->speak($this->expert, ['memory' => 'm', 'beitragsabsicht' => 'b'], $this->directive());
 
-        $this->assertSame('Das ist mein Beitrag.', $result['content']);
-        $this->assertSame('Bob', $result['next_speaker']);
+        $this->assertSame('Das ist mein Beitrag, Bob.', $result['content']);
+        $this->assertSame("E{$bob->id}", $result['adjacency_partner_token']);
         $this->assertSame('Frage→Antwort', $result['adjacency_pair_type']);
-        $this->assertSame('Eine Frage wurde gestellt.', $result['reason']);
     }
 
-    public function test_speak_handles_missing_metadata_gracefully(): void
+    public function test_speak_handles_missing_trailer_gracefully(): void
     {
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
-        $client->shouldReceive('sendFast')->once()->andReturn('Nur Inhalt, keine Metadaten.');
+        $client->shouldReceive('sendFast')->once()->andReturn('Nur Inhalt, keine Steuerung.');
         $prompts->shouldReceive('speak')->once()->andReturn('prompt');
 
-        $result = (new AgentService($this->project, $client, $prompts))->speak($this->expert, 'think output');
+        $result = (new AgentService($this->project, $client, $prompts))
+            ->speak($this->expert, ['memory' => 'm', 'beitragsabsicht' => 'b'], $this->directive());
 
-        $this->assertSame('Nur Inhalt, keine Metadaten.', $result['content']);
-        $this->assertSame('', $result['next_speaker']);
-        $this->assertSame('', $result['adjacency_pair_type']);
-        $this->assertSame('', $result['reason']);
+        $this->assertSame('Nur Inhalt, keine Steuerung.', $result['content']);
+        $this->assertNull($result['adjacency_partner_token']);
+        $this->assertNull($result['adjacency_pair_type']);
     }
 
-    public function test_speak_passes_moderation_note_to_prompt_builder(): void
+    public function test_speak_rejects_unknown_partner_token_and_invalid_pair_type(): void
     {
+        $raw = "Beitrag.\n---STEUERUNG---\nADRESSAT: E999999\nPAARTYP: Quatsch";
+
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
-        $client->shouldReceive('sendFast')->andReturn('Inhalt.');
-        $prompts->shouldReceive('speak')
-            ->with($this->project, $this->expert, 'think', 'mod note')
-            ->once()
-            ->andReturn('prompt');
+        $client->shouldReceive('sendFast')->once()->andReturn($raw);
+        $prompts->shouldReceive('speak')->once()->andReturn('prompt');
 
-        (new AgentService($this->project, $client, $prompts))->speak($this->expert, 'think', 'mod note');
+        $result = (new AgentService($this->project, $client, $prompts))
+            ->speak($this->expert, ['memory' => 'm', 'beitragsabsicht' => 'b'], $this->directive());
+
+        $this->assertSame('Beitrag.', $result['content']);
+        $this->assertNull($result['adjacency_partner_token']);
+        $this->assertNull($result['adjacency_pair_type']);
+    }
+
+    private function directive(): Directive
+    {
+        return new Directive(
+            role: '',
+            agendaStep: 'divergenz',
+            convergenceIntent: '',
+            addressUser: false,
+        );
     }
 }

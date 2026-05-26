@@ -16,16 +16,16 @@ class PromptBuilder
     public function think(Project $project, Expert $expert): string
     {
         $agents = $project->contributingExperts()
-            ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job]])
+            ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job, 'prompt_id' => $e->promptId]])
             ->all();
 
-        // Every human participant gets its own [NUTZER: <Name>] memory block,
-        // so the expert keeps a note per person (not one merged "user").
+        // Every human participant gets its own [U<id>] memory block, so the
+        // expert keeps a note per person (not one merged "user"), keyed by token.
         $users = $project->users()->get()
             ->push($project->owner)
             ->filter()
             ->unique('id')
-            ->map(fn($u) => ['name' => $u->name])
+            ->map(fn($u) => ['name' => $u->name, 'prompt_id' => $u->promptId])
             ->values()
             ->all();
 
@@ -49,7 +49,17 @@ class PromptBuilder
         $contributors = $project->contributingExperts();
 
         $agents = $contributors
-            ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job]])
+            ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job, 'prompt_id' => $e->promptId]])
+            ->all();
+
+        // Human participants, so the agent can map a "U<id>" transcript label
+        // back to a name for natural prose (the roster is the only token→name map).
+        $users = $project->users()->get()
+            ->push($project->owner)
+            ->filter()
+            ->unique('id')
+            ->map(fn($u) => ['name' => $u->name, 'prompt_id' => $u->promptId])
+            ->values()
             ->all();
 
         // Recent opening fragments per expert (kept by ModeratorService::updateState).
@@ -80,6 +90,7 @@ class PromptBuilder
             'expert'           => $expert->asPromptArray($project),
             'project'          => $project->asPromptArray(),
             'agents'           => $agents,
+            'users'            => $users,
             'think_output'     => $thinkOutput,
             'directive'        => $directive,
             'own_openings'     => $ownOpenings,
@@ -92,9 +103,9 @@ class PromptBuilder
      * Returns a prompt asking the moderator to narrow the candidate pool and
      * emit the turn Directive (role, agenda step, convergence intent, address_user).
      *
-     * @param array $agents  Keyed by expert id → ['name', 'job'].
-     * @param array{open_adjacency_pair?: array, agenda_phase?: string, pending_user?: string}|null $context
-     *               Advisory signals: detected adjacency pair, agenda phase, pending user excerpt.
+     * @param array $agents  Keyed by expert id → ['name', 'job', 'prompt_id'].
+     * @param array{agenda_phase?: string, pending_user?: ?string}|null $context
+     *               Advisory signals: agenda phase, pending (unanswered) user excerpt.
      */
     public function moderatorRoute(Project $project, array $agents, string $moderationNote = '', ?array $context = null): string
     {
@@ -120,14 +131,12 @@ class PromptBuilder
         array $agents,
         array $intents,
         array $state,
-        ?array $openAdjacencyPair = null,
     ): string {
         return $this->decode(view('prompts.moderator.select', [
-            'project'             => $project->asPromptArray(),
-            'agents'              => $agents,
-            'intents'             => $intents,
-            'state'               => $state,
-            'open_adjacency_pair' => $openAdjacencyPair,
+            'project' => $project->asPromptArray(),
+            'agents'  => $agents,
+            'intents' => $intents,
+            'state'   => $state,
         ])->render());
     }
 
@@ -150,18 +159,6 @@ class PromptBuilder
 
         return $this->decode(view('prompts.shorten-chat', [
             'project' => $projectData,
-        ])->render());
-    }
-
-    /**
-     * @deprecated Legacy single-shot prompt used only by the old Assistant service.
-     *             The funnel pipeline uses think() + speak() instead.
-     */
-    public function nextMessage(Project $project, Expert $expert): string
-    {
-        return $this->decode(view('prompts.multiple.next-message', [
-            'project' => $project->asPromptArray(),
-            'expert'  => $expert->asPromptArray($project),
         ])->render());
     }
 

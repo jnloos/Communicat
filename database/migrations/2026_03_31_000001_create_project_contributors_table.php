@@ -8,9 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::dropIfExists('expert_project');
-        Schema::dropIfExists('user_project');
-
+        // Single polymorphic pivot: experts AND users join a project through the
+        // same table (contributor_type + contributor_id).
         Schema::create('project_contributors', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
@@ -24,21 +23,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('project_contributors');
-
-        Schema::create('expert_project', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('expert_id')->constrained('experts')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->timestamps();
-            $table->unique(['project_id', 'expert_id']);
-        });
-
-        Schema::create('user_project', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete()->cascadeOnUpdate();
-            $table->timestamps();
-            $table->unique(['project_id', 'user_id']);
-        });
     }
 };

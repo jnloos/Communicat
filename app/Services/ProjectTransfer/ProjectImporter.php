@@ -62,12 +62,17 @@ class ProjectImporter
 
                 $msg->adjacency_pair_type = $m['adjacency_pair_type'] ?? null;
 
-                // Re-link the addressed expert only if it survived re-linking;
-                // a user hand-off is reassigned to the importing owner (the
-                // export carries no stable user id), mirroring user messages.
-                $nsExpert = isset($m['next_speaker_expert_id']) ? (int) $m['next_speaker_expert_id'] : null;
-                $msg->next_speaker_expert_id = ($nsExpert !== null && in_array($nsExpert, $existingIds, true)) ? $nsExpert : null;
-                $msg->next_speaker_user_id   = ! empty($m['next_speaker_user_id']) ? $owner->id : null;
+                // Re-link the polymorphic addressee: an expert only if it survived
+                // re-linking; a user hand-off is reassigned to the importing owner
+                // (the export carries no stable user id), mirroring user messages.
+                $apExpert = isset($m['adjacency_partner_expert_id']) ? (int) $m['adjacency_partner_expert_id'] : null;
+                if ($apExpert !== null && in_array($apExpert, $existingIds, true)) {
+                    $msg->adjacency_partner_type = \App\Models\Expert::class;
+                    $msg->adjacency_partner_id   = $apExpert;
+                } elseif (! empty($m['adjacency_partner_is_user'])) {
+                    $msg->adjacency_partner_type = \App\Models\User::class;
+                    $msg->adjacency_partner_id   = $owner->id;
+                }
                 if (! empty($m['created_at'])) {
                     $msg->created_at = Carbon::parse($m['created_at']);
                 }

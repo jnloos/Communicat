@@ -27,6 +27,41 @@ class MemoryFormatterTest extends TestCase
         $this->assertSame('', $result['raw']);
     }
 
+    public function test_parses_token_markers_and_resolves_names(): void
+    {
+        $block = <<<'TXT'
+GEDÄCHTNIS-UPDATE:
+[U3]
+Möchte schnell skalierbare Lösungen.
+[E7]
+Pragmatische Backend-Sicht.
+[E9]
+UX-Fokus.
+[STAND]
+Diskussion läuft.
+TXT;
+
+        $result = $this->formatter->parse($block, [
+            'U3' => 'Owner',
+            'E7' => 'Sophie Wagner',
+            'E9' => 'Lena Fischer',
+        ]);
+
+        $this->assertTrue($result['structured']);
+        $this->assertSame(['Owner' => 'Möchte schnell skalierbare Lösungen.'], $result['users']);
+        $this->assertArrayHasKey('Sophie Wagner', $result['experts']);
+        $this->assertArrayHasKey('Lena Fischer', $result['experts']);
+        $this->assertSame('Diskussion läuft.', $result['state']);
+    }
+
+    public function test_token_markers_fall_back_to_token_when_unmapped(): void
+    {
+        $result = $this->formatter->parse("[E7]\nNotiz ohne Mapping.");
+
+        $this->assertTrue($result['structured']);
+        $this->assertSame(['E7' => 'Notiz ohne Mapping.'], $result['experts']);
+    }
+
     public function test_parses_canonical_marker_format(): void
     {
         $block = <<<'TXT'

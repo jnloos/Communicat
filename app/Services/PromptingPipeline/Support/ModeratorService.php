@@ -65,7 +65,7 @@ class ModeratorService
      * Ask the moderator LLM to narrow the candidate pool and define the turn's
      * Directive (role, agenda step, convergence intent, address_user).
      *
-     * @param  array{open_adjacency_pair?: array, agenda_phase?: string, pending_user?: string}|null $context
+     * @param  array{agenda_phase?: string, pending_user?: ?string}|null $context
      * @return array{candidates: int[], directive: Directive, reasoning: string}
      */
     public function route(string $moderationNote = '', ?array $context = null): array
@@ -86,7 +86,9 @@ class ModeratorService
             ];
         }
 
-        $candidates = $this->normalizeKnownIds($decoded['candidates'] ?? $knownIds, $knownIds);
+        // The moderator returns prompt tokens ("E7"); resolve them back to the
+        // canonical integer expert ids the rest of the pipeline works with.
+        $candidates = $this->resolveExpertIds($decoded['candidates'] ?? [], $knownIds);
         if (empty($candidates)) {
             $candidates = $knownIds;
         }
@@ -100,14 +102,13 @@ class ModeratorService
 
     /**
      * Pick the winning candidate from the set of THINK outputs by qualitatively
-     * judging their BEITRAGSABSICHT (no score). Back-to-back guard and the
-     * open-adjacency-pair mandate are preserved.
+     * judging their BEITRAGSABSICHT (no score). The hard back-to-back guard is
+     * preserved as a deterministic guardrail against monologue loops.
      *
      * @param  array<int, array{memory: string, beitragsabsicht: string}> $thinkOutputs  keyed by expert id
-     * @param  array{addressee_id?: int, pair_type?: string, from?: string}|null $openAdjacencyPair
      * @return int  the winning expert id
      */
-    public function selectWinner(array $thinkOutputs, ?array $openAdjacencyPair = null): int
+    public function selectWinner(array $thinkOutputs): int
     {
         $agents = $this->buildAgentsArray();
 
@@ -119,7 +120,7 @@ class ModeratorService
         // Expose only the contribution intents to the selection prompt (keyed by id).
         $intents = array_map(fn(array $o) => $o['beitragsabsicht'], $thinkOutputs);
 
-        $prompt   = $this->prompts->moderatorSelect($this->project, $agents, $intents, $state, $openAdjacencyPair);
+        $prompt   = $this->prompts->moderatorSelect($this->project, $agents, $intents, $state);
         $response = $this->client->sendFast($prompt, 'moderator:select');
 
         $decoded = $this->parseJson($response);
@@ -128,20 +129,19 @@ class ModeratorService
             return (int) array_key_first($thinkOutputs);
         }
 
-        $winner = (int) $decoded['winner'];
+        // The moderator returns a prompt token ("E7"); reduce it to the expert id.
+        $winner = $this->promptIdToExpertId((string) $decoded['winner']);
 
-        if (!array_key_exists($winner, $thinkOutputs)) {
+        if ($winner === null || !array_key_exists($winner, $thinkOutputs)) {
             return (int) array_key_first($thinkOutputs);
         }
 
         // Hard back-to-back guard: never let the immediately previous speaker go
-        // twice in a row unless the open-adjacency-pair path mandates it.
+        // twice in a row unless they are the only remaining candidate.
         $lastSpeaker = $state['recent_speakers'][0] ?? null;
         $lastSpeaker = $lastSpeaker !== null ? (int) $lastSpeaker : null;
-        $isMandated  = $openAdjacencyPair !== null
-            && (int) ($openAdjacencyPair['addressee_id'] ?? 0) === $winner;
 
-        if (!$isMandated && $lastSpeaker !== null && $winner === $lastSpeaker) {
+        if ($lastSpeaker !== null && $winner === $lastSpeaker) {
             $alternatives = array_diff(array_keys($thinkOutputs), [$lastSpeaker]);
             if (!empty($alternatives)) {
                 return (int) reset($alternatives);
@@ -248,31 +248,12 @@ class ModeratorService
             $phase = $this->agendaPhase();
         }
 
-        // Adjacency-pair steering. Resolve the target expert id → name so SPEAK
-        // can address the peer by name. An invalid/missing target degrades to
-        // 'none'. Disabled entirely when the feature flag is off.
-        $pairAction   = 'none';
-        $pairWithName = '';
-        if (config('discussion.generate_pairs', true)) {
-            $action = mb_strtolower(trim((string) ($d['pair_action'] ?? 'none')));
-            if (in_array($action, ['open', 'close'], true)) {
-                $targetId = (int) ($d['pair_with'] ?? 0);
-                $name     = $this->project->contributorMap()[$targetId]->name ?? '';
-                if ($name !== '') {
-                    $pairAction   = $action;
-                    $pairWithName = $name;
-                }
-            }
-        }
-
         return new Directive(
             role:              (string) ($d['role'] ?? ''),
             agendaStep:        $phase,
             convergenceIntent: (string) ($d['convergence_intent'] ?? ''),
             addressUser:       (bool)   ($d['address_user'] ?? false),
             reasoning:         $reasoning,
-            pairAction:        $pairAction,
-            pairWithName:      $pairWithName,
         );
     }
 
@@ -315,27 +296,39 @@ class ModeratorService
     protected function buildAgentsArray(): array
     {
         return $this->project->contributingExperts()
-            ->mapWithKeys(fn(Expert $e) => [$e->id => ['name' => $e->name, 'job' => $e->job]])
+            ->mapWithKeys(fn(Expert $e) => [
+                $e->id => ['name' => $e->name, 'job' => $e->job, 'prompt_id' => $e->promptId],
+            ])
             ->all();
     }
 
     /**
-     * Keep only ids that belong to the project's contributors, deduplicated and
-     * order-preserving. Anything the LLM invents (unknown ids, names) is dropped.
+     * Reduce a single "E7" prompt token to its integer expert id, or null if it
+     * is malformed / not an expert token.
+     */
+    protected function promptIdToExpertId(string $token): ?int
+    {
+        return preg_match('/^E(\d+)$/', trim($token), $m) ? (int) $m[1] : null;
+    }
+
+    /**
+     * Resolve a list of prompt tokens ("E7") to the canonical integer expert ids
+     * that belong to this project, deduplicated and order-preserving. Anything
+     * the LLM invents (unknown tokens, user tokens, names) is dropped.
      *
      * @param  int[] $knownIds
      * @return int[]
      */
-    protected function normalizeKnownIds(mixed $ids, array $knownIds): array
+    protected function resolveExpertIds(mixed $tokens, array $knownIds): array
     {
-        if (!is_array($ids)) {
-            return $knownIds;
+        if (!is_array($tokens)) {
+            return [];
         }
 
         $normalized = [];
-        foreach ($ids as $id) {
-            $id = (int) $id;
-            if (in_array($id, $knownIds, true) && !in_array($id, $normalized, true)) {
+        foreach ($tokens as $token) {
+            $id = $this->promptIdToExpertId((string) $token);
+            if ($id !== null && in_array($id, $knownIds, true) && !in_array($id, $normalized, true)) {
                 $normalized[] = $id;
             }
         }

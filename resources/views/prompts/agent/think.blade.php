@@ -10,6 +10,15 @@ Titel: {{ $project['title'] }}
 Beschreibung: {{ $project['description'] }}
 @endif
 
+=== BLOCK 2b: TEILNEHMER (Referenz-Tokens) ===
+@foreach ($agents as $agent)
+- {{ $agent['name'] }} [{{ $agent['prompt_id'] }}] ({{ $agent['job'] }})
+@endforeach
+@foreach ($users as $user)
+- {{ $user['name'] }} [{{ $user['prompt_id'] }}] (Nutzer)
+@endforeach
+Nutze diese Tokens ausschließlich als Block-Marker in deinem Gedächtnis. Im sichtbaren Gespräch sprichst du Teilnehmer immer mit Namen an, niemals mit Token.
+
 === BLOCK 3: DEIN AKTUELLES GEDÄCHTNIS ===
 @if (!empty($expert['thoughts']->content))
 {{ $expert['thoughts']->content }}
@@ -24,7 +33,7 @@ Noch kein Gedächtnis vorhanden.
 @endif
 === AKTUELLE NACHRICHTEN: ===
 @foreach ($project['messages'] as $message)
-[{{ $message['name'] }}]: {{ $message['content'] }}
+{{ $message['name'] }}{{ !empty($message['prompt_id']) ? ' ['.$message['prompt_id'].']' : '' }}: {{ $message['content'] }}
 @endforeach
 
 === AUFGABE ===
@@ -35,7 +44,7 @@ Gib AUSSCHLIESSLICH den GEDÄCHTNIS-UPDATE-Block gefolgt von der BEITRAGSABSICHT
 Formatregeln (verbindlich):
 - Jede Sektion beginnt mit ihrem Marker in eckigen Klammern in einer eigenen Zeile.
 - Inhalt steht in den Folgezeilen bis zum nächsten Marker.
-- Die Marker [NUTZER: <Name>], [EXPERTE: <Name>], [OFFENE_FRAGEN], [STAND] werden wörtlich übernommen — auch die eckigen Klammern. Führe für JEDEN Gesprächsteilnehmer einen eigenen Block: pro Nutzer ein [NUTZER: <Name>], pro anderem Experten ein [EXPERTE: <Name>]. Pflege bei jedem Update alle Blöcke fort.
+- Die Marker sind die Teilnehmer-Tokens (z. B. [U3], [E7]) sowie [OFFENE_FRAGEN] und [STAND] — wörtlich übernommen, inkl. der eckigen Klammern. Führe für JEDEN anderen Gesprächsteilnehmer einen eigenen Block mit seinem Token aus der TEILNEHMER-Liste (jeder Nutzer, jeder andere Experte). Pflege bei jedem Update alle Blöcke fort.
 - Bei [OFFENE_FRAGEN] eine Liste mit "- " pro Eintrag; "keine" wenn nichts offen ist.
 - Keine zusätzlichen Marker, keine Markdown-Überschriften, keine Aufzählungen außerhalb von [OFFENE_FRAGEN].
 
@@ -47,12 +56,12 @@ Nach dem GEDÄCHTNIS-UPDATE folgt verbindlich die Zeile BEITRAGSABSICHT:
 Pflichtformat:
 GEDÄCHTNIS-UPDATE:
 @foreach ($users as $user)
-[NUTZER: {{ $user['name'] }}]
+[{{ $user['prompt_id'] }}]
 ...
 @endforeach
 @foreach ($agents as $agentId => $agent)
 @if ($agentId !== $expert['expert_id'])
-[EXPERTE: {{ $agent['name'] }}]
+[{{ $agent['prompt_id'] }}]
 ...
 @endif
 @endforeach

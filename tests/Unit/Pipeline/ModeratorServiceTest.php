@@ -50,9 +50,13 @@ class ModeratorServiceTest extends TestCase
     // checkTriggers
     // -------------------------------------------------------------------------
 
-    public function test_check_triggers_returns_empty_when_no_triggers(): void
+    public function test_check_triggers_returns_only_agenda_note_when_no_silence(): void
     {
-        $this->assertSame('', $this->makeService()->checkTriggers());
+        // With no silence counters the note carries just the current agenda phase.
+        $note = $this->makeService()->checkTriggers();
+
+        $this->assertStringContainsString('Divergenz', $note);
+        $this->assertStringNotContainsString('nicht geäußert', $note);
     }
 
     public function test_check_triggers_fires_silence_note_at_two_turns(): void
@@ -71,17 +75,15 @@ class ModeratorServiceTest extends TestCase
         $this->project->settings = ['silence_counters' => [$this->expert1->id => 1]];
         $this->project->save();
 
-        $this->assertSame('', $this->makeService()->checkTriggers());
+        $this->assertStringNotContainsString('nicht geäußert', $this->makeService()->checkTriggers());
     }
 
-    public function test_check_triggers_fires_stagnation_note_at_five_turns(): void
+    public function test_check_triggers_nudges_toward_convergence_late_in_phase(): void
     {
-        $this->project->settings = ['topic_turn_count' => 5];
+        $this->project->settings = ['agenda_phase' => 'divergenz', 'phase_turn_count' => 5];
         $this->project->save();
 
-        $note = $this->makeService()->checkTriggers();
-
-        $this->assertStringContainsString('Themenwechsel', $note);
+        $this->assertStringContainsString('Konvergenz', $this->makeService()->checkTriggers());
     }
 
     // -------------------------------------------------------------------------
@@ -90,7 +92,7 @@ class ModeratorServiceTest extends TestCase
 
     public function test_route_returns_candidate_ids_from_json(): void
     {
-        $json = '{"candidates":[' . $this->expert2->id . '],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","address_user":false},"reasoning":"Bob passt."}';
+        $json = '{"candidates":["E' . $this->expert2->id . '"],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","address_user":false},"reasoning":"Bob passt."}';
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -105,7 +107,7 @@ class ModeratorServiceTest extends TestCase
 
     public function test_route_filters_unknown_ids(): void
     {
-        $json = '{"candidates":[' . $this->expert1->id . ',999999],"directive":{},"reasoning":"x"}';
+        $json = '{"candidates":["E' . $this->expert1->id . '","E999999"],"directive":{},"reasoning":"x"}';
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -134,7 +136,7 @@ class ModeratorServiceTest extends TestCase
 
     public function test_route_parses_candidate_ids_in_markdown_fence(): void
     {
-        $response = "```json\n{\"candidates\":[" . $this->expert1->id . ',' . $this->expert2->id . "],\"directive\":{},\"reasoning\":\"Test.\"}\n```";
+        $response = "```json\n{\"candidates\":[\"E" . $this->expert1->id . '","E' . $this->expert2->id . "\"],\"directive\":{},\"reasoning\":\"Test.\"}\n```";
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -179,7 +181,7 @@ class ModeratorServiceTest extends TestCase
 
     public function test_select_winner_returns_parsed_winner(): void
     {
-        $json = '{"winner":' . $this->expert2->id . ',"reasoning":"Höchste Priorität."}';
+        $json = '{"winner":"E' . $this->expert2->id . '","reasoning":"Höchste Priorität."}';
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -194,7 +196,7 @@ class ModeratorServiceTest extends TestCase
 
     public function test_select_winner_falls_back_when_winner_not_in_candidates(): void
     {
-        $json = '{"winner":999999,"reasoning":"Test."}';
+        $json = '{"winner":"E999999","reasoning":"Test."}';
 
         $client  = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);

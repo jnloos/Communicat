@@ -8,20 +8,10 @@ return [
     |--------------------------------------------------------------------------
     | Which CandidateStrategy the pipeline uses to build a turn's candidate pool.
     | 'funnel' (default) lets the moderator narrow to a subset; 'all' offers
-    | every contributing expert. An @-mention always overrides the strategy.
+    | every contributing expert. Direct address (incl. @-mentions) is inferred
+    | by the moderator from the transcript, not special-cased in code.
     */
     'candidate_strategy' => env('DISCUSSION_CANDIDATE_STRATEGY', 'funnel'),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Adjacency-pair generation
-    |--------------------------------------------------------------------------
-    | When true, the moderator may instruct the next speaker (via the Directive)
-    | to OPEN an adjacency pair (pose a direct question/request to a named peer)
-    | or CLOSE one (answer/react to whoever addressed them). Turning it off
-    | reverts to the prior behaviour (no explicit pair steering).
-    */
-    'generate_pairs' => env('DISCUSSION_GENERATE_PAIRS', true),
 
     /*
     |--------------------------------------------------------------------------

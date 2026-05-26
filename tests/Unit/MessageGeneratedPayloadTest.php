@@ -26,7 +26,7 @@ class MessageGeneratedPayloadTest extends TestCase
         $project->addContributingExpert($bob);
 
         $message = $project->addMessage('Hallo Bob.', $alice);
-        $message->next_speaker_expert_id = $bob->id;
+        $message->adjacencyPartner()->associate($bob);
         $message->save();
 
         $payload = (new MessageGenerated($project->id, $message->id))->broadcastWith();
@@ -48,7 +48,7 @@ class MessageGeneratedPayloadTest extends TestCase
         $project->addContributingExpert($alice);
 
         $message = $project->addMessage('Was meinst du?', $alice);
-        $message->next_speaker_user_id = $owner->id;
+        $message->adjacencyPartner()->associate($owner);
         $message->save();
 
         $payload = (new MessageGenerated($project->id, $message->id))->broadcastWith();

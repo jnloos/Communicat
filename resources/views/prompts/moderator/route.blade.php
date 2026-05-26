@@ -8,8 +8,8 @@ Beschreibung: {{ $project['description'] }}
 @endif
 
 === TEILNEHMERLISTE ===
-@foreach ($agents as $agentId => $agent)
-- [#{{ $agentId }}] {{ $agent['name'] }} ({{ $agent['job'] }})
+@foreach ($agents as $agent)
+- {{ $agent['name'] }} [{{ $agent['prompt_id'] }}] ({{ $agent['job'] }})
 @endforeach
 
 @if (!empty($project['chat_summary']))
@@ -19,7 +19,7 @@ Beschreibung: {{ $project['description'] }}
 @endif
 === AKTUELLE NACHRICHTEN: ===
 @foreach ($project['messages'] as $message)
-[{{ $message['name'] }}]: {{ $message['content'] }}
+{{ $message['name'] }}{{ !empty($message['prompt_id']) ? ' ['.$message['prompt_id'].']' : '' }}: {{ $message['content'] }}
 @endforeach
 
 @if (!empty($moderation_note))
@@ -32,52 +32,33 @@ Beschreibung: {{ $project['description'] }}
 @if (!empty($moderation_context['agenda_phase']))
 Agenda-Phase: {{ $moderation_context['agenda_phase'] }}
 @endif
-@if (!empty($moderation_context['open_adjacency_pair']))
-Offenes Adjacency Pair:
-@if (!empty($moderation_context['open_adjacency_pair']['pair_type']))
-- Typ: {{ $moderation_context['open_adjacency_pair']['pair_type'] }}
-@endif
-@if (!empty($moderation_context['open_adjacency_pair']['from']))
-- Ausgelöst durch: {{ $moderation_context['open_adjacency_pair']['from'] }}
-@endif
-@if (!empty($moderation_context['open_adjacency_pair']['addressee']))
-- Erwarteter Adressat: {{ $moderation_context['open_adjacency_pair']['addressee'] }}
-@endif
-@if (!empty($moderation_context['open_adjacency_pair']['source']))
-- Quelle: {{ $moderation_context['open_adjacency_pair']['source'] }}
-@endif
-@endif
 @if (!empty($moderation_context['pending_user']))
-Offene Nutzernachricht (Auszug): {{ $moderation_context['pending_user'] }}
+Offene, noch unbeantwortete Nutzernachricht (Auszug): {{ $moderation_context['pending_user'] }}
+
+VERBINDLICH — HÖCHSTER VORRANG (noch vor offenen Experten-Gesprächspaaren): Die zuletzt eingegangene Nachricht stammt vom Nutzer und ist noch unbeantwortet. Der nächste Beitrag MUSS direkt darauf eingehen — eine Nutzerfrage hat Vorrang vor jeder laufenden Experten-Diskussion. Wähle die fachlich passenden Kandidaten für eine Antwort. Setze "address_user" nur dann auf true, wenn zur Beantwortung eine Entscheidung, Freigabe oder fehlende Information vom Nutzer nötig ist — sonst sollen die Experten zuerst inhaltlich antworten.
 @endif
 
-Diese Signale sind beratend. Ein genannter Adressat eines offenen Adjacency Pairs oder eine offene Nutzernachricht ist jedoch quasi-bindend: Nimm den Adressaten in das Kandidaten-Set auf bzw. setze "address_user" auf true, sofern nicht ein klarer Grund dagegen spricht (dann kurz in "reasoning" begründen).
+Diese Signale sind beratend, sofern oben nicht ausdrücklich als verbindlich markiert.
 
 @endif
 === AUFGABE: KANDIDATEN-SET + DIRECTIVE ===
-1. Wähle ein Kandidaten-Set: das Subset der Teilnehmer (eine oder mehrere IDs aus der Teilnehmerliste — die Zahl in eckigen Klammern, z. B. 7), das als Nächstes nachdenken soll. Wähle die fachlich passendsten für den nächsten Diskussionsschritt; bei klarer Lage genügt ein einzelner Kandidat.
+1. Wähle ein Kandidaten-Set: das Subset der Teilnehmer (ein oder mehrere Tokens aus der Teilnehmerliste — der Wert in eckigen Klammern, z. B. E7), das als Nächstes nachdenken soll. Wähle die fachlich passendsten für den nächsten Diskussionsschritt; bei klarer Lage genügt ein einzelner Kandidat. VORRANG (nachrangig nur zu einer offenen Nutzernachricht): Richtet eine der jüngsten Äußerungen eine direkte Frage, Bitte oder einen Einwand an einen bestimmten Experten, nimm diesen unbedingt ins Kandidaten-Set auf, damit das offene Gesprächspaar geschlossen werden kann.
 2. Vergib eine Directive:
    - "role": die Aufgabe für den nächsten Beitrag (z. B. "zusammenfassen", "Advocatus Diaboli", "Beleg fordern", "Gegenposition", "Brücke bauen", "vertiefen").
    - "agenda_step": einer von "divergenz" (öffnen, neue Thesen/Einwände), "konvergenz" (verdichten, auf Entscheidung hinarbeiten), "abschluss" (Zwischenergebnis oder verbleibende offene Frage).
    - "convergence_intent": ein Satz, worauf der Beitrag inhaltlich hinarbeiten soll.
-   - "address_user": true, wenn als Nächstes an den Nutzer übergeben werden soll (offene Nutzernachricht, Entscheidung/Freigabe nötig, Diskussion kippt in Wiederholung), sonst false.
-@if(config('discussion.generate_pairs', true))
-   - "pair_action": Adjacency-Pair-Steuerung für den nächsten Beitrag. "close", wenn die letzte relevante Äußerung eine Frage/Bitte/einen Einwand an einen Teilnehmer richtete, der zur Auswahl steht — dieser liefert dann den zweiten Paarteil (Antwort/Reaktion). "open", um die Diskussion zu verzahnen: der Sprecher richtet einen ersten Paarteil (gezielte Frage/Bitte/Einwand) an einen benannten Experten. Sonst "none". Erzwinge KEIN Paar, wenn keines sinnvoll ist — "none" ist völlig in Ordnung.
-   - "pair_with": die ID des betroffenen Experten (bei "open" das angesprochene Gegenüber, bei "close" derjenige, auf den geantwortet wird); null bei "none". Wähle den Adressaten möglichst aus dem Kandidaten-Set. Bei "address_user": true setze "pair_action" auf "none".
-@endif
+   - "address_user": true, wenn als Nächstes an den Nutzer übergeben werden soll (Entscheidung/Freigabe nötig, Diskussion kippt in Wiederholung), sonst false.
 3. Begründe kurz in "reasoning".
 
 Gib AUSSCHLIESSLICH valides JSON aus. Kein erklärender Text davor oder danach.
 
 {
-  "candidates": [7],
+  "candidates": ["E7"],
   "directive": {
     "role": "Rolle",
     "agenda_step": "divergenz",
     "convergence_intent": "1 Satz Konvergenz-Absicht",
-    "address_user": false,
-    "pair_action": "none",
-    "pair_with": null
+    "address_user": false
   },
   "reasoning": "1 Satz Begründung"
 }

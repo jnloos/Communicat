@@ -7,7 +7,7 @@ Beschreibung: {{ $project['description'] }}
 
 === ZU KOMPRIMIERENDE NACHRICHTEN ===
 @foreach ($project['messages'] as $message)
-[{{ $message['name'] }}]: {{ $message['content'] }}
+{{ $message['name'] }}{{ !empty($message['prompt_id']) ? ' ['.$message['prompt_id'].']' : '' }}: {{ $message['content'] }}
 @endforeach
 
 === AUFGABE ===

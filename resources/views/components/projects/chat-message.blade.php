@@ -8,16 +8,15 @@
 @php
     $sender = $msg->sender();
 
-    // Resolve the "speaks to" target from the FK fields (project-scoped by data,
-    // no global name lookup): an expert (next_speaker_expert_id) or a user
-    // (next_speaker_user_id). No self-arrow.
+    // Resolve the "speaks to" target from the polymorphic adjacency_partner:
+    // an expert or a user (no global name lookup). No self-arrow.
+    $partner = $msg->adjacencyPartner;
+    $addressedIsExpert = $partner instanceof \App\Models\Expert;
     $addressed = null;
-    $addressedIsExpert = false;
-    if ($msg->next_speaker_expert_id && $msg->next_speaker_expert_id !== $msg->expert_id) {
-        $addressed = $msg->nextSpeakerExpert;
-        $addressedIsExpert = true;
-    } elseif ($msg->next_speaker_user_id && !($msg->isUser() && $msg->next_speaker_user_id === $msg->user_id)) {
-        $addressed = $msg->nextSpeakerUser;
+    if ($addressedIsExpert && $partner->id !== $msg->expert_id) {
+        $addressed = $partner;
+    } elseif ($partner instanceof \App\Models\User && !($msg->isUser() && $partner->id === $msg->user_id)) {
+        $addressed = $partner;
     }
 
     // Render the message body and rewrite "@PersonaName" into clickable badges

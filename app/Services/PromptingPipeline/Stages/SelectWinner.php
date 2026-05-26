@@ -25,9 +25,8 @@ class SelectWinner
         }
 
         $moderator = app(ModeratorService::class, ['project' => $ctx->project]);
-        $openPair  = $ctx->moderationContext['open_adjacency_pair'] ?? null;
 
-        $winnerId    = $moderator->selectWinner($ctx->thinkOutputs, $openPair);
+        $winnerId    = $moderator->selectWinner($ctx->thinkOutputs);
         $ctx->winner = $map[$winnerId] ?? $map[$ids[0]];
 
         return $next($ctx);

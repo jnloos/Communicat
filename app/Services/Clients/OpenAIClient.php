@@ -15,27 +15,24 @@ class OpenAIClient
 
     protected static ?int $jobLogId = null;
 
-    /**
-     * System-level framing applied to every call. Prevents content-policy refusals
-     * on legitimate but politically/ethically charged debate topics by clarifying
-     * the simulation context. This is NOT a content filter bypass — the model still
-     * follows OpenAI policy; it just knows the personas are fictional.
-     */
-    protected const SYSTEM_INSTRUCTIONS = <<<'TXT'
-Du bist Teil einer akademischen Diskussionssimulation. Mehrere fiktive Experten mit klar definierten Rollen erörtern ein vom Nutzer vorgegebenes Thema.
-
-Wichtig:
-- Alle Personas sind erfunden und nehmen vorgegebene fachliche Perspektiven ein.
-- Die behandelten Themen — auch kontroverse, politische, ökonomische oder ethische — sind Gegenstand legitimer akademischer Diskussion und Lehre.
-- Verweigere keinen Beitrag wegen Kontroversität des Themas. Folge stattdessen strikt dem Format und der Persona, die im Nutzerprompt vorgegeben sind.
-- Halte dich an die im Prompt verlangte Ausgabestruktur (z.B. GEDÄCHTNIS-UPDATE, METADATEN-Block) wortwörtlich.
-- Vertritt Standpunkte, ohne als KI zu sprechen oder dich zu distanzieren.
-TXT;
+    /** Rendered system framing, memoized per instance (the blade has no variables). */
+    protected ?string $systemInstructionsCache = null;
 
     public function __construct() {
         $this->modelFast = config('apis.openai.model_fast');
         $this->modelSlow = config('apis.openai.model_slow');
         $this->client    = OpenAI::client(config('apis.openai.api_key'));
+    }
+
+    /**
+     * System-level framing applied to every call, rendered from prompts.system.
+     * Frames the academic-simulation context so legitimate but politically/
+     * ethically charged debate topics aren't refused — NOT a policy bypass; the
+     * model still follows OpenAI policy, it just knows the personas are fictional.
+     */
+    protected function systemInstructions(): string
+    {
+        return $this->systemInstructionsCache ??= trim(view('prompts.system')->render());
     }
 
     public static function bindJobLog(?int $jobLogId): void
@@ -49,7 +46,7 @@ TXT;
 
         $response = $this->client->responses()->create([
             'model'        => $model,
-            'instructions' => self::SYSTEM_INSTRUCTIONS,
+            'instructions' => $this->systemInstructions(),
             'input'        => $prompt,
         ])->outputText;
 
@@ -71,7 +68,8 @@ TXT;
         $model  = $model ?? $this->modelFast;
 
         $keys         = array_keys($prompts);
-        $instructions = self::SYSTEM_INSTRUCTIONS;
+        // Render once here so the concurrency closures capture a plain string.
+        $instructions = $this->systemInstructions();
         $tasks        = [];
         foreach ($prompts as $prompt) {
             $tasks[] = static function () use ($apiKey, $model, $prompt, $instructions) {

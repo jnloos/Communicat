@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,6 +12,16 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 class Expert extends Model
 {
     use HasFactory;
+
+    /**
+     * Stable, type-prefixed token used to reference this contributor inside
+     * prompts and structured LLM outputs ("E7"). Disambiguates experts from
+     * users (and from same-named experts) without ever matching on names.
+     */
+    protected function promptId(): Attribute
+    {
+        return Attribute::get(fn () => 'E' . $this->id);
+    }
 
     protected $casts = [
         'core_beliefs'     => 'array',
@@ -79,6 +90,7 @@ class Expert extends Model
         return [
             'name'        => $this->name,
             'expert_id'   => $this->id,
+            'prompt_id'   => $this->promptId,
             'job'         => $this->job,
             'description' => $persona,
             'thoughts'    => $summary,

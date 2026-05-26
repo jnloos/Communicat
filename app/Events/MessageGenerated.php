@@ -2,7 +2,9 @@
 
 namespace App\Events;
 
+use App\Models\Expert;
 use App\Models\Message;
+use App\Models\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -32,12 +34,17 @@ class MessageGenerated implements ShouldBroadcastNow
     {
         $message = $this->messageId ? Message::find($this->messageId) : null;
 
+        // The single polymorphic adjacency_partner fans back out into the two
+        // payload keys the frontend already listens for (kept stable on purpose).
+        $partnerType = $message?->adjacency_partner_type;
+        $partnerId   = $message?->adjacency_partner_id;
+
         return [
             'project_id'          => $this->projectId,
             'message_id'          => $this->messageId,
             'expert_id'           => $message?->expert_id,
-            'addressed_expert_id' => $message?->next_speaker_expert_id,
-            'addressed_user_id'   => $message?->next_speaker_user_id,
+            'addressed_expert_id' => $partnerType === Expert::class ? $partnerId : null,
+            'addressed_user_id'   => $partnerType === User::class ? $partnerId : null,
         ];
     }
 }

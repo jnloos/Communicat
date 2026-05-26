@@ -77,6 +77,27 @@ class Project extends Model
         return $this->experts()->count() < self::MAX_CONTRIBUTING_EXPERTS;
     }
 
+    /**
+     * Resolve a prompt token ("E7"/"U3") back to its contributor — the single,
+     * project-scoped entry point for turning an id the LLM returned into a model.
+     * Experts resolve against the contributor map; users against the project's
+     * participants (including the owner). Unknown/malformed tokens yield null.
+     */
+    public function contributorByPromptId(?string $token): Expert|User|null {
+        if (!is_string($token) || !preg_match('/^([EU])(\d+)$/', trim($token), $m)) {
+            return null;
+        }
+
+        $id = (int) $m[2];
+
+        if ($m[1] === 'E') {
+            return $this->contributorMap()->get($id);
+        }
+
+        return $this->users()->whereKey($id)->first()
+            ?? ($this->owner?->id === $id ? $this->owner : null);
+    }
+
     public function addContributingUser(User $user): void {
         $this->users()->syncWithoutDetaching($user->id);
     }

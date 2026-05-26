@@ -50,10 +50,12 @@ class ProjectExport
                     'expert_id'           => $m->expert_id,
                     'is_user'             => $m->user_id !== null,
                     'sender_name'         => $m->expert?->name ?? $m->user?->name,
-                    'adjacency_pair_type'    => $m->adjacency_pair_type,
-                    'next_speaker_expert_id' => $m->next_speaker_expert_id,
-                    'next_speaker_user_id'   => $m->next_speaker_user_id,
-                    'created_at'             => optional($m->created_at)->toIso8601String(),
+                    'adjacency_pair_type' => $m->adjacency_pair_type,
+                    // Polymorphic addressee, flattened: the expert id (re-linkable)
+                    // or a user flag (reassigned to the importing owner).
+                    'adjacency_partner_expert_id' => $m->adjacency_partner_type === \App\Models\Expert::class ? $m->adjacency_partner_id : null,
+                    'adjacency_partner_is_user'   => $m->adjacency_partner_type === \App\Models\User::class,
+                    'created_at'          => optional($m->created_at)->toIso8601String(),
                 ])
                 ->values()
                 ->all(),

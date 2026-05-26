@@ -196,9 +196,9 @@
                                             <span class="text-zinc-400">·</span>
                                             <span class="font-mono text-zinc-500">{{ $msg->adjacency_pair_type }}</span>
                                         @endif
-                                        @if ($msg->next_speaker_expert_id || $msg->next_speaker_user_id)
+                                        @if ($msg->adjacency_partner_id)
                                             <span class="text-zinc-400">→</span>
-                                            <span class="text-zinc-500">{{ $msg->nextSpeakerExpert?->name ?? $msg->nextSpeakerUser?->name }}</span>
+                                            <span class="text-zinc-500">{{ $msg->adjacencyPartner?->name }}</span>
                                         @endif
                                         <span class="ml-auto font-mono text-zinc-400">{{ $msg->created_at?->format('H:i:s') }}</span>
                                     </div>

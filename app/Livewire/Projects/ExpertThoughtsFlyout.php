@@ -35,7 +35,19 @@ class ExpertThoughtsFlyout extends Component
         $project  = Project::find($this->projectId);
         $thoughts = $expert && $project ? $expert->thoughtsAbout($project) : null;
 
-        $memory = app(MemoryFormatter::class)->parse($thoughts?->content);
+        // Map the memory's prompt tokens (E7/U3) back to display names so the
+        // per-participant cards render with names instead of raw tokens.
+        $tokenNames = [];
+        if ($project !== null) {
+            foreach ($project->contributingExperts() as $e) {
+                $tokenNames[$e->promptId] = $e->name;
+            }
+            foreach ($project->users()->get()->push($project->owner)->filter()->unique('id') as $u) {
+                $tokenNames[$u->promptId] = $u->name;
+            }
+        }
+
+        $memory = app(MemoryFormatter::class)->parse($thoughts?->content, $tokenNames);
 
         // Resolve avatars for the experts mentioned inside the memory so the
         // view can show a small face next to each "Über X"-card.
