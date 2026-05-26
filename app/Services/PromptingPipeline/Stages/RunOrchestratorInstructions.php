@@ -18,7 +18,7 @@ use Closure;
  * the moderator, which decides addressUser itself. There is no @-mention special
  * case either — the moderator infers direct address from the visible transcript.
  */
-class RunModeratorSelect
+class RunOrchestratorInstructions
 {
     public function handle(TurnContext $ctx, Closure $next)
     {

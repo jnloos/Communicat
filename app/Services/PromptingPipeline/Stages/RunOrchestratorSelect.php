@@ -12,7 +12,7 @@ use Closure;
  * winner is always resolved by id against the project's contributor map — never
  * a global name lookup.
  */
-class SelectWinner
+class RunOrchestratorSelect
 {
     public function handle(TurnContext $ctx, Closure $next)
     {

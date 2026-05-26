@@ -6,8 +6,8 @@ use App\Models\Project;
 use App\Services\PromptingPipeline\Stages\MaybeRunSummarize;
 use App\Services\PromptingPipeline\Stages\PersistMessage;
 use App\Services\PromptingPipeline\Stages\RunExpertsThink;
-use App\Services\PromptingPipeline\Stages\RunModeratorSelect;
-use App\Services\PromptingPipeline\Stages\SelectWinner;
+use App\Services\PromptingPipeline\Stages\RunOrchestratorInstructions;
+use App\Services\PromptingPipeline\Stages\RunOrchestratorSelect;
 use App\Services\PromptingPipeline\Stages\RunExpertsSpeak;
 use App\Services\PromptingPipeline\Stages\UpdateState;
 use App\Services\PromptingPipeline\Data\TurnContext;
@@ -32,9 +32,9 @@ class DiscussionPipeline
         $ctx = app(Pipeline::class)
             ->send(new TurnContext($this->project, $this->jobLogId))
             ->through([
-                RunModeratorSelect::class,
+                RunOrchestratorInstructions::class,
                 RunExpertsThink::class,
-                SelectWinner::class,
+                RunOrchestratorSelect::class,
                 RunExpertsSpeak::class,
                 PersistMessage::class,
                 UpdateState::class,
