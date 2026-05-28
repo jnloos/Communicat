@@ -1,93 +1,97 @@
 @startuml
-title Multi-Agent-Diskussions-Pipeline (Funnel-Modell)\nEin Turn — TurnContext fliesst durch 8 Stages (Pipes & Filters)
+title Diskussions-Pipeline — Prompt- & Sprachtheorie-Sicht (ein Turn)
+
+skinparam dpi 110
+skinparam defaultFontSize 11
+skinparam noteFontSize 10
 
 legend top right
-  | Farbe | Akteur |
-  |<#E8F0FE> Moderator (LLM)|
-  |<#E6F4EA> Agent / Experte (LLM)|
-  |<#FFFFFF> Deterministisch / System|
+  |<#E8F0FE> Moderator-Call|
+  |<#E6F4EA> Agent-Call|
+  |<#FFF4E5> Sprachtheorie|
+  |<#FFFFFF> System / deterministisch|
 endlegend
 
 start
+floating note left #FFFFFF
+  **system.blade.php** vor jedem LLM-Call:
+  akad. Simulation, Personas fiktiv, keine
+  KI-Distanzierung, Ausgabeformat wörtlich.
+end note
 
-partition "1. ResolveModerationContext" {
-  :Trigger / pendingUser-Note lesen;
-  :Adjacency-Pairs deterministisch erkennen
-  (Experten- + Nutzer-Faelle)
-  -> advisory Signal;
-  :Agenda-Phase lesen;
-  note right: rein deterministisch
+partition "1. Moderator route()" {
+  #E8F0FE:**moderator/route.blade.php**
+  In: Kontext + Teilnehmer "Name [E7]" + Nachrichten
+  + Advisory (agenda_phase, pending_user)
+  Out (JSON): candidates[] + Directive
+  {role, agenda_step, convergence_intent, address_user};
+  note right #FFF4E5
+    **Turn-Allocation** (Sacks/Schegloff 1974):
+    Floor-Vergabe. Vorrang: offene Nutzerfrage
+    > offenes Adjazenzpaar an Experten.
+  end note
 }
 
-partition "2. SelectCandidates" {
-  if (@-Mention vorhanden?) then (ja)
-    #FFFFFF:Override (deterministisch):
-    Pool = genannte Experten;
-    note right: route-LLM uebersprungen
+partition "2. Agent think() (parallel)" {
+  #E6F4EA:**agent/think.blade.php** je Kandidat
+  In: Persona + Kontext + eigenes Gedächtnis + Nachrichten
+  Out: GEDÄCHTNIS-UPDATE (persistiert)
+  + BEITRAGSABSICHT (1 Satz, nur Auswahlsignal);
+  note right #FFF4E5
+    **Gedächtnis-Struktur = Theorie:**
+    [Token] je Teilnehmer = partner-spez. Modell
+    (Clark, Recipient Design); [OFFENE_FRAGEN] =
+    konditionelle Relevanz / offene Paare;
+    [STAND] = Common Ground.
+    Absicht ≠ Äußerung.
+  end note
+}
+
+partition "3. Moderator select()" {
+  if (n > 1 Kandidaten?) then (ja)
+    #E8F0FE:**moderator/select.blade.php**
+    In: Beitragsabsichten + recent_speakers/-types
+    Out (JSON): winner;
+    note right #FFF4E5
+      Rangfolge: Nutzerfrage > Adjazenzpaar
+      > **Kein Back-to-Back** (Sprecherwechsel).
+    end note
   else (nein)
-    #E8F0FE:CandidateStrategy
-    (Default: FunnelStrategy)
-    -> Moderator engt Pool ein;
-    note right
-      Moderator (LLM)
-      nutzt Adjacency-Signal (advisory)
-    end note
-  endif
-  :Directive setzen
-  (Rolle / Agenda-Schritt /
-   Konvergenz / address_user);
-  :Kandidaten-Set {1..n};
-}
-
-partition "3. RunThink" {
-  #E6F4EA:THINK je Kandidat (parallel bei n>1):
-  - GEDAECHTNIS-UPDATE (persistiert)
-  - BEITRAGSABSICHT (nur Auswahlsignal);
-  note right: Agenten / Experten (LLM)
-}
-
-partition "4. SelectWinner" {
-  if (n == 1?) then (ja)
-    :Stage uebersprungen
-    -> einziger Kandidat ist Gewinner;
-  else (n > 1)
-    #E8F0FE:Moderator bewertet
-    Beitragsabsichten qualitativ
-    -> bester Beitrag;
-    note right
-      Moderator (LLM)
-      nutzt Adjacency-Signal (advisory)
-    end note
+    :Pass-through;
   endif
 }
 
-partition "5. Speak" {
-  #E6F4EA:Gewinner fuehrt Directive
-  in Persona aus;
-  note right: Agent / Experte (LLM)
+partition "4. Agent speak()" {
+  #E6F4EA:**agent/speak.blade.php** (Gewinner)
+  +BLOCK 4 Reaktions-Typen, +BLOCK 5 Reparatur,
+  +Anti-Echo-Einstiege, +Directive
+  Out: Turn-Text + ---STEUERUNG--- (ADRESSAT + PAARTYP);
+  note right #FFF4E5
+    BLOCK 4 = **Präferenzorganisation** (Pomerantz):
+    Ablehnung mit Verzögerungssignal + Begründung.
+    BLOCK 5 = **Reparatur** (Schegloff 1977):
+    Selbst- vor Fremdkorrektur.
+    PAARTYP = **Adjazenzpaar-Typ**.
+  end note
 }
 
-partition "6. PersistMessage" {
-  :Nachricht speichern
-  + adjacency_pair_type (fuer UI);
+partition "5.–6. System (deterministisch)" {
+  :**Persist:** Nachricht + adjacency_partner (Paar materialisiert);
+  :**State:** recent_speakers/-types, Agenda-Phase fortschreiben;
 }
 
-partition "7. UpdateState" {
-  :recent_speakers / response_types /
-  silence / openings fortschreiben;
-  :Agenda-Phase fortschreiben;
-}
-
-partition "8. MaybeSummarize" {
-  if (unsummierte Nachrichten > summary_trigger_at\n(Default 100)?) then (ja)
-    :Summary erzeugen
-    (neuste summary_keep_recent
-     = Default 30 bleiben roh);
+partition "7. Summarizer (bei Schwelle)" {
+  if (unsummierte Nachrichten > Schwelle?) then (ja)
+    :**shorten-chat.blade.php** → Chat-Summary
+    (neueste N Nachrichten bleiben roh);
+    note right #FFF4E5
+      Kontextfenster-Management: ältere Turns
+      verdichtet, Common Ground bleibt erhalten.
+    end note
   else (nein)
     :keine Summary;
   endif
 }
 
 stop
-
 @enduml
