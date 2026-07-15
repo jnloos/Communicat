@@ -16,7 +16,7 @@ class PersonaListTest extends TestCase
 
     public function test_core_beliefs_can_be_added_removed_and_saved(): void
     {
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin);
 
         $component = Livewire::test(ExpertEditor::class)

@@ -17,8 +17,10 @@ class AuthServiceProvider extends ServiceProvider
             return $project->isOwner($user);
         });
 
+        // Adding/removing users ("Zusammenarbeit") is an admin capability;
+        // study participants may only manage the experts of their projects.
         Gate::define('manage-contributors', function (User $user, Project $project) {
-            return $project->isOwner($user);
+            return $user->is_admin && $project->isOwner($user);
         });
 
         Gate::define('admin', function (User $user) {

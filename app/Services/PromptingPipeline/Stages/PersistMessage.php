@@ -39,8 +39,8 @@ class PersistMessage
         $message->save();
 
         $ctx->message = $message;
-        $ctx->stop    = $addressUser;
-        $ctx->reason  = $addressUser ? 'user_addressed' : null;
+        $ctx->stop = $addressUser;
+        $ctx->reason = $addressUser ? 'user_addressed' : null;
 
         return $next($ctx);
     }

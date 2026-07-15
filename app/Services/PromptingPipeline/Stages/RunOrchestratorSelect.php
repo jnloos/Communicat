@@ -21,12 +21,13 @@ class RunOrchestratorSelect
 
         if (count($ids) === 1) {
             $ctx->winner = $map[$ids[0]];
+
             return $next($ctx);
         }
 
         $moderator = app(ModeratorService::class, ['project' => $ctx->project]);
 
-        $winnerId    = $moderator->selectWinner($ctx->thinkOutputs);
+        $winnerId = $moderator->selectWinner($ctx->thinkOutputs);
         $ctx->winner = $map[$winnerId] ?? $map[$ids[0]];
 
         return $next($ctx);

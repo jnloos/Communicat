@@ -2,6 +2,7 @@
 
 namespace App\Services\PromptingPipeline\Stages;
 
+use App\Events\PipelineStageChanged;
 use App\Services\PromptingPipeline\Data\TurnContext;
 use App\Services\PromptingPipeline\Support\AgentService;
 use Closure;
@@ -15,7 +16,13 @@ class RunExpertsSpeak
 {
     public function handle(TurnContext $ctx, Closure $next)
     {
-        $agent       = app(AgentService::class, ['project' => $ctx->project]);
+        PipelineStageChanged::dispatch($ctx->project->id, 'speaking', [[
+            'id' => $ctx->winner->id,
+            'name' => $ctx->winner->name,
+            'avatar_url' => $ctx->winner->avatar_url,
+        ]]);
+
+        $agent = app(AgentService::class, ['project' => $ctx->project]);
         $thinkOutput = $ctx->thinkOutputs[$ctx->winner->id];
 
         $ctx->speakResult = $agent->speak($ctx->winner, $thinkOutput, $ctx->directive);

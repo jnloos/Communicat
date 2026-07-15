@@ -4,6 +4,7 @@ namespace App\Livewire\Projects;
 
 use App\Models\Project;
 use App\Services\ProjectTransfer\ProjectImporter;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -27,6 +28,12 @@ class CreateProject extends Component
     public function save(): void {
         $this->validate();
 
+        // Non-admins (study participants) always use the standard memory
+        // reduction; the select is hidden for them in the view.
+        if (! auth()->user()->is_admin) {
+            $this->frequency = 10;
+        }
+
         $project = new Project();
         $project->title       = $this->title;
         $project->description = $this->description;
@@ -36,8 +43,9 @@ class CreateProject extends Component
         $this->redirect(route('project.show', $project), navigate: true);
     }
 
-    /** Alternative to save(): create a full project copy from an uploaded JSON export. */
+    /** Alternative to save(): create a full project copy from an uploaded JSON export. Admin-only. */
     public function createFromFile(): void {
+        Gate::authorize('admin');
         $this->validate(['importFile' => 'required|file|max:20480']);
 
         $data = json_decode(file_get_contents($this->importFile->getRealPath()), true);

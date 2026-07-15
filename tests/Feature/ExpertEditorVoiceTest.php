@@ -19,7 +19,7 @@ class ExpertEditorVoiceTest extends TestCase
         $this->assertNotEmpty($female, 'config/voices.php must seed at least one female voice');
 
         $expert = Expert::factory()->create(['voice_id' => $female]);
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin);
         Livewire::test(ExpertEditor::class)
@@ -32,7 +32,7 @@ class ExpertEditorVoiceTest extends TestCase
     {
         $male = config('voices.male.0.id');
         $expert = Expert::factory()->create(['voice_id' => null]);
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin);
         Livewire::test(ExpertEditor::class)
@@ -48,7 +48,7 @@ class ExpertEditorVoiceTest extends TestCase
     {
         $female = config('voices.female.0.id');
         $expert = Expert::factory()->create(['voice_id' => $female]);
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin);
         Livewire::test(ExpertEditor::class)
@@ -61,7 +61,7 @@ class ExpertEditorVoiceTest extends TestCase
     {
         $unknown = 'totally-not-in-the-catalog';
         $expert = Expert::factory()->create(['voice_id' => $unknown]);
-        $admin = User::factory()->create();
+        $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin);
         $component = Livewire::test(ExpertEditor::class)

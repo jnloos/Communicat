@@ -41,13 +41,20 @@ class EditProject extends Component
     }
 
     public function save(): void {
+        // Editing title/description/frequency is admin-only; non-admin owners
+        // only get the read-only view with delete.
+        Gate::authorize('admin');
+
         $project = Project::findOrFail($this->forProjectId);
         Gate::authorize('manage-project', $project);
         $this->validate();
 
         $project->title       = $this->title;
         $project->description = $this->description;
-        $project->settings    = ['summary_frequency' => $this->frequency];
+        // Merge instead of replace: settings also carries the discussion
+        // state (recent_speakers, summaries watermark, …) which an edit of
+        // title/description must not wipe.
+        $project->settings    = array_merge($project->settings ?? [], ['summary_frequency' => $this->frequency]);
         $project->save();
 
         $this->dispatch('project_edited');

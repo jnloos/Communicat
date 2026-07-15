@@ -14,7 +14,7 @@
                     </div>
                 </div>
 
-                <div class="text-[10px] uppercase tracking-wide text-zinc-500">
+                <div class="text-xs uppercase tracking-wide text-zinc-500">
                     {{ __('Gedächtnis zur Diskussion') }}
                 </div>
 
@@ -125,7 +125,7 @@
                     </div>
                 @else
                     <div class="rounded-md border border-zinc-200 dark:border-zinc-700 p-4 bg-zinc-50 dark:bg-zinc-900/40 space-y-2">
-                        <p class="text-[11px] text-zinc-500 italic">
+                        <p class="text-xs text-zinc-500 italic">
                             {{ __('Format wird beim nächsten Update aktualisiert.') }}
                         </p>
                         <pre class="text-xs whitespace-pre-wrap font-mono text-zinc-700 dark:text-zinc-300 max-h-[60vh] overflow-auto">{{ $memory['raw'] }}</pre>

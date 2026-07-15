@@ -323,20 +323,20 @@
                                         <img :src="item.avatar_url" :alt="item.name" class="w-full h-full object-cover" />
                                     </template>
                                     <template x-if="!item.avatar_url">
-                                        <span class="text-[10px] font-semibold text-zinc-600 dark:text-zinc-300" x-text="item.name.slice(0,2).toUpperCase()"></span>
+                                        <span class="text-xs font-semibold text-zinc-600 dark:text-zinc-300" x-text="item.name.slice(0,2).toUpperCase()"></span>
                                     </template>
                                 </span>
                                 <span class="flex flex-col items-start min-w-0">
                                     <span class="font-medium text-zinc-900 dark:text-zinc-100 truncate" x-text="item.name"></span>
                                     <template x-if="item.job">
-                                        <span class="text-[11px] leading-tight text-zinc-500 dark:text-zinc-400 truncate" x-text="item.job"></span>
+                                        <span class="text-xs leading-tight text-zinc-500 dark:text-zinc-400 truncate" x-text="item.job"></span>
                                     </template>
                                 </span>
                             </button>
                         </li>
                     </template>
                 </ul>
-                <div class="px-3 py-1.5 text-[10px] uppercase tracking-wide text-zinc-500 border-t border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40">
+                <div class="px-3 py-1.5 text-xs uppercase tracking-wide text-zinc-500 border-t border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40">
                     <span>{{ __('↑↓ wählen, Enter bestätigen, Esc abbrechen') }}</span>
                 </div>
             </div>

@@ -8,12 +8,14 @@
     x-data="{
         mode: 'text',
         init() {
-            this.$store.discussionMode.initForProject('{{ $project->id }}');
-            this.mode = this.$store.discussionMode.value;
+            @can('admin')
+                this.$store.discussionMode.initForProject('{{ $project->id }}');
+                this.mode = this.$store.discussionMode.value;
 
-            this.$watch('$store.discussionMode.value', (value) => {
-                this.mode = value;
-            });
+                this.$watch('$store.discussionMode.value', (value) => {
+                    this.mode = value;
+                });
+            @endcan
         },
         setMode(value) {
             this.$store.discussionMode.setMode(value);
@@ -24,6 +26,7 @@
     <livewire:projects.select-contributors :project="$project" />
     <livewire:projects.edit-project :project="$project" />
     <livewire:projects.expert-thoughts-flyout :project="$project" />
+    <livewire:experts.expert-details-flyout />
 
     <!-- Project Management -->
     <div class="flex items-center gap-2">
@@ -55,11 +58,13 @@
             </flux:heading>
         </div>
 
-        {{-- Center: tab selection — always exactly centered --}}
-        <flux:radio.group variant="segmented" x-model="mode" x-on:change="setMode(mode)" class="shrink-0">
-            <flux:radio value="text" icon="chat-bubble-left-right">{{ __('Text') }}</flux:radio>
-            <flux:radio value="voice" icon="microphone">{{ __('Voice') }}</flux:radio>
-        </flux:radio.group>
+        {{-- Center: tab selection — always exactly centered (voice mode is admin-only) --}}
+        @can('admin')
+            <flux:radio.group variant="segmented" x-model="mode" x-on:change="setMode(mode)" class="shrink-0">
+                <flux:radio value="text" icon="chat-bubble-left-right">{{ __('Text') }}</flux:radio>
+                <flux:radio value="voice" icon="microphone">{{ __('Voice') }}</flux:radio>
+            </flux:radio.group>
+        @endcan
 
         {{-- Right: contributors (equal flex, right-aligned) --}}
         <div class="flex-1 min-w-0 flex justify-end">
@@ -120,6 +125,15 @@
                             if (wasNearBottom) this.scrollToBottom();
                         });
                     });
+
+                    // Keep the pipeline indicator (thinking/typing bubble) in
+                    // view when it appears or grows, same near-bottom rule.
+                    window.addEventListener('pipeline_stage_changed', () => {
+                        const wasNearBottom = this.isNearBottom();
+                        this.$nextTick(() => {
+                            if (wasNearBottom) this.scrollToBottom();
+                        });
+                    });
                 }
             }"
         >
@@ -133,13 +147,18 @@
                 @foreach ($messages as $msg)
                     <x-projects.chat-message :id="$msg->id" :msg="$msg" />
                 @endforeach
+
+                <!-- Denkblase / Tipp-Indikator der Generierungs-Pipeline -->
+                <x-projects.pipeline-indicator :project="$project" />
             </div>
         </div>
     </div>
 
-    <div x-show="mode === 'voice'" class="py-6">
-        <x-projects.voice-stage :project="$project" :messages="$messages" />
-    </div>
+    @can('admin')
+        <div x-show="mode === 'voice'" class="py-6">
+            <x-projects.voice-stage :project="$project" :messages="$messages" />
+        </div>
+    @endcan
 
     <!-- Chat Control -->
     <livewire:projects.control-chat :project="$project" />

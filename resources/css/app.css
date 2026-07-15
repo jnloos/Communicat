@@ -40,6 +40,13 @@
 
 @layer base {
 
+    /* Readability bump: raise the root font size 16px → 17px. Everything in
+       Tailwind and Flux is rem-based, so all text and spacing scale
+       proportionally — do not add absolute px font sizes in views. */
+    html {
+        font-size: 106.25%;
+    }
+
     *,
     ::after,
     ::before,
@@ -160,3 +167,21 @@ select:focus[data-flux-control] {
   transition: filter 400ms ease, transform 300ms ease,
               box-shadow 300ms ease, --tw-ring-color 300ms ease;
 }
+
+/* Pipeline indicator (thinking bubble): three dots pulsing in sequence,
+   like a classic messenger typing indicator. */
+@keyframes typing-bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30%           { transform: translateY(-0.25rem); opacity: 1; }
+}
+
+.typing-dot {
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background-color: currentColor;
+    animation: typing-bounce 1.2s ease-in-out infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }

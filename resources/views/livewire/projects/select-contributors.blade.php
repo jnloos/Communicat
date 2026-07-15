@@ -17,101 +17,17 @@
     </flux:heading>
     <flux:spacer/>
 
-    <flux:tab.group class="mt-5 w-full">
-        <flux:tabs variant="segmented" class="w-full -mb-5 cursor-pointer">
-            <flux:tab name="experts" selected>{{ __('Experts') }}</flux:tab>
-            @can('manage-contributors', $project)
+    @can('manage-contributors', $project)
+        <flux:tab.group class="mt-5 w-full">
+            <flux:tabs variant="segmented" class="w-full -mb-5 cursor-pointer">
+                <flux:tab name="experts" selected>{{ __('Experts') }}</flux:tab>
                 <flux:tab name="users">{{ __('Users') }}</flux:tab>
-            @endcan
-        </flux:tabs>
+            </flux:tabs>
 
-        <flux:tab.panel name="experts" selected>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between gap-2">
-                    @if(!$hasSuggestions)
-                        <flux:button
-                            size="sm"
-                            icon="sparkles"
-                            wire:click="suggestExperts"
-                            wire:loading.attr="disabled"
-                            wire:target="suggestExperts"
-                            class="cursor-pointer"
-                        >
-                            <span wire:loading.remove wire:target="suggestExperts">{{ __('Suggest experts') }}</span>
-                            <span wire:loading wire:target="suggestExperts">{{ __('Suggesting...') }}</span>
-                        </flux:button>
-                    @else
-                        <div class="flex items-center gap-2">
-                            <flux:button
-                                size="sm"
-                                variant="ghost"
-                                icon="arrow-path"
-                                wire:click="suggestExperts"
-                                wire:loading.attr="disabled"
-                                wire:target="suggestExperts"
-                                class="cursor-pointer"
-                            >
-                                <span wire:loading.remove wire:target="suggestExperts">{{ __('Refresh suggestions') }}</span>
-                                <span wire:loading wire:target="suggestExperts">{{ __('Suggesting...') }}</span>
-                            </flux:button>
-                            <flux:button
-                                size="sm"
-                                variant="ghost"
-                                icon="x-mark"
-                                wire:click="clearSuggestions"
-                                class="cursor-pointer"
-                                :title="__('Clear suggestions')"
-                            />
-                        </div>
-                    @endif
-                </div>
+            <flux:tab.panel name="experts" selected>
+                @include('livewire.projects.partials.expert-picker')
+            </flux:tab.panel>
 
-                @if($suggestionError)
-                    <p class="text-xs text-red-500 dark:text-red-400">{{ $suggestionError }}</p>
-                @endif
-
-                @if($limitWarning)
-                    <p class="text-xs rounded-md bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700/60 text-amber-800 dark:text-amber-200 px-3 py-2">
-                        {{ $limitWarning }}
-                    </p>
-                @elseif(!$canAddExpert)
-                    <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                        {{ __('Limit erreicht: maximal :n Experten pro Projekt.', ['n' => $expertLimit]) }}
-                    </p>
-                @endif
-
-                <x-experts.filter-bar />
-
-                @if($experts->isEmpty())
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400 text-center py-6">
-                        @if($hasFilters)
-                            {{ __('No experts match the current filters.') }}
-                        @else
-                            {{ __('Keine Einträge') }}
-                        @endif
-                    </p>
-                @else
-                    @foreach ($experts as $expert)
-                        @php($active = $expert->isContributing($project))
-                        @php($isSuggested = isset($suggestedIdSet[$expert->id]))
-                        @php($limitBlocked = !$active && !$canAddExpert)
-                        <x-contributors.contributors-card
-                            class="cursor-pointer {{ $limitBlocked ? 'opacity-50' : '' }} {{ $active ? 'ring-2 ring-primary' : '' }}"
-                            :name="$expert->name"
-                            :job="$expert->job"
-                            :avatar-url="$expert->avatar_url ?? null"
-                            :seed="$expert->id"
-                            :suggested="$isSuggested"
-                            :suggestion-reason="$isSuggested ? ($suggestionReasons[$expert->id] ?? null) : null"
-                            wire:loading.attr="disabled"
-                            wire:click="{{ $active ? 'removeExpert' : 'addExpert' }}({{ $expert->id }})"
-                        />
-                    @endforeach
-                @endif
-            </div>
-        </flux:tab.panel>
-
-        @can('manage-contributors', $project)
             <flux:tab.panel name="users">
                 <div class="space-y-4">
                     <flux:input
@@ -144,6 +60,28 @@
                     @endif
                 </div>
             </flux:tab.panel>
-        @endcan
-    </flux:tab.group>
+        </flux:tab.group>
+    @else
+        {{-- Non-admins have no Users tab; instead of a lone "Experts" tab they
+             see the avatars of the currently selected experts. --}}
+        <div class="mt-5 space-y-5">
+            @php($selectedExperts = $project->experts()->get())
+            <div class="flex items-center gap-2 flex-wrap min-h-9">
+                @forelse ($selectedExperts as $selected)
+                    <x-contributors.contributors-avatar
+                        :name="$selected->name"
+                        :avatar-url="$selected->avatar_url"
+                        title="{{ $selected->name }}"
+                        class="w-9 h-9"
+                    />
+                @empty
+                    <p class="text-sm text-zinc-500 dark:text-zinc-400">
+                        {{ __('Noch keine Experten ausgewählt.') }}
+                    </p>
+                @endforelse
+            </div>
+
+            @include('livewire.projects.partials.expert-picker')
+        </div>
+    @endcan
 </flux:modal>

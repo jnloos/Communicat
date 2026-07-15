@@ -20,7 +20,7 @@
             <flux:navlist variant="outline">
                 <flux:navlist.group class="grid mt-5">
                     <flux:navlist.item icon="squares-plus" :href="route('project.new')" :current="request()->routeIs('project.new')" wire:navigate>{{ __('New Project') }}</flux:navlist.item>
-                    <flux:navlist.item icon="user-circle" :href="route('experts')" :current="request()->routeIs('experts')" wire:navigate>{{ __('Edit Experts') }}</flux:navlist.item>
+                    <flux:navlist.item icon="user-circle" :href="route('experts')" :current="request()->routeIs('experts')" wire:navigate>{{ __('Experts') }}</flux:navlist.item>
                 </flux:navlist.group>
 
                 @php
@@ -41,13 +41,15 @@
             <flux:spacer />
 
             <flux:navlist variant="outline">
-                <flux:navlist.item icon="folder-git-2" href="https://github.com/jnloos/Communicat" target="_blank">
-                    {{ __('Repository') }}
-                </flux:navlist.item>
+                @can('admin')
+                    <flux:navlist.item icon="folder-git-2" href="https://github.com/jnloos/Communicat" target="_blank">
+                        {{ __('Repository') }}
+                    </flux:navlist.item>
 
-                <flux:navlist.item icon="cog" :href="route('settings.profile')" wire:navigate>
-                    {{ __('Settings') }}
-                </flux:navlist.item>
+                    <flux:navlist.item icon="cog" :href="route('settings.profile')" wire:navigate>
+                        {{ __('Settings') }}
+                    </flux:navlist.item>
+                @endcan
 
                 <form method="POST" action="{{ route('logout') }}" class="w-full">
                     @csrf
@@ -85,11 +87,13 @@
 
                     <flux:menu.separator />
 
-                    <flux:menu.radio.group>
-                        <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>{{ __('Settings') }}</flux:menu.item>
-                    </flux:menu.radio.group>
+                    @can('admin')
+                        <flux:menu.radio.group>
+                            <flux:menu.item :href="route('settings.profile')" icon="cog" wire:navigate>{{ __('Settings') }}</flux:menu.item>
+                        </flux:menu.radio.group>
 
-                    <flux:menu.separator />
+                        <flux:menu.separator />
+                    @endcan
 
                     <form method="POST" action="{{ route('logout') }}" class="w-full">
                         @csrf

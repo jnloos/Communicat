@@ -2,6 +2,7 @@
 
 namespace App\Services\PromptingPipeline\Stages;
 
+use App\Events\PipelineStageChanged;
 use App\Services\PromptingPipeline\Candidates\AllExpertsStrategy;
 use App\Services\PromptingPipeline\Candidates\CandidateStrategy;
 use App\Services\PromptingPipeline\Candidates\FunnelStrategy;
@@ -22,16 +23,18 @@ class RunOrchestratorInstructions
 {
     public function handle(TurnContext $ctx, Closure $next)
     {
+        PipelineStageChanged::dispatch($ctx->project->id, 'routing');
+
         $moderator = app(ModeratorService::class, ['project' => $ctx->project]);
 
         $ctx->latestMessage = $ctx->project->latestParticipantMessage();
 
-        $latest         = $ctx->latestMessage;
+        $latest = $ctx->latestMessage;
         $pendingExcerpt = ($latest && $latest->user_id !== null)
             ? mb_substr(trim($latest->content), 0, 240)
             : null;
 
-        $ctx->moderationNote    = $moderator->checkTriggers();
+        $ctx->moderationNote = $moderator->checkTriggers();
         $ctx->moderationContext = [
             'agenda_phase' => $moderator->agendaPhase(),
             'pending_user' => $pendingExcerpt,
@@ -47,7 +50,7 @@ class RunOrchestratorInstructions
         $moderator = app(ModeratorService::class, ['project' => $ctx->project]);
 
         return match (config('discussion.candidate_strategy', 'funnel')) {
-            'all'   => new AllExpertsStrategy($moderator),
+            'all' => new AllExpertsStrategy($moderator),
             default => new FunnelStrategy($moderator),
         };
     }

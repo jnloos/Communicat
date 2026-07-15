@@ -7,6 +7,7 @@ use App\Models\Expert;
 use App\Models\Tag;
 use App\Support\VoiceCatalog;
 use Flux\Flux;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -58,6 +59,8 @@ class ExpertEditor extends Component
     #[On('edit_expert')]
     public function edit($id = null): void
     {
+        Gate::authorize('admin');
+
         $this->resetForm();
 
         $expert = null;
@@ -100,6 +103,7 @@ class ExpertEditor extends Component
 
     public function save(): void
     {
+        Gate::authorize('admin');
         $this->validate();
 
         $expert = $this->expertId ? Expert::findOrFail($this->expertId) : new Expert;
@@ -158,6 +162,8 @@ class ExpertEditor extends Component
 
     public function delete(): void
     {
+        Gate::authorize('admin');
+
         if (! is_null($this->expertId)) {
             $expert = Expert::findOrFail($this->expertId);
             $this->deleteAvatar($expert->avatar_url);

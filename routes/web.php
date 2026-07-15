@@ -58,13 +58,13 @@ Route::get('experts', function () {
     return view('experts');
 })->middleware(['auth', 'verified'])->name('experts');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'admin'])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
     Route::get('settings/profile', Profile::class)->name('settings.profile');
     Route::get('settings/password', Password::class)->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
-    Route::get('settings/users', Users::class)->middleware('admin')->name('settings.users');
+    Route::get('settings/users', Users::class)->name('settings.users');
 });
 
 require __DIR__.'/auth.php';

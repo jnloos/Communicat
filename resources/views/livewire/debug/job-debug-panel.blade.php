@@ -171,11 +171,11 @@
                                     </button>
                                     <div x-show="open" x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-zinc-200 dark:border-zinc-700">
                                         <div class="p-3 border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-700">
-                                            <div class="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">Prompt</div>
+                                            <div class="text-xs uppercase tracking-wide text-zinc-500 mb-1">Prompt</div>
                                             <pre class="text-xs whitespace-pre-wrap font-mono text-zinc-700 dark:text-zinc-300 max-h-80 overflow-auto">{{ $plog->prompt }}</pre>
                                         </div>
                                         <div class="p-3">
-                                            <div class="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">Response</div>
+                                            <div class="text-xs uppercase tracking-wide text-zinc-500 mb-1">Response</div>
                                             <pre class="text-xs whitespace-pre-wrap font-mono text-zinc-700 dark:text-zinc-300 max-h-80 overflow-auto">{{ $plog->response }}</pre>
                                         </div>
                                     </div>

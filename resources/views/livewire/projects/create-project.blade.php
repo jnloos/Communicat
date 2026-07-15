@@ -7,11 +7,13 @@
 
             <flux:textarea wire:model.defer="description" :label="__('Description')" rows="10" description="Describe the project in a clear and concise way. This description will be used by AI systems, so make sure it's easy to understand and captures the core idea precisely."/>
 
-            <flux:select wire:model.defer="frequency" :label="__('Memory Reduction')" description="This setting controls how many messages will be sent to the LLM. High reduction reduces token usage, but may also reduce the quality of the discussion.">
-                <option value="5">{{ __('High') }}</option>
-                <option selected value="10">{{ __('Standard') }}</option>
-                <option value="20">{{ __('Low') }}</option>
-            </flux:select>
+            @can('admin')
+                <flux:select wire:model.defer="frequency" :label="__('Memory Reduction')" description="This setting controls how many messages will be sent to the LLM. High reduction reduces token usage, but may also reduce the quality of the discussion.">
+                    <option value="5">{{ __('High') }}</option>
+                    <option selected value="10">{{ __('Standard') }}</option>
+                    <option value="20">{{ __('Low') }}</option>
+                </flux:select>
+            @endcan
 
             <div class="flex">
                 <flux:spacer />
@@ -21,6 +23,7 @@
             </div>
         </form>
 
+        @can('admin')
         <div class="my-8 flex items-center gap-4 text-zinc-400">
             <flux:separator class="flex-1" />
             <span class="text-sm">{{ __('or') }}</span>
@@ -51,5 +54,6 @@
                 </flux:button>
             </div>
         </div>
+        @endcan
     </div>
 </div>
