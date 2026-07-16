@@ -120,6 +120,15 @@
                             if (wasNearBottom) this.scrollToBottom();
                         });
                     });
+
+                    // Keep the pipeline indicator (thinking/typing bubble) in
+                    // view when it appears or grows, same near-bottom rule.
+                    window.addEventListener('pipeline_stage_changed', () => {
+                        const wasNearBottom = this.isNearBottom();
+                        this.$nextTick(() => {
+                            if (wasNearBottom) this.scrollToBottom();
+                        });
+                    });
                 }
             }"
         >
@@ -133,6 +142,9 @@
                 @foreach ($messages as $msg)
                     <x-projects.chat-message :id="$msg->id" :msg="$msg" />
                 @endforeach
+
+                <!-- Denkblase / Tipp-Indikator der Generierungs-Pipeline -->
+                <x-projects.pipeline-indicator :project="$project" />
             </div>
         </div>
     </div>

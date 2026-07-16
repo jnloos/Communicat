@@ -8,9 +8,11 @@ use App\Events\MessageGenerated;
 use App\Events\UserInputRequested;
 use App\Jobs\Dependencies\ProjectJob;
 use App\Models\JobLog;
+use App\Models\Message;
 use App\Models\Project;
 use App\Services\Clients\OpenAIClient;
 use App\Services\PromptingPipeline\DiscussionPipeline;
+use App\Services\PromptingPipeline\Support\ReadingPause;
 use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -25,16 +27,27 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
 
     public int $timeout = 280;
 
-    public function __construct(int $projectId) {
+    public function __construct(int $projectId)
+    {
         $this->setProject($projectId);
     }
 
-    public function handle(): void {
+    public function handle(): void
+    {
+        // A delayed follow-up may have been queued before the user pressed stop.
+        if (! ProjectJob::isGenerating($this->project->id)) {
+            return;
+        }
+
         $this->withProjectLock(function (Project $project) {
+            if (! ProjectJob::isGenerating($project->id)) {
+                return;
+            }
+
             $log = JobLog::create([
-                'job_class'  => static::class,
+                'job_class' => static::class,
                 'project_id' => $project->id,
-                'status'     => 'running',
+                'status' => 'running',
                 'started_at' => now(),
             ]);
             JobLogged::dispatch($log);
@@ -51,7 +64,7 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
                 $log->update(['status' => 'success', 'finished_at' => now()]);
                 JobLogged::dispatch($log->fresh());
 
-                if (!empty($pipelineResult['stop'])) {
+                if (! empty($pipelineResult['stop'])) {
                     $continue = false;
                     ProjectJob::stopGenerating($project->id);
                     UserInputRequested::dispatch(
@@ -61,11 +74,11 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
                     );
                 }
             } catch (Exception $e) {
-                Log::error(sprintf("%s: %s", $e->getMessage(), $e->getTraceAsString()));
+                Log::error(sprintf('%s: %s', $e->getMessage(), $e->getTraceAsString()));
                 $log->update([
-                    'status'      => 'failed',
+                    'status' => 'failed',
                     'finished_at' => now(),
-                    'payload'     => ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()],
+                    'payload' => ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()],
                 ]);
                 JobLogged::dispatch($log->fresh());
 
@@ -78,16 +91,26 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
                 OpenAIClient::bindJobLog(null);
             }
 
-            $latestMessageId = $project->messages()
+            /** @var Message|null $latestMessage */
+            $latestMessage = $project->messages()
                 ->whereNotNull('expert_id')
                 ->latest('id')
-                ->value('id');
+                ->first();
 
-            MessageGenerated::dispatch($project->id, $latestMessageId);
+            $nextTurnDelay = 0;
+            if ($continue && $latestMessage !== null) {
+                $nextTurnDelay = ReadingPause::secondsFor($latestMessage->content);
+            }
+
+            MessageGenerated::dispatch(
+                $project->id,
+                $latestMessage?->id,
+                $nextTurnDelay,
+            );
 
             // Halt the loop if nobody has the discussion open anymore, so it can
             // never run unattended (no accidental generations).
-            if ($continue && !ProjectJob::hasViewers($project->id)) {
+            if ($continue && ! ProjectJob::hasViewers($project->id)) {
                 $continue = false;
                 ProjectJob::stopGenerating($project->id);
                 GenerationStopped::dispatch($project->id);
@@ -95,9 +118,13 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
 
             // Server-driven loop: keep going only while the shared flag is still
             // set (a user may have pressed stop during this turn). The next job
-            // queues here and acquires the project lock once this one releases.
+            // is queued with a reading pause so the message is visible first.
             if ($continue && ProjectJob::isGenerating($project->id)) {
-                static::dispatch($project->id);
+                $dispatch = static::dispatch($project->id);
+
+                if ($nextTurnDelay > 0) {
+                    $dispatch->delay(now()->addSeconds($nextTurnDelay));
+                }
             }
         });
     }

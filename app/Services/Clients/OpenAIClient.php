@@ -10,7 +10,9 @@ use OpenAI\Client;
 class OpenAIClient
 {
     protected Client $client;
+
     protected string $modelFast;
+
     protected string $modelSlow;
 
     protected static ?int $jobLogId = null;
@@ -18,10 +20,11 @@ class OpenAIClient
     /** Rendered system framing, memoized per instance (the blade has no variables). */
     protected ?string $systemInstructionsCache = null;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->modelFast = config('apis.openai.model_fast');
         $this->modelSlow = config('apis.openai.model_slow');
-        $this->client    = OpenAI::client(config('apis.openai.api_key'));
+        $this->client = OpenAI::client(config('apis.openai.api_key'));
     }
 
     /**
@@ -40,69 +43,99 @@ class OpenAIClient
         self::$jobLogId = $jobLogId;
     }
 
-    public function send(string $prompt, ?string $model = null, string $label = ''): string {
+    public function send(string $prompt, ?string $model = null, string $label = ''): string
+    {
         $model = $model ?? $this->modelFast;
         $start = microtime(true);
 
         $response = $this->client->responses()->create([
-            'model'        => $model,
+            'model' => $model,
             'instructions' => $this->systemInstructions(),
-            'input'        => $prompt,
-        ])->outputText;
+            'input' => $prompt,
+        ] + $this->reasoningOptions($model, $label))->outputText;
 
         $this->logCall($label, $model, $prompt, $response, $start);
 
         return $response;
     }
 
-    public function sendFast(string $prompt, string $label = ''): string {
+    public function sendFast(string $prompt, string $label = ''): string
+    {
         return $this->send($prompt, $this->modelFast, $label);
     }
 
-    public function sendSlow(string $prompt, string $label = ''): string {
+    public function sendSlow(string $prompt, string $label = ''): string
+    {
         return $this->send($prompt, $this->modelSlow, $label);
     }
 
-    public function sendMany(array $prompts, ?string $model = null, string $label = ''): array {
+    public function sendMany(array $prompts, ?string $model = null, string $label = ''): array
+    {
         $apiKey = config('apis.openai.api_key');
-        $model  = $model ?? $this->modelFast;
+        $model = $model ?? $this->modelFast;
 
-        $keys         = array_keys($prompts);
+        $keys = array_keys($prompts);
         // Render once here so the concurrency closures capture a plain string.
         $instructions = $this->systemInstructions();
-        $tasks        = [];
+        $reasoning = $this->reasoningOptions($model, $label);
+        $tasks = [];
         foreach ($prompts as $prompt) {
-            $tasks[] = static function () use ($apiKey, $model, $prompt, $instructions) {
+            $tasks[] = static function () use ($apiKey, $model, $prompt, $instructions, $reasoning) {
                 $client = OpenAI::client($apiKey);
-                $start  = microtime(true);
-                $text   = $client->responses()->create([
-                    'model'        => $model,
+                $start = microtime(true);
+                $text = $client->responses()->create([
+                    'model' => $model,
                     'instructions' => $instructions,
-                    'input'        => $prompt,
-                ])->outputText;
+                    'input' => $prompt,
+                ] + $reasoning)->outputText;
+
                 return ['response' => $text, 'latency_ms' => (int) round((microtime(true) - $start) * 1000)];
             };
         }
 
-        $raw       = Concurrency::run($tasks);
-        $results   = [];
+        $raw = Concurrency::run($tasks);
+        $results = [];
         $promptArr = array_values($prompts);
 
         foreach ($keys as $i => $key) {
             $results[$key] = $raw[$i]['response'];
-            $entryLabel    = $label !== '' ? "{$label}:{$key}" : (string) $key;
+            $entryLabel = $label !== '' ? "{$label}:{$key}" : (string) $key;
             $this->recordCall($entryLabel, $model, $promptArr[$i], $raw[$i]['response'], $raw[$i]['latency_ms']);
         }
 
         return $results;
     }
 
-    public function sendManyFast(array $prompts, string $label = ''): array {
+    public function sendManyFast(array $prompts, string $label = ''): array
+    {
         return $this->sendMany($prompts, $this->modelFast, $label);
     }
 
-    public function sendManySlow(array $prompts, string $label = ''): array {
+    public function sendManySlow(array $prompts, string $label = ''): array
+    {
         return $this->sendMany($prompts, $this->modelSlow, $label);
+    }
+
+    /**
+     * gpt-5* are reasoning models and default to "medium" reasoning effort,
+     * which dominated wall-clock latency (10-30s per call for a few hundred
+     * chars of output). Cap the effort per call-label prefix via config
+     * (apis.openai.reasoning_effort); non-reasoning models must not receive
+     * the parameter at all, so anything else returns no options.
+     */
+    protected function reasoningOptions(string $model, string $label): array
+    {
+        if (! str_starts_with($model, 'gpt-5')) {
+            return [];
+        }
+
+        foreach (config('apis.openai.reasoning_effort', []) as $prefix => $effort) {
+            if ($effort && str_starts_with($label, $prefix)) {
+                return ['reasoning' => ['effort' => $effort]];
+            }
+        }
+
+        return [];
     }
 
     protected function logCall(string $label, string $model, string $prompt, string $response, float $start): void
@@ -119,10 +152,10 @@ class OpenAIClient
         try {
             PromptLog::create([
                 'job_log_id' => self::$jobLogId,
-                'label'      => $label !== '' ? $label : null,
-                'model'      => $model,
-                'prompt'     => $prompt,
-                'response'   => $response,
+                'label' => $label !== '' ? $label : null,
+                'model' => $model,
+                'prompt' => $prompt,
+                'response' => $response,
                 'latency_ms' => $latencyMs,
             ]);
         } catch (\Throwable) {
