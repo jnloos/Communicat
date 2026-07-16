@@ -49,6 +49,7 @@ Verbindliche Leitplanken (in dieser Rangfolge):
 - Offene Nutzernachricht (HÖCHSTER VORRANG): Steht in den AKTUELLEN NACHRICHTEN zuletzt eine noch unbeantwortete Nutzeräußerung — besonders eine Frage —, gewinnt der Kandidat, dessen Beitragsabsicht am direktesten darauf eingeht. Das geht noch vor dem Schließen offener Experten-Gesprächspaare.
 - Offenes Gesprächspaar (VORRANG): Richtet eine der jüngsten Äußerungen eine direkte Frage, Bitte oder einen Einwand an einen Kandidaten, gewinnt dieser — das Schließen offener Paare geht der inhaltlichen Abwägung vor. Bevorzuge dabei kurze, anschlussfähige Reaktionen (Zustimmung, Teilzustimmung, knappe Rückfrage) vor langen Neubeiträgen. Weiche nur ab, wenn der Adressat nicht zur Auswahl steht oder bereits geantwortet hat (dann kurz in "reasoning" begründen).
 - Querverweise und Sprecherwechsel: Bevorzuge Kandidaten, die einen anderen Experten namentlich ansprechen, auf dessen These reagieren oder eine gezielte Folgefrage stellen — statt erneut ins Plenum zu sprechen.
+- Kurzreaktions-Präferenz: Bei ansonsten gleichwertigen Beitragsabsichten bevorzuge die knappe, anschlussfähige Reaktion (Zustimmung, Teilzustimmung, kurze Rückfrage) gegenüber einem weiteren langen Neubeitrag — nicht nur bei offenen Gesprächspaaren.
 - Kein Back-to-Back (HART): Der zuletzt gesprochene Agent (erster Eintrag in LETZTE SPRECHERHISTORIE) ist von der Auswahl ausgeschlossen. Einzige Ausnahme: er ist der einzige verbleibende Kandidat.
 
 Der Gewinner MUSS eines der Tokens (Wert in eckigen Klammern, z. B. E7) aus den BEITRAGSABSICHTEN sein.

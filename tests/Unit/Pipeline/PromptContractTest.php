@@ -114,6 +114,134 @@ class PromptContractTest extends TestCase
         $this->assertTrue($result['directive']->addressUser);
     }
 
+    public function test_speak_prompt_contains_pending_user_block_when_directive_carries_it(): void
+    {
+        $builder = app(PromptBuilder::class);
+
+        $withPending = $builder->speak(
+            $this->project,
+            $this->expert1,
+            ['memory' => '[STAND]\nx', 'beitragsabsicht' => 'Antworten.'],
+            new Directive('vertiefen', 'divergenz', 'Test', false, 'r', 'Simon', 'Was kostet das?'),
+        );
+
+        $this->assertStringContainsString('OFFENE NUTZERNACHRICHT', $withPending);
+        $this->assertStringContainsString('Simon', $withPending);
+        $this->assertStringContainsString('Was kostet das?', $withPending);
+
+        $withoutPending = $builder->speak(
+            $this->project,
+            $this->expert1,
+            ['memory' => '[STAND]\nx', 'beitragsabsicht' => 'Antworten.'],
+            new Directive('vertiefen', 'divergenz', 'Test', false, 'r'),
+        );
+
+        $this->assertStringNotContainsString('OFFENE NUTZERNACHRICHT', $withoutPending);
+    }
+
+    public function test_speak_prompt_carries_brevity_signal_after_long_expert_streak(): void
+    {
+        config(['discussion.brevity_streak' => 3, 'discussion.brevity_min_chars' => 200]);
+
+        $builder = app(PromptBuilder::class);
+        $directive = new Directive('vertiefen', 'divergenz', 'Test', false, 'r');
+        $think = ['memory' => '[STAND]\nx', 'beitragsabsicht' => 'Test.'];
+
+        $this->assertStringNotContainsString(
+            'KÜRZE-SIGNAL',
+            $builder->speak($this->project, $this->expert1, $think, $directive),
+        );
+
+        $long = str_repeat('Sehr langer Beitrag mit Substanz. ', 10);
+        foreach ([$this->expert1, $this->expert2, $this->expert1] as $expert) {
+            $this->project->addMessage($long, $expert);
+        }
+
+        $this->assertStringContainsString(
+            'KÜRZE-SIGNAL',
+            $builder->speak($this->project, $this->expert1, $think, $directive),
+        );
+    }
+
+    public function test_speak_prompt_forbids_name_opening_after_recent_name_openers(): void
+    {
+        $builder = app(PromptBuilder::class);
+        $directive = new Directive('vertiefen', 'divergenz', 'Test', false, 'r');
+        $think = ['memory' => '[STAND]\nx', 'beitragsabsicht' => 'Test.'];
+
+        $this->assertStringNotContainsString(
+            'HARTE ZUSATZREGEL',
+            $builder->speak($this->project, $this->expert1, $think, $directive),
+        );
+
+        $this->project->addMessage('Bob, das sehe ich anders.', $this->expert1);
+
+        $this->assertStringContainsString(
+            'HARTE ZUSATZREGEL',
+            $builder->speak($this->project, $this->expert2, $think, $directive),
+        );
+    }
+
+    public function test_think_prompt_offers_short_agreement_as_full_intent(): void
+    {
+        $prompt = app(PromptBuilder::class)->think($this->project, $this->expert1);
+
+        $this->assertStringContainsString('vollwertige Beitragsabsicht', $prompt);
+    }
+
+    public function test_select_prompt_prefers_short_reactions(): void
+    {
+        $agents = $this->project->contributingExperts()
+            ->mapWithKeys(fn (Expert $e) => [$e->id => ['name' => $e->name, 'job' => $e->job, 'prompt_id' => $e->promptId]])
+            ->all();
+
+        $prompt = app(PromptBuilder::class)->moderatorSelect($this->project, $agents, [
+            $this->expert1->id => 'Zustimmen.',
+            $this->expert2->id => 'Neues Argument.',
+        ], ['recent_speakers' => [], 'recent_response_types' => []]);
+
+        $this->assertStringContainsString('Kurzreaktions-Präferenz', $prompt);
+    }
+
+    public function test_route_attaches_pending_user_to_directive(): void
+    {
+        $json = '{"candidates":["E'.$this->expert1->id.'"],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","address_user":false},"reasoning":"Test."}';
+
+        $client = Mockery::mock(OpenAIClient::class);
+        $prompts = Mockery::mock(PromptBuilder::class);
+        $client->shouldReceive('sendFast')->andReturn($json, 'kein json');
+        $prompts->shouldReceive('moderatorRoute')->andReturn('prompt');
+
+        $service = new ModeratorService($this->project, $client, $prompts);
+        $context = ['pending_user' => 'Was kostet das?', 'pending_user_name' => 'Simon'];
+
+        $result = $service->route('', $context);
+        $this->assertSame('Simon', $result['directive']->pendingUserName);
+        $this->assertSame('Was kostet das?', $result['directive']->pendingUserExcerpt);
+
+        // JSON fallback path attaches it too.
+        $fallback = $service->route('', $context);
+        $this->assertSame('Simon', $fallback['directive']->pendingUserName);
+    }
+
+    public function test_mention_directive_answers_user_without_handoff(): void
+    {
+        $service = new ModeratorService(
+            $this->project,
+            Mockery::mock(OpenAIClient::class),
+            Mockery::mock(PromptBuilder::class),
+        );
+
+        $directive = $service->mentionDirective([
+            'pending_user' => '@Alice wie siehst du das?',
+            'pending_user_name' => 'Simon',
+        ]);
+
+        $this->assertFalse($directive->addressUser);
+        $this->assertSame('Nutzerfrage direkt beantworten', $directive->role);
+        $this->assertSame('Simon', $directive->pendingUserName);
+    }
+
     public function test_pair_type_markers_match_message_constants(): void
     {
         $allowed = [

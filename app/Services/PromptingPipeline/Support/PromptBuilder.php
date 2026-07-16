@@ -16,7 +16,7 @@ class PromptBuilder
     public function think(Project $project, Expert $expert): string
     {
         $agents = $project->contributingExperts()
-            ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job, 'prompt_id' => $e->promptId]])
+            ->mapWithKeys(fn ($e) => [$e->id => ['name' => $e->name, 'job' => $e->job, 'prompt_id' => $e->promptId]])
             ->all();
 
         // Every human participant gets its own [U<id>] memory block, so the
@@ -25,15 +25,15 @@ class PromptBuilder
             ->push($project->owner)
             ->filter()
             ->unique('id')
-            ->map(fn($u) => ['name' => $u->name, 'prompt_id' => $u->promptId])
+            ->map(fn ($u) => ['name' => $u->name, 'prompt_id' => $u->promptId])
             ->values()
             ->all();
 
         return $this->decode(view('prompts.agent.think', [
-            'expert'   => $expert->asPromptArray($project),
-            'project'  => $project->asPromptArray(),
-            'agents'   => $agents,
-            'users'    => $users,
+            'expert' => $expert->asPromptArray($project),
+            'project' => $project->asPromptArray(),
+            'agents' => $agents,
+            'users' => $users,
         ])->render());
     }
 
@@ -42,14 +42,14 @@ class PromptBuilder
      * Returns a prompt asking the agent to generate a visible turn that executes
      * the moderator's Directive in persona.
      *
-     * @param array{memory: string, beitragsabsicht: string} $thinkOutput
+     * @param  array{memory: string, beitragsabsicht: string}  $thinkOutput
      */
     public function speak(Project $project, Expert $expert, array $thinkOutput, Directive $directive): string
     {
         $contributors = $project->contributingExperts();
 
         $agents = $contributors
-            ->mapWithKeys(fn($e) => [$e->id => ['name' => $e->name, 'job' => $e->job, 'prompt_id' => $e->promptId]])
+            ->mapWithKeys(fn ($e) => [$e->id => ['name' => $e->name, 'job' => $e->job, 'prompt_id' => $e->promptId]])
             ->all();
 
         // Human participants, so the agent can map a "U<id>" transcript label
@@ -58,7 +58,16 @@ class PromptBuilder
             ->push($project->owner)
             ->filter()
             ->unique('id')
-            ->map(fn($u) => ['name' => $u->name, 'prompt_id' => $u->promptId])
+            ->map(fn ($u) => ['name' => $u->name, 'prompt_id' => $u->promptId])
+            ->values()
+            ->all();
+
+        $projectData = $project->asPromptArray();
+
+        $participantNames = collect($agents)->pluck('name')
+            ->concat(collect($users)->pluck('name'))
+            ->flatMap(fn (string $name) => [$name, preg_split('/\s+/u', trim($name))[0] ?? $name])
+            ->unique()
             ->values()
             ->all();
 
@@ -81,21 +90,90 @@ class PromptBuilder
             }
             // Only the most recent two openers per other expert.
             $otherOpenings[] = [
-                'name'     => $contributor->name,
+                'name' => $contributor->name,
                 'openings' => array_slice(array_values($list), 0, 2),
             ];
         }
 
         return $this->decode(view('prompts.agent.speak', [
-            'expert'           => $expert->asPromptArray($project),
-            'project'          => $project->asPromptArray(),
-            'agents'           => $agents,
-            'users'            => $users,
-            'think_output'     => $thinkOutput,
-            'directive'        => $directive,
-            'own_openings'     => $ownOpenings,
-            'other_openings'   => $otherOpenings,
+            'expert' => $expert->asPromptArray($project),
+            'project' => $projectData,
+            'agents' => $agents,
+            'users' => $users,
+            'think_output' => $thinkOutput,
+            'directive' => $directive,
+            'own_openings' => $ownOpenings,
+            'other_openings' => $otherOpenings,
+            'force_brevity' => $this->lastExpertTurnsAllLong($projectData['messages']),
+            'forbid_name_opening' => $this->recentTurnsOpenWithName($projectData['messages'], $participantNames),
         ])->render());
+    }
+
+    /**
+     * True when the last N expert turns were all long — the SPEAK prompt then
+     * carries a hard brevity instruction to break long-message monotony.
+     *
+     * @param  array<int, array{prompt_id: ?string, content: string}>  $messages
+     */
+    protected function lastExpertTurnsAllLong(array $messages): bool
+    {
+        $streak = max(1, (int) config('discussion.brevity_streak', 3));
+        $minChars = max(1, (int) config('discussion.brevity_min_chars', 200));
+
+        $recent = array_slice($this->expertTurns($messages), -$streak);
+        if (count($recent) < $streak) {
+            return false;
+        }
+
+        foreach ($recent as $message) {
+            if (mb_strlen(trim((string) ($message['content'] ?? ''))) < $minChars) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * True when one of the last two expert turns opened with a participant name
+     * ("Bob, …") — the SPEAK prompt then forbids another name-first opening.
+     *
+     * @param  array<int, array{prompt_id: ?string, content: string}>  $messages
+     * @param  string[]  $participantNames  full names and first names
+     */
+    protected function recentTurnsOpenWithName(array $messages, array $participantNames): bool
+    {
+        if (empty($participantNames)) {
+            return false;
+        }
+
+        $recent = array_slice($this->expertTurns($messages), -2);
+        if (empty($recent)) {
+            return false;
+        }
+
+        $quoted = array_map(fn (string $name) => preg_quote($name, '/'), $participantNames);
+        $pattern = '/^@?('.implode('|', $quoted).')\s*[,:]/iu';
+
+        foreach ($recent as $message) {
+            if (preg_match($pattern, ltrim((string) ($message['content'] ?? '')))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  array<int, array{prompt_id: ?string, content: string}>  $messages
+     * @return array<int, array{prompt_id: ?string, content: string}>
+     */
+    protected function expertTurns(array $messages): array
+    {
+        return array_values(array_filter(
+            $messages,
+            fn (array $message) => str_starts_with((string) ($message['prompt_id'] ?? ''), 'E'),
+        ));
     }
 
     /**
@@ -103,16 +181,16 @@ class PromptBuilder
      * Returns a prompt asking the moderator to narrow the candidate pool and
      * emit the turn Directive (role, agenda step, convergence intent, address_user).
      *
-     * @param array $agents  Keyed by expert id → ['name', 'job', 'prompt_id'].
-     * @param array{agenda_phase?: string, pending_user?: ?string}|null $context
-     *               Advisory signals: agenda phase, pending (unanswered) user excerpt.
+     * @param  array  $agents  Keyed by expert id → ['name', 'job', 'prompt_id'].
+     * @param  array{agenda_phase?: string, pending_user?: ?string}|null  $context
+     *                                                                              Advisory signals: agenda phase, pending (unanswered) user excerpt.
      */
     public function moderatorRoute(Project $project, array $agents, string $moderationNote = '', ?array $context = null): string
     {
         return $this->decode(view('prompts.moderator.route', [
-            'project'            => $project->asPromptArray(),
-            'agents'             => $agents,
-            'moderation_note'    => $moderationNote,
+            'project' => $project->asPromptArray(),
+            'agents' => $agents,
+            'moderation_note' => $moderationNote,
             'moderation_context' => $context,
         ])->render());
     }
@@ -122,9 +200,9 @@ class PromptBuilder
      * Returns a prompt asking the moderator to qualitatively pick the best
      * contribution intent.
      *
-     * @param array $agents  Keyed by expert id → ['name', 'job'].
-     * @param array<int, string> $intents  expert id → BEITRAGSABSICHT text.
-     * @param array $state   ['recent_speakers' => [expert id, ...], 'recent_response_types' => [...]].
+     * @param  array  $agents  Keyed by expert id → ['name', 'job'].
+     * @param  array<int, string>  $intents  expert id → BEITRAGSABSICHT text.
+     * @param  array  $state  ['recent_speakers' => [expert id, ...], 'recent_response_types' => [...]].
      */
     public function moderatorSelect(
         Project $project,
@@ -134,9 +212,9 @@ class PromptBuilder
     ): string {
         return $this->decode(view('prompts.moderator.select', [
             'project' => $project->asPromptArray(),
-            'agents'  => $agents,
+            'agents' => $agents,
             'intents' => $intents,
-            'state'   => $state,
+            'state' => $state,
         ])->render());
     }
 
@@ -144,17 +222,17 @@ class PromptBuilder
      * SHORTEN CHAT — Summarizer only.
      * Returns a prompt asking the summarizer to compress a set of messages into a plain-text summary.
      *
-     * @param array $messages  The oldest messages being compressed (not the full history).
-     *                         Each entry: ['expert_id' => ..., 'name' => ..., 'content' => ...].
+     * @param  array  $messages  The oldest messages being compressed (not the full history).
+     *                           Each entry: ['expert_id' => ..., 'name' => ..., 'content' => ...].
      */
     public function shortenChat(Project $project, array $messages): string
     {
         // Build a lightweight project array containing only the messages to compress,
         // rather than the full recent window from asPromptArray().
         $projectData = [
-            'title'       => $project->title,
+            'title' => $project->title,
             'description' => $project->description,
-            'messages'    => $messages,
+            'messages' => $messages,
         ];
 
         return $this->decode(view('prompts.shorten-chat', [

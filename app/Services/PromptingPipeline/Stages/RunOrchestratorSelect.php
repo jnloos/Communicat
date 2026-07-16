@@ -27,7 +27,7 @@ class RunOrchestratorSelect
 
         $moderator = app(ModeratorService::class, ['project' => $ctx->project]);
 
-        $winnerId = $moderator->selectWinner($ctx->thinkOutputs);
+        $winnerId = $moderator->selectWinner($ctx->thinkOutputs, allowBackToBack: $ctx->mentionShortcut);
         $ctx->winner = $map[$winnerId] ?? $map[$ids[0]];
 
         return $next($ctx);

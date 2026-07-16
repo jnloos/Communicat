@@ -81,7 +81,7 @@ class ModeratorService
         if ($decoded === null) {
             return [
                 'candidates' => $knownIds,
-                'directive' => $this->applyUserInclusionGuard($this->fallbackDirective(), $context),
+                'directive' => $this->attachPendingUser($this->applyUserInclusionGuard($this->fallbackDirective(), $context), $context),
                 'reasoning' => '',
             ];
         }
@@ -95,9 +95,26 @@ class ModeratorService
 
         return [
             'candidates' => $candidates,
-            'directive' => $this->applyUserInclusionGuard($this->directiveFromArray($decoded['directive'] ?? [], (string) ($decoded['reasoning'] ?? '')), $context),
+            'directive' => $this->attachPendingUser($this->applyUserInclusionGuard($this->directiveFromArray($decoded['directive'] ?? [], (string) ($decoded['reasoning'] ?? '')), $context), $context),
             'reasoning' => (string) ($decoded['reasoning'] ?? ''),
         ];
+    }
+
+    /**
+     * Deterministic directive for the @-mention shortcut: the mentioned expert
+     * answers the user's message directly — no route LLM call involved.
+     *
+     * @param  array{pending_user?: ?string, pending_user_name?: ?string}|null  $context
+     */
+    public function mentionDirective(?array $context = null): Directive
+    {
+        return $this->attachPendingUser(new Directive(
+            role: 'Nutzerfrage direkt beantworten',
+            agendaStep: $this->agendaPhase(),
+            convergenceIntent: 'Direkt und konkret auf die letzte Nutzernachricht eingehen, bevor etwas Neues geöffnet wird.',
+            addressUser: false,
+            reasoning: 'Der Nutzer hat diesen Experten mit @ direkt angesprochen.',
+        ), $context);
     }
 
     /**
@@ -106,9 +123,10 @@ class ModeratorService
      * preserved as a deterministic guardrail against monologue loops.
      *
      * @param  array<int, array{memory: string, beitragsabsicht: string}>  $thinkOutputs  keyed by expert id
+     * @param  bool  $allowBackToBack  bypass the guard (e.g. the user @-mentioned the last speaker)
      * @return int the winning expert id
      */
-    public function selectWinner(array $thinkOutputs): int
+    public function selectWinner(array $thinkOutputs, bool $allowBackToBack = false): int
     {
         $agents = $this->buildAgentsArray();
 
@@ -141,7 +159,7 @@ class ModeratorService
         $lastSpeaker = $state['recent_speakers'][0] ?? null;
         $lastSpeaker = $lastSpeaker !== null ? (int) $lastSpeaker : null;
 
-        if ($lastSpeaker !== null && $winner === $lastSpeaker) {
+        if (! $allowBackToBack && $lastSpeaker !== null && $winner === $lastSpeaker) {
             $alternatives = array_diff(array_keys($thinkOutputs), [$lastSpeaker]);
             if (! empty($alternatives)) {
                 return (int) reset($alternatives);
@@ -289,6 +307,30 @@ class ModeratorService
                 : 'Eine konkrete Präferenz-, Klärungs- oder Freigabefrage an den Nutzer stellen.',
             addressUser: true,
             reasoning: $directive->reasoning,
+        );
+    }
+
+    /**
+     * Copy pending-user info from the moderation context onto the directive so
+     * SPEAK can instruct the winner to answer the user's message first. Applied
+     * as the last decoration step — it must not undo the inclusion guard.
+     *
+     * @param  array{pending_user?: ?string, pending_user_name?: ?string}|null  $context
+     */
+    protected function attachPendingUser(Directive $directive, ?array $context): Directive
+    {
+        if (empty($context['pending_user'])) {
+            return $directive;
+        }
+
+        return new Directive(
+            role: $directive->role,
+            agendaStep: $directive->agendaStep,
+            convergenceIntent: $directive->convergenceIntent,
+            addressUser: $directive->addressUser,
+            reasoning: $directive->reasoning,
+            pendingUserName: $context['pending_user_name'] ?? 'Nutzer',
+            pendingUserExcerpt: $context['pending_user'],
         );
     }
 

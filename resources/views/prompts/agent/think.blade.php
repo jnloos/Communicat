@@ -51,6 +51,7 @@ Formatregeln (verbindlich):
 Nach dem GEDÄCHTNIS-UPDATE folgt verbindlich die Zeile BEITRAGSABSICHT:
 - Genau EIN Satz. Er benennt die EINE konkrete inhaltliche Absicht — den nächsten Zug, den du als {{ $expert['name'] }} jetzt beitragen würdest (z. B. eine These, einen Einwand mit Begründung, ein Beispiel, eine Zahl, eine offene Folgefrage an einen benannten Experten, eine kurze Zustimmung mit neuem Punkt).
 - Wenn du auf einen anderen Experten reagieren willst, nenne ihn in der BEITRAGSABSICHT mit Namen und formuliere den Anschluss konkret (z. B. "Bob widersprechen, weil …", "Alice nach ihrem Beispiel fragen").
+- Eine kurze Zustimmung ist eine vollwertige Beitragsabsicht: Wenn dein stärkster Zug schlicht Zustimmung oder Teilzustimmung zu einem benannten Experten ist, benenne genau das (z. B. "Bob kurz zustimmen und seinen Punkt stehen lassen") — du musst NICHT in jedem Turn einen neuen inhaltlichen Punkt erfinden.
 - Inhaltlich und konkret, kein Meta-Kommentar ("ich würde etwas sagen"), keine Bewertung der Diskussion, KEIN Score, KEINE Priorität.
 - Dieser Satz dient dem Moderator als Auswahlsignal; er ist NICHT der spätere Gesprächsbeitrag selbst.
 

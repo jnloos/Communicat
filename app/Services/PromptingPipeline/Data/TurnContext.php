@@ -23,6 +23,9 @@ class TurnContext
     /** @var Expert[] candidate pool for this turn */
     public array $candidates = [];
 
+    /** True when the turn was short-circuited by a user @-mention. */
+    public bool $mentionShortcut = false;
+
     public ?Directive $directive = null;
 
     /** @var array<int, array{memory: string, beitragsabsicht: string}> expert id → THINK output */
@@ -36,6 +39,7 @@ class TurnContext
     public ?Message $message = null;
 
     public bool $stop = false;
+
     public ?string $reason = null;
 
     public function __construct(

@@ -8,10 +8,33 @@ return [
     |--------------------------------------------------------------------------
     | Which CandidateStrategy the pipeline uses to build a turn's candidate pool.
     | 'funnel' (default) lets the moderator narrow to a subset; 'all' offers
-    | every contributing expert. Direct address (incl. @-mentions) is inferred
-    | by the moderator from the transcript, not special-cased in code.
+    | every contributing expert. Exception: a user @-mention of a contributing
+    | expert takes the deterministic mention shortcut below and bypasses the
+    | strategy (and its route LLM call) entirely.
     */
     'candidate_strategy' => env('DISCUSSION_CANDIDATE_STRATEGY', 'funnel'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | @-mention shortcut
+    |--------------------------------------------------------------------------
+    | When the latest unanswered user message @-mentions contributing experts,
+    | those experts become the candidate set directly: no route call, and with
+    | a single mention no select call either — the mentioned expert answers,
+    | even back-to-back.
+    */
+    'mention_shortcut' => (bool) env('DISCUSSION_MENTION_SHORTCUT', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Brevity signal
+    |--------------------------------------------------------------------------
+    | When the last brevity_streak expert turns were all at least
+    | brevity_min_chars long, the next SPEAK prompt carries a hard brevity
+    | instruction (1-2 short sentences) to break long-message monotony.
+    */
+    'brevity_streak' => (int) env('DISCUSSION_BREVITY_STREAK', 3),
+    'brevity_min_chars' => (int) env('DISCUSSION_BREVITY_MIN_CHARS', 200),
 
     /*
     |--------------------------------------------------------------------------

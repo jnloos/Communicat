@@ -154,6 +154,102 @@ class PipelineModeratorTest extends TestCase
         $this->assertSame('user_addressed', $result['reason']);
     }
 
+    public function test_user_mention_skips_route_and_select(): void
+    {
+        $this->project->addMessage('@Alice wie siehst du das?', $this->user);
+
+        $client = Mockery::mock(OpenAIClient::class);
+        // Exactly one sendFast call (speak) proves route AND select were skipped.
+        $client->shouldReceive('sendFast')->once()->andReturn(
+            "Alice antwortet direkt.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Frage→Antwort"
+        );
+        $client->shouldReceive('sendSlow')->once()
+            ->andReturn("GEDÄCHTNIS-UPDATE:\n[STAND]\nx\nBEITRAGSABSICHT: Dem Nutzer antworten.");
+
+        $this->instance(OpenAIClient::class, $client);
+        $this->instance(PromptBuilder::class, $this->mockPrompts());
+
+        (new DiscussionPipeline($this->project))->run();
+
+        $msg = $this->project->messages()->whereNotNull('expert_id')->latest('id')->first();
+        $this->assertSame($this->expert1->id, $msg->expert_id);
+        $this->assertSame('Alice antwortet direkt.', $msg->content);
+    }
+
+    public function test_mentioned_expert_may_speak_back_to_back(): void
+    {
+        $this->project->addMessage('Erster Beitrag von Alice', $this->expert1);
+        $this->project->settings = ['recent_speakers' => [$this->expert1->id]];
+        $this->project->save();
+        $this->project->addMessage('@Alice kannst du das vertiefen?', $this->user);
+
+        $client = Mockery::mock(OpenAIClient::class);
+        $client->shouldReceive('sendFast')->once()->andReturn(
+            "Alice vertieft.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Frage→Antwort"
+        );
+        $client->shouldReceive('sendSlow')->once()
+            ->andReturn("GEDÄCHTNIS-UPDATE:\n[STAND]\nx\nBEITRAGSABSICHT: Vertiefen.");
+
+        $this->instance(OpenAIClient::class, $client);
+        $this->instance(PromptBuilder::class, $this->mockPrompts());
+
+        (new DiscussionPipeline($this->project))->run();
+
+        $msg = $this->project->messages()->whereNotNull('expert_id')->latest('id')->first();
+        $this->assertSame($this->expert1->id, $msg->expert_id);
+    }
+
+    public function test_multiple_mentions_run_select_with_back_to_back_exemption(): void
+    {
+        $this->project->settings = ['recent_speakers' => [$this->expert1->id]];
+        $this->project->save();
+        $this->project->addMessage('@Alice und @Bob, was meint ihr beide?', $this->user);
+
+        $thinkResponse = "GEDÄCHTNIS-UPDATE:\n[STAND]\nx\nBEITRAGSABSICHT: Antworten.";
+
+        $client = Mockery::mock(OpenAIClient::class);
+        // select → speak (no route call: the mention shortcut chose the candidates)
+        $client->shouldReceive('sendFast')->twice()->andReturn(
+            json_encode(['winner' => "E{$this->expert1->id}", 'reasoning' => 'r']),
+            "Alice antwortet beiden.\n---STEUERUNG---\nADRESSAT: E{$this->expert2->id}\nPAARTYP: Frage→Antwort"
+        );
+        $client->shouldReceive('sendManySlow')->once()->andReturn([
+            $this->expert1->id => $thinkResponse,
+            $this->expert2->id => $thinkResponse,
+        ]);
+
+        $this->instance(OpenAIClient::class, $client);
+        $this->instance(PromptBuilder::class, $this->mockPrompts());
+
+        (new DiscussionPipeline($this->project))->run();
+
+        // Despite being the previous speaker, the mentioned winner is kept.
+        $msg = $this->project->messages()->whereNotNull('expert_id')->latest('id')->first();
+        $this->assertSame($this->expert1->id, $msg->expert_id);
+    }
+
+    public function test_mention_of_non_contributor_uses_normal_funnel(): void
+    {
+        $this->project->addMessage('@Zoe was denkst du?', $this->user);
+
+        $client = Mockery::mock(OpenAIClient::class);
+        // route → speak: the unknown mention falls back to the moderator funnel.
+        $client->shouldReceive('sendFast')->twice()->andReturn(
+            $this->routeJson(["E{$this->expert1->id}"]),
+            "Alice übernimmt.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion"
+        );
+        $client->shouldReceive('sendSlow')->once()
+            ->andReturn("GEDÄCHTNIS-UPDATE:\n[STAND]\nx\nBEITRAGSABSICHT: Antworten.");
+
+        $this->instance(OpenAIClient::class, $client);
+        $this->instance(PromptBuilder::class, $this->mockPrompts());
+
+        (new DiscussionPipeline($this->project))->run();
+
+        $msg = $this->project->messages()->whereNotNull('expert_id')->latest('id')->first();
+        $this->assertSame($this->expert1->id, $msg->expert_id);
+    }
+
     public function test_turn_updates_project_state(): void
     {
         $client = Mockery::mock(OpenAIClient::class);
