@@ -18,12 +18,14 @@ if (reverbKey) {
 }
 
 document.addEventListener('alpine:init', () => {
-    // Thinking bubble / typing indicator fed by the PipelineStageChanged
-    // broadcasts. Lives entirely client-side: Livewire is not involved, the
-    // bubble is display-only sugar while a turn generates.
+    // Pipeline indicator: only the visible "writing" step and the post-message
+    // reading countdown. Routing/thinking stages still broadcast server-side but
+    // are intentionally hidden so the bubble never overlaps the info button area.
     window.Alpine.data('pipelineIndicator', (projectId) => ({
         stage: null,
         experts: [],
+        countdown: 0,
+        _countdownTimer: null,
 
         init() {
             if (!window.Echo) return;
@@ -31,33 +33,72 @@ document.addEventListener('alpine:init', () => {
             const channel = window.Echo.private(`projects.${projectId}`);
 
             channel.listen('.PipelineStageChanged', (e) => {
+                if (e.stage !== 'speaking') {
+                    return;
+                }
+
+                this.clearCountdown();
                 this.stage = e.stage;
                 this.experts = e.experts ?? [];
-                // Lets the chat scroll container keep the bubble in view.
                 window.dispatchEvent(new Event('pipeline_stage_changed'));
             });
 
-            const clear = () => {
-                this.stage = null;
-                this.experts = [];
-            };
-            channel.listen('.MessageGenerated', clear);
+            channel.listen('.MessageGenerated', (e) => {
+                if (e.next_turn_delay_seconds > 0) {
+                    this.clearCountdown();
+                    this.stage = 'waiting';
+                    this.experts = [];
+                    this.countdown = e.next_turn_delay_seconds;
+                    this.startCountdown();
+                    window.dispatchEvent(new Event('pipeline_stage_changed'));
+                    return;
+                }
+
+                this.clear();
+            });
+
+            const clear = () => this.clear();
             channel.listen('.GenerationStopped', clear);
             channel.listen('.UserInputRequested', clear);
         },
 
-        label() {
-            const names = this.experts.map((e) => e.name).join(', ');
-            switch (this.stage) {
-                case 'routing':
-                    return 'Moderator is choosing the next speaker';
-                case 'thinking':
-                    return this.experts.length > 1 ? `${names} are thinking` : `${names} is thinking`;
-                case 'speaking':
-                    return `${names} is writing`;
-                default:
-                    return '';
+        clearCountdown() {
+            if (this._countdownTimer !== null) {
+                clearInterval(this._countdownTimer);
+                this._countdownTimer = null;
             }
+        },
+
+        startCountdown() {
+            this.clearCountdown();
+            this._countdownTimer = setInterval(() => {
+                this.countdown = Math.max(0, this.countdown - 1);
+                if (this.countdown <= 0) {
+                    this.clear();
+                }
+            }, 1000);
+        },
+
+        clear() {
+            this.clearCountdown();
+            this.stage = null;
+            this.experts = [];
+            this.countdown = 0;
+        },
+
+        label() {
+            if (this.stage === 'waiting') {
+                return this.countdown > 0
+                    ? `Next contribution in ${this.countdown}s`
+                    : 'Next contribution soon';
+            }
+
+            const names = this.experts.map((e) => e.name).join(', ');
+            if (this.stage === 'speaking') {
+                return `${names} is writing`;
+            }
+
+            return '';
         },
     }));
 

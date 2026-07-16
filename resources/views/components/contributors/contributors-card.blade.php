@@ -14,12 +14,7 @@
         'class' => 'w-full h-full text-left rounded-xl transition hover:bg-zinc-50 dark:hover:bg-zinc-700 focus:outline-none cursor-pointer active:scale-[.98]'
     ]) }}>
     <flux:card size="sm" class="h-full relative">
-        @if($suggested)
-            <div class="absolute top-2 end-2">
-                <flux:badge color="blue" size="sm" icon="sparkles">{{ __('Suggested') }}</flux:badge>
-            </div>
-        @endif
-        <div class="flex flex-col justify-between p-2">
+        <div class="flex flex-col justify-between p-2 {{ $suggested ? 'pb-10' : '' }}">
             <div class="flex items-center gap-4">
                 <x-contributors.contributors-avatar :name="$name" :avatar-url="$avatarUrl" class="h-16 w-16"/>
                 <div>
@@ -45,6 +40,11 @@
                 </div>
             @endif
         </div>
+        @if($suggested)
+            <div class="absolute bottom-2 end-2">
+                <flux:badge color="blue" size="sm" icon="sparkles">{{ __('Suggested') }}</flux:badge>
+            </div>
+        @endif
     </flux:card>
 </button>
 

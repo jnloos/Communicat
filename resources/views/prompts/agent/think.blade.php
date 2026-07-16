@@ -49,7 +49,8 @@ Formatregeln (verbindlich):
 - Keine zusätzlichen Marker, keine Markdown-Überschriften, keine Aufzählungen außerhalb von [OFFENE_FRAGEN].
 
 Nach dem GEDÄCHTNIS-UPDATE folgt verbindlich die Zeile BEITRAGSABSICHT:
-- Genau EIN Satz. Er benennt die EINE konkrete inhaltliche Absicht — den nächsten Zug, den du als {{ $expert['name'] }} jetzt beitragen würdest (z. B. eine These, einen Einwand mit Begründung, ein Beispiel, eine Zahl, eine offene Folgefrage).
+- Genau EIN Satz. Er benennt die EINE konkrete inhaltliche Absicht — den nächsten Zug, den du als {{ $expert['name'] }} jetzt beitragen würdest (z. B. eine These, einen Einwand mit Begründung, ein Beispiel, eine Zahl, eine offene Folgefrage an einen benannten Experten, eine kurze Zustimmung mit neuem Punkt).
+- Wenn du auf einen anderen Experten reagieren willst, nenne ihn in der BEITRAGSABSICHT mit Namen und formuliere den Anschluss konkret (z. B. "Bob widersprechen, weil …", "Alice nach ihrem Beispiel fragen").
 - Inhaltlich und konkret, kein Meta-Kommentar ("ich würde etwas sagen"), keine Bewertung der Diskussion, KEIN Score, KEINE Priorität.
 - Dieser Satz dient dem Moderator als Auswahlsignal; er ist NICHT der spätere Gesprächsbeitrag selbst.
 
@@ -68,6 +69,7 @@ GEDÄCHTNIS-UPDATE:
 [OFFENE_FRAGEN]
 - ...
 - ...
+- Frage an <Name>: ...
 [STAND]
 ...
 BEITRAGSABSICHT: <ein konkreter Satz>

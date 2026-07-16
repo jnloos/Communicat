@@ -85,7 +85,7 @@
                     type="button"
                     title="{{ __('Details zu') }} {{ $expert->name }}"
                     @click.stop="$dispatch('open-expert-details', { expertId: {{ $expert->id }} })"
-                    class="absolute top-2 end-2 rounded-full p-1 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200
+                    class="absolute top-2 end-2 z-10 rounded-full p-1 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200
                            cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                 >
                     <flux:icon.information-circle class="w-5 h-5"/>

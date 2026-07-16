@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use App\Events\MessageGenerated;
 use App\Models\Expert;
-use App\Models\Message;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,7 +16,7 @@ class MessageGeneratedPayloadTest extends TestCase
     public function test_payload_contains_speaker_and_addressed_ids(): void
     {
         $owner = User::factory()->create();
-        $project = Project::withoutEvents(fn() => Project::create([
+        $project = Project::withoutEvents(fn () => Project::create([
             'title' => 't', 'description' => 'd', 'settings' => [], 'user_id' => $owner->id,
         ]));
         $alice = Expert::factory()->create(['name' => 'Alice']);
@@ -29,19 +28,20 @@ class MessageGeneratedPayloadTest extends TestCase
         $message->adjacencyPartner()->associate($bob);
         $message->save();
 
-        $payload = (new MessageGenerated($project->id, $message->id))->broadcastWith();
+        $payload = (new MessageGenerated($project->id, $message->id, 5))->broadcastWith();
 
         $this->assertSame($project->id, $payload['project_id']);
         $this->assertSame($message->id, $payload['message_id']);
         $this->assertSame($alice->id, $payload['expert_id']);
         $this->assertSame($bob->id, $payload['addressed_expert_id']);
         $this->assertNull($payload['addressed_user_id']);
+        $this->assertSame(5, $payload['next_turn_delay_seconds']);
     }
 
     public function test_payload_carries_user_addressee(): void
     {
         $owner = User::factory()->create();
-        $project = Project::withoutEvents(fn() => Project::create([
+        $project = Project::withoutEvents(fn () => Project::create([
             'title' => 't', 'description' => 'd', 'settings' => [], 'user_id' => $owner->id,
         ]));
         $alice = Expert::factory()->create(['name' => 'Alice']);
@@ -60,7 +60,7 @@ class MessageGeneratedPayloadTest extends TestCase
     public function test_payload_handles_missing_message(): void
     {
         $owner = User::factory()->create();
-        $project = Project::withoutEvents(fn() => Project::create([
+        $project = Project::withoutEvents(fn () => Project::create([
             'title' => 't', 'description' => 'd', 'settings' => [], 'user_id' => $owner->id,
         ]));
 
@@ -70,5 +70,6 @@ class MessageGeneratedPayloadTest extends TestCase
         $this->assertNull($payload['expert_id']);
         $this->assertNull($payload['addressed_expert_id']);
         $this->assertNull($payload['addressed_user_id']);
+        $this->assertSame(0, $payload['next_turn_delay_seconds']);
     }
 }

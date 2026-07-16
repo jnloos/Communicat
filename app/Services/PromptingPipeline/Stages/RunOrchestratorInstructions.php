@@ -35,9 +35,16 @@ class RunOrchestratorInstructions
             : null;
 
         $ctx->moderationNote = $moderator->checkTriggers();
+        $contributorCount = $ctx->project->contributingExperts()->count();
+        $inclusionThreshold = $ctx->project->userInclusionThreshold();
+
         $ctx->moderationContext = [
             'agenda_phase' => $moderator->agendaPhase(),
             'pending_user' => $pendingExcerpt,
+            'contributor_count' => $contributorCount,
+            'expert_turns_since_user' => $ctx->project->expertTurnsSinceLastUserMessage(),
+            'inclusion_threshold' => $inclusionThreshold,
+            'user_inclusion_due' => $ctx->project->userInclusionDue(),
         ];
 
         $ctx->candidates = $this->strategy($ctx)->select($ctx);

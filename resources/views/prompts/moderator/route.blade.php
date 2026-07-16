@@ -37,6 +37,11 @@ Offene, noch unbeantwortete Nutzernachricht (Auszug): {{ $moderation_context['pe
 
 VERBINDLICH — HÖCHSTER VORRANG (noch vor offenen Experten-Gesprächspaaren): Die zuletzt eingegangene Nachricht stammt vom Nutzer und ist noch unbeantwortet. Der nächste Beitrag MUSS direkt darauf eingehen — eine Nutzerfrage hat Vorrang vor jeder laufenden Experten-Diskussion. Wähle die fachlich passenden Kandidaten für eine Antwort. Setze "address_user" nur dann auf true, wenn zur Beantwortung eine Entscheidung, Freigabe oder fehlende Information vom Nutzer nötig ist — sonst sollen die Experten zuerst inhaltlich antworten.
 @endif
+@if (!empty($moderation_context['user_inclusion_due']) && empty($moderation_context['pending_user']))
+Expertenbeiträge seit letzter Nutzernachricht: {{ $moderation_context['expert_turns_since_user'] ?? 0 }} (Schwelle: {{ $moderation_context['inclusion_threshold'] ?? 0 }} bei {{ $moderation_context['contributor_count'] ?? 0 }} Experten)
+
+VERBINDLICH — NUTZER-EINBINDUNG FÄLLIG: Seit der letzten Nutzeräußerung sind genug reine Expertenbeiträge gelaufen. Der nächste Zug MUSS an den Nutzer übergeben werden. Setze "address_user" auf true und wähle Kandidaten, die eine konkrete Präferenz-, Klärungs- oder Freigabefrage stellen können — keine rhetorische Frage, sondern eine echte Entscheidungshilfe oder Informationslücke.
+@endif
 
 Diese Signale sind beratend, sofern oben nicht ausdrücklich als verbindlich markiert.
 
@@ -47,7 +52,7 @@ Diese Signale sind beratend, sofern oben nicht ausdrücklich als verbindlich mar
    - "role": die Aufgabe für den nächsten Beitrag (z. B. "zusammenfassen", "Advocatus Diaboli", "Beleg fordern", "Gegenposition", "Brücke bauen", "vertiefen").
    - "agenda_step": einer von "divergenz" (öffnen, neue Thesen/Einwände), "konvergenz" (verdichten, auf Entscheidung hinarbeiten), "abschluss" (Zwischenergebnis oder verbleibende offene Frage).
    - "convergence_intent": ein Satz, worauf der Beitrag inhaltlich hinarbeiten soll.
-   - "address_user": true, wenn als Nächstes an den Nutzer übergeben werden soll (Entscheidung/Freigabe nötig, Diskussion kippt in Wiederholung), sonst false.
+   - "address_user": true, wenn als Nächstes an den Nutzer übergeben werden soll (Entscheidung/Freigabe nötig, Präferenz- oder Klärungsfrage fällig, Diskussion kippt in Wiederholung, oder die Nutzer-Einbindung oben als VERBINDLICH markiert ist), sonst false.
 3. Begründe kurz in "reasoning".
 
 Gib AUSSCHLIESSLICH valides JSON aus. Kein erklärender Text davor oder danach.

@@ -25,23 +25,23 @@ class ModeratorService
      */
     public function checkTriggers(): string
     {
-        $settings        = $this->project->settings ?? [];
+        $settings = $this->project->settings ?? [];
         $silenceCounters = $settings['silence_counters'] ?? [];
-        $phase           = $this->agendaPhase();
-        $turnsInPhase    = $settings['phase_turn_count'] ?? 0;
+        $phase = $this->agendaPhase();
+        $turnsInPhase = $settings['phase_turn_count'] ?? 0;
 
         $notes = [];
 
         // Silence trigger: any expert silent for >= 2 turns
-        if (!empty($silenceCounters)) {
+        if (! empty($silenceCounters)) {
             $expertNames = $this->project->contributingExperts()
-                ->mapWithKeys(fn(Expert $e) => [$e->id => $e->name])
+                ->mapWithKeys(fn (Expert $e) => [$e->id => $e->name])
                 ->all();
 
             foreach ($silenceCounters as $expertId => $count) {
                 if ($count >= 2 && isset($expertNames[$expertId])) {
-                    $notes[] = 'Agent ' . $expertNames[$expertId]
-                        . ' hat sich längere Zeit nicht geäußert. Beziehe ihn/sie aktiv in die Diskussion ein.';
+                    $notes[] = 'Agent '.$expertNames[$expertId]
+                        .' hat sich längere Zeit nicht geäußert. Beziehe ihn/sie aktiv in die Diskussion ein.';
                 }
             }
         }
@@ -65,15 +65,15 @@ class ModeratorService
      * Ask the moderator LLM to narrow the candidate pool and define the turn's
      * Directive (role, agenda step, convergence intent, address_user).
      *
-     * @param  array{agenda_phase?: string, pending_user?: ?string}|null $context
+     * @param  array{agenda_phase?: string, pending_user?: ?string}|null  $context
      * @return array{candidates: int[], directive: Directive, reasoning: string}
      */
     public function route(string $moderationNote = '', ?array $context = null): array
     {
-        $agents   = $this->buildAgentsArray();
+        $agents = $this->buildAgentsArray();
         $knownIds = array_map('intval', array_keys($agents));
 
-        $prompt   = $this->prompts->moderatorRoute($this->project, $agents, $moderationNote, $context);
+        $prompt = $this->prompts->moderatorRoute($this->project, $agents, $moderationNote, $context);
         $response = $this->client->sendFast($prompt, 'moderator:route');
 
         $decoded = $this->parseJson($response);
@@ -81,8 +81,8 @@ class ModeratorService
         if ($decoded === null) {
             return [
                 'candidates' => $knownIds,
-                'directive'  => $this->fallbackDirective(),
-                'reasoning'  => '',
+                'directive' => $this->applyUserInclusionGuard($this->fallbackDirective(), $context),
+                'reasoning' => '',
             ];
         }
 
@@ -95,8 +95,8 @@ class ModeratorService
 
         return [
             'candidates' => $candidates,
-            'directive'  => $this->directiveFromArray($decoded['directive'] ?? [], (string) ($decoded['reasoning'] ?? '')),
-            'reasoning'  => (string) ($decoded['reasoning'] ?? ''),
+            'directive' => $this->applyUserInclusionGuard($this->directiveFromArray($decoded['directive'] ?? [], (string) ($decoded['reasoning'] ?? '')), $context),
+            'reasoning' => (string) ($decoded['reasoning'] ?? ''),
         ];
     }
 
@@ -105,34 +105,34 @@ class ModeratorService
      * judging their BEITRAGSABSICHT (no score). The hard back-to-back guard is
      * preserved as a deterministic guardrail against monologue loops.
      *
-     * @param  array<int, array{memory: string, beitragsabsicht: string}> $thinkOutputs  keyed by expert id
-     * @return int  the winning expert id
+     * @param  array<int, array{memory: string, beitragsabsicht: string}>  $thinkOutputs  keyed by expert id
+     * @return int the winning expert id
      */
     public function selectWinner(array $thinkOutputs): int
     {
         $agents = $this->buildAgentsArray();
 
         $state = [
-            'recent_speakers'       => $this->project->settings['recent_speakers']       ?? [],
-            'recent_response_types' => $this->project->settings['recent_response_types']  ?? [],
+            'recent_speakers' => $this->project->settings['recent_speakers'] ?? [],
+            'recent_response_types' => $this->project->settings['recent_response_types'] ?? [],
         ];
 
         // Expose only the contribution intents to the selection prompt (keyed by id).
-        $intents = array_map(fn(array $o) => $o['beitragsabsicht'], $thinkOutputs);
+        $intents = array_map(fn (array $o) => $o['beitragsabsicht'], $thinkOutputs);
 
-        $prompt   = $this->prompts->moderatorSelect($this->project, $agents, $intents, $state);
+        $prompt = $this->prompts->moderatorSelect($this->project, $agents, $intents, $state);
         $response = $this->client->sendFast($prompt, 'moderator:select');
 
         $decoded = $this->parseJson($response);
 
-        if ($decoded === null || !isset($decoded['winner'])) {
+        if ($decoded === null || ! isset($decoded['winner'])) {
             return (int) array_key_first($thinkOutputs);
         }
 
         // The moderator returns a prompt token ("E7"); reduce it to the expert id.
         $winner = $this->promptIdToExpertId((string) $decoded['winner']);
 
-        if ($winner === null || !array_key_exists($winner, $thinkOutputs)) {
+        if ($winner === null || ! array_key_exists($winner, $thinkOutputs)) {
             return (int) array_key_first($thinkOutputs);
         }
 
@@ -143,7 +143,7 @@ class ModeratorService
 
         if ($lastSpeaker !== null && $winner === $lastSpeaker) {
             $alternatives = array_diff(array_keys($thinkOutputs), [$lastSpeaker]);
-            if (!empty($alternatives)) {
+            if (! empty($alternatives)) {
                 return (int) reset($alternatives);
             }
         }
@@ -183,7 +183,7 @@ class ModeratorService
         $opening = $this->extractOpeningFragment($content);
         if ($opening !== '') {
             $recentOpenings = $settings['recent_openings'] ?? [];
-            $perExpert      = $recentOpenings[$winner->id] ?? [];
+            $perExpert = $recentOpenings[$winner->id] ?? [];
             array_unshift($perExpert, $opening);
             $recentOpenings[$winner->id] = array_slice($perExpert, 0, 3);
             $settings['recent_openings'] = $recentOpenings;
@@ -203,6 +203,7 @@ class ModeratorService
     public function agendaPhase(): string
     {
         $phase = $this->project->settings['agenda_phase'] ?? self::AGENDA_PHASES[0];
+
         return in_array($phase, self::AGENDA_PHASES, true) ? $phase : self::AGENDA_PHASES[0];
     }
 
@@ -215,7 +216,7 @@ class ModeratorService
     protected function advanceAgenda(array $settings): array
     {
         $phase = $settings['agenda_phase'] ?? self::AGENDA_PHASES[0];
-        if (!in_array($phase, self::AGENDA_PHASES, true)) {
+        if (! in_array($phase, self::AGENDA_PHASES, true)) {
             $phase = self::AGENDA_PHASES[0];
         }
 
@@ -227,7 +228,7 @@ class ModeratorService
             $turns = 0;
         }
 
-        $settings['agenda_phase']     = $phase;
+        $settings['agenda_phase'] = $phase;
         $settings['phase_turn_count'] = $turns;
 
         return $settings;
@@ -244,27 +245,50 @@ class ModeratorService
     protected function directiveFromArray(array $d, string $reasoning): Directive
     {
         $phase = mb_strtolower(trim((string) ($d['agenda_step'] ?? $this->agendaPhase())));
-        if (!in_array($phase, self::AGENDA_PHASES, true)) {
+        if (! in_array($phase, self::AGENDA_PHASES, true)) {
             $phase = $this->agendaPhase();
         }
 
         return new Directive(
-            role:              (string) ($d['role'] ?? ''),
-            agendaStep:        $phase,
+            role: (string) ($d['role'] ?? ''),
+            agendaStep: $phase,
             convergenceIntent: (string) ($d['convergence_intent'] ?? ''),
-            addressUser:       (bool)   ($d['address_user'] ?? false),
-            reasoning:         $reasoning,
+            addressUser: (bool) ($d['address_user'] ?? false),
+            reasoning: $reasoning,
         );
     }
 
     protected function fallbackDirective(): Directive
     {
         return new Directive(
-            role:              '',
-            agendaStep:        $this->agendaPhase(),
+            role: '',
+            agendaStep: $this->agendaPhase(),
             convergenceIntent: '',
-            addressUser:       false,
-            reasoning:         '',
+            addressUser: false,
+            reasoning: '',
+        );
+    }
+
+    /**
+     * When the expert-only cadence threshold is reached, force a user handoff
+     * regardless of what the route LLM returned.
+     *
+     * @param  array{pending_user?: ?string, user_inclusion_due?: bool}|null  $context
+     */
+    protected function applyUserInclusionGuard(Directive $directive, ?array $context): Directive
+    {
+        if (empty($context['user_inclusion_due']) || ! empty($context['pending_user'])) {
+            return $directive;
+        }
+
+        return new Directive(
+            role: $directive->role !== '' ? $directive->role : 'Nutzer einbeziehen',
+            agendaStep: $directive->agendaStep,
+            convergenceIntent: $directive->convergenceIntent !== ''
+                ? $directive->convergenceIntent
+                : 'Eine konkrete Präferenz-, Klärungs- oder Freigabefrage an den Nutzer stellen.',
+            addressUser: true,
+            reasoning: $directive->reasoning,
         );
     }
 
@@ -296,7 +320,7 @@ class ModeratorService
     protected function buildAgentsArray(): array
     {
         return $this->project->contributingExperts()
-            ->mapWithKeys(fn(Expert $e) => [
+            ->mapWithKeys(fn (Expert $e) => [
                 $e->id => ['name' => $e->name, 'job' => $e->job, 'prompt_id' => $e->promptId],
             ])
             ->all();
@@ -316,19 +340,19 @@ class ModeratorService
      * that belong to this project, deduplicated and order-preserving. Anything
      * the LLM invents (unknown tokens, user tokens, names) is dropped.
      *
-     * @param  int[] $knownIds
+     * @param  int[]  $knownIds
      * @return int[]
      */
     protected function resolveExpertIds(mixed $tokens, array $knownIds): array
     {
-        if (!is_array($tokens)) {
+        if (! is_array($tokens)) {
             return [];
         }
 
         $normalized = [];
         foreach ($tokens as $token) {
             $id = $this->promptIdToExpertId((string) $token);
-            if ($id !== null && in_array($id, $knownIds, true) && !in_array($id, $normalized, true)) {
+            if ($id !== null && in_array($id, $knownIds, true) && ! in_array($id, $normalized, true)) {
                 $normalized[] = $id;
             }
         }

@@ -18,8 +18,11 @@ class PipelineModeratorTest extends TestCase
     use RefreshDatabase;
 
     private Project $project;
+
     private Expert $expert1;
+
     private Expert $expert2;
+
     private User $user;
 
     protected function setUp(): void
@@ -27,11 +30,11 @@ class PipelineModeratorTest extends TestCase
         parent::setUp();
 
         $this->user = User::factory()->create();
-        $this->project = Project::withoutEvents(fn() => Project::create([
-            'title'       => 'Test Project',
+        $this->project = Project::withoutEvents(fn () => Project::create([
+            'title' => 'Test Project',
             'description' => 'Test',
-            'settings'    => [],
-            'user_id'     => $this->user->id,
+            'settings' => [],
+            'user_id' => $this->user->id,
         ]));
         $this->expert1 = Expert::factory()->create(['name' => 'Alice']);
         $this->expert2 = Expert::factory()->create(['name' => 'Bob']);
@@ -47,6 +50,7 @@ class PipelineModeratorTest extends TestCase
         $prompts->shouldReceive('think')->andReturn('think-prompt');
         $prompts->shouldReceive('moderatorSelect')->andReturn('select-prompt');
         $prompts->shouldReceive('speak')->andReturn('speak-prompt');
+
         return $prompts;
     }
 
@@ -54,13 +58,13 @@ class PipelineModeratorTest extends TestCase
     {
         return json_encode([
             'candidates' => $candidateTokens,
-            'directive'  => [
-                'role'               => 'vertiefen',
-                'agenda_step'        => 'divergenz',
+            'directive' => [
+                'role' => 'vertiefen',
+                'agenda_step' => 'divergenz',
                 'convergence_intent' => 'x',
-                'address_user'       => $addressUser,
+                'address_user' => $addressUser,
             ],
-            'reasoning'  => 'Test.',
+            'reasoning' => 'Test.',
         ]);
     }
 
@@ -120,6 +124,34 @@ class PipelineModeratorTest extends TestCase
         $this->assertTrue($result['stop']);
         $this->assertSame('user_addressed', $result['reason']);
         $this->assertSame($this->user->id, $result['user_id']);
+    }
+
+    public function test_user_inclusion_cadence_forces_handoff_even_when_route_says_false(): void
+    {
+        config(['discussion.user_inclusion_multiplier' => 2]);
+
+        foreach ([$this->expert1, $this->expert2, $this->expert1, $this->expert2] as $expert) {
+            $this->project->addMessage('Expertenbeitrag', $expert);
+        }
+
+        $thinkResponse = "GEDÄCHTNIS-UPDATE:\n[STAND]\nx\nBEITRAGSABSICHT: Nutzer fragen.";
+
+        $client = Mockery::mock(OpenAIClient::class);
+        $client->shouldReceive('sendFast')->andReturn(
+            $this->routeJson(["E{$this->expert1->id}"], addressUser: false),
+            "Alice fragt nach deiner Präferenz?\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion"
+        );
+        $client->shouldReceive('sendSlow')->once()->andReturn($thinkResponse);
+
+        $this->instance(OpenAIClient::class, $client);
+        $this->instance(PromptBuilder::class, $this->mockPrompts());
+
+        $result = (new DiscussionPipeline($this->project))->run();
+
+        $msg = $this->project->messages()->whereNotNull('expert_id')->latest('id')->first();
+        $this->assertTrue($msg->handsBackToUser());
+        $this->assertTrue($result['stop']);
+        $this->assertSame('user_addressed', $result['reason']);
     }
 
     public function test_turn_updates_project_state(): void
