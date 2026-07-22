@@ -75,9 +75,10 @@
     </div>
 
     <!-- Chat -->
-    <div class="relative py-6" x-show="mode === 'text'">
-        <!-- Fade top -->
-        <div class="absolute top-6 left-0 right-0 h-2 bg-linear-to-b from-white dark:from-zinc-800 to-transparent z-10 pointer-events-none"></div>
+    <div class="relative pt-2 pb-6" x-show="mode === 'text'">
+        <!-- Fade top — sits above the scroll area, messages get matching pt so
+             the first bubble isn't clipped under the project header/fade. -->
+        <div class="absolute top-2 left-0 right-0 h-6 bg-linear-to-b from-white dark:from-zinc-800 to-transparent z-10 pointer-events-none"></div>
         <div id="chat" class="relative w-full mx-auto overflow-y-auto marker" style="max-height: 84vh;"
             x-data="{
                 loading: false,
@@ -143,7 +144,7 @@
             </div>
 
             <!-- Nachrichten -->
-            <div class="space-y-8 pb-24 max-w-220 mx-auto">
+            <div class="space-y-8 pt-6 pb-24 max-w-220 mx-auto">
                 @foreach ($messages as $msg)
                     <x-projects.chat-message :id="$msg->id" :msg="$msg" />
                 @endforeach

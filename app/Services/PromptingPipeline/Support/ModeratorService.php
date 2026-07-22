@@ -58,6 +58,10 @@ class ModeratorService
             default => 'Phase Abschluss: Fasse die gemeinsame Position zusammen und schließe die Diskussion ab.',
         };
 
+        if ($this->project->descriptionIsSparse() && ! $this->project->hasUserMessage()) {
+            $notes[] = 'Die Projektbeschreibung ist zu dünn oder fehlt. Lass die Experten nicht spekulieren, sondern steuere auf eine konkrete Klärungsfrage an den Nutzer (Ziel, Scope, Zielgruppe, Erfolgskriterium).';
+        }
+
         return implode(' ', array_filter($notes));
     }
 
@@ -81,7 +85,7 @@ class ModeratorService
         if ($decoded === null) {
             return [
                 'candidates' => $knownIds,
-                'directive' => $this->attachPendingUser($this->applyUserInclusionGuard($this->fallbackDirective(), $context), $context),
+                'directive' => $this->attachPendingUser($this->decorateDirective($this->fallbackDirective(), $context), $context),
                 'reasoning' => '',
             ];
         }
@@ -95,7 +99,7 @@ class ModeratorService
 
         return [
             'candidates' => $candidates,
-            'directive' => $this->attachPendingUser($this->applyUserInclusionGuard($this->directiveFromArray($decoded['directive'] ?? [], (string) ($decoded['reasoning'] ?? '')), $context), $context),
+            'directive' => $this->attachPendingUser($this->decorateDirective($this->directiveFromArray($decoded['directive'] ?? [], (string) ($decoded['reasoning'] ?? '')), $context), $context),
             'reasoning' => (string) ($decoded['reasoning'] ?? ''),
         ];
     }
@@ -288,6 +292,41 @@ class ModeratorService
     }
 
     /**
+     * Apply hard handoff guards in priority order: topic clarification first
+     * (sparse briefing), then cadence-based user inclusion.
+     *
+     * @param  array{pending_user?: ?string, user_inclusion_due?: bool, topic_clarification_due?: bool}|null  $context
+     */
+    protected function decorateDirective(Directive $directive, ?array $context): Directive
+    {
+        return $this->applyUserInclusionGuard(
+            $this->applyTopicClarificationGuard($directive, $context),
+            $context,
+        );
+    }
+
+    /**
+     * When the project briefing is too thin and the user has not spoken yet,
+     * force a clarifying handoff regardless of what the route LLM returned.
+     *
+     * @param  array{pending_user?: ?string, topic_clarification_due?: bool}|null  $context
+     */
+    protected function applyTopicClarificationGuard(Directive $directive, ?array $context): Directive
+    {
+        if (empty($context['topic_clarification_due']) || ! empty($context['pending_user'])) {
+            return $directive;
+        }
+
+        return new Directive(
+            role: 'Projektziel und Scope beim Nutzer klären',
+            agendaStep: $directive->agendaStep,
+            convergenceIntent: 'Eine konkrete Klärungsfrage zu Ziel, Scope, Zielgruppe oder Erfolgskriterium stellen — keine spekulative These.',
+            addressUser: true,
+            reasoning: $directive->reasoning,
+        );
+    }
+
+    /**
      * When the expert-only cadence threshold is reached, force a user handoff
      * regardless of what the route LLM returned.
      *
@@ -296,6 +335,11 @@ class ModeratorService
     protected function applyUserInclusionGuard(Directive $directive, ?array $context): Directive
     {
         if (empty($context['user_inclusion_due']) || ! empty($context['pending_user'])) {
+            return $directive;
+        }
+
+        // Topic clarification already forced a handoff with a stronger intent.
+        if ($directive->addressUser && str_contains($directive->role, 'klären')) {
             return $directive;
         }
 

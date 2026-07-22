@@ -48,6 +48,56 @@ class RunOrchestratorInstructions
             'expert_turns_since_user' => $ctx->project->expertTurnsSinceLastUserMessage(),
             'inclusion_threshold' => $inclusionThreshold,
             'user_inclusion_due' => $ctx->project->userInclusionDue(),
+            'topic_clarification_due' => $ctx->project->topicClarificationDue(),
+            'description_sparse' => $ctx->project->descriptionIsSparse(),
+            // #region agent log
+            'participant_message_count' => (function () use ($ctx) {
+                $ref = new \ReflectionMethod($ctx->project, 'participantMessages');
+                file_put_contents(base_path('.cursor/debug-c0b61f.log'), json_encode([
+                    'sessionId' => 'c0b61f',
+                    'runId' => 'post-fix',
+                    'hypothesisId' => 'A',
+                    'location' => 'RunOrchestratorInstructions.php:participant_message_count',
+                    'message' => 'About to call participantMessages from outside Project',
+                    'data' => [
+                        'method_exists' => method_exists($ctx->project, 'participantMessages'),
+                        'is_public' => $ref->isPublic(),
+                        'is_private' => $ref->isPrivate(),
+                        'project_id' => $ctx->project->id,
+                    ],
+                    'timestamp' => (int) (microtime(true) * 1000),
+                ])."\n", FILE_APPEND);
+
+                try {
+                    $count = $ctx->project->participantMessages()->count();
+                    file_put_contents(base_path('.cursor/debug-c0b61f.log'), json_encode([
+                        'sessionId' => 'c0b61f',
+                        'runId' => 'post-fix',
+                        'hypothesisId' => 'A',
+                        'location' => 'RunOrchestratorInstructions.php:after_call',
+                        'message' => 'participantMessages call succeeded',
+                        'data' => ['count' => $count],
+                        'timestamp' => (int) (microtime(true) * 1000),
+                    ])."\n", FILE_APPEND);
+
+                    return $count;
+                } catch (\Throwable $e) {
+                    file_put_contents(base_path('.cursor/debug-c0b61f.log'), json_encode([
+                        'sessionId' => 'c0b61f',
+                        'runId' => 'post-fix',
+                        'hypothesisId' => 'A',
+                        'location' => 'RunOrchestratorInstructions.php:catch',
+                        'message' => 'participantMessages call failed',
+                        'data' => [
+                            'error' => $e->getMessage(),
+                            'exception_class' => $e::class,
+                        ],
+                        'timestamp' => (int) (microtime(true) * 1000),
+                    ])."\n", FILE_APPEND);
+                    throw $e;
+                }
+            })(),
+            // #endregion
         ];
 
         // Mention shortcut: a user @-mention picks the candidates deterministically

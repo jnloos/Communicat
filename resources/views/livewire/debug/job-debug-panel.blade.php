@@ -1,9 +1,10 @@
 <div>
-    {{-- Trigger Button (fixed bottom-right) --}}
+    {{-- Trigger Button (fixed bottom-right). z-[60] keeps it above the
+         chat composer (z-50) so it stays clickable. --}}
     <button
         wire:click="open"
         title="Job Debug Panel"
-        class="fixed bottom-5 right-5 z-50 flex items-center justify-center w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-400 text-white shadow-lg shadow-amber-500/30 transition-colors"
+        class="fixed bottom-5 right-5 z-[60] flex items-center justify-center w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-400 text-white shadow-lg shadow-amber-500/30 transition-colors"
     >
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>

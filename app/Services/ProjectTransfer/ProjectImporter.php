@@ -36,10 +36,7 @@ class ProjectImporter
             $project->title       = trim((string) ($projectData['title'] ?? 'Projekt')) . ' ' . __('(Kopie)');
             $project->description = $projectData['description'] ?? '';
             $project->settings    = [];
-            $project->save(); // creating/created hooks add a welcome message + sync the owner
-
-            // Drop the auto-generated welcome message so the clone matches the source.
-            $project->messages()->delete();
+            $project->save(); // creating/created hooks sync the owner
 
             if (! empty($existingIds)) {
                 $project->experts()->syncWithoutDetaching($existingIds);

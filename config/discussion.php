@@ -60,6 +60,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Topic clarification (sparse project briefing)
+    |--------------------------------------------------------------------------
+    | When the project description is shorter than this many characters (after
+    | trim) and no user message exists yet, the moderator must hand back to the
+    | user with a concrete clarifying question instead of speculative debate.
+    */
+    'topic_clarification_min_description_length' => (int) env('DISCUSSION_TOPIC_CLARIFICATION_MIN_DESC', 40),
+
+    /*
+    |--------------------------------------------------------------------------
     | Summarizer thresholds
     |--------------------------------------------------------------------------
     | summary_trigger_at  — compression runs only when the number of unsummarized

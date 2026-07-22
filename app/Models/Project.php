@@ -158,11 +158,6 @@ class Project extends Model
             if (auth()->check()) {
                 $project->users()->syncWithoutDetaching(auth()->id());
             }
-
-            $welcomeMsg = view('components.projects.welcome-message', [
-                'project' => $project,
-            ])->render();
-            $project->addMessage($welcomeMsg);
         });
     }
 
@@ -184,7 +179,7 @@ class Project extends Model
     }
 
     /** Messages from participants (expert or user), excluding system/assistant. */
-    private function participantMessages(): HasMany
+    public function participantMessages(): HasMany
     {
         return $this->messages()->where(function ($q) {
             $q->whereNotNull('expert_id')->orWhereNotNull('user_id');
@@ -231,6 +226,29 @@ class Project extends Model
     public function userInclusionDue(): bool
     {
         return $this->expertTurnsSinceLastUserMessage() >= $this->userInclusionThreshold();
+    }
+
+    /**
+     * True when the project briefing is too thin for a meaningful debate and
+     * the user has not yet contributed any message — the pipeline should ask
+     * for clarification instead of inventing scope.
+     */
+    public function descriptionIsSparse(): bool
+    {
+        $minLength = max(0, (int) config('discussion.topic_clarification_min_description_length', 40));
+        $description = trim((string) ($this->description ?? ''));
+
+        return mb_strlen($description) < $minLength;
+    }
+
+    public function hasUserMessage(): bool
+    {
+        return $this->messages()->whereNotNull('user_id')->exists();
+    }
+
+    public function topicClarificationDue(): bool
+    {
+        return $this->descriptionIsSparse() && ! $this->hasUserMessage();
     }
 
     public function asPromptArray(int $numMsg = -1): array

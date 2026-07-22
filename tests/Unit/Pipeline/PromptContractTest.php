@@ -114,6 +114,43 @@ class PromptContractTest extends TestCase
         $this->assertTrue($result['directive']->addressUser);
     }
 
+    public function test_route_prompt_contains_topic_clarification_block_when_due(): void
+    {
+        $builder = app(PromptBuilder::class);
+        $agents = $this->project->contributingExperts()
+            ->mapWithKeys(fn (Expert $e) => [$e->id => ['name' => $e->name, 'job' => $e->job, 'prompt_id' => $e->promptId]])
+            ->all();
+
+        $prompt = $builder->moderatorRoute($this->project, $agents, 'note', [
+            'agenda_phase' => 'divergenz',
+            'pending_user' => null,
+            'topic_clarification_due' => true,
+            'description_sparse' => true,
+            'participant_message_count' => 0,
+        ]);
+
+        $this->assertStringContainsString('PROJEKTKONTEXT UNKLAR', $prompt);
+        $this->assertStringContainsString('Klärungsfrage', $prompt);
+    }
+
+    public function test_moderator_service_forces_address_user_when_topic_clarification_due(): void
+    {
+        $json = '{"candidates":["E'.$this->expert1->id.'"],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","address_user":false},"reasoning":"Test."}';
+
+        $client = Mockery::mock(OpenAIClient::class);
+        $prompts = Mockery::mock(PromptBuilder::class);
+        $client->shouldReceive('sendFast')->once()->andReturn($json);
+        $prompts->shouldReceive('moderatorRoute')->once()->andReturn('prompt');
+
+        $result = (new ModeratorService($this->project, $client, $prompts))->route('', [
+            'topic_clarification_due' => true,
+            'pending_user' => null,
+        ]);
+
+        $this->assertTrue($result['directive']->addressUser);
+        $this->assertStringContainsString('klären', $result['directive']->role);
+    }
+
     public function test_speak_prompt_contains_pending_user_block_when_directive_carries_it(): void
     {
         $builder = app(PromptBuilder::class);
