@@ -44,9 +44,9 @@ return [
     | derived from the visible content length so users can read before the loop
     | continues. The message appears immediately; only the follow-up is delayed.
     */
-    'reading_chars_per_second' => (int) env('DISCUSSION_READING_CHARS_PER_SECOND', 18),
-    'reading_delay_min_seconds' => (int) env('DISCUSSION_READING_DELAY_MIN', 2),
-    'reading_delay_max_seconds' => (int) env('DISCUSSION_READING_DELAY_MAX', 15),
+    'reading_chars_per_second' => (int) env('DISCUSSION_READING_CHARS_PER_SECOND', 12),
+    'reading_delay_min_seconds' => (int) env('DISCUSSION_READING_DELAY_MIN', 4),
+    'reading_delay_max_seconds' => (int) env('DISCUSSION_READING_DELAY_MAX', 25),
 
     /*
     |--------------------------------------------------------------------------

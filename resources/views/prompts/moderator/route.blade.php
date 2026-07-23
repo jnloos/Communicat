@@ -35,7 +35,7 @@ Agenda-Phase: {{ $moderation_context['agenda_phase'] }}
 @if (!empty($moderation_context['pending_user']))
 Offene, noch unbeantwortete Nutzernachricht (Auszug): {{ $moderation_context['pending_user'] }}
 
-VERBINDLICH — HÖCHSTER VORRANG (noch vor offenen Experten-Gesprächspaaren): Die zuletzt eingegangene Nachricht stammt vom Nutzer und ist noch unbeantwortet. Der nächste Beitrag MUSS direkt darauf eingehen — eine Nutzerfrage hat Vorrang vor jeder laufenden Experten-Diskussion. Wähle die fachlich passenden Kandidaten für eine Antwort. Setze "address_user" nur dann auf true, wenn zur Beantwortung eine Entscheidung, Freigabe oder fehlende Information vom Nutzer nötig ist — sonst sollen die Experten zuerst inhaltlich antworten.
+VERBINDLICH — HÖCHSTER VORRANG (noch vor offenen Experten-Gesprächspaaren): Die zuletzt eingegangene Nachricht stammt vom Nutzer und ist noch unbeantwortet. Der nächste Beitrag MUSS die Frage/den Punkt direkt und inhaltlich beantworten — eine Nutzerfrage hat Vorrang vor jeder laufenden Experten-Diskussion. Wähle die fachlich passenden Kandidaten für eine konkrete Antwort (ggf. mit einer klaren Klärungsfrage, falls Information fehlt). Setze in "role" bevorzugt etwas wie "Frage konkret beantworten, ggf. eine Klärungsfrage". Setze "address_user" nur dann auf true, wenn zur Beantwortung eine Entscheidung, Freigabe oder fehlende Information vom Nutzer nötig ist — sonst sollen die Experten zuerst inhaltlich antworten.
 @endif
 @if (!empty($moderation_context['topic_clarification_due']) && empty($moderation_context['pending_user']))
 Projektbeschreibung: {{ !empty($moderation_context['description_sparse']) ? 'zu dünn oder fehlend' : 'vorhanden' }}; Teilnehmer-Nachrichten bisher: {{ $moderation_context['participant_message_count'] ?? 0 }}
@@ -54,11 +54,13 @@ Diese Signale sind beratend, sofern oben nicht ausdrücklich als verbindlich mar
 === AUFGABE: KANDIDATEN-SET + DIRECTIVE ===
 1. Wähle ein Kandidaten-Set: das Subset der Teilnehmer (ein oder mehrere Tokens aus der Teilnehmerliste — der Wert in eckigen Klammern, z. B. E7), das als Nächstes nachdenken soll. Wähle die fachlich passendsten für den nächsten Diskussionsschritt; bei klarer Lage genügt ein einzelner Kandidat. VORRANG (nachrangig nur zu einer offenen Nutzernachricht): Richtet eine der jüngsten Äußerungen eine direkte Frage, Bitte oder einen Einwand an einen bestimmten Experten, nimm diesen unbedingt ins Kandidaten-Set auf, damit das offene Gesprächspaar geschlossen werden kann.
 2. Vergib eine Directive:
-   - "role": die Aufgabe für den nächsten Beitrag (z. B. "zusammenfassen", "Advocatus Diaboli", "Beleg fordern", "Gegenposition", "Brücke bauen", "vertiefen", "Projektkontext klären").
+   - "role": die Aufgabe für den nächsten Beitrag (z. B. "zusammenfassen", "Advocatus Diaboli", "Beleg fordern", "Gegenposition", "Brücke bauen", "vertiefen", "Projektkontext klären", "Frage konkret beantworten, ggf. eine Klärungsfrage", "Vorschlag verständlich erklären"). Bei offenen Nutzerfragen bevorzuge Rollen, die direkt antworten und — falls nötig — genau eine gezielte Rückfrage vorsehen.
    - "agenda_step": einer von "divergenz" (öffnen, neue Thesen/Einwände), "konvergenz" (verdichten, auf Entscheidung hinarbeiten), "abschluss" (Zwischenergebnis oder verbleibende offene Frage).
-   - "convergence_intent": ein Satz, worauf der Beitrag inhaltlich hinarbeiten soll.
+   - "convergence_intent": ein Satz, worauf der Beitrag inhaltlich hinarbeiten soll. Bei Vorschlägen: greifbare, für Laien verständliche nächste Schritte statt reiner Fachthese.
    - "address_user": true, wenn als Nächstes an den Nutzer übergeben werden soll (fehlender/unklarer Projektkontext, Entscheidung/Freigabe nötig, Präferenz- oder Klärungsfrage fällig, Diskussion kippt in Wiederholung, oder eine der VERBINDLICH-Markierungen oben), sonst false. Soft-Regel: Wenn aus Titel und Beschreibung Ziel, Scope oder Restriktionen nicht eindeutig sind, setze address_user früh auf true statt Annahmen zu stapeln.
 3. Begründe kurz in "reasoning".
+
+Soft-Regeln (nachrangig zu VERBINDLICH-Blöcken oben): Bevorzuge gezielte Einzel-Ansprache (genau ein Adressat, eine Folgefrage) statt Plenum-Ansprachen an mehrere oder ans Plenum. Bevorzuge Rollen und "convergence_intent" mit erklärtem, greifbarem Vorschlag statt reiner abstrakter Fachthese.
 
 Gib AUSSCHLIESSLICH valides JSON aus. Kein erklärender Text davor oder danach.
 
