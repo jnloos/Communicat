@@ -20,6 +20,7 @@ class UpdateState
             $ctx->winner,
             $ctx->message->adjacency_pair_type ?? '',
             $ctx->speakResult['content'] ?? '',
+            $ctx->thinkOutputs[$ctx->winner->id]['beitragsabsicht'] ?? '',
         );
 
         return $next($ctx);

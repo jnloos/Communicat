@@ -34,6 +34,7 @@ class PromptBuilder
             'project' => $project->asPromptArray(),
             'agents' => $agents,
             'users' => $users,
+            'current_user_question' => $project->settings['current_user_question'] ?? null,
         ])->render());
     }
 
@@ -95,6 +96,8 @@ class PromptBuilder
             ];
         }
 
+        $settings = $project->settings ?? [];
+
         return $this->decode(view('prompts.agent.speak', [
             'expert' => $expert->asPromptArray($project),
             'project' => $projectData,
@@ -106,6 +109,10 @@ class PromptBuilder
             'other_openings' => $otherOpenings,
             'force_brevity' => $this->lastExpertTurnsAllLong($projectData['messages']),
             'forbid_name_opening' => $this->recentTurnsOpenWithName($projectData['messages'], $participantNames),
+            'current_user_question' => $settings['current_user_question'] ?? null,
+            'open_question' => $settings['open_question'] ?? null,
+            'covered_points' => $settings['covered_points'] ?? [],
+            'resolved_points' => $settings['resolved_points'] ?? [],
         ])->render());
     }
 
@@ -215,6 +222,23 @@ class PromptBuilder
             'agents' => $agents,
             'intents' => $intents,
             'state' => $state,
+        ])->render());
+    }
+
+    /**
+     * MODERATOR CLOSURE — periodic progress/closure check (ProgressTracker).
+     * Returns a prompt asking the moderator to judge whether the current point
+     * is resolved or the discussion is circling, and to name the next move and
+     * the remaining open question.
+     */
+    public function moderatorClosure(Project $project): string
+    {
+        $settings = $project->settings ?? [];
+
+        return $this->decode(view('prompts.moderator.closure', [
+            'project' => $project->asPromptArray(),
+            'covered_points' => $settings['covered_points'] ?? [],
+            'resolved_points' => $settings['resolved_points'] ?? [],
         ])->render());
     }
 

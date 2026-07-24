@@ -26,7 +26,7 @@ class AgentService
      */
     public function think(Expert $expert): array
     {
-        $prompt   = $this->thinkPrompt($expert);
+        $prompt = $this->thinkPrompt($expert);
         $response = $this->client->sendSlow($prompt, "think:{$expert->id}");
 
         return $this->consumeThink($expert, $response);
@@ -52,11 +52,30 @@ class AgentService
     {
         $memoryBlock = $this->extractMemoryUpdate($response, 'BEITRAGSABSICHT:');
         $this->persistMemoryBlock($expert, $memoryBlock, $response, "{$context}:{$expert->id}");
+        $this->ensureUserQuestionInMemory($expert, $memoryBlock);
 
         return [
-            'memory'          => $memoryBlock,
+            'memory' => $memoryBlock,
             'beitragsabsicht' => $this->extractBeitragsabsicht($response),
         ];
+    }
+
+    /**
+     * Re-inject the current user question into the expert's memory if THINK
+     * persisted a non-empty block that dropped the [AKTUELLE_NUTZERFRAGE] marker.
+     * Keeps every expert anchored to the current question deterministically.
+     */
+    protected function ensureUserQuestionInMemory(Expert $expert, string $memoryBlock): void
+    {
+        $question = $this->project->settings['current_user_question'] ?? null;
+
+        if ($memoryBlock === '' || empty($question) || UserQuestionMemory::contains($memoryBlock)) {
+            return;
+        }
+
+        $summary = $expert->thoughtsAbout($this->project);
+        $summary->content = UserQuestionMemory::upsert($summary->content ?? '', $question);
+        $summary->save();
     }
 
     /**
@@ -68,11 +87,12 @@ class AgentService
     {
         if ($memoryBlock === '') {
             Log::warning('GEDÄCHTNIS-UPDATE marker missing in LLM response', [
-                'context'        => $context,
-                'project_id'     => $this->project->id,
-                'expert_id'      => $expert->id,
+                'context' => $context,
+                'project_id' => $this->project->id,
+                'expert_id' => $expert->id,
                 'response_first' => mb_substr($rawResponse, 0, 200),
             ]);
+
             return;
         }
 
@@ -91,12 +111,12 @@ class AgentService
      * from the visible content. The user hand-back is NOT emitted here — it stays
      * moderator-driven (Directive->addressUser) and is resolved in PersistMessage.
      *
-     * @param  array{memory: string, beitragsabsicht: string} $thinkOutput
+     * @param  array{memory: string, beitragsabsicht: string}  $thinkOutput
      * @return array{content: string, adjacency_pair_type: ?string, adjacency_partner_token: ?string}
      */
     public function speak(Expert $expert, array $thinkOutput, Directive $directive): array
     {
-        $prompt   = $this->prompts->speak($this->project, $expert, $thinkOutput, $directive);
+        $prompt = $this->prompts->speak($this->project, $expert, $thinkOutput, $directive);
         $response = $this->client->sendFast($prompt, "speak:{$expert->id}");
 
         return $this->consumeSpeak($response);
@@ -112,14 +132,14 @@ class AgentService
     public function consumeSpeak(string $response): array
     {
         $marker = '---STEUERUNG---';
-        $pos    = mb_strpos($response, $marker);
+        $pos = mb_strpos($response, $marker);
 
         $content = $pos === false ? $response : mb_substr($response, 0, $pos);
-        $trailer = $pos === false ? ''        : mb_substr($response, $pos + mb_strlen($marker));
+        $trailer = $pos === false ? '' : mb_substr($response, $pos + mb_strlen($marker));
 
         return [
-            'content'                 => trim($content),
-            'adjacency_pair_type'     => $this->parsePairType($trailer),
+            'content' => trim($content),
+            'adjacency_pair_type' => $this->parsePairType($trailer),
             'adjacency_partner_token' => $this->parsePartnerToken($trailer),
         ];
     }
@@ -131,11 +151,11 @@ class AgentService
      */
     protected function parsePairType(string $trailer): ?string
     {
-        if (!preg_match('/PAARTYP:\s*(.+)/u', $trailer, $m)) {
+        if (! preg_match('/PAARTYP:\s*(.+)/u', $trailer, $m)) {
             return null;
         }
 
-        $value   = trim($m[1]);
+        $value = trim($m[1]);
         $allowed = [
             Message::PAIR_FRAGE_ANTWORT,
             Message::PAIR_ANSPRACHE_REAKTION,
@@ -152,7 +172,7 @@ class AgentService
      */
     protected function parsePartnerToken(string $trailer): ?string
     {
-        if (!preg_match('/ADRESSAT:\s*(\S+)/u', $trailer, $m)) {
+        if (! preg_match('/ADRESSAT:\s*(\S+)/u', $trailer, $m)) {
             return null;
         }
 
@@ -172,7 +192,7 @@ class AgentService
     protected function extractMemoryUpdate(string $text, ?string $stopAt = null): string
     {
         $marker = 'GEDÄCHTNIS-UPDATE:';
-        $pos    = strpos($text, $marker);
+        $pos = strpos($text, $marker);
 
         if ($pos === false) {
             return '';
@@ -196,7 +216,7 @@ class AgentService
     protected function extractBeitragsabsicht(string $text): string
     {
         $marker = 'BEITRAGSABSICHT:';
-        $pos    = strpos($text, $marker);
+        $pos = strpos($text, $marker);
 
         if ($pos === false) {
             return '';

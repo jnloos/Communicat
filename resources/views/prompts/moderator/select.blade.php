@@ -42,6 +42,11 @@ Noch keine Antwort-Typen aufgezeichnet.
 {{ $message['name'] }}{{ !empty($message['prompt_id']) ? ' ['.$message['prompt_id'].']' : '' }}: {{ $message['content'] }}
 @endforeach
 
+@if (!empty($state['open_floor']))
+=== OFFENER FLOOR (VORRANG) ===
+Die letzte Äußerung richtete sich direkt an {{ $state['open_floor']['name'] }} [{{ $state['open_floor']['prompt_id'] }}]. Steht dieser Kandidat zur Auswahl, wähle ihn — er hält das Rederecht, um das offene Gesprächspaar zu schließen. Weiche nur ab, wenn er nicht unter den Kandidaten ist.
+
+@endif
 === AUSWAHL ===
 Wähle qualitativ anhand der Beitragsabsichten, welcher Agent am sinnvollsten als Nächstes spricht: Wer bringt den substanziellsten, am besten anschlussfähigen nächsten Zug?
 

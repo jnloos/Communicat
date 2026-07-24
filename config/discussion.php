@@ -82,4 +82,24 @@ return [
     'summary_trigger_at' => 100,
     'summary_keep_recent' => 30,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Progress / closure engine (anti-circularity)
+    |--------------------------------------------------------------------------
+    | closure_check          — master switch for the periodic LLM closure check.
+    | closure_check_interval — run the closure check every N expert turns.
+    | stagnation_threshold   — a closure check is also forced once the
+    |                          deterministic stagnation counter reaches this many
+    |                          near-repeated turns in a row.
+    | fingerprint_window     — how many recent turn fingerprints to compare a new
+    |                          turn against when detecting repetition.
+    | fingerprint_overlap    — Jaccard overlap (0..1) above which a turn counts as
+    |                          "no new content" and bumps the stagnation counter.
+    */
+    'closure_check' => (bool) env('DISCUSSION_CLOSURE_CHECK', true),
+    'closure_check_interval' => (int) env('DISCUSSION_CLOSURE_CHECK_INTERVAL', 4),
+    'stagnation_threshold' => (int) env('DISCUSSION_STAGNATION_THRESHOLD', 3),
+    'fingerprint_window' => (int) env('DISCUSSION_FINGERPRINT_WINDOW', 6),
+    'fingerprint_overlap' => (float) env('DISCUSSION_FINGERPRINT_OVERLAP', 0.6),
+
 ];

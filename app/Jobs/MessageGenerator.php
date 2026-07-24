@@ -62,21 +62,6 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
             try {
                 $pipelineResult = (new DiscussionPipeline($project, $log->id))->run();
                 $log->update(['status' => 'success', 'finished_at' => now()]);
-                // #region agent log
-                file_put_contents(base_path('.cursor/debug-c0b61f.log'), json_encode([
-                    'sessionId' => 'c0b61f',
-                    'runId' => 'post-fix',
-                    'hypothesisId' => 'A',
-                    'location' => 'MessageGenerator.php:success',
-                    'message' => 'Pipeline completed successfully',
-                    'data' => [
-                        'project_id' => $project->id,
-                        'job_log_id' => $log->id,
-                        'stop' => ! empty($pipelineResult['stop']),
-                    ],
-                    'timestamp' => (int) (microtime(true) * 1000),
-                ])."\n", FILE_APPEND);
-                // #endregion
                 JobLogged::dispatch($log->fresh());
 
                 if (! empty($pipelineResult['stop'])) {
@@ -91,22 +76,6 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
             } catch (Exception $e) {
                 Log::error(sprintf('%s: %s', $e->getMessage(), $e->getTraceAsString()));
                 $failPayload = ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()];
-                // #region agent log
-                file_put_contents(base_path('.cursor/debug-c0b61f.log'), json_encode([
-                    'sessionId' => 'c0b61f',
-                    'runId' => 'post-fix',
-                    'hypothesisId' => 'B',
-                    'location' => 'MessageGenerator.php:catch',
-                    'message' => 'Pipeline failed; measuring JobLog failure payload',
-                    'data' => [
-                        'error' => $e->getMessage(),
-                        'payload_bytes' => strlen(json_encode($failPayload)),
-                        'trace_bytes' => strlen($e->getTraceAsString()),
-                        'reverb_max_message_size' => (int) config('reverb.apps.apps.0.max_message_size', 10000),
-                    ],
-                    'timestamp' => (int) (microtime(true) * 1000),
-                ])."\n", FILE_APPEND);
-                // #endregion
                 $log->update([
                     'status' => 'failed',
                     'finished_at' => now(),

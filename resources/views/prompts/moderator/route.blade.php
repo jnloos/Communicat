@@ -32,6 +32,9 @@ Beschreibung: {{ $project['description'] }}
 @if (!empty($moderation_context['agenda_phase']))
 Agenda-Phase: {{ $moderation_context['agenda_phase'] }}
 @endif
+@if (!empty($moderation_context['current_user_question']))
+Aktuelle Nutzerfrage im Fokus: "{{ $moderation_context['current_user_question'] }}"
+@endif
 @if (!empty($moderation_context['pending_user']))
 Offene, noch unbeantwortete Nutzernachricht (Auszug): {{ $moderation_context['pending_user'] }}
 
@@ -46,6 +49,32 @@ VERBINDLICH — PROJEKTKONTEXT UNKLAR: Die Projektbeschreibung fehlt oder ist zu
 Expertenbeiträge seit letzter Nutzernachricht: {{ $moderation_context['expert_turns_since_user'] ?? 0 }} (Schwelle: {{ $moderation_context['inclusion_threshold'] ?? 0 }} bei {{ $moderation_context['contributor_count'] ?? 0 }} Experten)
 
 VERBINDLICH — NUTZER-EINBINDUNG FÄLLIG: Seit der letzten Nutzeräußerung sind genug reine Expertenbeiträge gelaufen. Der nächste Zug MUSS an den Nutzer übergeben werden. Setze "address_user" auf true und wähle Kandidaten, die eine konkrete Präferenz-, Klärungs- oder Freigabefrage stellen können — keine rhetorische Frage, sondern eine echte Entscheidungshilfe oder Informationslücke.
+@endif
+
+@if (!empty($moderation_context['covered_points']))
+Bereits behandelte Punkte (nicht erneut aufmachen, höchstens knapp anschließen):
+@foreach ($moderation_context['covered_points'] as $point)
+- {{ $point }}
+@endforeach
+@endif
+@if (!empty($moderation_context['resolved_points']))
+Bereits abgeschlossene Punkte (VERBINDLICH — nicht wieder öffnen):
+@foreach ($moderation_context['resolved_points'] as $point)
+- {{ $point }}
+@endforeach
+@endif
+@if (!empty($moderation_context['closure_due']))
+Fortschritts-Check: {{ !empty($moderation_context['going_in_circles']) ? 'Die Diskussion dreht sich im Kreis (Wiederholung ohne neuen Aspekt).' : '' }}{{ !empty($moderation_context['point_resolved']) ? 'Der aktuelle Punkt ist ausreichend geklärt.' : '' }}
+@if (!empty($moderation_context['next_move']))
+Empfohlener nächster Zug: {{ $moderation_context['next_move'] }} (vertiefen = weiter am Punkt; neuer_aspekt = neuen, noch nicht behandelten Aspekt öffnen; konvergenz = verdichten; abschluss = Zwischenergebnis + offene Frage; nutzer = an den Nutzer übergeben).
+@endif
+@if (!empty($moderation_context['open_question']))
+Offene Kernfrage, auf die hingearbeitet werden soll: "{{ $moderation_context['open_question'] }}"
+@endif
+VERBINDLICH — VORANKOMMEN: Lass die Diskussion nicht auf demselben Punkt verharren. Wähle "agenda_step" und Kandidaten so, dass der empfohlene nächste Zug umgesetzt wird — verdichte zu einem Zwischenergebnis, öffne einen NEUEN Aspekt oder übergib an den Nutzer, statt Bekanntes zu wiederholen.
+@endif
+@if (!empty($moderation_context['open_floor_expert']))
+Offenes Gesprächspaar: {{ $moderation_context['open_floor_expert']['name'] }} [{{ $moderation_context['open_floor_expert']['prompt_id'] }}] wurde zuletzt direkt angesprochen und sollte im Kandidaten-Set sein, um zu antworten.
 @endif
 
 Diese Signale sind beratend, sofern oben nicht ausdrücklich als verbindlich markiert.

@@ -392,6 +392,18 @@
                                 </flux:tooltip>
                             </span>
 
+                            <flux:tooltip :content="$autoplay ? __('Autoplay an: Diskussion läuft nach deiner Nachricht automatisch weiter') : __('Autoplay aus: nach deiner Nachricht musst du selbst starten')" position="top">
+                                <flux:button
+                                    type="button"
+                                    size="sm"
+                                    :variant="$autoplay ? 'filled' : 'subtle'"
+                                    icon="forward"
+                                    wire:click="toggleAutoplay"
+                                    :aria-label="__('Autoplay umschalten')"
+                                    @class(['cursor-pointer', 'text-amber-600 dark:text-amber-400' => $autoplay])
+                                />
+                            </flux:tooltip>
+
                             @if($showGenerate)
                                 <flux:tooltip :content="$aiRunTooltip" position="top">
                                     <flux:button
@@ -450,6 +462,18 @@
                     ></textarea>
 
                     <div class="flex flex-wrap items-center justify-center gap-4">
+                        <flux:tooltip :content="$autoplay ? __('Autoplay an: Diskussion läuft nach deiner Nachricht automatisch weiter') : __('Autoplay aus: nach deiner Nachricht musst du selbst starten')" position="top">
+                            <flux:button
+                                type="button"
+                                size="base"
+                                :variant="$autoplay ? 'filled' : 'subtle'"
+                                icon="forward"
+                                wire:click="toggleAutoplay"
+                                :aria-label="__('Autoplay umschalten')"
+                                @class(['w-14 h-14 rounded-full cursor-pointer', 'text-amber-600 dark:text-amber-400' => $autoplay])
+                            />
+                        </flux:tooltip>
+
                         @if($showGenerate)
                             <flux:tooltip :content="$aiRunTooltip" position="top">
                                 <flux:button

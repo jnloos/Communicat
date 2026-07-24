@@ -26,6 +26,9 @@ class ControlChat extends Component
 
     public bool $userInputRequested = false;
 
+    /** Durable per-project toggle: continue the discussion after a user message. */
+    public bool $autoplay = false;
+
     #[Validate('required|string|min:3|max:1000')]
     public string $msgContent = '';
 
@@ -136,6 +139,31 @@ class ControlChat extends Component
         $this->dispatch('user-input-cleared', projectId: $this->projectId);
         $this->reset('msgContent');
         $this->userInputRequested = false;
+
+        // Autoplay: when enabled, the discussion continues on its own after a
+        // user message (mirrors startGenerate) instead of waiting for a click.
+        if (($this->project->settings['autoplay'] ?? false) && ! ProjectJob::isGenerating($this->projectId)) {
+            ProjectJob::startGenerating($this->projectId);
+            ProjectJob::markViewing($this->projectId);
+            $this->keepGenerating = true;
+            $this->isDispatching = true;
+            GenerationStarted::dispatch($this->projectId);
+            MessageGenerator::dispatch($this->projectId);
+        }
+    }
+
+    /**
+     * Flip the durable per-project autoplay preference. Persisted in settings so
+     * it survives reloads and is shared across everyone viewing the project.
+     */
+    public function toggleAutoplay(): void
+    {
+        $settings = $this->project->settings ?? [];
+        $settings['autoplay'] = ! ($settings['autoplay'] ?? false);
+        $this->project->settings = $settings;
+        $this->project->save();
+
+        $this->autoplay = $settings['autoplay'];
     }
 
     /**
@@ -162,6 +190,7 @@ class ControlChat extends Component
         // generating", so even a user who opened the page mid-run shows the
         // correct (pause) button and can stop it.
         $this->keepGenerating = ProjectJob::isGenerating($this->projectId);
+        $this->autoplay = (bool) ($this->project->settings['autoplay'] ?? false);
 
         $jobRunning = ProjectJob::isRunningFor($this->projectId);
 
@@ -173,9 +202,9 @@ class ControlChat extends Component
         }
 
         $mentionables = $this->project->contributingExperts()
-            ->map(fn($expert) => [
-                'name'       => $expert->name,
-                'job'        => $expert->job,
+            ->map(fn ($expert) => [
+                'name' => $expert->name,
+                'job' => $expert->job,
                 'avatar_url' => $expert->avatar_url,
             ])
             ->values()
@@ -190,6 +219,7 @@ class ControlChat extends Component
             'showGenerate' => ! $this->keepGenerating,
             'disabledControlsHint' => $disabledControlsHint,
             'userInputRequested' => $this->userInputRequested,
+            'autoplay' => $this->autoplay,
             'mentionables' => $mentionables,
         ]);
     }

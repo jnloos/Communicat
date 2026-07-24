@@ -128,15 +128,17 @@ class ModeratorService
      *
      * @param  array<int, array{memory: string, beitragsabsicht: string}>  $thinkOutputs  keyed by expert id
      * @param  bool  $allowBackToBack  bypass the guard (e.g. the user @-mentioned the last speaker)
+     * @param  array{name: string, prompt_id: string}|null  $openFloor  addressee of an open pair, to prioritize
      * @return int the winning expert id
      */
-    public function selectWinner(array $thinkOutputs, bool $allowBackToBack = false): int
+    public function selectWinner(array $thinkOutputs, bool $allowBackToBack = false, ?array $openFloor = null): int
     {
         $agents = $this->buildAgentsArray();
 
         $state = [
             'recent_speakers' => $this->project->settings['recent_speakers'] ?? [],
             'recent_response_types' => $this->project->settings['recent_response_types'] ?? [],
+            'open_floor' => $openFloor,
         ];
 
         // Expose only the contribution intents to the selection prompt (keyed by id).
@@ -177,9 +179,15 @@ class ModeratorService
      * Update project settings after a turn: recent speakers, response types,
      * silence counters, recent opening fragments, and the agenda phase.
      */
-    public function updateState(Expert $winner, string $adjacencyType, string $content = ''): void
+    public function updateState(Expert $winner, string $adjacencyType, string $content = '', string $beitragsabsicht = ''): void
     {
         $settings = $this->project->settings ?? [];
+
+        // Progress/anti-circularity bookkeeping: fingerprint the turn, roll the
+        // stagnation counter and the covered-points ledger, advance the
+        // closure-check interval. (Deterministic, no LLM.)
+        $settings = app(ProgressTracker::class, ['project' => $this->project])
+            ->recordTurn($settings, $content, $beitragsabsicht);
 
         // Recent speakers — prepend winner id, keep last 6
         $recentSpeakers = $settings['recent_speakers'] ?? [];
@@ -232,8 +240,11 @@ class ModeratorService
     protected const PHASE_LENGTH = 5;
 
     /**
-     * Increment the phase turn counter and roll over to the next agenda phase
-     * once PHASE_LENGTH turns have elapsed. Abschluss is terminal.
+     * Advance the agenda by content first, by counter second. The phase rolls
+     * forward when the closure check flagged the current phase as done
+     * (`closure_advance`, set by ProgressTracker) OR, as a safety ceiling, once
+     * PHASE_LENGTH turns have elapsed — so the discussion can't stall forever
+     * even if the check keeps saying "vertiefen". Abschluss is terminal.
      */
     protected function advanceAgenda(array $settings): array
     {
@@ -244,11 +255,17 @@ class ModeratorService
 
         $turns = (int) ($settings['phase_turn_count'] ?? 0) + 1;
 
+        $forced = ! empty($settings['closure_advance']);
+        $capReached = $turns >= self::PHASE_LENGTH;
+
         $index = array_search($phase, self::AGENDA_PHASES, true);
-        if ($turns >= self::PHASE_LENGTH && $index < count(self::AGENDA_PHASES) - 1) {
+        if (($forced || $capReached) && $index < count(self::AGENDA_PHASES) - 1) {
             $phase = self::AGENDA_PHASES[$index + 1];
             $turns = 0;
         }
+
+        // Consume the one-shot advance flag so it can't roll the phase again.
+        unset($settings['closure_advance']);
 
         $settings['agenda_phase'] = $phase;
         $settings['phase_turn_count'] = $turns;
@@ -299,9 +316,70 @@ class ModeratorService
      */
     protected function decorateDirective(Directive $directive, ?array $context): Directive
     {
+        // Closure is innermost so the structural guards (sparse-briefing
+        // clarification, then user-inclusion cadence) can still override its
+        // verdict with a user hand-off when one is due.
         return $this->applyUserInclusionGuard(
-            $this->applyTopicClarificationGuard($directive, $context),
+            $this->applyTopicClarificationGuard(
+                $this->applyClosureGuard($directive, $context),
+                $context,
+            ),
             $context,
+        );
+    }
+
+    /**
+     * When the periodic closure check fired, steer the turn: hand to the user if
+     * a decision is needed, otherwise force convergence/closure so the debate
+     * stops circling and drives to a Zwischenergebnis. A pending user message
+     * still wins (answer it first).
+     *
+     * @param  array{closure_due?: bool, pending_user?: ?string, going_in_circles?: bool, point_resolved?: bool, next_move?: ?string, open_question?: ?string, zwischenergebnis?: ?string}|null  $context
+     */
+    protected function applyClosureGuard(Directive $directive, ?array $context): Directive
+    {
+        if (empty($context['closure_due']) || ! empty($context['pending_user'])) {
+            return $directive;
+        }
+
+        $circling = ! empty($context['going_in_circles']);
+        $resolved = ! empty($context['point_resolved']);
+        $nextMove = $context['next_move'] ?? null;
+        $openQuestion = trim((string) ($context['open_question'] ?? ''));
+        $zwischen = trim((string) ($context['zwischenergebnis'] ?? ''));
+
+        // "vertiefen" / "neuer_aspekt" with nothing resolved: no override — the
+        // route directive already opens/deepens; the prompts carry the ledger.
+        if (! $circling && ! $resolved && ! in_array($nextMove, ['abschluss', 'konvergenz', 'nutzer'], true)) {
+            return $directive;
+        }
+
+        if ($nextMove === 'nutzer') {
+            return new Directive(
+                role: $directive->role !== '' ? $directive->role : 'Nutzer einbeziehen',
+                agendaStep: $directive->agendaStep,
+                convergenceIntent: $openQuestion !== ''
+                    ? $openQuestion
+                    : 'Eine konkrete Entscheidungs- oder Klärungsfrage an den Nutzer stellen.',
+                addressUser: true,
+                reasoning: $directive->reasoning,
+            );
+        }
+
+        $step = ($resolved || $nextMove === 'abschluss') ? 'abschluss' : 'konvergenz';
+
+        $intent = $step === 'abschluss'
+            ? trim(($zwischen !== '' ? 'Knappes Zwischenergebnis festhalten: '.$zwischen.'. ' : 'Knappes Zwischenergebnis festhalten. ')
+                .($openQuestion !== '' ? 'Danach die verbleibende offene Frage benennen: '.$openQuestion : 'Danach die verbleibende offene Frage benennen.'))
+            : trim('Gemeinsamkeiten verdichten und auf eine Entscheidung hinarbeiten'
+                .($openQuestion !== '' ? ', konkret zu: '.$openQuestion : '.'));
+
+        return new Directive(
+            role: $directive->role !== '' ? $directive->role : ($step === 'abschluss' ? 'Zwischenergebnis formulieren' : 'Verdichten und Differenzen abgleichen'),
+            agendaStep: $step,
+            convergenceIntent: $intent,
+            addressUser: $directive->addressUser,
+            reasoning: $directive->reasoning,
         );
     }
 

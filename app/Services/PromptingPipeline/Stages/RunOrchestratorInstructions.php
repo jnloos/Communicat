@@ -3,12 +3,15 @@
 namespace App\Services\PromptingPipeline\Stages;
 
 use App\Events\PipelineStageChanged;
+use App\Models\Expert;
+use App\Models\Message;
 use App\Services\PromptingPipeline\Candidates\AllExpertsStrategy;
 use App\Services\PromptingPipeline\Candidates\CandidateStrategy;
 use App\Services\PromptingPipeline\Candidates\FunnelStrategy;
 use App\Services\PromptingPipeline\Data\TurnContext;
 use App\Services\PromptingPipeline\Support\MentionResolver;
 use App\Services\PromptingPipeline\Support\ModeratorService;
+use App\Services\PromptingPipeline\Support\ProgressTracker;
 use Closure;
 
 /**
@@ -40,64 +43,40 @@ class RunOrchestratorInstructions
         $contributorCount = $ctx->project->contributingExperts()->count();
         $inclusionThreshold = $ctx->project->userInclusionThreshold();
 
+        // Progress/closure signals (stagnation, covered/resolved ledgers, and —
+        // when due — the periodic LLM closure verdict). Persists its own state.
+        $progress = app(ProgressTracker::class, ['project' => $ctx->project])->signals();
+
+        // Deterministic floor: if the last turn addressed a specific expert with
+        // an open pair (question/address), that expert holds the floor next.
+        $floorExpert = $this->openFloorExpert($ctx);
+
         $ctx->moderationContext = [
             'agenda_phase' => $moderator->agendaPhase(),
             'pending_user' => $pendingExcerpt,
             'pending_user_name' => $pendingExcerpt !== null ? $latest->user?->name : null,
+            'current_user_question' => $ctx->project->settings['current_user_question'] ?? null,
             'contributor_count' => $contributorCount,
             'expert_turns_since_user' => $ctx->project->expertTurnsSinceLastUserMessage(),
             'inclusion_threshold' => $inclusionThreshold,
             'user_inclusion_due' => $ctx->project->userInclusionDue(),
             'topic_clarification_due' => $ctx->project->topicClarificationDue(),
             'description_sparse' => $ctx->project->descriptionIsSparse(),
-            // #region agent log
-            'participant_message_count' => (function () use ($ctx) {
-                $ref = new \ReflectionMethod($ctx->project, 'participantMessages');
-                file_put_contents(base_path('.cursor/debug-c0b61f.log'), json_encode([
-                    'sessionId' => 'c0b61f',
-                    'runId' => 'post-fix',
-                    'hypothesisId' => 'A',
-                    'location' => 'RunOrchestratorInstructions.php:participant_message_count',
-                    'message' => 'About to call participantMessages from outside Project',
-                    'data' => [
-                        'method_exists' => method_exists($ctx->project, 'participantMessages'),
-                        'is_public' => $ref->isPublic(),
-                        'is_private' => $ref->isPrivate(),
-                        'project_id' => $ctx->project->id,
-                    ],
-                    'timestamp' => (int) (microtime(true) * 1000),
-                ])."\n", FILE_APPEND);
-
-                try {
-                    $count = $ctx->project->participantMessages()->count();
-                    file_put_contents(base_path('.cursor/debug-c0b61f.log'), json_encode([
-                        'sessionId' => 'c0b61f',
-                        'runId' => 'post-fix',
-                        'hypothesisId' => 'A',
-                        'location' => 'RunOrchestratorInstructions.php:after_call',
-                        'message' => 'participantMessages call succeeded',
-                        'data' => ['count' => $count],
-                        'timestamp' => (int) (microtime(true) * 1000),
-                    ])."\n", FILE_APPEND);
-
-                    return $count;
-                } catch (\Throwable $e) {
-                    file_put_contents(base_path('.cursor/debug-c0b61f.log'), json_encode([
-                        'sessionId' => 'c0b61f',
-                        'runId' => 'post-fix',
-                        'hypothesisId' => 'A',
-                        'location' => 'RunOrchestratorInstructions.php:catch',
-                        'message' => 'participantMessages call failed',
-                        'data' => [
-                            'error' => $e->getMessage(),
-                            'exception_class' => $e::class,
-                        ],
-                        'timestamp' => (int) (microtime(true) * 1000),
-                    ])."\n", FILE_APPEND);
-                    throw $e;
-                }
-            })(),
-            // #endregion
+            'participant_message_count' => $ctx->project->participantMessages()->count(),
+            // Progress / anti-circularity
+            'stagnation' => $progress['stagnation'],
+            'closure_due' => $progress['closure_due'],
+            'point_resolved' => $progress['point_resolved'],
+            'going_in_circles' => $progress['going_in_circles'],
+            'next_move' => $progress['next_move'],
+            'open_question' => $progress['open_question'],
+            'zwischenergebnis' => $progress['zwischenergebnis'],
+            'covered_points' => $progress['covered_points'],
+            'resolved_points' => $progress['resolved_points'],
+            // Floor
+            'open_floor_expert' => $floorExpert !== null
+                ? ['name' => $floorExpert->name, 'prompt_id' => $floorExpert->promptId]
+                : null,
         ];
 
         // Mention shortcut: a user @-mention picks the candidates deterministically
@@ -117,7 +96,41 @@ class RunOrchestratorInstructions
 
         $ctx->candidates = $this->strategy($ctx)->select($ctx);
 
+        // Floor guarantee: the addressed expert of an open pair must be able to
+        // answer, so merge them into the candidate set even if the funnel didn't
+        // pick them. The back-to-back guard (in selectWinner) still keeps the
+        // addresser from immediately going again.
+        if ($floorExpert !== null) {
+            $alreadyIn = collect($ctx->candidates)->contains(fn (Expert $e) => $e->id === $floorExpert->id);
+            if (! $alreadyIn) {
+                $ctx->candidates[] = $floorExpert;
+            }
+        }
+
         return $next($ctx);
+    }
+
+    /**
+     * The expert who holds the floor next by adjacency: the addressee of the
+     * latest expert turn when it opened a question/address pair. Null otherwise.
+     */
+    protected function openFloorExpert(TurnContext $ctx): ?Expert
+    {
+        $latest = $ctx->latestMessage;
+
+        if ($latest === null || $latest->expert_id === null) {
+            return null;
+        }
+
+        if ($latest->adjacency_partner_type !== Expert::class || $latest->adjacency_partner_id === null) {
+            return null;
+        }
+
+        if (! in_array($latest->adjacency_pair_type, [Message::PAIR_FRAGE_ANTWORT, Message::PAIR_ANSPRACHE_REAKTION], true)) {
+            return null;
+        }
+
+        return $ctx->project->contributorMap()->get($latest->adjacency_partner_id);
     }
 
     protected function strategy(TurnContext $ctx): CandidateStrategy
