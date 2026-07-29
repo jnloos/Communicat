@@ -5,7 +5,7 @@
 ])
 
 {{-- "speaks to" indicator: an arrow plus the addressed entity's avatar. --}}
-<div class="flex items-center gap-2">
+<div class="flex items-center gap-2" data-tour="addressed-arrow">
     @if ($flip)
         <x-projects.addressed-avatar :addressed="$addressed" :is-expert="$isExpert" />
     @endif

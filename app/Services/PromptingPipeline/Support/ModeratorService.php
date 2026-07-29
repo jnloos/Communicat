@@ -32,6 +32,15 @@ class ModeratorService
 
         $notes = [];
 
+        // Stale-topic trigger: the discussion has stayed on the same topic for a
+        // long time without a registered advance. Reinforces the deterministic
+        // force-advance in ProgressTracker with a textual nudge to the route LLM.
+        $turnsOnTopic = (int) ($settings['turns_on_topic'] ?? 0);
+        $staleThreshold = max(1, (int) config('discussion.topic_stale_threshold', 6));
+        if ($turnsOnTopic >= $staleThreshold) {
+            $notes[] = 'Das aktuelle Thema wird seit '.$turnsOnTopic.' Zügen ohne Themenwechsel diskutiert. Treibe aktiv einen Abschluss oder einen neuen Aspekt voran, statt denselben Punkt weiter zu vertiefen.';
+        }
+
         // Silence trigger: any expert silent for >= 2 turns
         if (! empty($silenceCounters)) {
             $expertNames = $this->project->contributingExperts()

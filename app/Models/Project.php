@@ -19,6 +19,8 @@ class Project extends Model
 
     public const MAX_CONTRIBUTING_EXPERTS = 4;
 
+    public const MIN_CONTRIBUTING_EXPERTS = 3;
+
     /** Per-instance cache for contributingExperts() (hit several times per turn). */
     private ?Collection $cachedContributingExperts = null;
 
@@ -87,6 +89,26 @@ class Project extends Model
     public function canAddExpert(): bool
     {
         return $this->experts()->count() < self::MAX_CONTRIBUTING_EXPERTS;
+    }
+
+    /**
+     * A discussion may only be started/continued once enough experts contribute.
+     * Used to hard-block auto-generation (start / autoplay) below the minimum, so
+     * study participants can't run a debate with too few voices.
+     */
+    public function canStartDiscussion(): bool
+    {
+        return $this->experts()->count() >= self::MIN_CONTRIBUTING_EXPERTS;
+    }
+
+    /**
+     * The shared, read-only onboarding demo project. Flagged in settings by the
+     * `discussion:seed-demo` command; every authenticated user may view it (see
+     * the access-project gate) but no one may mutate it through the UI.
+     */
+    public function isDemo(): bool
+    {
+        return (bool) ($this->settings['is_demo'] ?? false);
     }
 
     /**

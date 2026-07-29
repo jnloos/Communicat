@@ -5,9 +5,9 @@ namespace Tests\Unit\Pipeline;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\User;
-use App\Services\PromptingPipeline\Support\AgentService;
 use App\Services\Clients\OpenAIClient;
 use App\Services\PromptingPipeline\Data\Directive;
+use App\Services\PromptingPipeline\Support\AgentService;
 use App\Services\PromptingPipeline\Support\PromptBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
@@ -18,6 +18,7 @@ class AgentServiceTest extends TestCase
     use RefreshDatabase;
 
     private Project $project;
+
     private Expert $expert;
 
     protected function setUp(): void
@@ -25,11 +26,11 @@ class AgentServiceTest extends TestCase
         parent::setUp();
 
         $user = User::factory()->create();
-        $this->project = Project::withoutEvents(fn() => Project::create([
-            'title'       => 'Test Project',
+        $this->project = Project::withoutEvents(fn () => Project::create([
+            'title' => 'Test Project',
             'description' => 'Test',
-            'settings'    => [],
-            'user_id'     => $user->id,
+            'settings' => [],
+            'user_id' => $user->id,
         ]));
         $this->expert = Expert::factory()->create(['name' => 'Alice']);
         $this->project->addContributingExpert($this->expert);
@@ -39,7 +40,7 @@ class AgentServiceTest extends TestCase
     {
         $raw = "Vorüberlegung.\nGEDÄCHTNIS-UPDATE:\nWas ich über den Nutzer weiß: Er liebt PHP.\nLetzter Gesprächsstand: Diskussion über Laravel.";
 
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendSlow')->once()->andReturn($raw);
         $prompts->shouldReceive('think')->once()->andReturn('prompt');
@@ -55,7 +56,7 @@ class AgentServiceTest extends TestCase
     {
         $raw = "GEDÄCHTNIS-UPDATE:\n[STAND]\nDiskussion läuft.\nBEITRAGSABSICHT: Ich bringe ein Beispiel.";
 
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendSlow')->once()->andReturn($raw);
         $prompts->shouldReceive('think')->once()->andReturn('prompt');
@@ -67,11 +68,29 @@ class AgentServiceTest extends TestCase
         $this->assertStringContainsString('Diskussion läuft.', $result['memory']);
         $this->assertStringNotContainsString('BEITRAGSABSICHT', $result['memory']);
         $this->assertSame('Ich bringe ein Beispiel.', $result['beitragsabsicht']);
+        // No THEMA_STATUS trailer → topic stays open (silence never closes a topic).
+        $this->assertFalse($result['topic_done']);
+    }
+
+    public function test_think_parses_thema_status_and_keeps_it_out_of_beitragsabsicht(): void
+    {
+        $raw = "GEDÄCHTNIS-UPDATE:\n[STAND]\nDiskussion läuft.\nBEITRAGSABSICHT: Bob kurz zustimmen.\nTHEMA_STATUS: abgeschlossen";
+
+        $client = Mockery::mock(OpenAIClient::class);
+        $prompts = Mockery::mock(PromptBuilder::class);
+        $client->shouldReceive('sendSlow')->once()->andReturn($raw);
+        $prompts->shouldReceive('think')->once()->andReturn('prompt');
+
+        $result = (new AgentService($this->project, $client, $prompts))->think($this->expert);
+
+        $this->assertTrue($result['topic_done']);
+        $this->assertSame('Bob kurz zustimmen.', $result['beitragsabsicht']);
+        $this->assertStringNotContainsString('THEMA_STATUS', $result['beitragsabsicht']);
     }
 
     public function test_think_saves_empty_string_when_marker_missing(): void
     {
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendSlow')->once()->andReturn('Keine Markierung hier.');
         $prompts->shouldReceive('think')->once()->andReturn('prompt');
@@ -83,7 +102,7 @@ class AgentServiceTest extends TestCase
 
     public function test_think_prompt_does_not_call_llm(): void
     {
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $prompts->shouldReceive('think')->once()->andReturn('rendered prompt');
         $client->shouldNotReceive('sendSlow');
@@ -98,7 +117,7 @@ class AgentServiceTest extends TestCase
     {
         $raw = "[NUTZER]\nLiebt PHP.\n[STAND]\nDiskussion über Laravel.";
 
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldNotReceive('sendSlow');
         $client->shouldNotReceive('sendFast');
@@ -117,7 +136,7 @@ class AgentServiceTest extends TestCase
         $existing->content = "[NUTZER]\nVorhandene Notiz.";
         $existing->save();
 
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
 
         (new AgentService($this->project, $client, $prompts))
@@ -133,7 +152,7 @@ class AgentServiceTest extends TestCase
 
         $raw = "Das ist mein Beitrag, Bob.\n---STEUERUNG---\nADRESSAT: E{$bob->id}\nPAARTYP: Frage→Antwort";
 
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendFast')->once()->andReturn($raw);
         $prompts->shouldReceive('speak')->once()->andReturn('prompt');
@@ -148,7 +167,7 @@ class AgentServiceTest extends TestCase
 
     public function test_speak_handles_missing_trailer_gracefully(): void
     {
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendFast')->once()->andReturn('Nur Inhalt, keine Steuerung.');
         $prompts->shouldReceive('speak')->once()->andReturn('prompt');
@@ -165,7 +184,7 @@ class AgentServiceTest extends TestCase
     {
         $raw = "Beitrag.\n---STEUERUNG---\nADRESSAT: E999999\nPAARTYP: Quatsch";
 
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendFast')->once()->andReturn($raw);
         $prompts->shouldReceive('speak')->once()->andReturn('prompt');

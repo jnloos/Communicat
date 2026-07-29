@@ -7,7 +7,7 @@
     'suggestionReasons' => [],
     'hasSuggestions' => false,
     'canAddExpert' => true,
-    'expertLimit' => 5,
+    'expertLimit' => 4,
     'limitWarning' => null,
 ])
 

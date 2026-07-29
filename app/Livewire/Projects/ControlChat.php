@@ -29,6 +29,9 @@ class ControlChat extends Component
     /** Durable per-project toggle: continue the discussion after a user message. */
     public bool $autoplay = false;
 
+    /** Transient hint shown above the composer when an action is blocked. */
+    public ?string $controlWarning = null;
+
     #[Validate('required|string|min:3|max:1000')]
     public string $msgContent = '';
 
@@ -43,9 +46,46 @@ class ControlChat extends Component
         $this->project = Project::findOrFail($this->projectId);
     }
 
+    /**
+     * Read-only guard for the shared onboarding demo: block any mutating action
+     * (send / generate / autoplay) and surface a hint. The buttons stay visible
+     * so the welcome tour can still explain them.
+     */
+    protected function demoBlocked(): bool
+    {
+        if ($this->project->isDemo()) {
+            $this->controlWarning = __('Die Demo-Diskussion ist schreibgeschützt.');
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Enough-experts guard: a discussion may only start/continue with at least
+     * MIN_CONTRIBUTING_EXPERTS. Surfaces a hint instead of dispatching a job.
+     */
+    protected function tooFewExperts(): bool
+    {
+        if (! $this->project->canStartDiscussion()) {
+            $this->controlWarning = __('Füge mindestens :n Experten hinzu, um die Diskussion zu starten.', ['n' => Project::MIN_CONTRIBUTING_EXPERTS]);
+
+            return true;
+        }
+
+        return false;
+    }
+
     public function startGenerate(): void
     {
         if (ProjectJob::isRunningFor($this->projectId)) {
+            return;
+        }
+
+        $this->controlWarning = null;
+
+        if ($this->demoBlocked() || $this->tooFewExperts()) {
             return;
         }
 
@@ -132,6 +172,12 @@ class ControlChat extends Component
             return;
         }
 
+        $this->controlWarning = null;
+
+        if ($this->demoBlocked()) {
+            return;
+        }
+
         $this->validate();
         $this->project->addMessage($this->msgContent, auth()->user());
         MessageSent::dispatch($this->projectId, auth()->id());
@@ -142,7 +188,10 @@ class ControlChat extends Component
 
         // Autoplay: when enabled, the discussion continues on its own after a
         // user message (mirrors startGenerate) instead of waiting for a click.
-        if (($this->project->settings['autoplay'] ?? false) && ! ProjectJob::isGenerating($this->projectId)) {
+        // Still gated by the minimum-experts rule.
+        if (($this->project->settings['autoplay'] ?? false)
+            && $this->project->canStartDiscussion()
+            && ! ProjectJob::isGenerating($this->projectId)) {
             ProjectJob::startGenerating($this->projectId);
             ProjectJob::markViewing($this->projectId);
             $this->keepGenerating = true;
@@ -158,6 +207,10 @@ class ControlChat extends Component
      */
     public function toggleAutoplay(): void
     {
+        if ($this->demoBlocked()) {
+            return;
+        }
+
         $settings = $this->project->settings ?? [];
         $settings['autoplay'] = ! ($settings['autoplay'] ?? false);
         $this->project->settings = $settings;
@@ -219,6 +272,10 @@ class ControlChat extends Component
             'showGenerate' => ! $this->keepGenerating,
             'disabledControlsHint' => $disabledControlsHint,
             'userInputRequested' => $this->userInputRequested,
+            // Hard minimum-experts gate: below MIN_CONTRIBUTING_EXPERTS the start
+            // button is disabled and explains why.
+            'canStart' => $this->project->canStartDiscussion(),
+            'controlWarning' => $this->controlWarning,
             'autoplay' => $this->autoplay,
             'mentionables' => $mentionables,
         ]);

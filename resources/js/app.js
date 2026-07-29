@@ -1,5 +1,6 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import './tour.js';
 
 const reverbKey = import.meta.env.VITE_REVERB_APP_KEY;
 

@@ -1,12 +1,12 @@
 <?php
 
-use App\Livewire\Settings\Users;
+use App\Http\Controllers\MessageAudioController;
+use App\Http\Controllers\ProjectExportController;
+use App\Http\Controllers\VoicePreviewController;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
-use App\Http\Controllers\MessageAudioController;
-use App\Http\Controllers\VoicePreviewController;
-use App\Http\Controllers\ProjectExportController;
+use App\Livewire\Settings\Users;
 use App\Models\Project;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Gate;
@@ -18,6 +18,7 @@ Route::get('/', function (Request $request) {
     if ($projectId && Project::find($projectId)) {
         return redirect()->route('project.show', ['project' => $projectId]);
     }
+
     // Redirect to project creation
     return redirect()->route('project.new');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -38,6 +39,7 @@ Route::middleware(['auth', 'verified'])
             }
 
             Cookie::queue('curr_project', str($project->id), minutes: 60 * 24 * 31);
+
             return view('project', compact('project'));
         })->name('show');
 
@@ -53,10 +55,22 @@ Route::middleware(['auth', 'verified'])
     ->get('voices/{voiceId}/preview', [VoicePreviewController::class, 'show'])
     ->name('voices.preview');
 
-
 Route::get('experts', function () {
     return view('experts');
 })->middleware(['auth', 'verified'])->name('experts');
+
+// Welcome tour entry: jump to the shared read-only demo discussion and auto-start
+// the guided tour there (?tour=1 is picked up by the front-end tour controller).
+Route::get('tour', function () {
+    $demo = Project::query()->where('settings->is_demo', true)->first();
+
+    if (! $demo) {
+        return redirect()->route('project.new')
+            ->with('status', __('Die Demo-Diskussion ist noch nicht verfügbar.'));
+    }
+
+    return redirect()->route('project.show', ['project' => $demo, 'tour' => 1]);
+})->middleware(['auth', 'verified'])->name('tour.start');
 
 Route::middleware(['auth', 'admin'])->group(function () {
     Route::redirect('settings', 'settings/profile');

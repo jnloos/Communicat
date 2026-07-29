@@ -65,6 +65,11 @@ Nach dem GEDÄCHTNIS-UPDATE folgt verbindlich die Zeile BEITRAGSABSICHT:
 - Inhaltlich und konkret, kein Meta-Kommentar ("ich würde etwas sagen"), keine Bewertung der Diskussion, KEIN Score, KEINE Priorität.
 - Dieser Satz dient dem Moderator als Auswahlsignal; er ist NICHT der spätere Gesprächsbeitrag selbst.
 
+Nach der BEITRAGSABSICHT folgt verbindlich die Zeile THEMA_STATUS:
+- Gib "abgeschlossen" aus, wenn AUS DEINER SICHT als {{ $expert['name'] }} der aktuell diskutierte Punkt ausgereizt ist: die wesentlichen Argumente liegen auf dem Tisch, deine Position ist eingebracht, und ein weiterer Beitrag von dir würde nur Bekanntes wiederholen. Andernfalls "offen".
+- Das ist dein persönliches Urteil zum AKTUELLEN Punkt, nicht zur gesamten Diskussion. Sei ehrlich: Hast du zu diesem Punkt wirklich nichts Substanzielles mehr beizutragen, sag "abgeschlossen" — auch wenn deine Beitragsabsicht nur noch eine kurze Zustimmung ist.
+- Solange eine offene Nutzerfrage im Raum steht oder du eine echte Differenz/These noch nicht eingebracht hast, ist der Status "offen".
+
 Pflichtformat:
 GEDÄCHTNIS-UPDATE:
 @if (!empty($current_user_question))
@@ -88,3 +93,4 @@ GEDÄCHTNIS-UPDATE:
 [STAND]
 ...
 BEITRAGSABSICHT: <ein konkreter Satz>
+THEMA_STATUS: offen

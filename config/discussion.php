@@ -95,11 +95,24 @@ return [
     |                          turn against when detecting repetition.
     | fingerprint_overlap    — Jaccard overlap (0..1) above which a turn counts as
     |                          "no new content" and bumps the stagnation counter.
+    | topic_stale_threshold  — how many consecutive turns the discussion may stay
+    |                          on the same topic (no registered advance) before an
+    |                          advance toward convergence is FORCED, regardless of
+    |                          what the closure-check LLM verdict says. This is the
+    |                          "the topic hasn't changed in a long time" signal.
+    | persona_topic_done     — master switch for the persona-driven topic-done
+    |                          signal (THINK emits THEMA_STATUS: offen|abgeschlossen).
+    | topic_done_quorum      — fraction of contributing experts whose persona must
+    |                          flag the current topic as "abgeschlossen" for it to
+    |                          count as resolved by the panel (min 1 vote).
     */
     'closure_check' => (bool) env('DISCUSSION_CLOSURE_CHECK', true),
     'closure_check_interval' => (int) env('DISCUSSION_CLOSURE_CHECK_INTERVAL', 4),
     'stagnation_threshold' => (int) env('DISCUSSION_STAGNATION_THRESHOLD', 3),
     'fingerprint_window' => (int) env('DISCUSSION_FINGERPRINT_WINDOW', 6),
     'fingerprint_overlap' => (float) env('DISCUSSION_FINGERPRINT_OVERLAP', 0.6),
+    'topic_stale_threshold' => (int) env('DISCUSSION_TOPIC_STALE_THRESHOLD', 6),
+    'persona_topic_done' => (bool) env('DISCUSSION_PERSONA_TOPIC_DONE', true),
+    'topic_done_quorum' => (float) env('DISCUSSION_TOPIC_DONE_QUORUM', 0.6),
 
 ];

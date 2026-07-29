@@ -46,7 +46,7 @@ class AgentService
      * expert and return both the memory block and the parsed BEITRAGSABSICHT
      * (the contribution intent the moderator judges in SelectWinner).
      *
-     * @return array{memory: string, beitragsabsicht: string}
+     * @return array{memory: string, beitragsabsicht: string, topic_done: bool}
      */
     public function consumeThink(Expert $expert, string $response, string $context = 'think'): array
     {
@@ -57,6 +57,8 @@ class AgentService
         return [
             'memory' => $memoryBlock,
             'beitragsabsicht' => $this->extractBeitragsabsicht($response),
+            // Persona's own verdict on whether the current point is exhausted.
+            'topic_done' => $this->extractTopicDone($response),
         ];
     }
 
@@ -211,7 +213,8 @@ class AgentService
     }
 
     /**
-     * Extract the contribution intent following the "BEITRAGSABSICHT:" marker.
+     * Extract the contribution intent following the "BEITRAGSABSICHT:" marker,
+     * stopping at the "THEMA_STATUS:" trailer so the status isn't folded into it.
      */
     protected function extractBeitragsabsicht(string $text): string
     {
@@ -222,6 +225,27 @@ class AgentService
             return '';
         }
 
-        return trim(substr($text, $pos + strlen($marker)));
+        $content = substr($text, $pos + strlen($marker));
+
+        $stopPos = strpos($content, 'THEMA_STATUS:');
+        if ($stopPos !== false) {
+            $content = substr($content, 0, $stopPos);
+        }
+
+        return trim($content);
+    }
+
+    /**
+     * Read the persona's THEMA_STATUS trailer: true only when the expert declares
+     * the current point exhausted ("abgeschlossen"). A missing/unknown value
+     * degrades to false (topic still open) — silence never closes a topic.
+     */
+    protected function extractTopicDone(string $text): bool
+    {
+        if (! preg_match('/THEMA_STATUS:\s*(\p{L}+)/u', $text, $m)) {
+            return false;
+        }
+
+        return mb_strtolower(trim($m[1])) === 'abgeschlossen';
     }
 }

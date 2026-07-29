@@ -19,8 +19,8 @@
 
             <flux:navlist variant="outline">
                 <flux:navlist.group class="grid mt-5">
-                    <flux:navlist.item icon="squares-plus" :href="route('project.new')" :current="request()->routeIs('project.new')" wire:navigate>{{ __('New Project') }}</flux:navlist.item>
-                    <flux:navlist.item icon="user-circle" :href="route('experts')" :current="request()->routeIs('experts')" wire:navigate>{{ __('Experts') }}</flux:navlist.item>
+                    <flux:navlist.item icon="squares-plus" :href="route('project.new')" :current="request()->routeIs('project.new')" data-tour="new-project" wire:navigate>{{ __('New Project') }}</flux:navlist.item>
+                    <flux:navlist.item icon="user-circle" :href="route('experts')" :current="request()->routeIs('experts')" data-tour="experts-nav" wire:navigate>{{ __('Experts') }}</flux:navlist.item>
                 </flux:navlist.group>
 
                 @php
@@ -41,6 +41,11 @@
             <flux:spacer />
 
             <flux:navlist variant="outline">
+                {{-- Full page load (no wire:navigate) so the tour controller re-inits cleanly. --}}
+                <flux:navlist.item icon="question-mark-circle" :href="route('tour.start')" data-tour="help">
+                    {{ __('Rundgang') }}
+                </flux:navlist.item>
+
                 @can('admin')
                     <flux:navlist.item icon="folder-git-2" href="https://github.com/jnloos/Communicat" target="_blank">
                         {{ __('Repository') }}

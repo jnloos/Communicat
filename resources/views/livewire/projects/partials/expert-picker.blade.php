@@ -69,7 +69,7 @@
             @php($active = $expert->isContributing($project))
             @php($isSuggested = isset($suggestedIdSet[$expert->id]))
             @php($limitBlocked = !$active && !$canAddExpert)
-            <div class="relative">
+            <div class="relative" data-tour="expert-card">
                 <x-contributors.contributors-card
                     class="cursor-pointer {{ $limitBlocked ? 'opacity-50' : '' }} {{ $active ? 'ring-2 ring-primary' : '' }}"
                     :name="$expert->name"
@@ -84,6 +84,7 @@
                 <button
                     type="button"
                     title="{{ __('Details zu') }} {{ $expert->name }}"
+                    data-tour="expert-details"
                     @click.stop="$dispatch('open-expert-details', { expertId: {{ $expert->id }} })"
                     class="absolute top-2 end-2 z-10 rounded-full p-1 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200
                            cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"

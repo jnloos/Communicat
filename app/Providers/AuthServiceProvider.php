@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Providers;
 
 use App\Models\Project;
@@ -8,9 +9,12 @@ use Illuminate\Support\ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
-    public function register(): void {
+    public function register(): void
+    {
         Gate::define('access-project', function (User $user, Project $project) {
-            return $project->hasContributor($user);
+            // The shared onboarding demo is viewable by every authenticated user
+            // (read-only). All other projects require contributor membership.
+            return $project->isDemo() || $project->hasContributor($user);
         });
 
         Gate::define('manage-project', function (User $user, Project $project) {
@@ -28,7 +32,8 @@ class AuthServiceProvider extends ServiceProvider
         });
     }
 
-    public function boot(): void {
+    public function boot(): void
+    {
         //
     }
 }

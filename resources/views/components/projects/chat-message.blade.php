@@ -61,7 +61,7 @@
         </div>
     @else {{-- Other user or expert --}}
         <div class="flex justify-start">
-            <div id="{{ $id }}" wire:key="{{ $id }}" class="rounded-lg w-full sm:w-auto sm:min-w-sm z-0 px-5 pt-4 pb-8 break-words me-2 sm:me-30 bg-zinc-100 dark:bg-zinc-700">
+            <div id="{{ $id }}" wire:key="{{ $id }}" data-tour="chat-message" class="rounded-lg w-full sm:w-auto sm:min-w-sm z-0 px-5 pt-4 pb-8 break-words me-2 sm:me-30 bg-zinc-100 dark:bg-zinc-700">
                 <flux:heading size="lg" class="mb-2 font-bold">{{ $sender->name }}</flux:heading>
                 <span class="markdown-html">
                     {!! $renderedContent !!}
@@ -86,6 +86,7 @@
                     <button
                         type="button"
                         title="{{ __('Gedanken von') }} {{ $sender->name }}"
+                        data-tour="speaker-avatar"
                         @click="$dispatch('open-expert-thoughts', { expertId: {{ $sender->id }} })"
                         class="rounded-full cursor-pointer transition-transform hover:scale-105 group-hover:scale-105 group-active:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                     >
@@ -94,6 +95,7 @@
                     <button
                         type="button"
                         title="{{ __('Gedächtnis anzeigen') }}"
+                        data-tour="brain-badge"
                         @click="$dispatch('open-expert-thoughts', { expertId: {{ $sender->id }} })"
                         class="absolute -bottom-1 -right-1 inline-flex items-center justify-center
                                w-5 h-5 rounded-full

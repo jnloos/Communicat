@@ -1,0 +1,178 @@
+/*
+ * Welcome-tour theme — Shepherd.js styled to match the Flux/zinc UI, in light
+ * and dark, with restrained motion. All animation is disabled under
+ * prefers-reduced-motion.
+ */
+
+:root {
+    --wt-bg: #ffffff;
+    --wt-fg: #262626;          /* zinc-800 */
+    --wt-muted: #737373;       /* zinc-500 */
+    --wt-border: #e5e5e5;      /* zinc-200 */
+    --wt-accent: #d97706;      /* amber-600 */
+    --wt-accent-fg: #ffffff;
+    --wt-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.35);
+}
+
+.dark {
+    --wt-bg: #262626;          /* zinc-800 */
+    --wt-fg: #f5f5f5;          /* zinc-100 */
+    --wt-muted: #a3a3a3;       /* zinc-400 */
+    --wt-border: #404040;      /* zinc-700 */
+    --wt-accent: #f59e0b;      /* amber-500 */
+    --wt-accent-fg: #171717;
+    --wt-shadow: 0 10px 40px -8px rgba(0, 0, 0, 0.6);
+}
+
+/* Popover shell ----------------------------------------------------------- */
+
+.shepherd-element.wt-step {
+    background: var(--wt-bg);
+    color: var(--wt-fg);
+    border: 1px solid var(--wt-border);
+    border-radius: 14px;
+    box-shadow: var(--wt-shadow);
+    max-width: 24rem;
+    font-family: inherit;
+    transform-origin: center;
+    animation: wt-pop-in 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.shepherd-element.wt-step .shepherd-arrow::before {
+    background: var(--wt-bg);
+    border: 1px solid var(--wt-border);
+}
+
+.shepherd-element.wt-step .shepherd-header {
+    background: transparent;
+    padding: 1rem 1rem 0.25rem;
+    border-radius: 14px 14px 0 0;
+}
+
+.shepherd-element.wt-step .shepherd-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--wt-fg);
+    letter-spacing: -0.01em;
+}
+
+.shepherd-element.wt-step .shepherd-text {
+    padding: 0.5rem 1rem 0.75rem;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--wt-fg);
+}
+
+.shepherd-element.wt-step .shepherd-text p {
+    margin: 0 0 0.6rem;
+}
+
+.shepherd-element.wt-step .shepherd-text p:last-child {
+    margin-bottom: 0;
+}
+
+.shepherd-element.wt-step .shepherd-text strong {
+    color: var(--wt-fg);
+    font-weight: 700;
+}
+
+/* Cancel (×) icon */
+.shepherd-element.wt-step .shepherd-cancel-icon {
+    color: var(--wt-muted);
+    font-size: 1.4rem;
+    transition: color 120ms ease;
+}
+.shepherd-element.wt-step .shepherd-cancel-icon:hover {
+    color: var(--wt-fg);
+}
+
+/* Footer / buttons -------------------------------------------------------- */
+
+.shepherd-element.wt-step .shepherd-footer {
+    padding: 0.25rem 1rem 1rem;
+    gap: 0.5rem;
+}
+
+.shepherd-element.wt-step .shepherd-button {
+    background: var(--wt-accent);
+    color: var(--wt-accent-fg);
+    border-radius: 9px;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: filter 120ms ease, background 120ms ease;
+}
+.shepherd-element.wt-step .shepherd-button:hover {
+    filter: brightness(1.05);
+}
+
+.shepherd-element.wt-step .shepherd-button.shepherd-button-secondary {
+    background: transparent;
+    color: var(--wt-muted);
+    border: 1px solid var(--wt-border);
+}
+.shepherd-element.wt-step .shepherd-button.shepherd-button-secondary:hover {
+    color: var(--wt-fg);
+    background: color-mix(in srgb, var(--wt-fg) 6%, transparent);
+}
+
+/* Progress dot count is not shown; keep the modal overlay soft. */
+.shepherd-modal-overlay-container {
+    opacity: 0.55;
+    transition: opacity 250ms ease;
+}
+
+/*
+ * Stacking during the tour. Flux flyouts/modals are <dialog>s shown non-modally
+ * (no top layer), so plain z-index wins. We layer them explicitly while the tour
+ * runs (body.wt-active) so an opened panel — the expert picker or the memory
+ * flyout — sits ABOVE the Shepherd overlay (visible, not dimmed) while the
+ * Shepherd popover sits above everything. Scoped to the tour so normal modal
+ * stacking is untouched otherwise.
+ */
+body.wt-active .shepherd-modal-overlay-container { z-index: 100000; }
+body.wt-active dialog[data-flux-flyout],
+body.wt-active dialog[data-modal] { z-index: 100050 !important; }
+.shepherd-element.wt-step { z-index: 100100; }
+
+/* Anchor accents (toggled from tour.js `when` hooks) ---------------------- */
+/* These are STATIC illuminations — no transforms, so highlighted elements
+ * never wobble or shift. Each tour step adds exactly one of these, so at any
+ * step only the arrow OR only the brain icon lights up, never both. */
+
+/* Step 5 — the "speaks to" arrow only. */
+.wt-hl-arrow svg {
+    color: var(--wt-accent) !important;
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--wt-accent) 60%, transparent));
+}
+
+/* Step 6 — the brain icon only. */
+.wt-hl-brain {
+    color: var(--wt-accent) !important;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--wt-accent) 30%, transparent);
+    border-radius: 9999px;
+}
+
+/* Step 9 — the generate button: a soft, still glow (box-shadow only, no motion). */
+.wt-shimmer {
+    animation: wt-glow 1.6s ease-in-out infinite;
+    border-radius: 10px;
+}
+
+/* Keyframes --------------------------------------------------------------- */
+
+@keyframes wt-pop-in {
+    from { opacity: 0; transform: scale(0.96) translateY(6px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes wt-glow {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--wt-accent) 55%, transparent); }
+    50%      { box-shadow: 0 0 0 6px color-mix(in srgb, var(--wt-accent) 0%, transparent); }
+}
+
+/* Respect reduced-motion: no pop or glow (static highlights stay). */
+@media (prefers-reduced-motion: reduce) {
+    .shepherd-element.wt-step { animation: none; }
+    .wt-shimmer { animation: none; }
+}

@@ -28,7 +28,7 @@ class TurnContext
 
     public ?Directive $directive = null;
 
-    /** @var array<int, array{memory: string, beitragsabsicht: string}> expert id → THINK output */
+    /** @var array<int, array{memory: string, beitragsabsicht: string, topic_done: bool}> expert id → THINK output */
     public array $thinkOutputs = [];
 
     public ?Expert $winner = null;

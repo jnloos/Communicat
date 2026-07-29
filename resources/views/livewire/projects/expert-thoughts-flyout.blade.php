@@ -1,7 +1,7 @@
 <div>
     <flux:modal name="expert-thoughts-flyout" variant="flyout" class="w-[560px] max-w-full">
         @if ($expert)
-            <div class="space-y-4">
+            <div class="space-y-4" data-tour="thoughts-content">
                 <div class="flex items-center gap-3">
                     <x-contributors.contributors-avatar
                         :name="$expert->name"

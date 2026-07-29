@@ -1,0 +1,80 @@
+{
+    "project": {
+        "title": "Beispiel: Native App oder PWA für unsere Mitarbeiter-Plattform?",
+        "description": "Unser Unternehmen möchte eine interne Mitarbeiter-Plattform bauen: Schichtpläne, interne News, Urlaubsanträge und Push-Benachrichtigungen. Rund 800 Mitarbeitende, viele im Außendienst mit wechselnder Netzabdeckung. Zur Debatte steht, ob wir eine native App (iOS/Android) oder eine Progressive Web App (PWA) entwickeln. Wichtig sind Offline-Fähigkeit, zuverlässige Push-Benachrichtigungen, Wartungsaufwand, Time-to-Market und Kosten. Ziel dieser Diskussion ist eine begründete Empfehlung.",
+        "settings": {
+            "is_demo": true,
+            "summary_frequency": 10,
+            "last_summarized_id": 0,
+            "autoplay": false
+        }
+    },
+    "experts": [
+        "Michael Bauer",
+        "Sophie Wagner",
+        "Lena Fischer",
+        "Jan Lehmann"
+    ],
+    "messages": [
+        {
+            "speaker": "Michael Bauer",
+            "pair_type": "Beitrag→Diskussion",
+            "addressed": null,
+            "content": "Ich starte mit der Architektur-Sicht: Bei rund 800 Nutzenden und diesem Funktionsumfang – Schichtpläne, News, Urlaubsanträge – ist eine PWA technisch völlig ausreichend. Wir hätten eine einzige Codebasis, kein doppeltes Deployment über zwei App-Stores und deutlich weniger Wartungsaufwand. Der kritische Punkt, den wir uns genau ansehen müssen, ist die Offline-Fähigkeit im Außendienst."
+        },
+        {
+            "speaker": "Lena Fischer",
+            "pair_type": "Ansprache→Reaktion",
+            "addressed": "Michael Bauer",
+            "content": "Da stimme ich dir zu, Michael. Genau für Offline gibt es im Web heute solide Werkzeuge: Mit Service Workern und IndexedDB lassen sich Schichtpläne und News lokal zwischenspeichern, sodass sie auch ohne Netz sichtbar bleiben. Urlaubsanträge kann man offline erfassen und später synchronisieren. Die Web-Plattform ist da viel weiter, als viele annehmen."
+        },
+        {
+            "speaker": "Sophie Wagner",
+            "pair_type": "Frage→Antwort",
+            "addressed": "Lena Fischer",
+            "content": "Lena, eine konkrete Rückfrage zur Synchronisation: Wenn 800 Leute Anträge offline anlegen und später gebündelt hochladen – wie verhinderst du Konflikte und doppelte Einträge? Ich denke an die Backend-Last und an eine saubere Idempotenz der Sync-Requests."
+        },
+        {
+            "speaker": "Lena Fischer",
+            "pair_type": "Ansprache→Reaktion",
+            "addressed": "Sophie Wagner",
+            "content": "Gute Frage, Sophie. Jeder offline erzeugte Antrag bekommt eine client-seitige UUID; das Backend behandelt Uploads idempotent über diese ID, sodass ein doppelter Sync-Versuch keinen zweiten Eintrag erzeugt. Die Last bleibt moderat, weil wir nur Deltas synchronisieren, nicht den gesamten Stand."
+        },
+        {
+            "speaker": "Jan Lehmann",
+            "pair_type": "Beitrag→Diskussion",
+            "addressed": null,
+            "content": "Ein Punkt, der bisher fehlt: Push-Benachrichtigungen. Auf Android funktionieren Web-Pushes für eine PWA problemlos. Auf iOS gehen sie inzwischen auch – aber nur, wenn Nutzer die PWA aktiv zum Home-Bildschirm hinzufügen. Diese Einschränkung müssen wir bei der Einführung offen kommunizieren, sonst erreichen kritische Schichtänderungen die Leute nicht zuverlässig."
+        },
+        {
+            "speaker": "user",
+            "pair_type": null,
+            "addressed": null,
+            "content": "Für uns sind zuverlässige Push-Benachrichtigungen bei kurzfristigen Schichtänderungen tatsächlich das wichtigste Kriterium. Wie kritisch ist die iOS-Einschränkung in der Praxis wirklich?"
+        },
+        {
+            "speaker": "Sophie Wagner",
+            "pair_type": "Beitrag→Diskussion",
+            "addressed": null,
+            "content": "Aus Backend-Sicht ist die Zustellung entscheidbar messbar: Wir protokollieren pro Benachrichtigung Auslieferung und Quittung. So sehen wir früh, welche Geräte kritische Alarme nicht bestätigen, und können gezielt nachsteuern – unabhängig davon, ob Web-Push oder ein Fallback greift."
+        },
+        {
+            "speaker": "Michael Bauer",
+            "pair_type": "Synthese→Diskussion",
+            "addressed": null,
+            "content": "Fassen wir zusammen: Funktional und architektonisch spricht alles für die PWA – eine Codebasis, Offline über Service Worker, sauberer Delta-Sync mit Idempotenz. Der einzige echte Vorbehalt ist die iOS-Push-Zuverlässigkeit. Der Kompromiss: PWA bauen, iPhone-Nutzern per kurzem Onboarding das Hinzufügen zum Home-Bildschirm zeigen und für die wenigen kritischsten Alarme einen SMS-Fallback vorsehen."
+        },
+        {
+            "speaker": "Jan Lehmann",
+            "pair_type": "Abschluss→Nutzer",
+            "addressed": "user",
+            "content": "Damit wir die Empfehlung final machen können, brauchen wir eine Entscheidung von dir: Sind für die kritischsten Notfall-Alarme zusätzliche SMS-Kosten (ca. wenige Cent pro Nachricht) akzeptabel? Davon hängt ab, ob wir den SMS-Fallback fest einplanen oder rein auf Web-Push setzen."
+        }
+    ],
+    "summaries": {
+        "Michael Bauer": "[NUTZER: %OWNER%]\nLegt den größten Wert auf zuverlässige Push-Benachrichtigungen bei kurzfristigen Schichtänderungen.\n[EXPERTE: Lena Fischer]\nVertritt überzeugend die PWA-Offline-Fähigkeit (Service Worker, IndexedDB) und hat die Sync-Konflikte über UUID/Idempotenz sauber beantwortet.\n[EXPERTE: Jan Lehmann]\nSieht die iOS-Push-Einschränkung als Hauptrisiko und schlägt Onboarding plus SMS-Fallback vor.\n[OFFENE_FRAGEN]\n- Frage an Sophie: Hält das Backend die Sync-Last bei gebündelten Offline-Uploads aus?\n[STAND]\nMeine Empfehlung tendiert klar zur PWA wegen einer Codebasis und geringerem Wartungsaufwand; offen bleibt nur die verlässliche Push-Zustellung auf iOS.",
+        "Sophie Wagner": "[NUTZER: %OWNER%]\nBraucht verlässliche Benachrichtigungen; Zuverlässigkeit geht vor Feature-Vielfalt.\n[EXPERTE: Lena Fischer]\nHat die Idempotenz der Sync-Requests per Client-UUID plausibel erklärt; Delta-Sync begrenzt die Backend-Last.\n[OFFENE_FRAGEN]\n- Frage an Lena: Wie behandeln wir Sync-Konflikte, wenn zwei Geräte denselben Antrag bearbeiten?\n[STAND]\nBackend-seitig ist die PWA gut machbar; ich achte auf idempotente Endpunkte, ein sauberes Konfliktmodell und messbare Zustellquittungen.",
+        "Lena Fischer": "[NUTZER: %OWNER%]\nHat Push-Zuverlässigkeit als wichtigstes Kriterium benannt.\n[EXPERTE: Michael Bauer]\nTeilt meine PWA-Präferenz aus Architektursicht (eine Codebasis, weniger Wartung).\n[EXPERTE: Jan Lehmann]\nBringt die iOS-Push-Einschränkung ein – berechtigt, aber mit Onboarding lösbar.\n[OFFENE_FRAGEN]\n- Frage an Jan: Reicht Web-Push auf Android für kritische Alarme, oder brauchen wir zwingend einen Fallback?\n[STAND]\nIch bin überzeugt, dass eine PWA alle Anforderungen erfüllt; Offline und Sync sind technisch gelöst.",
+        "Jan Lehmann": "[NUTZER: %OWNER%]\nPush-Zuverlässigkeit bei Schichtänderungen ist für den Nutzer das wichtigste Kriterium.\n[EXPERTE: Lena Fischer]\nStarke PWA-Argumente; Offline und Sync überzeugen mich weitgehend.\n[OFFENE_FRAGEN]\n- Frage an den Nutzer: Sind für die kritischsten Alarme zusätzliche SMS-Kosten akzeptabel?\n[STAND]\nIch trage die PWA-Empfehlung mit, sofern wir iOS-Onboarding und einen SMS-Fallback für Notfälle einplanen."
+    }
+}

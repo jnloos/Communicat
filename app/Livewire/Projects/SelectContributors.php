@@ -67,13 +67,33 @@ class SelectContributors extends Component
         Flux::modal('select-contributors')->show();
     }
 
+    /**
+     * The shared onboarding demo is read-only for everyone: block contributor
+     * changes but keep the modal usable so the welcome tour can explain it.
+     */
+    protected function demoBlocked(): bool
+    {
+        if ($this->forProject->isDemo()) {
+            $this->limitWarning = __('Die Demo-Diskussion ist schreibgeschützt.');
+
+            return true;
+        }
+
+        return false;
+    }
+
     public function addExpert(int $expertId): void
     {
+        if ($this->demoBlocked()) {
+            return;
+        }
+
         if (! $this->forProject->canAddExpert()) {
             $this->limitWarning = __(
                 'Maximal :n Experten pro Projekt.',
                 ['n' => Project::MAX_CONTRIBUTING_EXPERTS]
             );
+
             return;
         }
 
@@ -86,6 +106,10 @@ class SelectContributors extends Component
 
     public function removeExpert(int $expertId): void
     {
+        if ($this->demoBlocked()) {
+            return;
+        }
+
         $expert = Expert::findOrFail($expertId);
         $this->forProject->removeContributingExpert($expert);
         $this->limitWarning = null;
@@ -117,7 +141,7 @@ class SelectContributors extends Component
         $this->suggestionError = null;
 
         try {
-            $results = $suggester->suggest($this->forProject, 5);
+            $results = $suggester->suggest($this->forProject, Project::MAX_CONTRIBUTING_EXPERTS);
 
             $settings = $this->forProject->settings ?? [];
             $settings['suggested_experts'] = [

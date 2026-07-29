@@ -65,6 +65,10 @@ class RunOrchestratorInstructions
             'participant_message_count' => $ctx->project->participantMessages()->count(),
             // Progress / anti-circularity
             'stagnation' => $progress['stagnation'],
+            'topic_turns' => $progress['topic_turns'],
+            'topic_stale' => $progress['topic_stale'],
+            'persona_done' => $progress['persona_done'],
+            'persona_done_votes' => $progress['persona_done_votes'],
             'closure_due' => $progress['closure_due'],
             'point_resolved' => $progress['point_resolved'],
             'going_in_circles' => $progress['going_in_circles'],

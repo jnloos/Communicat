@@ -73,7 +73,48 @@ class ProgressTracker
 
         $settings['turns_since_closure_check'] = (int) ($settings['turns_since_closure_check'] ?? 0) + 1;
 
+        // Topic standing time: how many turns the discussion has stayed on the
+        // current topic without a registered advance. Only reset when the tracker
+        // actually detects a topic change/closure (see signals()). This is the
+        // "the topic hasn't changed in a long time" signal.
+        $settings['turns_on_topic'] = (int) ($settings['turns_on_topic'] ?? 0) + 1;
+
         return $settings;
+    }
+
+    /**
+     * Record the personas' own verdicts on whether the current topic is done,
+     * gathered from the THINK outputs of the experts that thought this turn.
+     * Votes accumulate across turns within the current topic epoch (a "done"
+     * expert stays counted until the topic advances); an expert that later votes
+     * "offen" withdraws their vote. Reset happens in signals() on advance.
+     *
+     * @param  array<int, bool>  $votes  expert id → topic_done
+     */
+    public function recordTopicVotes(array $votes): void
+    {
+        if (empty($votes)) {
+            return;
+        }
+
+        $settings = $this->project->settings ?? [];
+        $current = $settings['topic_done_votes'] ?? [];
+        if (! is_array($current)) {
+            $current = [];
+        }
+
+        foreach ($votes as $expertId => $done) {
+            if ($done) {
+                $current[(int) $expertId] = true;
+            } else {
+                // Changed their mind / still has something → withdraw the vote.
+                unset($current[(int) $expertId]);
+            }
+        }
+
+        $settings['topic_done_votes'] = $current;
+        $this->project->settings = $settings;
+        $this->project->save();
     }
 
     /**
@@ -81,7 +122,7 @@ class ProgressTracker
      * the progress ledgers and, when a check is due, run the LLM closure check
      * and persist its verdict. Returns the advisory signals for moderationContext.
      *
-     * @return array{stagnation:int, covered_points:array, resolved_points:array, open_question:?string, next_move:?string, closure_due:bool, point_resolved:bool, going_in_circles:bool, zwischenergebnis:?string}
+     * @return array{stagnation:int, covered_points:array, resolved_points:array, open_question:?string, next_move:?string, closure_due:bool, point_resolved:bool, going_in_circles:bool, zwischenergebnis:?string, topic_turns:int, topic_stale:bool, persona_done:bool, persona_done_votes:int}
      */
     public function signals(): array
     {
@@ -97,6 +138,10 @@ class ProgressTracker
             'point_resolved' => false,
             'going_in_circles' => false,
             'zwischenergebnis' => null,
+            'topic_turns' => (int) ($settings['turns_on_topic'] ?? 0),
+            'topic_stale' => false,
+            'persona_done' => false,
+            'persona_done_votes' => 0,
         ];
 
         if (! config('discussion.closure_check', true)) {
@@ -105,9 +150,27 @@ class ProgressTracker
 
         $interval = max(1, (int) config('discussion.closure_check_interval', 4));
         $threshold = max(1, (int) config('discussion.stagnation_threshold', 3));
+        $staleThreshold = max(1, (int) config('discussion.topic_stale_threshold', 6));
         $turnsSince = (int) ($settings['turns_since_closure_check'] ?? 0);
 
-        $due = $signals['stagnation'] >= $threshold || $turnsSince >= $interval;
+        // Stronger "topic hasn't changed in a long time" signal: the discussion
+        // has stayed on the same topic for too many turns without any registered
+        // advance. Forces convergence even if the LLM keeps saying "vertiefen".
+        $topicStale = $signals['topic_turns'] >= $staleThreshold;
+
+        // "Topic done according to the personas": a quorum of the panel flagged
+        // the current point as exhausted via THINK's THEMA_STATUS.
+        [$personaDone, $doneVotes] = $this->personaConsensus($settings);
+
+        $signals['topic_stale'] = $topicStale;
+        $signals['persona_done'] = $personaDone;
+        $signals['persona_done_votes'] = $doneVotes;
+
+        $due = $signals['stagnation'] >= $threshold
+            || $turnsSince >= $interval
+            || $topicStale
+            || $personaDone;
+
         if (! $due) {
             return $signals;
         }
@@ -118,36 +181,86 @@ class ProgressTracker
 
         $result = $this->runClosureCheck();
 
+        // The two deterministic signals force an advance regardless of the LLM
+        // verdict: a stale topic maps to "circling" (drive to convergence), a
+        // persona consensus maps to "resolved" (the panel considers it done).
+        $forceCircling = $topicStale;
+        $forceResolved = $personaDone;
+
         if ($result !== null) {
             $signals['closure_due'] = true;
-            $signals['point_resolved'] = (bool) ($result['point_resolved'] ?? false);
-            $signals['going_in_circles'] = (bool) ($result['going_in_circles'] ?? false);
+            $signals['point_resolved'] = (bool) ($result['point_resolved'] ?? false) || $forceResolved;
+            $signals['going_in_circles'] = (bool) ($result['going_in_circles'] ?? false) || $forceCircling;
             $signals['next_move'] = $this->cleanString($result['next_move'] ?? null);
             $signals['open_question'] = $this->cleanString($result['open_question'] ?? null);
             $signals['zwischenergebnis'] = $this->cleanString($result['zwischenergebnis'] ?? null);
 
             $settings['open_question'] = $signals['open_question'];
             $settings['next_move'] = $signals['next_move'];
+        } elseif ($forceResolved || $forceCircling) {
+            // No usable LLM verdict, but a deterministic signal still fired:
+            // advance anyway so the stronger detection is never swallowed by a
+            // malformed response.
+            $signals['closure_due'] = true;
+            $signals['point_resolved'] = $forceResolved;
+            $signals['going_in_circles'] = $forceCircling;
+        }
 
-            // A resolved point or a detected circle advances the agenda by content
-            // (consumed by ModeratorService::advanceAgenda) and resets stagnation.
-            if ($signals['point_resolved'] || $signals['going_in_circles']) {
-                $settings['closure_advance'] = true;
-                $settings['stagnation_counter'] = 0;
-            }
+        // A resolved point or a detected circle advances the agenda by content
+        // (consumed by ModeratorService::advanceAgenda), resets stagnation, and
+        // opens a fresh topic epoch (streak + persona votes cleared).
+        if ($signals['point_resolved'] || $signals['going_in_circles']) {
+            $settings['closure_advance'] = true;
+            $settings['stagnation_counter'] = 0;
+            $settings['turns_on_topic'] = 0;
+            $settings['topic_done_votes'] = [];
+        }
 
-            if ($signals['point_resolved'] && $signals['zwischenergebnis'] !== null) {
-                $resolved = $settings['resolved_points'] ?? [];
-                $resolved[] = $this->shortLabel($signals['zwischenergebnis']);
-                $settings['resolved_points'] = array_slice($resolved, -self::LEDGER_KEEP);
-                $signals['resolved_points'] = $settings['resolved_points'];
-            }
+        if ($signals['point_resolved'] && $signals['zwischenergebnis'] !== null) {
+            $resolved = $settings['resolved_points'] ?? [];
+            $resolved[] = $this->shortLabel($signals['zwischenergebnis']);
+            $settings['resolved_points'] = array_slice($resolved, -self::LEDGER_KEEP);
+            $signals['resolved_points'] = $settings['resolved_points'];
         }
 
         $this->project->settings = $settings;
         $this->project->save();
 
         return $signals;
+    }
+
+    /**
+     * Whether a quorum of the contributing experts flagged the current topic as
+     * done. Votes from experts no longer contributing are ignored. Returns the
+     * boolean verdict and the raw done-vote count (for the advisory signal).
+     *
+     * @return array{0: bool, 1: int}
+     */
+    protected function personaConsensus(array $settings): array
+    {
+        if (! config('discussion.persona_topic_done', true)) {
+            return [false, 0];
+        }
+
+        $votes = $settings['topic_done_votes'] ?? [];
+        if (! is_array($votes) || empty($votes)) {
+            return [false, 0];
+        }
+
+        $contributorIds = $this->project->contributingExperts()->pluck('id')->all();
+
+        $doneVotes = 0;
+        foreach ($votes as $expertId => $done) {
+            if ($done && in_array((int) $expertId, $contributorIds, true)) {
+                $doneVotes++;
+            }
+        }
+
+        $panel = max(1, count($contributorIds));
+        $fraction = (float) config('discussion.topic_done_quorum', 0.6);
+        $needed = max(1, (int) ceil($panel * $fraction));
+
+        return [$doneVotes >= $needed, $doneVotes];
     }
 
     /**

@@ -67,7 +67,7 @@
         @endcan
 
         {{-- Right: contributors (equal flex, right-aligned) --}}
-        <div class="flex-1 min-w-0 flex justify-end">
+        <div class="flex-1 min-w-0 flex justify-end" data-tour="contributors">
             <x-projects.contributor-group :contributors="$project->experts()->get()->concat($project->users()->whereKeyNot(auth()->id())->get())" :label="__('Set Contributors')" @click="$wire.dispatch('select_contributors')">
                 {{ __('Add ') }}
             </x-projects.contributor-group>

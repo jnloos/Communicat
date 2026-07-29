@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Jobs\Dependencies\ProjectJob;
 use App\Jobs\MessageGenerator;
 use App\Livewire\Projects\ControlChat;
+use App\Models\Expert;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,9 +22,17 @@ class AutoplayControlChatTest extends TestCase
     {
         $owner = User::factory()->create();
 
-        return Project::withoutEvents(fn () => Project::create([
+        $project = Project::withoutEvents(fn () => Project::create([
             'title' => 't', 'description' => 'd', 'settings' => $settings, 'user_id' => $owner->id,
         ]));
+
+        // Autoplay/generation now requires the minimum number of experts, so
+        // every project used here contributes enough of them.
+        foreach (Expert::factory()->count(Project::MIN_CONTRIBUTING_EXPERTS)->create() as $expert) {
+            $project->addContributingExpert($expert);
+        }
+
+        return $project;
     }
 
     public function test_toggle_autoplay_persists_to_settings(): void

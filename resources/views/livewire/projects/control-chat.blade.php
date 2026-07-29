@@ -5,12 +5,20 @@
     'showGenerate'         => true,
     'disabledControlsHint' => null,
     'userInputRequested'   => false,
+    'canStart'             => true,
+    'controlWarning'       => null,
     'mentionables'         => [],
 ])
 
 @php
     $sendTooltip = $disableInput && $disabledControlsHint ? $disabledControlsHint : __('Send your message');
-    $aiRunTooltip = $disableGenerate && $disabledControlsHint ? $disabledControlsHint : __('Run expert discussion');
+    // Below the minimum number of experts the discussion cannot be started; the
+    // button is disabled and the tooltip explains why.
+    $tooFewExpertsHint = __('Füge mindestens :n Experten hinzu, um die Diskussion zu starten.', ['n' => \App\Models\Project::MIN_CONTRIBUTING_EXPERTS]);
+    $startDisabled = $disableGenerate || ! $canStart;
+    $aiRunTooltip = ! $canStart
+        ? $tooFewExpertsHint
+        : ($disableGenerate && $disabledControlsHint ? $disabledControlsHint : __('Run expert discussion'));
     $aiPauseTooltip = $disableGenerate && $disabledControlsHint ? $disabledControlsHint : __('Pause expert discussion');
 @endphp
 
@@ -341,6 +349,13 @@
                 </div>
             </div>
 
+            @if ($controlWarning)
+                <div class="mb-2 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400" wire:transition>
+                    <flux:icon.exclamation-triangle class="w-4 h-4 shrink-0" />
+                    {{ $controlWarning }}
+                </div>
+            @endif
+
             @if ($userInputRequested)
                 <div class="mb-2 flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -352,8 +367,8 @@
                 </div>
             @endif
 
-            <form wire:submit="sendMessage" x-show="mode === 'text'">
-                <div @class([
+            <form wire:submit="sendMessage" x-show="mode === 'text'" data-tour="composer">
+                <div data-tour="composer-ring" @class([
                     'rounded-lg transition-shadow',
                     'ring-2 ring-amber-400 dark:ring-amber-500 shadow-[0_0_0_4px_rgba(251,191,36,0.15)] animate-pulse' => $userInputRequested,
                 ])>
@@ -399,6 +414,7 @@
                                     :variant="$autoplay ? 'filled' : 'subtle'"
                                     icon="forward"
                                     wire:click="toggleAutoplay"
+                                    data-tour="autoplay"
                                     :aria-label="__('Autoplay umschalten')"
                                     @class(['cursor-pointer', 'text-amber-600 dark:text-amber-400' => $autoplay])
                                 />
@@ -412,7 +428,8 @@
                                         variant="filled"
                                         icon="sparkles"
                                         wire:click.debounce="startGenerate"
-                                        :disabled="$disableGenerate"
+                                        :disabled="$startDisabled"
+                                        data-tour="generate"
                                         :aria-label="$aiRunTooltip"
                                         class="cursor-pointer"
                                     />
@@ -441,6 +458,7 @@
                                     variant="primary"
                                     icon="paper-airplane"
                                     :disabled="$disableInput"
+                                    data-tour="send"
                                     :aria-label="$sendTooltip"
                                     class="cursor-pointer"
                                 />
@@ -482,7 +500,7 @@
                                     variant="filled"
                                     icon="sparkles"
                                     wire:click.debounce="startGenerate"
-                                    :disabled="$disableGenerate"
+                                    :disabled="$startDisabled"
                                     :aria-label="$aiRunTooltip"
                                     class="w-20 h-20 rounded-full cursor-pointer"
                                 />
