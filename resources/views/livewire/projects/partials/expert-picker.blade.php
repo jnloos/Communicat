@@ -6,6 +6,7 @@
             <flux:button
                 size="sm"
                 icon="sparkles"
+                data-tour="suggest-experts"
                 wire:click="suggestExperts"
                 wire:loading.attr="disabled"
                 wire:target="suggestExperts"
@@ -20,6 +21,7 @@
                     size="sm"
                     variant="ghost"
                     icon="arrow-path"
+                    data-tour="suggest-experts"
                     wire:click="suggestExperts"
                     wire:loading.attr="disabled"
                     wire:target="suggestExperts"

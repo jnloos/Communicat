@@ -137,23 +137,52 @@ body.wt-active dialog[data-modal] { z-index: 100050 !important; }
 
 /* Anchor accents (toggled from tour.js `when` hooks) ---------------------- */
 /* These are STATIC illuminations — no transforms, so highlighted elements
- * never wobble or shift. Each tour step adds exactly one of these, so at any
- * step only the arrow OR only the brain icon lights up, never both. */
+ * never wobble or shift. */
 
-/* Step 5 — the "speaks to" arrow only. */
+/* Step 6 — the "speaks to" arrow only. */
 .wt-hl-arrow svg {
     color: var(--wt-accent) !important;
     filter: drop-shadow(0 0 5px color-mix(in srgb, var(--wt-accent) 60%, transparent));
 }
 
-/* Step 6 — the brain icon only. */
+/* Step 7 — the brain icon only. */
 .wt-hl-brain {
     color: var(--wt-accent) !important;
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--wt-accent) 30%, transparent);
     border-radius: 9999px;
 }
 
-/* Step 9 — the generate button: a soft, still glow (box-shadow only, no motion). */
+/* During the tour the brain badge must only glow when a step explicitly lights
+ * it (step 7). Its normal group-hover amber would otherwise make it look
+ * "highlighted" on step 6 whenever the cursor rests over the message. */
+body.wt-active [data-tour="brain-badge"]:not(.wt-hl-brain) {
+    color: var(--wt-muted) !important;
+}
+
+/* Generic amber ring — buttons/icons (Set Contributors, ℹ️, Suggest experts).
+ * box-shadow follows each element's own border-radius, so it fits pills and
+ * round info dots alike. */
+.wt-hl-ring {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--wt-accent) 45%, transparent);
+}
+
+/* Steps 5–7 — a white frame around the contribution. Drawn on the message
+ * bubble (so it is only as wide as the text field) but extended downward via
+ * ::after so it still wraps the speaker/target avatars that sit below. */
+.wt-hl-frame {
+    position: relative;
+}
+.wt-hl-frame::after {
+    content: '';
+    position: absolute;
+    inset: -8px -8px -48px -8px;   /* extra bottom room for the avatar row */
+    border-radius: 14px;
+    box-shadow: 0 0 0 3px #fff,
+                0 0 0 6px color-mix(in srgb, var(--wt-accent) 35%, transparent);
+    pointer-events: none;
+}
+
+/* Step 11 — the generate button: a soft, still glow (box-shadow only, no motion). */
 .wt-shimmer {
     animation: wt-glow 1.6s ease-in-out infinite;
     border-radius: 10px;

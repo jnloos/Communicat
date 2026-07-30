@@ -1,4 +1,5 @@
 import Shepherd from 'shepherd.js';
+import { offset } from '@floating-ui/dom';
 import 'shepherd.js/dist/css/shepherd.css';
 import '../css/tour.css';
 
@@ -10,10 +11,18 @@ const byTour = (name) => document.querySelector(`[data-tour="${name}"]`);
 const anchor = (name, on) => ({ element: () => byTour(name), on });
 
 /**
- * The one demo message used for the "anatomy of a message" steps (4–7): the
+ * Push a popover further away from its anchor edge (extra floating-ui offset,
+ * stacked on top of Shepherd's default gap). Used on the flyout steps so the
+ * box clears the "Choose Contributors" / thoughts flyout that slides in on the
+ * right instead of being overlapped by it.
+ */
+const shiftAway = (px) => ({ floatingUIOptions: { middleware: [offset(px)] } });
+
+/**
+ * The one demo message used for the "anatomy of a message" steps (5–8): the
  * first message that carries BOTH an addressed arrow and a brain badge, so the
  * bubble, arrow, brain icon and thoughts all belong to the SAME message and the
- * tour never jumps between messages. Each step highlights only its own element.
+ * tour never jumps between messages.
  */
 function tourMsg() {
     for (const arrow of document.querySelectorAll('[data-tour="addressed-arrow"]')) {
@@ -26,26 +35,6 @@ function tourMsg() {
     }
 
     return null;
-}
-
-/** Poll for a selector to appear (used after opening a modal/flyout). */
-function waitFor(selector, timeout = 2500) {
-    return new Promise((resolve) => {
-        const existing = document.querySelector(selector);
-        if (existing) return resolve(existing);
-
-        const start = Date.now();
-        const iv = setInterval(() => {
-            const el = document.querySelector(selector);
-            if (el) {
-                clearInterval(iv);
-                resolve(el);
-            } else if (Date.now() - start > timeout) {
-                clearInterval(iv);
-                resolve(null);
-            }
-        }, 60);
-    });
 }
 
 /**
@@ -72,16 +61,6 @@ function waitForVisible(selector, { settle = 320, timeout = 3000 } = {}) {
     });
 }
 
-/**
- * Force Shepherd/floating-ui to recompute the popover position on the next
- * frames — belt-and-braces after a panel has slid in, in case the first
- * measurement happened a hair too early.
- */
-function nudgeReposition() {
-    requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
-    setTimeout(() => window.dispatchEvent(new Event('resize')), 150);
-}
-
 /** Open/close a Flux modal by name, tolerating API/version differences. */
 function fluxModal(name, action) {
     try {
@@ -102,12 +81,23 @@ function fluxModal(name, action) {
     );
 }
 
+// Every highlight class the steps toggle. Stripped on teardown so a tour that
+// is cancelled mid-step (Esc / ×) never leaves an element frozen in a lit state.
+const WT_HIGHLIGHTS = ['wt-hl-frame', 'wt-hl-arrow', 'wt-hl-brain', 'wt-hl-ring', 'wt-shimmer'];
+
+const clearHighlights = () => {
+    document
+        .querySelectorAll('.' + WT_HIGHLIGHTS.join(',.'))
+        .forEach((el) => el.classList.remove(...WT_HIGHLIGHTS));
+};
+
 const closeAnyOverlays = () => {
     fluxModal('select-contributors', 'close');
     fluxModal('expert-thoughts-flyout', 'close');
     // Drop the tour-scoped z-index lift and any leftover simulated states.
     document.body.classList.remove('wt-active');
     teardownInputRequestedDemo();
+    clearHighlights();
 };
 
 // --- "Your input is requested" simulation ------------------------------------
@@ -200,10 +190,18 @@ function buildTour() {
         id: 'contributors',
         title: '3 · Experten hinzufügen',
         text: `
-            <p>Hier stellst du das Team für dein Projekt zusammen. Pro Diskussion sind es <strong>mindestens 3 und höchstens 4 Experten</strong> – genug für echte Kontroverse, ohne unübersichtlich zu werden.</p>
+            <p>Hier stellst du das Team für dein Projekt zusammen. Pro Diskussion sind es <strong>mindestens 3 und höchstens 4 Experten</strong>.</p>
             <p>Im Auswahldialog fügst du Experten per Klick hinzu; das ℹ️-Symbol jeder Karte zeigt die Details.</p>
         `,
-        attachTo: anchor('contributors', 'bottom'),
+        attachTo: anchor('set-contributors', 'bottom'),
+        when: {
+            show() {
+                byTour('set-contributors')?.classList.add('wt-hl-ring');
+            },
+            hide() {
+                byTour('set-contributors')?.classList.remove('wt-hl-ring');
+            },
+        },
         buttons: [backBtn, nextBtn],
     });
 
@@ -212,18 +210,25 @@ function buildTour() {
         title: '4 · Experten auswählen',
         text: `
             <p>So sieht die Auswahl aus: Jede Karte ist eine Persona. Ein <strong>Klick</strong> fügt sie hinzu oder entfernt sie wieder; das <strong>ℹ️-Symbol</strong> öffnet die Detailansicht.</p>
-            <p>Ist das Maximum von 4 Experten erreicht, werden weitere Karten ausgegraut.</p>
+            <p>Mit <strong>„Suggest experts"</strong> schlägt dir das System automatisch passende Experten zu deinem Thema vor. Ist das Maximum von 4 Experten erreicht, werden weitere Karten ausgegraut.</p>
         `,
         attachTo: { element: () => byTour('expert-card'), on: 'left' },
+        // Don't scroll-center a target inside a freshly-opened flyout — that scroll
+        // triggers a second positioning pass and the popover appears to flash twice.
+        scrollTo: false,
+        ...shiftAway(40),
         beforeShowPromise: () => {
             fluxModal('select-contributors', 'show');
             return waitForVisible('[data-tour="expert-card"]');
         },
         when: {
             show() {
-                nudgeReposition();
+                byTour('expert-details')?.classList.add('wt-hl-ring');
+                byTour('suggest-experts')?.classList.add('wt-hl-ring');
             },
             hide() {
+                byTour('expert-details')?.classList.remove('wt-hl-ring');
+                byTour('suggest-experts')?.classList.remove('wt-hl-ring');
                 fluxModal('select-contributors', 'close');
             },
         },
@@ -236,7 +241,15 @@ function buildTour() {
         text: `
             <p>Jede Sprechblase ist ein Diskussionsbeitrag. Unter der Blase siehst du den <strong>Avatar des Sprechers</strong>. Die Beiträge bauen logisch aufeinander auf.</p>
         `,
-        attachTo: { element: () => tourMsg()?.bubble ?? byTour('chat-message'), on: 'right' },
+        attachTo: { element: () => tourMsg()?.root ?? byTour('chat-message'), on: 'right' },
+        when: {
+            show() {
+                (tourMsg()?.bubble ?? byTour('chat-message'))?.classList.add('wt-hl-frame');
+            },
+            hide() {
+                (tourMsg()?.bubble ?? byTour('chat-message'))?.classList.remove('wt-hl-frame');
+            },
+        },
         buttons: [backBtn, nextBtn],
     });
 
@@ -245,14 +258,17 @@ function buildTour() {
         title: '6 · Die Pfeile',
         text: `
             <p>Ein <strong>Pfeil</strong> neben dem Avatar zeigt, <strong>an wen</strong> sich ein Beitrag richtet – am Ziel-Avatar erkennst du die adressierte Person.</p>
-            <p>So entstehen sichtbare Gesprächsfäden: eine Frage an einen Experten, eine Reaktion auf eine Ansprache, oder – am Ende – eine Rückgabe <strong>an dich</strong> als Nutzer:in.</p>
         `,
-        attachTo: { element: () => tourMsg()?.arrow ?? byTour('addressed-arrow'), on: 'bottom' },
+        // Anchor the popover to the bottom of the message (right-end) so it sits
+        // close to the arrow, while the frame still wraps the whole contribution.
+        attachTo: { element: () => tourMsg()?.root ?? byTour('chat-message'), on: 'right-end' },
         when: {
             show() {
+                (tourMsg()?.bubble ?? byTour('chat-message'))?.classList.add('wt-hl-frame');
                 (tourMsg()?.arrow ?? byTour('addressed-arrow'))?.classList.add('wt-hl-arrow');
             },
             hide() {
+                (tourMsg()?.bubble ?? byTour('chat-message'))?.classList.remove('wt-hl-frame');
                 (tourMsg()?.arrow ?? byTour('addressed-arrow'))?.classList.remove('wt-hl-arrow');
             },
         },
@@ -264,14 +280,17 @@ function buildTour() {
         title: '7 · In die Gedanken schauen',
         text: `
             <p>Das <strong>Gehirn-Symbol</strong> an einem Experten-Avatar öffnet sein <strong>Gedächtnis</strong>: was er über die anderen denkt, welche Fragen für ihn offen sind und wie er den Stand einschätzt.</p>
-            <p>Klick auf „Weiter" – wir öffnen es für dich.</p>
         `,
-        attachTo: { element: () => tourMsg()?.brain ?? byTour('brain-badge'), on: 'bottom' },
+        // Anchor the popover to the bottom of the message (right-end) so it sits
+        // close to the brain badge, while the frame still wraps the whole message.
+        attachTo: { element: () => tourMsg()?.root ?? byTour('chat-message'), on: 'right-end' },
         when: {
             show() {
+                (tourMsg()?.bubble ?? byTour('chat-message'))?.classList.add('wt-hl-frame');
                 (tourMsg()?.brain ?? byTour('brain-badge'))?.classList.add('wt-hl-brain');
             },
             hide() {
+                (tourMsg()?.bubble ?? byTour('chat-message'))?.classList.remove('wt-hl-frame');
                 (tourMsg()?.brain ?? byTour('brain-badge'))?.classList.remove('wt-hl-brain');
             },
         },
@@ -282,9 +301,13 @@ function buildTour() {
         id: 'thoughts',
         title: '8 · Das Gedächtnis',
         text: `
-            <p>Das ist die innere Sicht des Experten auf die Diskussion – sein „Gedächtnis". Es wird bei jedem Denk-Schritt aktualisiert und steuert, was er als Nächstes beiträgt.</p>
+            <p>Das ist die innere Sicht des Experten auf die Diskussion – sein „Gedächtnis".</p>
         `,
         attachTo: { element: () => byTour('thoughts-content'), on: 'left' },
+        // Don't scroll-center a target inside a freshly-opened flyout — that scroll
+        // triggers a second positioning pass and the popover appears to flash twice.
+        scrollTo: false,
+        ...shiftAway(40),
         // Open the flyout for the SAME expert whose brain icon we just highlighted,
         // then wait until the panel has fully slid in before anchoring — otherwise
         // Shepherd measures a mid-transition rect and drops the popover in a corner.
@@ -293,9 +316,6 @@ function buildTour() {
             return waitForVisible('[data-tour="thoughts-content"]');
         },
         when: {
-            show() {
-                nudgeReposition();
-            },
             hide() {
                 fluxModal('expert-thoughts-flyout', 'close');
             },
@@ -307,7 +327,7 @@ function buildTour() {
         id: 'composer',
         title: '9 · Selbst mitdiskutieren',
         text: `
-            <p>Hier schreibst du eigene Nachrichten in die Diskussion. Mit <strong>@Name</strong> sprichst du einen Experten gezielt an – er wird dann bevorzugt antworten.</p>
+            <p>Hier schreibst du eigene Nachrichten in die Diskussion. Mit <strong>@Name</strong> sprichst du einen Experten gezielt an.</p>
         `,
         attachTo: anchor('composer', 'top'),
         buttons: [backBtn, nextBtn],
@@ -337,7 +357,6 @@ function buildTour() {
         title: '11 · Nächsten Beitrag erzeugen',
         text: `
             <p>Mit dem <strong>✨-Knopf</strong> lässt du die Experten den nächsten Diskussionsbeitrag erzeugen – Schritt für Schritt, ganz nach deinem Tempo.</p>
-            <p>Der Knopf ist erst aktiv, wenn <strong>mindestens 3 Experten</strong> im Projekt sind.</p>
         `,
         attachTo: anchor('generate', 'top'),
         when: {
