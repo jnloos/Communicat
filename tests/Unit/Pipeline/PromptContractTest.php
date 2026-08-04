@@ -59,6 +59,25 @@ class PromptContractTest extends TestCase
         $this->assertStringContainsString('PAARTYP:', $prompt);
         $this->assertStringContainsString('Ich stimme Bob zu.', $prompt);
         $this->assertStringContainsString('X\'s Punkt finde ich stark', $prompt);
+        $this->assertStringContainsString('MENSCHLICHER SPRACHSTIL', $prompt);
+        $this->assertStringContainsString('Als KI…', $prompt);
+        $this->assertStringContainsString('Hilfe-Center-Ton', $prompt);
+    }
+
+    public function test_system_instructions_forbid_ai_self_reference(): void
+    {
+        $instructions = trim(view('prompts.system')->render());
+
+        $this->assertStringContainsString('niemals eine KI', $instructions);
+        $this->assertStringContainsString('ChatGPT', $instructions);
+    }
+
+    public function test_think_prompt_anchors_human_persona(): void
+    {
+        $prompt = app(PromptBuilder::class)->think($this->project, $this->expert1);
+
+        $this->assertStringContainsString('als Mensch mit Haltung', $prompt);
+        $this->assertStringContainsString('nicht als KI oder Assistent', $prompt);
     }
 
     public function test_route_prompt_contains_user_inclusion_block_when_due(): void
