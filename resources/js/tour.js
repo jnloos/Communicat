@@ -130,6 +130,76 @@ function teardownInputRequestedDemo() {
 
 // --- Tour definition ---------------------------------------------------------
 
+// #region agent log
+/** Debug: measure popover vs attachTo placement and flag visual issues. */
+function wtDebugStep(tour, hypothesisId) {
+    try {
+        const step = tour.getCurrentStep?.();
+        const id = step?.id ?? 'unknown';
+        const pop = [...document.querySelectorAll('.shepherd-element')]
+            .find((el) => !el.hidden && el.getAttribute('data-shepherd-step-id') === id)
+            || [...document.querySelectorAll('.shepherd-element')]
+                .find((el) => !el.hidden)
+            || document.querySelector('.shepherd-element');
+        const pr = pop?.getBoundingClientRect();
+        const popStyle = pop ? getComputedStyle(pop) : null;
+        const attach = step?.options?.attachTo;
+        let anchorEl = null;
+        if (attach?.element) {
+            anchorEl = typeof attach.element === 'function' ? attach.element() : attach.element;
+        }
+        const ar = anchorEl?.getBoundingClientRect?.();
+        const issues = [];
+        if (!pr) issues.push('no-popover');
+        if (pr && (pr.width < 4 || pr.height < 4)) issues.push('popover-tiny');
+        if (pr && (pr.right < 0 || pr.bottom < 0 || pr.left > innerWidth || pr.top > innerHeight)) {
+            issues.push('popover-offscreen');
+        }
+        if (attach && !anchorEl) issues.push('missing-anchor');
+        if (ar && (ar.width < 4 || ar.height < 4)) issues.push('anchor-tiny');
+        if (ar && (ar.right < 0 || ar.bottom < 0 || ar.left > innerWidth || ar.top > innerHeight)) {
+            issues.push('anchor-offscreen');
+        }
+        // Corner-drop heuristic: popover near (0,0) while an attach target existed
+        if (pr && attach && ar && pr.x < 8 && pr.y < 8 && (ar.x > 40 || ar.y > 40)) {
+            issues.push('popover-corner-drop');
+        }
+        const payload = {
+            sessionId: 'aba80e',
+            runId: 'tour-qa',
+            hypothesisId,
+            location: 'tour.js:wtDebugStep',
+            message: `tour-step:${id}`,
+            data: {
+                stepId: id,
+                attachOn: attach?.on ?? null,
+                popover: pr ? { x: Math.round(pr.x), y: Math.round(pr.y), w: Math.round(pr.width), h: Math.round(pr.height) } : null,
+                popStyle: popStyle ? { display: popStyle.display, visibility: popStyle.visibility, opacity: popStyle.opacity, cls: pop.className } : null,
+                shepherdCount: document.querySelectorAll('.shepherd-element').length,
+                anchor: ar ? { x: Math.round(ar.x), y: Math.round(ar.y), w: Math.round(ar.width), h: Math.round(ar.height) } : null,
+                vw: innerWidth,
+                vh: innerHeight,
+                issues,
+                highlights: {
+                    frame: !!document.querySelector('.wt-hl-frame'),
+                    arrow: !!document.querySelector('.wt-hl-arrow'),
+                    brain: !!document.querySelector('.wt-hl-brain'),
+                    ring: !!document.querySelector('.wt-hl-ring'),
+                    shimmer: !!document.querySelector('.wt-shimmer'),
+                    banner: !!document.getElementById('wt-input-banner'),
+                },
+            },
+            timestamp: Date.now(),
+        };
+        fetch('http://127.0.0.1:7618/ingest/1c93f1ef-a021-45ff-a0b8-0f1babb7ed76', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': 'aba80e' },
+            body: JSON.stringify(payload),
+        }).catch(() => {});
+    } catch (_) { /* ignore */ }
+}
+// #endregion
+
 function buildTour() {
     const tour = new Shepherd.Tour({
         useModalOverlay: true,
@@ -148,6 +218,23 @@ function buildTour() {
     // Always leave the UI clean when the tour ends for any reason.
     tour.on('complete', closeAnyOverlays);
     tour.on('cancel', closeAnyOverlays);
+
+    // #region agent log
+    tour.on('show', () => {
+        // Wait a tick so floating-ui finishes positioning.
+        // Settle after scrollTo (smooth) + floating-ui; message steps can scroll far.
+        setTimeout(() => {
+            const id = tour.getCurrentStep()?.id;
+            const hyp =
+                id === 'expert-select' || id === 'thoughts' ? 'H1' :
+                id === 'chat-message' || id === 'arrow' || id === 'brain' ? 'H2' :
+                id === 'new-project' || id === 'experts-nav' || id === 'contributors' ? 'H3' :
+                id === 'composer' || id === 'generate' || id === 'autoplay' ? 'H4' :
+                id === 'input-requested' ? 'H5' : 'H0';
+            wtDebugStep(tour, hyp);
+        }, 900);
+    });
+    // #endregion
 
     const backBtn = { text: 'Zurück', action: () => tour.back(), secondary: true };
     const nextBtn = { text: 'Weiter', action: () => tour.next() };
@@ -172,7 +259,7 @@ function buildTour() {
             <p>Über <strong>„New Project"</strong> startest du ein neues Thema. Du gibst einen Titel und eine Beschreibung ein.</p>
             <p><em>Tipp:</em> Je konkreter die Beschreibung (Ziel, Rahmenbedingungen, Zielgruppe), desto besser und fokussierter diskutieren die Experten.</p>
         `,
-        attachTo: anchor('new-project', 'right'),
+        attachTo: anchor('new-project', 'right-start'),
         buttons: [backBtn, nextBtn],
     });
 
@@ -182,7 +269,7 @@ function buildTour() {
         text: `
             <p>Unter <strong>„Experts"</strong> findest du alle verfügbaren Personas. Über das <strong>ℹ️-Symbol</strong> siehst du jede Persona im Detail: Profil, Kernüberzeugungen, Wissensgrenzen und Sprachstil.</p>
         `,
-        attachTo: anchor('experts-nav', 'right'),
+        attachTo: anchor('experts-nav', 'right-start'),
         buttons: [backBtn, nextBtn],
     });
 
