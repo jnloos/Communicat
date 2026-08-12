@@ -4,13 +4,14 @@ namespace App\Services\PromptingPipeline\Stages;
 
 use App\Events\PipelineStageChanged;
 use App\Models\Expert;
-use App\Models\Message;
 use App\Services\PromptingPipeline\Candidates\AllExpertsStrategy;
 use App\Services\PromptingPipeline\Candidates\CandidateStrategy;
 use App\Services\PromptingPipeline\Candidates\FunnelStrategy;
 use App\Services\PromptingPipeline\Data\TurnContext;
+use App\Services\PromptingPipeline\Support\BrevitySignal;
 use App\Services\PromptingPipeline\Support\MentionResolver;
 use App\Services\PromptingPipeline\Support\ModeratorService;
+use App\Services\PromptingPipeline\Support\OpenPairRegistry;
 use App\Services\PromptingPipeline\Support\ProgressTracker;
 use Closure;
 
@@ -47,9 +48,14 @@ class RunOrchestratorInstructions
         // when due — the periodic LLM closure verdict). Persists its own state.
         $progress = app(ProgressTracker::class, ['project' => $ctx->project])->signals();
 
-        // Deterministic floor: if the last turn addressed a specific expert with
-        // an open pair (question/address), that expert holds the floor next.
-        $floorExpert = $this->openFloorExpert($ctx);
+        // Deterministic floor: the expert who has owed a reply the longest. The
+        // registry looks across the whole recent window, not just the last turn,
+        // so an obligation survives user messages and intervening speakers.
+        $pairs = app(OpenPairRegistry::class, ['project' => $ctx->project]);
+        $openPair = $pairs->oldestOpen();
+        $floorExpert = $openPair !== null
+            ? $ctx->project->contributorMap()->get($openPair->adjacency_partner_id)
+            : null;
 
         $ctx->moderationContext = [
             'agenda_phase' => $moderator->agendaPhase(),
@@ -60,6 +66,11 @@ class RunOrchestratorInstructions
             'expert_turns_since_user' => $ctx->project->expertTurnsSinceLastUserMessage(),
             'inclusion_threshold' => $inclusionThreshold,
             'user_inclusion_due' => $ctx->project->userInclusionDue(),
+            'handoff_cooldown_left' => (int) ($ctx->project->settings['handoff_cooldown_left'] ?? 0),
+            'open_pair_count' => $pairs->openPairs()->count(),
+            // Reaction cadence inputs (see ModeratorService::applyReactionCadence).
+            'brevity_streak' => BrevitySignal::forProject($ctx->project),
+            'turns_since_reaction' => (int) ($ctx->project->settings['turns_since_reaction'] ?? 0),
             'topic_clarification_due' => $ctx->project->topicClarificationDue(),
             'description_sparse' => $ctx->project->descriptionIsSparse(),
             'participant_message_count' => $ctx->project->participantMessages()->count(),
@@ -78,9 +89,7 @@ class RunOrchestratorInstructions
             'covered_points' => $progress['covered_points'],
             'resolved_points' => $progress['resolved_points'],
             // Floor
-            'open_floor_expert' => $floorExpert !== null
-                ? ['name' => $floorExpert->name, 'prompt_id' => $floorExpert->promptId]
-                : null,
+            'open_floor_expert' => $pairs->oldestOpenSignal(),
         ];
 
         // Mention shortcut: a user @-mention picks the candidates deterministically
@@ -112,29 +121,6 @@ class RunOrchestratorInstructions
         }
 
         return $next($ctx);
-    }
-
-    /**
-     * The expert who holds the floor next by adjacency: the addressee of the
-     * latest expert turn when it opened a question/address pair. Null otherwise.
-     */
-    protected function openFloorExpert(TurnContext $ctx): ?Expert
-    {
-        $latest = $ctx->latestMessage;
-
-        if ($latest === null || $latest->expert_id === null) {
-            return null;
-        }
-
-        if ($latest->adjacency_partner_type !== Expert::class || $latest->adjacency_partner_id === null) {
-            return null;
-        }
-
-        if (! in_array($latest->adjacency_pair_type, [Message::PAIR_FRAGE_ANTWORT, Message::PAIR_ANSPRACHE_REAKTION], true)) {
-            return null;
-        }
-
-        return $ctx->project->contributorMap()->get($latest->adjacency_partner_id);
     }
 
     protected function strategy(TurnContext $ctx): CandidateStrategy

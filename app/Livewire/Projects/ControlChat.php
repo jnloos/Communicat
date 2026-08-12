@@ -155,8 +155,9 @@ class ControlChat extends Component
         $this->keepGenerating = false;
         $this->isDispatching = false;
 
-        // Only the addressed user gets the "your input is requested" prompt. A
-        // null target (unresolved hand-off) falls back to prompting everyone.
+        // Only the addressed user gets the "your input is requested" prompt.
+        // MessageGenerator resolves the target (pending message author, else the
+        // project owner) before dispatching, so it is never null in practice.
         $targetUserId = $event['targetUserId'] ?? null;
         if ($targetUserId !== null && $targetUserId !== auth()->id()) {
             return;

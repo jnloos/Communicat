@@ -5,7 +5,9 @@ namespace App\Services\PromptingPipeline\Support;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Services\Clients\OpenAIClient;
+use App\Services\Clients\ResponseSchemas;
 use App\Services\PromptingPipeline\Data\Directive;
+use Illuminate\Support\Facades\Log;
 
 class ModeratorService
 {
@@ -76,7 +78,7 @@ class ModeratorService
 
     /**
      * Ask the moderator LLM to narrow the candidate pool and define the turn's
-     * Directive (role, agenda step, convergence intent, address_user).
+     * Directive (role, agenda step, convergence intent, hand_back_to_user).
      *
      * @param  array{agenda_phase?: string, pending_user?: ?string}|null  $context
      * @return array{candidates: int[], directive: Directive, reasoning: string}
@@ -87,11 +89,19 @@ class ModeratorService
         $knownIds = array_map('intval', array_keys($agents));
 
         $prompt = $this->prompts->moderatorRoute($this->project, $agents, $moderationNote, $context);
-        $response = $this->client->sendFast($prompt, 'moderator:route');
+        $response = $this->client->sendFast($prompt, 'moderator:route', ResponseSchemas::route());
 
         $decoded = $this->parseJson($response);
 
         if ($decoded === null) {
+            // With ResponseSchemas::route() attached this should not happen.
+            // Log it: otherwise an unparseable answer is indistinguishable from
+            // a legitimate "all candidates" routing decision.
+            Log::warning('moderator:route returned unparseable JSON — falling back to all candidates', [
+                'project_id' => $this->project->id,
+                'response_first' => mb_substr($response, 0, 300),
+            ]);
+
             return [
                 'candidates' => $knownIds,
                 'directive' => $this->attachPendingUser($this->decorateDirective($this->fallbackDirective(), $context), $context),
@@ -122,10 +132,10 @@ class ModeratorService
     public function mentionDirective(?array $context = null): Directive
     {
         return $this->attachPendingUser(new Directive(
-            role: 'Nutzerfrage direkt beantworten',
+            role: 'frage_beantworten',
             agendaStep: $this->agendaPhase(),
             convergenceIntent: 'Direkt und konkret auf die letzte Nutzernachricht eingehen, bevor etwas Neues geöffnet wird.',
-            addressUser: false,
+            handBackToUser: false,
             reasoning: 'Der Nutzer hat diesen Experten mit @ direkt angesprochen.',
         ), $context);
     }
@@ -137,11 +147,23 @@ class ModeratorService
      *
      * @param  array<int, array{memory: string, beitragsabsicht: string}>  $thinkOutputs  keyed by expert id
      * @param  bool  $allowBackToBack  bypass the guard (e.g. the user @-mentioned the last speaker)
-     * @param  array{name: string, prompt_id: string}|null  $openFloor  addressee of an open pair, to prioritize
+     * @param  array{name: string, prompt_id: string, message_id?: int, question?: string}|null  $openFloor  addressee of an open pair
      * @return int the winning expert id
      */
     public function selectWinner(array $thinkOutputs, bool $allowBackToBack = false, ?array $openFloor = null): int
     {
+        // Hard floor rule: someone who was asked a direct question answers it.
+        // This used to be a prompt hint only, and the selection LLM regularly
+        // walked past it — of eight closed pairs in the logged runs, exactly one
+        // answered back to the asker. Enforced here for the same reason as the
+        // back-to-back guard below: structure the transcript must show cannot
+        // depend on the model choosing to comply.
+        $floorWinner = $this->floorWinner($thinkOutputs, $openFloor, $allowBackToBack);
+
+        if ($floorWinner !== null) {
+            return $floorWinner;
+        }
+
         $agents = $this->buildAgentsArray();
 
         $state = [
@@ -154,7 +176,7 @@ class ModeratorService
         $intents = array_map(fn (array $o) => $o['beitragsabsicht'], $thinkOutputs);
 
         $prompt = $this->prompts->moderatorSelect($this->project, $agents, $intents, $state);
-        $response = $this->client->sendFast($prompt, 'moderator:select');
+        $response = $this->client->sendFast($prompt, 'moderator:select', ResponseSchemas::select());
 
         $decoded = $this->parseJson($response);
 
@@ -182,6 +204,34 @@ class ModeratorService
         }
 
         return $winner;
+    }
+
+    /**
+     * The addressee of the oldest open pair, when they are able to answer now.
+     *
+     * Returns null — leaving the choice to the selection LLM — when there is no
+     * open pair, the addressee did not think this turn, or answering would mean
+     * speaking twice in a row (the back-to-back guard stays the outer rule, so a
+     * persona never monologues just to close a pair).
+     *
+     * @param  array<int, array{memory: string, beitragsabsicht: string}>  $thinkOutputs
+     * @param  array{prompt_id?: string}|null  $openFloor
+     */
+    protected function floorWinner(array $thinkOutputs, ?array $openFloor, bool $allowBackToBack): ?int
+    {
+        $addressee = $this->promptIdToExpertId((string) ($openFloor['prompt_id'] ?? ''));
+
+        if ($addressee === null || ! array_key_exists($addressee, $thinkOutputs)) {
+            return null;
+        }
+
+        $lastSpeaker = $this->project->settings['recent_speakers'][0] ?? null;
+
+        if (! $allowBackToBack && $lastSpeaker !== null && (int) $lastSpeaker === $addressee) {
+            return null;
+        }
+
+        return $addressee;
     }
 
     /**
@@ -298,10 +348,10 @@ class ModeratorService
         }
 
         return new Directive(
-            role: (string) ($d['role'] ?? ''),
+            role: Directive::normaliseRole($d['role'] ?? null),
             agendaStep: $phase,
             convergenceIntent: (string) ($d['convergence_intent'] ?? ''),
-            addressUser: (bool) ($d['address_user'] ?? false),
+            handBackToUser: (bool) ($d['hand_back_to_user'] ?? false),
             reasoning: $reasoning,
         );
     }
@@ -309,17 +359,18 @@ class ModeratorService
     protected function fallbackDirective(): Directive
     {
         return new Directive(
-            role: '',
+            role: Directive::DEFAULT_ROLE,
             agendaStep: $this->agendaPhase(),
             convergenceIntent: '',
-            addressUser: false,
+            handBackToUser: false,
             reasoning: '',
         );
     }
 
     /**
      * Apply hard handoff guards in priority order: topic clarification first
-     * (sparse briefing), then cadence-based user inclusion.
+     * (sparse briefing), then cadence-based user inclusion. The pending-user
+     * clamp sits outermost and can veto every hand-off decided below it.
      *
      * @param  array{pending_user?: ?string, user_inclusion_due?: bool, topic_clarification_due?: bool}|null  $context
      */
@@ -328,12 +379,104 @@ class ModeratorService
         // Closure is innermost so the structural guards (sparse-briefing
         // clarification, then user-inclusion cadence) can still override its
         // verdict with a user hand-off when one is due.
-        return $this->applyUserInclusionGuard(
-            $this->applyTopicClarificationGuard(
-                $this->applyClosureGuard($directive, $context),
+        return $this->applyReactionCadence(
+            $this->applyHandoffClamp(
+                $this->applyUserInclusionGuard(
+                    $this->applyTopicClarificationGuard(
+                        $this->applyClosureGuard($directive, $context),
+                        $context,
+                    ),
+                    $context,
+                ),
                 $context,
             ),
             $context,
+        );
+    }
+
+    /**
+     * Periodically turn a turn into a short reaction instead of another block of
+     * exposition.
+     *
+     * The prompt has permitted brief agreement all along, and the round still
+     * produced 58 straight informative turns — average 649 characters, exactly
+     * one with any reaction marker. So the reaction is scheduled, not requested.
+     *
+     * Two conditions, both needed: the recent turns really were all long (the
+     * existing brevity signal), and enough turns have passed since the last
+     * reaction. Without the second, the brevity signal alone fired on 52 of 58
+     * turns and would have made every turn a reaction.
+     *
+     * A hand-off is never converted — the user is owed a real question.
+     *
+     * @param  array{brevity_streak?: bool}|null  $context
+     */
+    protected function applyReactionCadence(Directive $directive, ?array $context): Directive
+    {
+        $cadence = max(0, (int) config('discussion.reaction_cadence', 3));
+
+        if ($cadence === 0 || $directive->handBackToUser || $directive->role === 'kurz_reagieren') {
+            return $directive;
+        }
+
+        if (empty($context['brevity_streak'])) {
+            return $directive;
+        }
+
+        $since = (int) ($this->project->settings['turns_since_reaction'] ?? 0);
+
+        if ($since < $cadence) {
+            return $directive;
+        }
+
+        return new Directive(
+            role: 'kurz_reagieren',
+            agendaStep: $directive->agendaStep,
+            convergenceIntent: $directive->convergenceIntent,
+            handBackToUser: false,
+            reasoning: $directive->reasoning,
+            pendingUserName: $directive->pendingUserName,
+            pendingUserExcerpt: $directive->pendingUserExcerpt,
+        );
+    }
+
+    /**
+     * Veto a hand-off the round cannot justify. Two deterministic cases:
+     *
+     *   1. An unanswered user message is pending. Answering "your turn" to
+     *      someone who just asked something is a non-answer, so the experts
+     *      must respond first. The three guards above already respect this;
+     *      the route LLM did not — it set the flag in 18 of 18 logged turns,
+     *      14 of them on top of a pending user message.
+     *   2. The round handed back only a few expert turns ago. Without a
+     *      cooldown the moderator chains hand-offs and the discussion never
+     *      runs on its own.
+     *
+     * @param  array{pending_user?: ?string, handoff_cooldown_left?: int}|null  $context
+     */
+    protected function applyHandoffClamp(Directive $directive, ?array $context): Directive
+    {
+        if (! $directive->handBackToUser) {
+            return $directive;
+        }
+
+        $pending = ! empty($context['pending_user']);
+        $coolingDown = (int) ($context['handoff_cooldown_left'] ?? 0) > 0;
+
+        if (! $pending && ! $coolingDown) {
+            return $directive;
+        }
+
+        return new Directive(
+            role: $pending ? 'frage_beantworten' : $directive->role,
+            agendaStep: $directive->agendaStep,
+            convergenceIntent: $pending
+                ? 'Die offene Nutzernachricht konkret beantworten, bevor irgendetwas anderes geöffnet wird.'
+                : $directive->convergenceIntent,
+            handBackToUser: false,
+            reasoning: $directive->reasoning,
+            pendingUserName: $directive->pendingUserName,
+            pendingUserExcerpt: $directive->pendingUserExcerpt,
         );
     }
 
@@ -365,12 +508,12 @@ class ModeratorService
 
         if ($nextMove === 'nutzer') {
             return new Directive(
-                role: $directive->role !== '' ? $directive->role : 'Nutzer einbeziehen',
+                role: 'projektkontext_klaeren',
                 agendaStep: $directive->agendaStep,
                 convergenceIntent: $openQuestion !== ''
                     ? $openQuestion
                     : 'Eine konkrete Entscheidungs- oder Klärungsfrage an den Nutzer stellen.',
-                addressUser: true,
+                handBackToUser: true,
                 reasoning: $directive->reasoning,
             );
         }
@@ -384,10 +527,10 @@ class ModeratorService
                 .($openQuestion !== '' ? ', konkret zu: '.$openQuestion : '.'));
 
         return new Directive(
-            role: $directive->role !== '' ? $directive->role : ($step === 'abschluss' ? 'Zwischenergebnis formulieren' : 'Verdichten und Differenzen abgleichen'),
+            role: $step === 'abschluss' ? 'zusammenfassen' : 'bruecke_bauen',
             agendaStep: $step,
             convergenceIntent: $intent,
-            addressUser: $directive->addressUser,
+            handBackToUser: $directive->handBackToUser,
             reasoning: $directive->reasoning,
         );
     }
@@ -405,10 +548,10 @@ class ModeratorService
         }
 
         return new Directive(
-            role: 'Projektziel und Scope beim Nutzer klären',
+            role: 'projektkontext_klaeren',
             agendaStep: $directive->agendaStep,
             convergenceIntent: 'Eine konkrete Klärungsfrage zu Ziel, Scope, Zielgruppe oder Erfolgskriterium stellen — keine spekulative These.',
-            addressUser: true,
+            handBackToUser: true,
             reasoning: $directive->reasoning,
         );
     }
@@ -426,17 +569,17 @@ class ModeratorService
         }
 
         // Topic clarification already forced a handoff with a stronger intent.
-        if ($directive->addressUser && str_contains($directive->role, 'klären')) {
+        if ($directive->handBackToUser && $directive->role === 'projektkontext_klaeren') {
             return $directive;
         }
 
         return new Directive(
-            role: $directive->role !== '' ? $directive->role : 'Nutzer einbeziehen',
+            role: $directive->role,
             agendaStep: $directive->agendaStep,
             convergenceIntent: $directive->convergenceIntent !== ''
                 ? $directive->convergenceIntent
                 : 'Eine konkrete Präferenz-, Klärungs- oder Freigabefrage an den Nutzer stellen.',
-            addressUser: true,
+            handBackToUser: true,
             reasoning: $directive->reasoning,
         );
     }
@@ -458,7 +601,7 @@ class ModeratorService
             role: $directive->role,
             agendaStep: $directive->agendaStep,
             convergenceIntent: $directive->convergenceIntent,
-            addressUser: $directive->addressUser,
+            handBackToUser: $directive->handBackToUser,
             reasoning: $directive->reasoning,
             pendingUserName: $context['pending_user_name'] ?? 'Nutzer',
             pendingUserExcerpt: $context['pending_user'],

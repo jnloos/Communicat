@@ -35,6 +35,35 @@ class UpdateState
         }
         app(ProgressTracker::class, ['project' => $ctx->project])->recordTopicVotes($votes);
 
+        $this->rollHandoffCooldown($ctx);
+
         return $next($ctx);
+    }
+
+    /**
+     * Arm the hand-off cooldown when this turn handed the floor to a human,
+     * otherwise burn one expert turn off it. Read back by ModeratorService's
+     * handoff clamp so two hand-offs cannot follow each other directly.
+     *
+     * Runs after ModeratorService::updateState(), which already persisted the
+     * project — so the settings read here are current.
+     */
+    protected function rollHandoffCooldown(TurnContext $ctx): void
+    {
+        $settings = $ctx->project->settings ?? [];
+
+        $settings['handoff_cooldown_left'] = $ctx->message?->handsBackToUser()
+            ? max(0, (int) config('discussion.handoff_cooldown_turns', 2))
+            : max(0, (int) ($settings['handoff_cooldown_left'] ?? 0) - 1);
+
+        // Reaction cadence: reset on a reaction turn, otherwise count up. Read
+        // back by ModeratorService::applyReactionCadence so short reactions are
+        // spaced out instead of firing on every long-turn streak.
+        $settings['turns_since_reaction'] = $ctx->directive?->role === 'kurz_reagieren'
+            ? 0
+            : (int) ($settings['turns_since_reaction'] ?? 0) + 1;
+
+        $ctx->project->settings = $settings;
+        $ctx->project->save();
     }
 }

@@ -39,7 +39,7 @@ class ClosureGuardTest extends TestCase
     private function route(array $context): \App\Services\PromptingPipeline\Data\Directive
     {
         // Route LLM returns a plain divergenz directive that the guard overrides.
-        $json = '{"candidates":["E'.$this->expert1->id.'"],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","address_user":false},"reasoning":"r"}';
+        $json = '{"candidates":["E'.$this->expert1->id.'"],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","hand_back_to_user":false},"reasoning":"r"}';
 
         $client = Mockery::mock(OpenAIClient::class);
         $client->shouldReceive('sendFast')->once()->andReturn($json);
@@ -87,7 +87,7 @@ class ClosureGuardTest extends TestCase
             'open_question' => 'Welches Budget habt ihr?',
         ]);
 
-        $this->assertTrue($directive->addressUser);
+        $this->assertTrue($directive->handBackToUser);
         $this->assertStringContainsString('Budget', $directive->convergenceIntent);
     }
 

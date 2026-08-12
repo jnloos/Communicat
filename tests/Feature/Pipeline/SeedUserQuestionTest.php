@@ -100,4 +100,53 @@ class SeedUserQuestionTest extends TestCase
         $this->assertStringContainsString('Frage zwei', $content);
         $this->assertStringNotContainsString('Frage eins', $content);
     }
+
+    /**
+     * A bare hand-over like "@Bob" is not a question. It used to be stored as
+     * the round's current question verbatim, so every persona then anchored its
+     * memory to a mention instead of to something answerable.
+     */
+    public function test_a_bare_mention_does_not_become_the_current_question(): void
+    {
+        $this->project->addMessage('Wie schätzt ihr die Lage ein?', $this->user);
+        $this->runStage();
+
+        $this->project->addMessage('@Bob', $this->user);
+        $this->runStage();
+
+        $this->assertSame(
+            'Wie schätzt ihr die Lage ein?',
+            $this->project->fresh()->settings['current_user_question'],
+        );
+        $this->assertStringContainsString(
+            'Wie schätzt ihr die Lage ein?',
+            (string) $this->expert1->thoughtsAbout($this->project)->fresh()->content,
+        );
+    }
+
+    /**
+     * A mention that also carries a question must still update it — only the
+     * mention itself is stripped.
+     */
+    public function test_a_mention_with_substance_still_updates_the_question(): void
+    {
+        $this->project->addMessage('@Bob Was hältst du von Wartelisten?', $this->user);
+        $this->runStage();
+
+        $question = $this->project->fresh()->settings['current_user_question'];
+        $this->assertSame('Was hältst du von Wartelisten?', $question);
+    }
+
+    public function test_every_persona_holds_the_same_question(): void
+    {
+        $this->project->addMessage('Welche Quote setzen wir an?', $this->user);
+        $this->runStage();
+
+        foreach ([$this->expert1, $this->expert2] as $expert) {
+            $this->assertStringContainsString(
+                'Welche Quote setzen wir an?',
+                (string) $expert->thoughtsAbout($this->project)->fresh()->content,
+            );
+        }
+    }
 }

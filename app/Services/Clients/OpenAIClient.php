@@ -43,30 +43,76 @@ class OpenAIClient
         self::$jobLogId = $jobLogId;
     }
 
-    public function send(string $prompt, ?string $model = null, string $label = ''): string
-    {
+    /**
+     * @param  array<string, mixed>|null  $schema  JSON schema the answer must satisfy
+     *                                             (see ResponseSchemas). Null = free text.
+     */
+    public function send(
+        string $prompt,
+        ?string $model = null,
+        string $label = '',
+        ?array $schema = null,
+        ?int $maxOutputTokens = null,
+        ?string $reasoningEffort = null,
+    ): string {
         $model = $model ?? $this->modelFast;
         $start = microtime(true);
 
-        $response = $this->client->responses()->create([
+        // outputText is nullable: a reasoning model that spends its whole token
+        // budget on hidden reasoning returns a response with no text at all.
+        $response = (string) ($this->client->responses()->create([
             'model' => $model,
             'instructions' => $this->systemInstructions(),
             'input' => $prompt,
-        ] + $this->reasoningOptions($model, $label))->outputText;
+        ] + $this->formatOptions($schema)
+          + ($maxOutputTokens !== null ? ['max_output_tokens' => $maxOutputTokens] : [])
+          + $this->reasoningOptions($model, $label, $reasoningEffort))->outputText ?? '');
 
         $this->logCall($label, $model, $prompt, $response, $start);
 
         return $response;
     }
 
-    public function sendFast(string $prompt, string $label = ''): string
-    {
-        return $this->send($prompt, $this->modelFast, $label);
+    /**
+     * @param  array<string, mixed>|null  $schema
+     * @param  int|null  $maxOutputTokens  hard ceiling; the prompt's own length
+     *                                     rules are routinely ignored, so short
+     *                                     turns need an actual limit
+     */
+    public function sendFast(
+        string $prompt,
+        string $label = '',
+        ?array $schema = null,
+        ?int $maxOutputTokens = null,
+        ?string $reasoningEffort = null,
+    ): string {
+        return $this->send($prompt, $this->modelFast, $label, $schema, $maxOutputTokens, $reasoningEffort);
     }
 
-    public function sendSlow(string $prompt, string $label = ''): string
+    /**
+     * @param  array<string, mixed>|null  $schema
+     */
+    public function sendSlow(string $prompt, string $label = '', ?array $schema = null): string
     {
-        return $this->send($prompt, $this->modelSlow, $label);
+        return $this->send($prompt, $this->modelSlow, $label, $schema);
+    }
+
+    /**
+     * Structured-output payload. With a schema attached the provider guarantees
+     * a response matching it, so missing keys and invented enum values stop
+     * reaching the parsers at all — the text fallbacks in ModeratorService
+     * become genuine exception paths instead of routine ones.
+     *
+     * @param  array<string, mixed>|null  $schema
+     * @return array<string, mixed>
+     */
+    protected function formatOptions(?array $schema): array
+    {
+        if ($schema === null) {
+            return [];
+        }
+
+        return ['text' => ['format' => $schema]];
     }
 
     public function sendMany(array $prompts, ?string $model = null, string $label = ''): array
@@ -123,10 +169,16 @@ class OpenAIClient
      * (apis.openai.reasoning_effort); non-reasoning models must not receive
      * the parameter at all, so anything else returns no options.
      */
-    protected function reasoningOptions(string $model, string $label): array
+    protected function reasoningOptions(string $model, string $label, ?string $override = null): array
     {
         if (! str_starts_with($model, 'gpt-5')) {
             return [];
+        }
+
+        // An explicit override wins: a token-capped call must not spend its
+        // budget on reasoning, or nothing is left for the answer.
+        if ($override !== null) {
+            return ['reasoning' => ['effort' => $override]];
         }
 
         foreach (config('apis.openai.reasoning_effort', []) as $prefix => $effort) {

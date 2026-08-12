@@ -200,10 +200,10 @@ class AgentServiceTest extends TestCase
     private function directive(): Directive
     {
         return new Directive(
-            role: '',
+            role: 'vertiefen',
             agendaStep: 'divergenz',
             convergenceIntent: '',
-            addressUser: false,
+            handBackToUser: false,
         );
     }
 }

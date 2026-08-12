@@ -150,7 +150,9 @@
                 @endforeach
 
                 <!-- Denkblase / Tipp-Indikator der Generierungs-Pipeline -->
-                <x-projects.pipeline-indicator :project="$project" />
+                <div wire:key="pipeline-indicator">
+                    <x-projects.pipeline-indicator :project="$project" />
+                </div>
             </div>
         </div>
     </div>

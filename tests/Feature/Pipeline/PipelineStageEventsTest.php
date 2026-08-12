@@ -48,7 +48,7 @@ class PipelineStageEventsTest extends TestCase
 
         $routeJson = json_encode([
             'candidates' => ["E{$this->expert1->id}", "E{$this->expert2->id}"],
-            'directive' => ['role' => 'vertiefen', 'agenda_step' => 'divergenz', 'convergence_intent' => 'x', 'address_user' => false],
+            'directive' => ['role' => 'vertiefen', 'agenda_step' => 'divergenz', 'convergence_intent' => 'x', 'hand_back_to_user' => false],
             'reasoning' => 'Test.',
         ]);
         $thinkResponse = "GEDÄCHTNIS-UPDATE:\n[STAND]\nx\nBEITRAGSABSICHT: y.";

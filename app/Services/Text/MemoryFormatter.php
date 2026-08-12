@@ -34,21 +34,21 @@ class MemoryFormatter
      * }
      */
     /**
-     * @param array<string, string> $tokenNames Maps prompt tokens (E7/U3) from the
-     *        memory block headers to display names. Empty = show the bare token.
+     * @param  array<string, string>  $tokenNames  Maps prompt tokens (E7/U3) from the
+     *                                             memory block headers to display names. Empty = show the bare token.
      */
     public function parse(?string $memoryBlock, array $tokenNames = []): array
     {
         $raw = trim((string) $memoryBlock);
 
         $empty = [
-            'structured'     => false,
-            'user'           => null,
-            'users'          => [],
-            'experts'        => [],
+            'structured' => false,
+            'user' => null,
+            'users' => [],
+            'experts' => [],
             'open_questions' => [],
-            'state'          => null,
-            'raw'            => $raw,
+            'state' => null,
+            'raw' => $raw,
         ];
 
         if ($raw === '') {
@@ -69,17 +69,17 @@ class MemoryFormatter
         }
 
         $result = [
-            'structured'     => true,
-            'user'           => null,
-            'users'          => [],
-            'experts'        => [],
+            'structured' => true,
+            'user' => null,
+            'users' => [],
+            'experts' => [],
             'open_questions' => [],
-            'state'          => null,
-            'raw'            => $raw,
+            'state' => null,
+            'raw' => $raw,
         ];
 
         $headers = $headerMatches[0];
-        $count   = count($headers);
+        $count = count($headers);
 
         for ($i = 0; $i < $count; $i++) {
             [$fullMatch, $offset] = $headers[$i];
@@ -98,6 +98,7 @@ class MemoryFormatter
                 if ($content !== '') {
                     $result['experts'][$tokenNames[$rawLabel] ?? $rawLabel] = $content;
                 }
+
                 continue;
             }
 
@@ -106,6 +107,7 @@ class MemoryFormatter
                 if ($content !== '') {
                     $result['users'][$tokenNames[$rawLabel] ?? $rawLabel] = $content;
                 }
+
                 continue;
             }
 
@@ -115,22 +117,26 @@ class MemoryFormatter
                 if ($name !== '' && $content !== '') {
                     $result['users'][$name] = $content;
                 }
+
                 continue;
             }
 
             // Legacy single [NUTZER] block (older summaries).
             if ($rawLabel === 'NUTZER') {
                 $result['user'] = $content !== '' ? $content : null;
+
                 continue;
             }
 
             if ($rawLabel === 'OFFENE_FRAGEN') {
                 $result['open_questions'] = $this->parseBulletList($content);
+
                 continue;
             }
 
             if ($rawLabel === 'STAND') {
                 $result['state'] = $content !== '' ? $content : null;
+
                 continue;
             }
 
@@ -153,6 +159,61 @@ class MemoryFormatter
         }
 
         return $result;
+    }
+
+    /**
+     * Inverse of parse(): render sections back into the canonical marker format.
+     *
+     * Only meaningful when parse() was called WITHOUT $tokenNames, so the
+     * `users`/`experts` keys are still prompt tokens rather than display names.
+     * Used by MemoryMerger to write a merged memory back; the UI only ever
+     * parses.
+     *
+     * @param  array{user?: ?string, users?: array<string, string>, experts?: array<string, string>, open_questions?: string[], state?: ?string}  $sections
+     */
+    public function render(array $sections): string
+    {
+        $lines = [];
+
+        // Legacy single [NUTZER] block from memories written by the older
+        // prompt. Preserved verbatim so a merge never drops it.
+        $legacyUser = trim((string) ($sections['user'] ?? ''));
+        if ($legacyUser !== '') {
+            $lines[] = '[NUTZER]';
+            $lines[] = $legacyUser;
+        }
+
+        foreach (($sections['users'] ?? []) as $token => $content) {
+            $lines[] = '['.$token.']';
+            $lines[] = trim((string) $content);
+        }
+
+        foreach (($sections['experts'] ?? []) as $token => $content) {
+            $lines[] = '['.$token.']';
+            $lines[] = trim((string) $content);
+        }
+
+        $questions = array_values(array_filter(
+            array_map('trim', $sections['open_questions'] ?? []),
+            fn (string $q) => $q !== '',
+        ));
+
+        $lines[] = '[OFFENE_FRAGEN]';
+        if (empty($questions)) {
+            $lines[] = 'keine';
+        } else {
+            foreach ($questions as $question) {
+                $lines[] = '- '.$question;
+            }
+        }
+
+        $state = trim((string) ($sections['state'] ?? ''));
+        if ($state !== '') {
+            $lines[] = '[STAND]';
+            $lines[] = $state;
+        }
+
+        return trim(implode("\n", $lines));
     }
 
     /**

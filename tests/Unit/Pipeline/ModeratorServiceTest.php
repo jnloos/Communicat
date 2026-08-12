@@ -5,8 +5,8 @@ namespace Tests\Unit\Pipeline;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\User;
-use App\Services\PromptingPipeline\Support\ModeratorService;
 use App\Services\Clients\OpenAIClient;
+use App\Services\PromptingPipeline\Support\ModeratorService;
 use App\Services\PromptingPipeline\Support\PromptBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
@@ -17,7 +17,9 @@ class ModeratorServiceTest extends TestCase
     use RefreshDatabase;
 
     private Project $project;
+
     private Expert $expert1;
+
     private Expert $expert2;
 
     protected function setUp(): void
@@ -25,11 +27,11 @@ class ModeratorServiceTest extends TestCase
         parent::setUp();
 
         $user = User::factory()->create();
-        $this->project = Project::withoutEvents(fn() => Project::create([
-            'title'       => 'Test',
+        $this->project = Project::withoutEvents(fn () => Project::create([
+            'title' => 'Test',
             'description' => 'Test',
-            'settings'    => [],
-            'user_id'     => $user->id,
+            'settings' => [],
+            'user_id' => $user->id,
         ]));
         $this->expert1 = Expert::factory()->create(['name' => 'Alice']);
         $this->expert2 = Expert::factory()->create(['name' => 'Bob']);
@@ -92,9 +94,9 @@ class ModeratorServiceTest extends TestCase
 
     public function test_route_returns_candidate_ids_from_json(): void
     {
-        $json = '{"candidates":["E' . $this->expert2->id . '"],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","address_user":false},"reasoning":"Bob passt."}';
+        $json = '{"candidates":["E'.$this->expert2->id.'"],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","hand_back_to_user":false},"reasoning":"Bob passt."}';
 
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendFast')->once()->andReturn($json);
         $prompts->shouldReceive('moderatorRoute')->once()->andReturn('prompt');
@@ -107,9 +109,9 @@ class ModeratorServiceTest extends TestCase
 
     public function test_route_filters_unknown_ids(): void
     {
-        $json = '{"candidates":["E' . $this->expert1->id . '","E999999"],"directive":{},"reasoning":"x"}';
+        $json = '{"candidates":["E'.$this->expert1->id.'","E999999"],"directive":{},"reasoning":"x"}';
 
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendFast')->once()->andReturn($json);
         $prompts->shouldReceive('moderatorRoute')->once()->andReturn('prompt');
@@ -121,7 +123,7 @@ class ModeratorServiceTest extends TestCase
 
     public function test_route_falls_back_to_all_contributors_on_invalid_json(): void
     {
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendFast')->once()->andReturn('kein gültiges JSON');
         $prompts->shouldReceive('moderatorRoute')->once()->andReturn('prompt');
@@ -136,9 +138,9 @@ class ModeratorServiceTest extends TestCase
 
     public function test_route_parses_candidate_ids_in_markdown_fence(): void
     {
-        $response = "```json\n{\"candidates\":[\"E" . $this->expert1->id . '","E' . $this->expert2->id . "\"],\"directive\":{},\"reasoning\":\"Test.\"}\n```";
+        $response = "```json\n{\"candidates\":[\"E".$this->expert1->id.'","E'.$this->expert2->id."\"],\"directive\":{},\"reasoning\":\"Test.\"}\n```";
 
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendFast')->once()->andReturn($response);
         $prompts->shouldReceive('moderatorRoute')->once()->andReturn('prompt');
@@ -153,7 +155,7 @@ class ModeratorServiceTest extends TestCase
     {
         $json = '{"candidates":[],"directive":{},"reasoning":"x"}';
 
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendFast')->once()->andReturn($json);
         $prompts->shouldReceive('moderatorRoute')->once()->andReturn('prompt');
@@ -181,9 +183,9 @@ class ModeratorServiceTest extends TestCase
 
     public function test_select_winner_returns_parsed_winner(): void
     {
-        $json = '{"winner":"E' . $this->expert2->id . '","reasoning":"Höchste Priorität."}';
+        $json = '{"winner":"E'.$this->expert2->id.'","reasoning":"Höchste Priorität."}';
 
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendFast')->once()->andReturn($json);
         $prompts->shouldReceive('moderatorSelect')->once()->andReturn('prompt');
@@ -198,7 +200,7 @@ class ModeratorServiceTest extends TestCase
     {
         $json = '{"winner":"E999999","reasoning":"Test."}';
 
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendFast')->once()->andReturn($json);
         $prompts->shouldReceive('moderatorSelect')->once()->andReturn('prompt');
@@ -211,7 +213,7 @@ class ModeratorServiceTest extends TestCase
 
     public function test_select_winner_falls_back_to_first_key_on_invalid_json(): void
     {
-        $client  = Mockery::mock(OpenAIClient::class);
+        $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
         $client->shouldReceive('sendFast')->once()->andReturn('ungültig');
         $prompts->shouldReceive('moderatorSelect')->once()->andReturn('prompt');

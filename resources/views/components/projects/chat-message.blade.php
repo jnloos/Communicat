@@ -19,6 +19,11 @@
         $addressed = $partner;
     }
 
+    // The incoming half of the pair: whose question this turn answers. Shown
+    // above the bubble so a question and its answer read as one exchange even
+    // when the same turn goes on to address somebody else (the arrow below).
+    $answersTo = $msg->answers?->sender();
+
     // Render the message body and rewrite "@PersonaName" into clickable badges
     // that open the matching expert's thoughts flyout. Longest contributor name
     // first so "@Sophie Wagner" wins over a partial "@Sophie" match.
@@ -41,7 +46,12 @@
     }
 @endphp
 
-<div class="block">
+{{--
+    The key belongs on the OUTER element: without it the Livewire morph matches
+    siblings positionally, so a new message shifts the pipeline indicator that
+    follows this loop and forces Alpine to re-create it.
+--}}
+<div class="block" wire:key="msg-{{ $id }}">
     @if($msg->isCurrUser())
         <div class="flex justify-end">
             <div id="{{ $id }}" wire:key="{{ $id }}" class="rounded-lg w-full sm:w-auto sm:min-w-sm z-0 px-5 pt-4 pb-8 break-words ms-2 sm:ms-30 bg-zinc-300 dark:bg-zinc-600">
@@ -60,6 +70,14 @@
             </div>
         </div>
     @else {{-- Other user or expert --}}
+        @if ($answersTo)
+            <div class="flex justify-start me-2 sm:me-30 ms-5 mb-1">
+                <span class="inline-flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400" data-tour="answers-to">
+                    <span aria-hidden="true">&#10557;</span>
+                    {{ __('Antwort an') }} {{ $answersTo->name }}
+                </span>
+            </div>
+        @endif
         <div class="flex justify-start">
             <div id="{{ $id }}" wire:key="{{ $id }}" data-tour="chat-message" class="rounded-lg w-full sm:w-auto sm:min-w-sm z-0 px-5 pt-4 pb-8 break-words me-2 sm:me-30 bg-zinc-100 dark:bg-zinc-700">
                 <flux:heading size="lg" class="mb-2 font-bold">{{ $sender->name }}</flux:heading>

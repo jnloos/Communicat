@@ -1,0 +1,449 @@
+% Skizze der Diskussions-Pipeline --- Stand: siehe \docdate
+% Bauen:  pdflatex -output-directory=docs docs/pipeline.tex
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[ngerman]{babel}
+\usepackage{lmodern}
+\usepackage{amssymb}
+
+\usepackage[a4paper,margin=20mm,top=18mm,bottom=20mm]{geometry}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{parskip}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc,shapes.geometric}
+\usepackage[colorlinks=true,linkcolor=black,urlcolor=black]{hyperref}
+
+\newcommand{\docdate}{12.\,August 2026}
+
+% Farbcode: blau = Moderator-LLM, grün = Agenten-LLM, grau = deterministisch (PHP)
+\definecolor{modblue}{HTML}{2C5AA0}
+\definecolor{modbg}{HTML}{E8F0FE}
+\definecolor{agentgreen}{HTML}{1E7B45}
+\definecolor{agentbg}{HTML}{E6F4EA}
+\definecolor{detgrey}{HTML}{4A4A4A}
+\definecolor{detbg}{HTML}{F0F0F0}
+\definecolor{statamber}{HTML}{9A6700}
+\definecolor{statbg}{HTML}{FFF4E5}
+\definecolor{stopred}{HTML}{A32A2A}
+\definecolor{stopbg}{HTML}{FBE9E9}
+
+\tikzset{
+  stage/.style   = {rectangle, rounded corners=2pt, draw=detgrey, fill=detbg,
+                    text width=52mm, align=left, inner sep=2.4mm, font=\sffamily\footnotesize},
+  mod/.style     = {stage, draw=modblue, fill=modbg},
+  agent/.style   = {stage, draw=agentgreen, fill=agentbg},
+  state/.style   = {stage, draw=statamber, fill=statbg, text width=44mm},
+  stop/.style    = {stage, draw=stopred, fill=stopbg, text width=44mm},
+  small/.style   = {font=\sffamily\scriptsize, inner sep=1pt},
+  flow/.style    = {-{Stealth[length=2mm]}, draw=detgrey, thick},
+  side/.style    = {-{Stealth[length=1.6mm]}, draw=statamber, dashed, thin},
+}
+
+\newcommand{\lbl}[1]{{\sffamily\footnotesize\textbf{#1}}}
+\newcommand{\code}[1]{{\ttfamily\small #1}}
+% Code innerhalb von TikZ-Knoten: eine Stufe kleiner, damit lange Bezeichner
+% nicht aus der Box laufen.
+\newcommand{\ncode}[1]{{\ttfamily\scriptsize #1}}
+\newcommand{\keyidea}[1]{%
+  \par\medskip\noindent
+  \begin{tikzpicture}
+    \node[draw=modblue, fill=modbg, rounded corners=2pt, inner sep=3mm,
+          text width=\dimexpr\linewidth-8mm\relax, align=left] {#1};
+  \end{tikzpicture}\par\medskip}
+
+\setlist[itemize]{leftmargin=5mm, itemsep=1pt, topsep=2pt}
+
+\begin{document}
+
+\begin{center}
+  {\sffamily\LARGE\bfseries Diskussions-Pipeline}\\[1.5mm]
+  {\sffamily\large Wie ein Gesprächszug entsteht und wie die Diskussion iteriert}\\[2mm]
+  {\sffamily\small Multi-Persona-Diskussionssimulator \textperiodcentered\ Stand \docdate}
+\end{center}
+
+\vspace{2mm}
+
+\section*{Was das System tut}
+
+Mehrere KI-Personas (\emph{Experten}) diskutieren ein vom Nutzer gestelltes Thema.
+Ein \emph{Moderator} --- selbst ein LLM-Aufruf ohne Persona --- vergibt das Rederecht.
+Pro Zug spricht genau eine Persona. Die Diskussion läuft selbsttätig weiter, bis sie
+an den Menschen übergibt oder gestoppt wird.
+
+Zwei Kreisläufe greifen ineinander: ein \textbf{äußerer Job-Kreislauf}, der Zug für Zug
+neu anstößt, und eine \textbf{innere Pipeline aus acht Stufen}, die einen einzelnen Zug
+erzeugt.
+
+\keyidea{%
+  \textbf{Leitprinzip der Architektur.}\enspace Der sichtbare Text ist die Wahrheit, und
+  Struktur wird deterministisch erzwungen --- nicht erhofft. Prompts formulieren die
+  Absicht; PHP stellt sicher, dass sie eintritt. Dieses Prinzip stammt aus der Messung:
+  In 52 von 58 protokollierten Aufrufen stand eine als \emph{harte Regel} markierte
+  Kürzungsanweisung im Prompt, und kein einziger Beitrag hielt sie ein.}
+
+\section*{1. Der äußere Kreislauf --- wie die Diskussion iteriert}
+
+\begin{center}
+\begin{tikzpicture}[node distance=7mm]
+
+\node[stage, text width=46mm] (start) {\lbl{Nutzer startet}\\
+  \ncode{ControlChat::startGenerate}\\ setzt das Generierungs-Flag};
+\node[stage, below=of start, text width=46mm] (job) {\lbl{MessageGenerator} (Queue-Job)\\
+  Sperre pro Projekt, damit nie zwei Züge gleichzeitig laufen};
+\node[stage, below=of job, draw=modblue, fill=modbg, text width=46mm] (pipe)
+  {\lbl{DiscussionPipeline::run()}\\ die acht Stufen (Abschnitt 2)\\
+   liefert \ncode{\{stop, reason, user\_id\}}};
+\node[stage, below=of pipe, text width=46mm] (pause) {\lbl{Lesepause}\\
+  \ncode{ReadingPause::secondsFor()}\\ Länge des Beitrags $\rightarrow$ 4--25\,s};
+
+\node[stop, right=26mm of pipe, text width=42mm] (handoff) {\lbl{Übergabe an den Menschen}\\
+  \ncode{stop = true}\\ \ncode{reason = user\_addressed}\\[0.8mm] Runde hält an und wartet};
+\node[stop, above=10mm of handoff, text width=42mm] (stopped) {\lbl{Abbruch}\\
+  niemand schaut zu, Nutzer drückt Stopp, oder ein Fehler};
+
+\draw[flow] (start) -- (job);
+\draw[flow] (job) -- (pipe);
+\draw[flow] (pipe) -- (pause);
+\draw[flow] (pipe) -- (handoff);
+\draw[flow] (job.east) -- ++(0.9,0) |- (stopped.west);
+
+% Selbstschleife: derselbe Job stellt den nächsten in die Queue
+\draw[flow] (pause.west) -- ++(-1.5,0) |- node[small, pos=0.25, left, align=right]
+  {derselbe Job\\ startet erneut} (job.west);
+
+% Rückweg über den Menschen: außen um die Stopp-Spalte herum, damit nichts
+% über den Boxen liegt.
+\draw[flow, draw=agentgreen] (handoff.east) -- ++(0.7,0)
+  |- node[small, pos=0.35, right, align=left, text=agentgreen]
+     {Nutzer\\antwortet\\[0.3mm]\ncode{sendMessage}} (start.east);
+
+\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+  \item Der Job \textbf{startet sich selbst neu} --- es gibt keinen zentralen Scheduler.
+        Jeder Zug stellt den nächsten mit Verzögerung in die Queue.
+  \item Die Verzögerung ist zugleich der Countdown, den das Frontend anzeigt. Sie ist
+        nur dann $>0$, wenn tatsächlich ein Folgezug eingeplant wurde.
+  \item Nach einer Übergabe läuft nichts weiter, bis der Mensch schreibt. Genau
+        \emph{ein} Nutzer wird gefragt: der Autor der offenen Nachricht, sonst der
+        Projekt-Eigentümer.
+\end{itemize}
+
+\clearpage
+\section*{2. Ein Zug --- die acht Stufen}
+
+Jede Stufe darf abbrechen; dann endet der Zug vorzeitig.\\
+{\footnotesize
+\textcolor{modblue}{$\blacksquare$}~Moderator-LLM \quad
+\textcolor{agentgreen}{$\blacksquare$}~Agenten-LLM \quad
+\textcolor{detgrey}{$\blacksquare$}~deterministisch \quad
+\textcolor{statamber}{$\blacksquare$}~Zustand}
+
+\begin{center}
+\scalebox{0.88}{%
+\begin{tikzpicture}[node distance=4.5mm]
+
+\node[stage] (s1) {\lbl{1 \enspace SeedUserQuestion}\\
+  Neue Nutzernachricht $\rightarrow$ Frage extrahieren und in \emph{jedes} Experten-Gedächtnis schreiben.
+  Eine reine \code{@Nennung} zählt nicht als Frage.};
+
+\node[mod, below=of s1] (s2) {\lbl{2 \enspace RunOrchestratorInstructions}\\
+  Signale sammeln (Agenda, offene Nutzernachricht, Stagnation, offene Paare).\\
+  \code{moderator:route} $\rightarrow$ Kandidaten + Directive.\\
+  \emph{Abkürzung:} \code{@Nennung} überspringt diesen Aufruf.};
+
+\node[agent, below=of s2] (s3) {\lbl{3 \enspace RunExpertsThink}\\
+  \code{think:<id>} für alle Kandidaten \textbf{parallel} (isoliert --- niemand sieht die
+  Gedanken der anderen).\\
+  Ausgabe: \code{GEDÄCHTNIS-UPDATE} + \code{BEITRAGSABSICHT} + \code{THEMA\_STATUS}.};
+
+\node[mod, below=of s3] (s4) {\lbl{4 \enspace RunOrchestratorSelect}\\
+  Gewinner aus den Beitragsabsichten. \code{moderator:select}.\\
+  \textbf{Wird übersprungen}, wenn ein offenes Paar den Sprecher bereits festlegt.};
+
+\node[agent, below=of s4] (s5) {\lbl{5 \enspace RunExpertsSpeak}\\
+  \code{speak:<id>} erzeugt den sichtbaren Beitrag + \code{---STEUERUNG---}-Anhang
+  (\code{ADRESSAT}, \code{PAARTYP}).\\
+  Danach: \code{SpeakTrailerResolver} gleicht Anhang gegen Prosa ab.};
+
+\node[stage, below=of s5] (s6) {\lbl{6 \enspace PersistMessage}\\
+  Nachricht speichern und beide Enden des Paars eintragen:
+  \code{answers\_message\_id} (was sie schließt) und \code{adjacency\_partner}
+  (wen sie neu anspricht).};
+
+\node[stage, below=of s6] (s7) {\lbl{7 \enspace UpdateState}\\
+  Sprecherhistorie, Schweigezähler, Eröffnungen, Agenda-Phase,
+  Abkühlzähler, Reaktionskadenz.};
+
+\node[agent, below=of s7] (s8) {\lbl{8 \enspace MaybeRunSummarize}\\
+  Erst wenn mehr als \code{summary\_trigger\_at} (100) unkomprimierte Nachrichten
+  vorliegen: ältere zu \code{chat\_summary} verdichten.};
+
+\foreach \a/\b in {s1/s2, s2/s3, s3/s4, s4/s5, s5/s6, s6/s7, s7/s8} {
+  \draw[flow] (\a) -- (\b);
+}
+
+% Seitliche Zustandsflüsse
+\node[state, right=14mm of s3] (mem) {\lbl{summaries}\\ Gedächtnis je (Projekt, Persona).
+  Wird \textbf{zusammengeführt}, nie überschrieben.};
+\node[state, right=14mm of s6] (msg) {\lbl{messages}\\ Paartyp, Adressat, Antwort-Verknüpfung};
+\node[state, right=14mm of s7] (set) {\lbl{projects.settings}\\ der gesamte Zustand zwischen den Zügen};
+
+\draw[side] (s3.east) -- (mem.west);
+\draw[side] (s1.east) -- ++(0.8,0) |- (mem.west);
+\draw[side] (s6.east) -- (msg.west);
+\draw[side] (s7.east) -- (set.west);
+
+\node[stop, right=14mm of s4, text width=40mm] (guard) {\lbl{Harte Regel}\\
+  Wer gefragt wurde, \textbf{gewinnt} --- sofern er nicht gerade selbst gesprochen hat.};
+\draw[side, draw=stopred] (guard.west) -- (s4.east);
+
+\end{tikzpicture}}
+\end{center}
+
+\clearpage
+\section*{3. Die LLM-Aufrufe}
+
+Pro Zug fallen typischerweise vier bis sechs Aufrufe an.
+
+\begin{center}\sffamily\footnotesize
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Label} & \textbf{Modell} & \textbf{Vorlage} & \textbf{Ausgabevertrag} \\
+\midrule
+\code{moderator:route}   & schnell & \code{moderator/route}   & JSON-Schema (erzwungen) \\
+\code{think:<id>}        & stark   & \code{agent/think}       & Marker-Blöcke \\
+\code{moderator:select}  & schnell & \code{moderator/select}  & JSON-Schema (erzwungen) \\
+\code{speak:<id>}        & schnell & \code{agent/speak}       & Freitext + Steuerzeile \\
+\code{moderator:closure} & schnell & \code{moderator/closure} & JSON-Schema (erzwungen) \\
+\code{summarizer:\dots}  & stark   & \code{shorten-chat}      & reiner Fließtext \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\medskip
+Die THINK-Aufrufe laufen \textbf{nebenläufig}. Ein zusätzlicher Kandidat kostet daher
+Tokens, aber keine Wartezeit. Das wird ausgenutzt: Die Persona mit dem größten
+Gedächtnis-Rückstand hängt sich jeden Zug an den Stapel, ohne sprechen zu dürfen.
+
+\subsection*{Warum \code{speak} als Einziger Freitext bleibt}
+
+Die Moderator-Aufrufe liefern JSON mit erzwungenem Schema --- Aufzählungswerte und
+Pflichtfelder können gar nicht mehr fehlen. Für \code{speak} wäre das ebenfalls möglich,
+ist aber bewusst \emph{nicht} umgesetzt: Der JSON-Modus verschlechtert die deutsche
+Prosa, und die Transkripte sind Studienmaterial. Die Verlässlichkeit kommt dort
+stattdessen aus dem nachgelagerten Abgleich.
+
+\subsection*{Der Steuerungs-Anhang von \code{speak}}
+
+\begin{center}\ttfamily\small
+\begin{tabular}{@{}l@{}}
+\textrm{\emph{... sichtbarer Beitrag ...}}\\
+-{}-{}-STEUERUNG-{}-{}-\\
+ADRESSAT: E7 \textrm{\emph{oder}} none\\
+PAARTYP: Frage$\rightarrow$Antwort | Ansprache$\rightarrow$Reaktion | Beitrag$\rightarrow$Diskussion | Synthese$\rightarrow$Diskussion\\
+\end{tabular}
+\end{center}
+
+\medskip
+Dieser Anhang ist unzuverlässig: In den protokollierten Läufen fehlte er in rund einem
+Fünftel der jüngsten Züge ganz, und in weiteren Fällen stand \code{ADRESSAT: none},
+während die Prosa eine benannte Person direkt fragte. Deshalb sitzt dahinter der
+\code{SpeakTrailerResolver}.
+
+\section*{4. Die deterministischen Wächter}
+
+Alles hier läuft \textbf{ohne LLM}. Jede dieser Regeln existiert, weil eine Prompt-Regel
+allein sie nachweislich nicht durchgesetzt hat.
+
+\begin{center}\sffamily\footnotesize
+\begin{tabular}{@{}p{45mm}p{105mm}@{}}
+\toprule
+\textbf{Wächter} & \textbf{Wirkung} \\
+\midrule
+Pending-User-Klammer &
+  Solange eine Nutzernachricht unbeantwortet ist, kann \emph{nie} an den Nutzer übergeben
+  werden. Verhindert „jetzt bist du dran“ als Antwort auf eine Frage. \\
+Abkühlphase &
+  Nach einer Übergabe zwei Expertenzüge Sperre, damit nicht mehrere Übergaben
+  aufeinander folgen. \\
+Paar-Vorrang &
+  Steht der Adressat eines offenen Paares zur Auswahl, gewinnt er. \\
+Kein Back-to-Back &
+  Niemand spricht zweimal direkt hintereinander --- bleibt äußerste Regel, auch
+  gegenüber dem Paar-Vorrang. \\
+\code{SpeakTrailerResolver} &
+  Fehlt der Adressat im Anhang, wird er aus der Prosa geborgen --- aber nur, wenn der
+  Text wirklich eine Frage stellt und genau eine Person nennt. \\
+Nutzer-Vokativ-Filter &
+  Entfernt „\emph{admin}, \dots“ am Satzanfang oder „\dots, \emph{admin}.“ am Ende, wenn
+  der Zug gar nicht an den Menschen gerichtet war. \\
+Abgleich beim Speichern &
+  Widerspricht die Absicht des Moderators dem, was der Text tut, \textbf{gewinnt der Text}. \\
+Reaktionskadenz &
+  Plant regelmäßig einen kurzen Reaktionszug ein, statt ihn zu erbitten. \\
+Gedächtnis-Zusammenführung &
+  Ein Block, den ein THINK auslässt, wird aus dem alten Gedächtnis übernommen statt
+  gelöscht. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\clearpage
+\section*{5. Adjazenzpaare --- wie ein Paar öffnet und schließt}
+
+Ein Adjazenzpaar ist die kleinste Gesprächseinheit: Frage$\rightarrow$Antwort,
+Ansprache$\rightarrow$Reaktion. Der erste Teil macht den zweiten \emph{konditionell
+relevant} --- sein Ausbleiben fällt auf. Die Abschlussrate offener Paare ist ein
+strukturelles Natürlichkeitsmaß.
+
+\begin{center}
+\begin{tikzpicture}[node distance=5mm]
+
+\node[stage, text width=62mm] (m1) {\lbl{Nachricht 1 --- Sophie}\\
+  „\emph{Welche Fehlerrate hältst du für vertretbar, Jan?}“\\[1mm]
+  \code{adjacency\_pair\_type = Frage$\rightarrow$Antwort}\\
+  \code{adjacency\_partner = Jan}};
+
+\node[state, right=10mm of m1, text width=48mm] (reg) {\lbl{OpenPairRegistry}\\
+  Offene Paare werden \textbf{abgeleitet}, nicht gespeichert: Paar ohne
+  \code{answeredBy}.\\[1mm]
+  Überlebt Nutzernachrichten und Zwischensprecher.};
+
+\node[stage, below=14mm of m1, text width=62mm] (m2) {\lbl{Nachricht 2 --- Jan}\\
+  „\emph{Höchstens 0,8\,\%, Sophie. Wie siehst du das, Lena?}“\\[1mm]
+  \code{answers\_message\_id = 1} \hfill \textcolor{stopred}{\small schließt}\\
+  \code{adjacency\_partner = Lena} \hfill \textcolor{agentgreen}{\small öffnet}};
+
+\node[stage, below=8mm of m2, text width=62mm, draw=modblue, fill=modbg] (ui) {\lbl{Im Chat sichtbar}\\
+  $\hookrightarrow$ \emph{Antwort an Sophie} \enspace(über der Blase)\\
+  $\rightarrow$ \emph{fragt Lena} \enspace(Pfeil darunter)};
+
+\draw[flow] (m1) -- node[small, right] {Jan ist am Zug} (m2);
+\draw[flow] (m2) -- (ui);
+\draw[side] (m1.east) -- (reg.west);
+\draw[side] (reg.south) -- ++(0,-1.2) -| (m2.east);
+
+\end{tikzpicture}
+\end{center}
+
+\begin{itemize}
+  \item Ein Zug darf gleichzeitig \textbf{schließen und öffnen}. Beide Enden werden
+        gespeichert, damit die Kette erlaubt bleibt, das Paar aber erkennbar ist.
+  \item Die Verknüpfung setzt PHP, nicht das Modell: Wer Adressat eines offenen Paares
+        ist und spricht, schließt es.
+  \item Der Speak-Prompt bekommt die \textbf{wörtliche Frage} vorgelegt --- mit dem
+        ausdrücklichen Hinweis, sie nicht nachzuerzählen. Ohne diesen Hinweis gab das
+        Modell die Frage paraphrasiert als „Antwort“ zurück.
+\end{itemize}
+
+\section*{6. Was zwischen den Zügen bestehen bleibt}
+
+\begin{center}\sffamily\footnotesize
+\begin{tabular}{@{}p{34mm}p{116mm}@{}}
+\toprule
+\textbf{Ort} & \textbf{Inhalt} \\
+\midrule
+\code{summaries} &
+  Das Gedächtnis je (Projekt, Persona) als Markerblöcke: ein Block pro Teilnehmer,
+  \code{[OFFENE\_FRAGEN]}, \code{[STAND]}. Dazu ein Wasserzeichen, bis zu welcher
+  Nachricht es gepflegt ist. \\
+\code{messages} &
+  Paartyp, Adressat (ausgehend), Antwort-Verknüpfung (eingehend). \\
+\code{projects.settings} &
+  Sprecherhistorie, Schweigezähler, Eröffnungen, Agenda-Phase, verdichteter Verlauf,
+  aktuelle Nutzerfrage, Abkühlzähler, Reaktionskadenz, behandelte und erledigte Punkte. \\
+\code{job\_logs}, \code{prompt\_logs} &
+  Jeder LLM-Aufruf mit Prompt, Antwort und Laufzeit --- die Grundlage jeder Auswertung. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection*{Das Gedächtnis der Personas}
+
+\begin{itemize}
+  \item \textbf{Nur wer denkt, erinnert sich.} Deshalb hängt sich pro Zug die Persona mit
+        dem größten Rückstand an den ohnehin nebenläufigen THINK-Stapel --- ohne
+        Rederecht. Ohne das hielten selten gewählte Personas nach 80 Nachrichten noch ein
+        Gedächtnis von 35 Zeichen.
+  \item \textbf{Zusammenführen statt überschreiben.} Vergisst ein THINK einen Block,
+        bleibt der alte erhalten.
+  \item \textbf{Fragen liegen beim Gefragten.} Wird jemand gefragt, landet die Frage
+        deterministisch in \emph{seinem} \code{[OFFENE\_FRAGEN]} --- nicht nur im Gedächtnis
+        des Fragenden. Sie wird gelöscht, sobald das Paar wirklich geschlossen ist.
+  \item \textbf{Eine Quelle für die Nutzerfrage.} Der Block wird bei jedem Schreiben aus
+        \code{projects.settings} gestempelt, damit die Personas nicht auseinanderdriften.
+\end{itemize}
+
+\subsection*{Reaktionszüge}
+
+Damit die Runde nicht nur Fachnotizen austauscht, plant der Moderator regelmäßig einen
+kurzen Reaktionszug ein. Dabei entfallen im Speak-Prompt genau die drei Blöcke, die
+Länge erzeugen (Substanz, kein Echo, kein Kreisen); stattdessen gilt eine
+Ein-bis-zwei-Satz-Regel mit Gesprächswendungen, dazu ein echtes Token-Limit.
+
+\medskip
+\noindent Typisches Ergebnis eines solchen Zuges:
+
+\begin{center}
+\begin{tikzpicture}
+  \node[draw=agentgreen, fill=agentbg, rounded corners=2pt, inner sep=3mm,
+        text width=\dimexpr\linewidth-14mm\relax, align=left, font=\itshape\small]
+    {„Sophie, dein Punkt zu den Metriken trifft den Kern. Für den Pilot setze ich die
+      Zielwerte wie folgt --- wie siehst du das, Lena?“};
+\end{tikzpicture}
+\end{center}
+
+\section*{7. Nachmessen}
+
+Beide Werkzeuge laufen ohne Frontend und ohne Queue.
+
+\medskip
+\noindent\code{php artisan spec:gen-message <id> -{}-turns=N}\\
+Führt N Züge synchron aus und gibt danach die Strukturkennzahlen aus.
+Mit \code{-{}-metrics} nur auswerten, ohne zu generieren.
+
+\medskip
+\noindent\code{php artisan replay:prompt-logs}\\
+Spielt die protokollierten \code{speak}-Antworten erneut durch Parser und Abgleich —
+keine API-Aufrufe. Macht eine Prompt-Änderung vorher/nachher vergleichbar.
+
+\begin{center}\sffamily\footnotesize
+\begin{tabular}{@{}p{58mm}p{88mm}@{}}
+\toprule
+\textbf{Kennzahl} & \textbf{Was sie zeigt} \\
+\midrule
+Abschlussrate offener Paare &
+  Anteil der Fragen, die eine verknüpfte Antwort bekommen haben. Strukturelles
+  Natürlichkeitsmaß. \\
+Antwort nennt den Frager &
+  Ob das Paar für einen Leser \emph{erkennbar} ist, nicht nur in der Datenbank steht. \\
+Verhältnis Paare zu Übergaben &
+  Ob die Runde untereinander diskutiert oder ständig zum Menschen zurückfällt. \\
+Gini der Redeanteile &
+  0 = alle gleich oft, 1 = eine Persona hält das Wort. \\
+Reaktionsmarker-Quote &
+  Anteil der Beiträge mit einer echten Gesprächswendung statt reiner Darlegung. \\
+Median-Länge &
+  Ob die Runde redet oder Aufsätze schreibt. \\
+Gedächtnis-Rückstand &
+  Wie viele Nachrichten eine Persona hinterherhinkt. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vfill
+\noindent{\sffamily\scriptsize
+Quelle im Code: \code{app/Services/PromptingPipeline/}. Stufen unter \code{Stages/},
+Dienste unter \code{Support/}, Vorlagen unter \code{resources/views/prompts/}.
+Stellschrauben in \code{config/discussion.php}.
+Messung: \code{php artisan spec:gen-message <id> -{}-turns=N} und
+\code{php artisan replay:prompt-logs}.}
+
+\end{document}

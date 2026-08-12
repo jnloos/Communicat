@@ -54,7 +54,7 @@ class PipelineModeratorTest extends TestCase
         return $prompts;
     }
 
-    private function routeJson(array $candidateTokens, bool $addressUser = false): string
+    private function routeJson(array $candidateTokens, bool $handBackToUser = false): string
     {
         return json_encode([
             'candidates' => $candidateTokens,
@@ -62,7 +62,7 @@ class PipelineModeratorTest extends TestCase
                 'role' => 'vertiefen',
                 'agenda_step' => 'divergenz',
                 'convergence_intent' => 'x',
-                'address_user' => $addressUser,
+                'hand_back_to_user' => $handBackToUser,
             ],
             'reasoning' => 'Test.',
         ]);
@@ -93,16 +93,20 @@ class PipelineModeratorTest extends TestCase
         $this->assertFalse($msg->handsBackToUser());
     }
 
-    public function test_address_user_hands_back_to_owner_regardless_of_trailer(): void
+    public function test_hand_back_to_user_lands_when_the_text_asks_the_user(): void
     {
+        // The user's opening message must already be answered — an unanswered
+        // one clamps the hand-off (see the clamp test below).
+        $this->project->addMessage('Erste Einschätzung.', $this->expert1);
+
         $thinkResponse = "GEDÄCHTNIS-UPDATE:\n[STAND]\nx\nBEITRAGSABSICHT: y.";
 
         $client = Mockery::mock(OpenAIClient::class);
-        // route (addressUser true) → select → speak
+        // route (handBackToUser true) → select → speak
         $client->shouldReceive('sendFast')->andReturn(
-            $this->routeJson(["E{$this->expert1->id}", "E{$this->expert2->id}"], addressUser: true),
+            $this->routeJson(["E{$this->expert1->id}", "E{$this->expert2->id}"], handBackToUser: true),
             json_encode(['winner' => "E{$this->expert2->id}", 'reasoning' => 'r']),
-            "Bob fragt dich etwas.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion"
+            "Welche Variante bevorzugst du?\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Frage→Antwort"
         );
         $client->shouldReceive('sendManySlow')->once()->andReturn([
             $this->expert1->id => $thinkResponse,
@@ -126,6 +130,133 @@ class PipelineModeratorTest extends TestCase
         $this->assertSame($this->user->id, $result['user_id']);
     }
 
+    /**
+     * The moderator asked to hand back while the user's own message was still
+     * unanswered. Replying "your turn" to someone who just asked something is a
+     * non-answer, so the clamp keeps the floor with the experts. This was the
+     * single most common failure: 14 of 18 logged hand-offs sat on top of an
+     * unanswered user message.
+     */
+    public function test_hand_back_is_clamped_while_a_user_message_is_unanswered(): void
+    {
+        $thinkResponse = "GEDÄCHTNIS-UPDATE:\n[STAND]\nx\nBEITRAGSABSICHT: y.";
+
+        $client = Mockery::mock(OpenAIClient::class);
+        $client->shouldReceive('sendFast')->andReturn(
+            $this->routeJson(["E{$this->expert1->id}", "E{$this->expert2->id}"], handBackToUser: true),
+            json_encode(['winner' => "E{$this->expert2->id}", 'reasoning' => 'r']),
+            "Welche Variante bevorzugst du?\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Frage→Antwort"
+        );
+        $client->shouldReceive('sendManySlow')->once()->andReturn([
+            $this->expert1->id => $thinkResponse,
+            $this->expert2->id => $thinkResponse,
+        ]);
+
+        $this->instance(OpenAIClient::class, $client);
+        $this->instance(PromptBuilder::class, $this->mockPrompts());
+
+        $result = (new DiscussionPipeline($this->project))->run();
+
+        $msg = $this->project->messages()->whereNotNull('expert_id')->latest('id')->first();
+        $this->assertFalse($msg->handsBackToUser());
+        $this->assertFalse($result['stop']);
+    }
+
+    /**
+     * The reported defect: the moderator wants to hand back, but the agent's
+     * visible text asks a named expert a question. Handing to the user here
+     * strands the addressed expert — nobody ever answers them. The text wins,
+     * the pair is recorded against the expert, and the round keeps running.
+     */
+    public function test_hand_back_is_overruled_when_the_text_addresses_an_expert(): void
+    {
+        $thinkResponse = "GEDÄCHTNIS-UPDATE:\n[STAND]\nx\nBEITRAGSABSICHT: y.";
+
+        $client = Mockery::mock(OpenAIClient::class);
+        $client->shouldReceive('sendFast')->andReturn(
+            $this->routeJson(["E{$this->expert1->id}", "E{$this->expert2->id}"], handBackToUser: true),
+            json_encode(['winner' => "E{$this->expert2->id}", 'reasoning' => 'r']),
+            "Wie siehst du das?\n---STEUERUNG---\nADRESSAT: E{$this->expert1->id}\nPAARTYP: Frage→Antwort"
+        );
+        $client->shouldReceive('sendManySlow')->once()->andReturn([
+            $this->expert1->id => $thinkResponse,
+            $this->expert2->id => $thinkResponse,
+        ]);
+
+        $this->instance(OpenAIClient::class, $client);
+        $this->instance(PromptBuilder::class, $this->mockPrompts());
+
+        $result = (new DiscussionPipeline($this->project))->run();
+
+        $msg = $this->project->messages()->whereNotNull('expert_id')->latest('id')->first();
+        $this->assertFalse($msg->handsBackToUser());
+        $this->assertSame(Expert::class, $msg->adjacency_partner_type);
+        $this->assertSame($this->expert1->id, $msg->adjacency_partner_id);
+        $this->assertSame(Message::PAIR_FRAGE_ANTWORT, $msg->adjacency_pair_type);
+
+        $this->assertFalse($result['stop']);
+    }
+
+    /**
+     * A hand-off whose text poses no question leaves the user with nothing to
+     * answer, so the round continues rather than stalling on a dead end.
+     */
+    public function test_hand_back_without_a_question_does_not_stop_the_round(): void
+    {
+        $thinkResponse = "GEDÄCHTNIS-UPDATE:\n[STAND]\nx\nBEITRAGSABSICHT: y.";
+
+        $client = Mockery::mock(OpenAIClient::class);
+        $client->shouldReceive('sendFast')->andReturn(
+            $this->routeJson(["E{$this->expert1->id}", "E{$this->expert2->id}"], handBackToUser: true),
+            json_encode(['winner' => "E{$this->expert2->id}", 'reasoning' => 'r']),
+            "Damit ist der Punkt festgehalten.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion"
+        );
+        $client->shouldReceive('sendManySlow')->once()->andReturn([
+            $this->expert1->id => $thinkResponse,
+            $this->expert2->id => $thinkResponse,
+        ]);
+
+        $this->instance(OpenAIClient::class, $client);
+        $this->instance(PromptBuilder::class, $this->mockPrompts());
+
+        $result = (new DiscussionPipeline($this->project))->run();
+
+        $msg = $this->project->messages()->whereNotNull('expert_id')->latest('id')->first();
+        $this->assertFalse($msg->handsBackToUser());
+        $this->assertFalse($result['stop']);
+    }
+
+    /**
+     * The agent asked a peer a question in prose but left ADRESSAT on "none"
+     * (or dropped the trailer entirely). The addressee is recovered from the
+     * text so the pair can be closed next turn.
+     */
+    public function test_addressee_is_recovered_from_prose_when_the_trailer_is_missing(): void
+    {
+        $thinkResponse = "GEDÄCHTNIS-UPDATE:\n[STAND]\nx\nBEITRAGSABSICHT: y.";
+
+        $client = Mockery::mock(OpenAIClient::class);
+        $client->shouldReceive('sendFast')->andReturn(
+            $this->routeJson(["E{$this->expert1->id}", "E{$this->expert2->id}"]),
+            json_encode(['winner' => "E{$this->expert2->id}", 'reasoning' => 'r']),
+            'Das trägt nur mit Zahlen, Alice — welche Quote hältst du für belastbar?'
+        );
+        $client->shouldReceive('sendManySlow')->once()->andReturn([
+            $this->expert1->id => $thinkResponse,
+            $this->expert2->id => $thinkResponse,
+        ]);
+
+        $this->instance(OpenAIClient::class, $client);
+        $this->instance(PromptBuilder::class, $this->mockPrompts());
+
+        (new DiscussionPipeline($this->project))->run();
+
+        $msg = $this->project->messages()->whereNotNull('expert_id')->latest('id')->first();
+        $this->assertSame(Expert::class, $msg->adjacency_partner_type);
+        $this->assertSame($this->expert1->id, $msg->adjacency_partner_id);
+        $this->assertSame(Message::PAIR_FRAGE_ANTWORT, $msg->adjacency_pair_type);
+    }
+
     public function test_user_inclusion_cadence_forces_handoff_even_when_route_says_false(): void
     {
         config(['discussion.user_inclusion_multiplier' => 2]);
@@ -138,7 +269,7 @@ class PipelineModeratorTest extends TestCase
 
         $client = Mockery::mock(OpenAIClient::class);
         $client->shouldReceive('sendFast')->andReturn(
-            $this->routeJson(["E{$this->expert1->id}"], addressUser: false),
+            $this->routeJson(["E{$this->expert1->id}"], handBackToUser: false),
             "Alice fragt nach deiner Präferenz?\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion"
         );
         $client->shouldReceive('sendSlow')->once()->andReturn($thinkResponse);

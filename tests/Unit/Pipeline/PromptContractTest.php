@@ -103,7 +103,7 @@ class PromptContractTest extends TestCase
         ]);
 
         $this->assertStringContainsString('NUTZER-EINBINDUNG FÄLLIG', $prompt);
-        $this->assertStringContainsString('"address_user": false', $prompt);
+        $this->assertStringContainsString('"hand_back_to_user": false', $prompt);
     }
 
     public function test_think_prompt_encourages_named_follow_up_intent(): void
@@ -118,7 +118,7 @@ class PromptContractTest extends TestCase
 
     public function test_moderator_service_forces_address_user_when_inclusion_due(): void
     {
-        $json = '{"candidates":["E'.$this->expert1->id.'"],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","address_user":false},"reasoning":"Test."}';
+        $json = '{"candidates":["E'.$this->expert1->id.'"],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","hand_back_to_user":false},"reasoning":"Test."}';
 
         $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -130,7 +130,7 @@ class PromptContractTest extends TestCase
             'pending_user' => null,
         ]);
 
-        $this->assertTrue($result['directive']->addressUser);
+        $this->assertTrue($result['directive']->handBackToUser);
     }
 
     public function test_route_prompt_contains_topic_clarification_block_when_due(): void
@@ -154,7 +154,7 @@ class PromptContractTest extends TestCase
 
     public function test_moderator_service_forces_address_user_when_topic_clarification_due(): void
     {
-        $json = '{"candidates":["E'.$this->expert1->id.'"],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","address_user":false},"reasoning":"Test."}';
+        $json = '{"candidates":["E'.$this->expert1->id.'"],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","hand_back_to_user":false},"reasoning":"Test."}';
 
         $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -166,8 +166,8 @@ class PromptContractTest extends TestCase
             'pending_user' => null,
         ]);
 
-        $this->assertTrue($result['directive']->addressUser);
-        $this->assertStringContainsString('klären', $result['directive']->role);
+        $this->assertTrue($result['directive']->handBackToUser);
+        $this->assertSame('projektkontext_klaeren', $result['directive']->role);
     }
 
     public function test_speak_prompt_contains_pending_user_block_when_directive_carries_it(): void
@@ -261,7 +261,7 @@ class PromptContractTest extends TestCase
 
     public function test_route_attaches_pending_user_to_directive(): void
     {
-        $json = '{"candidates":["E'.$this->expert1->id.'"],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","address_user":false},"reasoning":"Test."}';
+        $json = '{"candidates":["E'.$this->expert1->id.'"],"directive":{"role":"vertiefen","agenda_step":"divergenz","convergence_intent":"x","hand_back_to_user":false},"reasoning":"Test."}';
 
         $client = Mockery::mock(OpenAIClient::class);
         $prompts = Mockery::mock(PromptBuilder::class);
@@ -293,8 +293,8 @@ class PromptContractTest extends TestCase
             'pending_user_name' => 'Simon',
         ]);
 
-        $this->assertFalse($directive->addressUser);
-        $this->assertSame('Nutzerfrage direkt beantworten', $directive->role);
+        $this->assertFalse($directive->handBackToUser);
+        $this->assertSame('frage_beantworten', $directive->role);
         $this->assertSame('Simon', $directive->pendingUserName);
     }
 

@@ -52,7 +52,6 @@ class AgentService
     {
         $memoryBlock = $this->extractMemoryUpdate($response, 'BEITRAGSABSICHT:');
         $this->persistMemoryBlock($expert, $memoryBlock, $response, "{$context}:{$expert->id}");
-        $this->ensureUserQuestionInMemory($expert, $memoryBlock);
 
         return [
             'memory' => $memoryBlock,
@@ -63,30 +62,22 @@ class AgentService
     }
 
     /**
-     * Re-inject the current user question into the expert's memory if THINK
-     * persisted a non-empty block that dropped the [AKTUELLE_NUTZERFRAGE] marker.
-     * Keeps every expert anchored to the current question deterministically.
-     */
-    protected function ensureUserQuestionInMemory(Expert $expert, string $memoryBlock): void
-    {
-        $question = $this->project->settings['current_user_question'] ?? null;
-
-        if ($memoryBlock === '' || empty($question) || UserQuestionMemory::contains($memoryBlock)) {
-            return;
-        }
-
-        $summary = $expert->thoughtsAbout($this->project);
-        $summary->content = UserQuestionMemory::upsert($summary->content ?? '', $question);
-        $summary->save();
-    }
-
-    /**
-     * Save the extracted GEDÄCHTNIS block, but never overwrite an existing memory
-     * with an empty value — that happens when the LLM refuses or returns a
-     * malformed response without the GEDÄCHTNIS-UPDATE marker.
+     * Fold the extracted GEDÄCHTNIS block into the expert's stored memory.
+     *
+     * Two properties matter here:
+     *  - A missing block never clears an existing memory (the LLM refused or
+     *    returned something malformed).
+     *  - A partial block never deletes what it failed to repeat — MemoryMerger
+     *    carries omitted sections over. This is what stops personas from
+     *    silently forgetting participants mid-discussion.
+     *
+     * The current user question is then re-stamped from the single project-level
+     * source, so every persona holds the same one.
      */
     protected function persistMemoryBlock(Expert $expert, string $memoryBlock, string $rawResponse, string $context): void
     {
+        $summary = $expert->thoughtsAbout($this->project);
+
         if ($memoryBlock === '') {
             Log::warning('GEDÄCHTNIS-UPDATE marker missing in LLM response', [
                 'context' => $context,
@@ -94,12 +85,19 @@ class AgentService
                 'expert_id' => $expert->id,
                 'response_first' => mb_substr($rawResponse, 0, 200),
             ]);
-
-            return;
+        } else {
+            $summary->content = app(MemoryMerger::class)->merge(
+                $summary->content,
+                $memoryBlock,
+                $this->project->participantTokens(),
+            );
         }
 
-        $summary = $expert->thoughtsAbout($this->project);
-        $summary->content = $memoryBlock;
+        $summary->content = UserQuestionMemory::upsert(
+            $summary->content ?? '',
+            $this->project->settings['current_user_question'] ?? null,
+        );
+        $summary->last_message_id = $this->project->messages()->max('id');
         $summary->save();
     }
 
@@ -116,12 +114,73 @@ class AgentService
      * @param  array{memory: string, beitragsabsicht: string}  $thinkOutput
      * @return array{content: string, adjacency_pair_type: ?string, adjacency_partner_token: ?string}
      */
-    public function speak(Expert $expert, array $thinkOutput, Directive $directive): array
+    public function speak(Expert $expert, array $thinkOutput, Directive $directive, ?Message $openPair = null): array
     {
-        $prompt = $this->prompts->speak($this->project, $expert, $thinkOutput, $directive);
-        $response = $this->client->sendFast($prompt, "speak:{$expert->id}");
+        $prompt = $this->prompts->speak($this->project, $expert, $thinkOutput, $directive, $openPair);
 
-        return $this->consumeSpeak($response);
+        // A reaction turn gets a real ceiling, not just an instruction: across
+        // the logged runs the hard brevity rule was present in 52 of 58 calls
+        // and never once produced a turn under 200 characters.
+        $isReaction = $directive->role === 'kurz_reagieren';
+        $maxTokens = $isReaction
+            ? max(32, (int) config('discussion.reaction_max_output_tokens', 160))
+            : null;
+
+        // The cap counts hidden reasoning tokens too, so the effort has to come
+        // down with it — otherwise the model thinks through its whole budget and
+        // returns no text at all.
+        $response = $this->client->sendFast(
+            $prompt,
+            "speak:{$expert->id}",
+            null,
+            $maxTokens,
+            $isReaction ? 'minimal' : null,
+        );
+
+        if ($isReaction && trim($response) === '') {
+            // The ceiling swallowed the answer. A silent turn is worse than a
+            // long one, so take one uncapped shot.
+            Log::warning('Reaction turn returned nothing under the token cap; retrying uncapped', [
+                'project_id' => $this->project->id,
+                'expert_id' => $expert->id,
+                'max_output_tokens' => $maxTokens,
+            ]);
+
+            $response = $this->client->sendFast($prompt, "speak:{$expert->id}");
+            $maxTokens = null;
+        }
+
+        return $this->consumeSpeak($this->trimToSentence($response, $maxTokens !== null));
+    }
+
+    /**
+     * Cut a token-capped response back to its last complete sentence, so a turn
+     * that hit the ceiling never ends mid-word. The STEUERUNG trailer is left
+     * untouched — it is parsed off afterwards.
+     */
+    protected function trimToSentence(string $response, bool $capped): string
+    {
+        if (! $capped) {
+            return $response;
+        }
+
+        $marker = '---STEUERUNG---';
+        $pos = mb_strpos($response, $marker);
+
+        $body = rtrim($pos === false ? $response : mb_substr($response, 0, $pos));
+        $trailer = $pos === false ? '' : mb_substr($response, $pos);
+
+        if ($body === '' || preg_match('/[.!?…]["»\']?$/u', $body)) {
+            return $response;
+        }
+
+        if (! preg_match('/^.*[.!?…]["»\']?/su', $body, $m)) {
+            // Not a single complete sentence — keep what there is rather than
+            // returning an empty contribution.
+            return $response;
+        }
+
+        return trim($m[0])."\n\n".$trailer;
     }
 
     /**

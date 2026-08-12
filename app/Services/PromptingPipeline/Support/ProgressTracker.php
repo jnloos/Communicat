@@ -4,6 +4,7 @@ namespace App\Services\PromptingPipeline\Support;
 
 use App\Models\Project;
 use App\Services\Clients\OpenAIClient;
+use App\Services\Clients\ResponseSchemas;
 
 /**
  * Detects whether a discussion is making progress or circling, and drives it
@@ -270,7 +271,7 @@ class ProgressTracker
     protected function runClosureCheck(): ?array
     {
         $prompt = app(PromptBuilder::class)->moderatorClosure($this->project);
-        $response = app(OpenAIClient::class)->sendFast($prompt, 'moderator:closure');
+        $response = app(OpenAIClient::class)->sendFast($prompt, 'moderator:closure', ResponseSchemas::closure());
 
         return $this->parseJson($response);
     }

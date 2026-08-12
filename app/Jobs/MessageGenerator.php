@@ -67,11 +67,20 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
                 if (! empty($pipelineResult['stop'])) {
                     $continue = false;
                     ProjectJob::stopGenerating($project->id);
-                    UserInputRequested::dispatch(
-                        $project->id,
-                        $pipelineResult['reason'] ?? 'stop',
-                        $pipelineResult['user_id'] ?? null,
-                    );
+
+                    // Only a genuine floor hand-off asks a human for input.
+                    // Technical stops (no candidates, no THINK output) used to
+                    // fire this too, and with no resolved target the frontend
+                    // fell back to prompting *every* viewer for input.
+                    if (($pipelineResult['reason'] ?? null) === 'user_addressed') {
+                        UserInputRequested::dispatch(
+                            $project->id,
+                            'user_addressed',
+                            $pipelineResult['user_id'] ?? $project->user_id,
+                        );
+                    } else {
+                        GenerationStopped::dispatch($project->id);
+                    }
                 }
             } catch (Exception $e) {
                 Log::error(sprintf('%s: %s', $e->getMessage(), $e->getTraceAsString()));
@@ -98,10 +107,26 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
                 ->latest('id')
                 ->first();
 
-            $nextTurnDelay = 0;
-            if ($continue && $latestMessage !== null) {
-                $nextTurnDelay = ReadingPause::secondsFor($latestMessage->content);
+            // Halt the loop if nobody has the discussion open anymore, so it can
+            // never run unattended (no accidental generations). Decided BEFORE
+            // announcing the turn — see the delay note below.
+            if ($continue && ! ProjectJob::hasViewers($project->id)) {
+                $continue = false;
+                ProjectJob::stopGenerating($project->id);
+                GenerationStopped::dispatch($project->id);
             }
+
+            // The shared flag may have been cleared during this turn (another
+            // client pressed stop).
+            $willContinue = $continue && ProjectJob::isGenerating($project->id);
+
+            // This delay doubles as the frontend's "next contribution in Xs"
+            // countdown, so it must reflect whether a follow-up is *actually*
+            // queued. Deriving it from $continue alone announced — and animated —
+            // a turn that never came.
+            $nextTurnDelay = ($willContinue && $latestMessage !== null)
+                ? ReadingPause::secondsFor($latestMessage->content)
+                : 0;
 
             MessageGenerated::dispatch(
                 $project->id,
@@ -109,18 +134,9 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
                 $nextTurnDelay,
             );
 
-            // Halt the loop if nobody has the discussion open anymore, so it can
-            // never run unattended (no accidental generations).
-            if ($continue && ! ProjectJob::hasViewers($project->id)) {
-                $continue = false;
-                ProjectJob::stopGenerating($project->id);
-                GenerationStopped::dispatch($project->id);
-            }
-
-            // Server-driven loop: keep going only while the shared flag is still
-            // set (a user may have pressed stop during this turn). The next job
-            // is queued with a reading pause so the message is visible first.
-            if ($continue && ProjectJob::isGenerating($project->id)) {
+            // Server-driven loop: the next job is queued with a reading pause so
+            // the message is visible first.
+            if ($willContinue) {
                 $dispatch = static::dispatch($project->id);
 
                 if ($nextTurnDelay > 0) {

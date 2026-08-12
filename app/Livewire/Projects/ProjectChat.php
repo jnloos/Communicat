@@ -92,7 +92,11 @@ class ProjectChat extends Component
 
     public function getMessagesProperty()
     {
+        // Eager-load what chat-message renders per row: the sender, the
+        // addressee arrow and the "answers X" label. Without this each message
+        // fires its own queries for them.
         return $this->project->messages()->latest('id')
+            ->with(['expert', 'user', 'adjacencyPartner', 'answers.expert', 'answers.user'])
             ->take($this->pageSize)
             ->get()
             ->reverse();

@@ -59,14 +59,53 @@ class Project extends Model
         return $this->experts()->count() > 0 || $this->users()->count() > 1;
     }
 
+    /**
+     * Add an expert and seed their memory with the discussion so far, so a
+     * late joiner does not enter blind and contribute vague, disconnected
+     * turns. The compressed history is already maintained for the prompt
+     * window; here it doubles as the newcomer's starting knowledge.
+     */
     public function addContributingExpert(Expert $expert): void
     {
+        $isNew = ! $this->experts()->where('experts.id', $expert->id)->exists();
+
         $this->experts()->syncWithoutDetaching($expert->id);
+        $this->cachedContributingExperts = null;
+
+        if (! $isNew) {
+            return;
+        }
+
+        $summary = $expert->thoughtsAbout($this);
+
+        if (trim((string) $summary->content) !== '') {
+            return;
+        }
+
+        $briefing = trim((string) ($this->settings['chat_summary'] ?? ''));
+
+        if ($briefing === '') {
+            return;
+        }
+
+        $summary->content = "[STAND]\n".$briefing;
+        $summary->last_message_id = $this->messages()->max('id');
+        $summary->save();
     }
 
+    /**
+     * Remove an expert and forget them: their own memory of this project goes,
+     * and their block is pruned from everyone else's memory on the next merge
+     * (participantTokens no longer lists them).
+     */
     public function removeContributingExpert(Expert $expert): void
     {
         $this->experts()->detach($expert->id);
+        $this->cachedContributingExperts = null;
+
+        Summary::where('project_id', $this->id)
+            ->where('expert_id', $expert->id)
+            ->delete();
     }
 
     public function contributingExperts(): Collection
@@ -84,6 +123,26 @@ class Project extends Model
     public function contributorMap(): Collection
     {
         return $this->contributingExperts()->keyBy('id');
+    }
+
+    /**
+     * Prompt tokens of everyone currently in the discussion (experts + humans).
+     * Used to prune memory blocks for participants who have left the project.
+     *
+     * @return string[]
+     */
+    public function participantTokens(): array
+    {
+        $experts = $this->contributingExperts()->map(fn (Expert $e) => $e->promptId)->all();
+
+        $users = $this->users()->get()
+            ->push($this->owner)
+            ->filter()
+            ->unique('id')
+            ->map(fn (User $u) => $u->promptId)
+            ->all();
+
+        return array_values(array_unique([...$experts, ...$users]));
     }
 
     public function canAddExpert(): bool

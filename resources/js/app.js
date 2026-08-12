@@ -26,41 +26,78 @@ document.addEventListener('alpine:init', () => {
         stage: null,
         experts: [],
         countdown: 0,
+        // Sticky: while the round waits for a human, nothing may animate a
+        // "next contribution" — not even a MessageGenerated that arrives late or
+        // out of order. Cleared only when generation actually restarts.
+        awaitingUser: false,
         _countdownTimer: null,
+        _channel: null,
+        _handlers: {},
 
         init() {
             if (!window.Echo) return;
 
-            const channel = window.Echo.private(`projects.${projectId}`);
+            this._channel = window.Echo.private(`projects.${projectId}`);
 
-            channel.listen('.PipelineStageChanged', (e) => {
-                if (e.stage !== 'speaking') {
-                    return;
-                }
+            this._handlers = {
+                '.PipelineStageChanged': (e) => {
+                    if (e.stage !== 'speaking') {
+                        return;
+                    }
 
-                this.clearCountdown();
-                this.stage = e.stage;
-                this.experts = e.experts ?? [];
-                window.dispatchEvent(new Event('pipeline_stage_changed'));
-            });
-
-            channel.listen('.MessageGenerated', (e) => {
-                if (e.next_turn_delay_seconds > 0) {
+                    this.awaitingUser = false;
                     this.clearCountdown();
-                    this.stage = 'waiting';
-                    this.experts = [];
-                    this.countdown = e.next_turn_delay_seconds;
-                    this.startCountdown();
+                    this.stage = e.stage;
+                    this.experts = e.experts ?? [];
                     window.dispatchEvent(new Event('pipeline_stage_changed'));
-                    return;
-                }
+                },
 
-                this.clear();
-            });
+                '.MessageGenerated': (e) => {
+                    if (e.next_turn_delay_seconds > 0 && !this.awaitingUser) {
+                        this.clearCountdown();
+                        this.stage = 'waiting';
+                        this.experts = [];
+                        this.countdown = e.next_turn_delay_seconds;
+                        this.startCountdown();
+                        window.dispatchEvent(new Event('pipeline_stage_changed'));
+                        return;
+                    }
 
-            const clear = () => this.clear();
-            channel.listen('.GenerationStopped', clear);
-            channel.listen('.UserInputRequested', clear);
+                    this.clear();
+                },
+
+                '.UserInputRequested': () => {
+                    this.awaitingUser = true;
+                    this.clear();
+                },
+
+                '.GenerationStopped': () => this.clear(),
+
+                '.GenerationStarted': () => {
+                    this.awaitingUser = false;
+                    this.clear();
+                },
+            };
+
+            for (const [event, handler] of Object.entries(this._handlers)) {
+                this._channel.listen(event, handler);
+            }
+        },
+
+        // Livewire morphs can re-create this component; without unbinding, every
+        // re-init would stack another set of Echo listeners on the cached channel
+        // and leave orphaned countdown timers behind.
+        destroy() {
+            this.clearCountdown();
+
+            if (!this._channel) return;
+
+            for (const [event, handler] of Object.entries(this._handlers)) {
+                this._channel.stopListening(event, handler);
+            }
+
+            this._channel = null;
+            this._handlers = {};
         },
 
         clearCountdown() {

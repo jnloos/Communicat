@@ -3,6 +3,7 @@
 namespace App\Services\PromptingPipeline\Support;
 
 use App\Models\Expert;
+use App\Models\Message;
 use App\Models\Project;
 use App\Services\PromptingPipeline\Data\Directive;
 
@@ -44,8 +45,9 @@ class PromptBuilder
      * the moderator's Directive in persona.
      *
      * @param  array{memory: string, beitragsabsicht: string}  $thinkOutput
+     * @param  Message|null  $openPair  the first pair part this turn must close
      */
-    public function speak(Project $project, Expert $expert, array $thinkOutput, Directive $directive): string
+    public function speak(Project $project, Expert $expert, array $thinkOutput, Directive $directive, ?Message $openPair = null): string
     {
         $contributors = $project->contributingExperts();
 
@@ -113,7 +115,43 @@ class PromptBuilder
             'open_question' => $settings['open_question'] ?? null,
             'covered_points' => $settings['covered_points'] ?? [],
             'resolved_points' => $settings['resolved_points'] ?? [],
+            'answer_to' => $this->answerObligation($project, $openPair),
+            'reaction_turn' => $directive->role === 'kurz_reagieren',
         ])->render());
+    }
+
+    /**
+     * The obligation to answer, rendered verbatim into the SPEAK prompt.
+     *
+     * Putting the actual question in front of the persona is the point: given
+     * only "answer the open question", the model paraphrased the question back
+     * instead of answering it (logged message 329).
+     *
+     * `question` is null when the pair was an address rather than a question —
+     * the prompt then asks for a reaction instead of an answer. Presenting the
+     * whole contribution as "the question" made the agent restate it.
+     *
+     * @return array{name: string, question: ?string, point: string}|null
+     */
+    protected function answerObligation(Project $project, ?Message $openPair): ?array
+    {
+        if ($openPair === null) {
+            return null;
+        }
+
+        $asker = $openPair->expert;
+
+        if ($asker === null) {
+            return null;
+        }
+
+        $registry = app(OpenPairRegistry::class, ['project' => $project]);
+
+        return [
+            'name' => $asker->name,
+            'question' => $registry->questionOf($openPair),
+            'point' => $registry->pointOf($openPair),
+        ];
     }
 
     /**
@@ -124,21 +162,7 @@ class PromptBuilder
      */
     protected function lastExpertTurnsAllLong(array $messages): bool
     {
-        $streak = max(1, (int) config('discussion.brevity_streak', 3));
-        $minChars = max(1, (int) config('discussion.brevity_min_chars', 200));
-
-        $recent = array_slice($this->expertTurns($messages), -$streak);
-        if (count($recent) < $streak) {
-            return false;
-        }
-
-        foreach ($recent as $message) {
-            if (mb_strlen(trim((string) ($message['content'] ?? ''))) < $minChars) {
-                return false;
-            }
-        }
-
-        return true;
+        return BrevitySignal::forMessages($messages);
     }
 
     /**

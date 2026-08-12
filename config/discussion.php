@@ -60,6 +60,53 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Hand-off cooldown
+    |--------------------------------------------------------------------------
+    | After the round hands back to the user, this many expert turns must pass
+    | before another hand-off may fire. Without it the moderator chains hand-offs
+    | and the experts never carry the discussion on their own.
+    */
+    'handoff_cooldown_turns' => (int) env('DISCUSSION_HANDOFF_COOLDOWN_TURNS', 2),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reaction turns
+    |--------------------------------------------------------------------------
+    | Personas otherwise produce nothing but long, purely informative turns. A
+    | reaction turn drops the substance/no-echo blocks from the SPEAK prompt and
+    | caps the output, so the round actually reacts to itself. reaction_cadence
+    | is the minimum number of turns between two reactions; 0 disables it.
+    */
+    'reaction_cadence' => (int) env('DISCUSSION_REACTION_CADENCE', 2),
+    // ~90 tokens leaves room for two German sentences plus the STEUERUNG
+    // trailer; at 160 the measured reaction turns still came out near 500 chars.
+    'reaction_max_output_tokens' => (int) env('DISCUSSION_REACTION_MAX_TOKENS', 90),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Open adjacency pairs
+    |--------------------------------------------------------------------------
+    | How many expert turns back the registry looks for unanswered pairs. Older
+    | questions are no longer live conversation and forcing an answer to them
+    | would drag the discussion backwards.
+    */
+    'open_pair_max_age_turns' => (int) env('DISCUSSION_OPEN_PAIR_MAX_AGE_TURNS', 6),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Memory catch-up
+    |--------------------------------------------------------------------------
+    | Memory is only written while an expert thinks, so rarely-picked personas
+    | fall behind and re-enter the discussion knowing nothing. Each turn, this
+    | many of the most stale experts join the (already concurrent) THINK batch
+    | purely to catch up — they cannot win the turn. Set to 0 to disable.
+    | min_backlog keeps the extra call from firing over a message or two.
+    */
+    'memory_catchup_per_turn' => (int) env('DISCUSSION_MEMORY_CATCHUP_PER_TURN', 1),
+    'memory_catchup_min_backlog' => (int) env('DISCUSSION_MEMORY_CATCHUP_MIN_BACKLOG', 3),
+
+    /*
+    |--------------------------------------------------------------------------
     | Topic clarification (sparse project briefing)
     |--------------------------------------------------------------------------
     | When the project description is shorter than this many characters (after
