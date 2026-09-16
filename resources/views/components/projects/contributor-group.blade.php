@@ -11,17 +11,15 @@
 
 <div class="flex shrink-0 items-center gap-2 sm:gap-3">
     @if ($contributors->isNotEmpty())
-        <flux:tooltip :content="$contributors->pluck('name')->implode(', ')" position="bottom">
-            <flux:avatar.group class="hidden sm:flex **:ring-white dark:**:ring-zinc-800">
-                @foreach ($visible as $contributor)
-                    <x-contributors.contributors-avatar :name="$contributor->name" :avatar-url="$contributor->avatar_url" class="size-9"/>
-                @endforeach
+        <flux:avatar.group class="hidden sm:flex **:ring-white dark:**:ring-zinc-800">
+            @foreach ($visible as $contributor)
+                <x-contributors.contributors-avatar :name="$contributor->name" :avatar-url="$contributor->avatar_url" class="size-9"/>
+            @endforeach
 
-                @if ($remaining > 0)
-                    <flux:avatar circle class="size-9 text-xs">+{{ $remaining }}</flux:avatar>
-                @endif
-            </flux:avatar.group>
-        </flux:tooltip>
+            @if ($remaining > 0)
+                <flux:avatar circle class="size-9 text-xs">+{{ $remaining }}</flux:avatar>
+            @endif
+        </flux:avatar.group>
     @endif
 
     <flux:button
