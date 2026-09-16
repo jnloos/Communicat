@@ -24,8 +24,6 @@ class ControlChat extends Component
 
     public bool $isDispatching = false;
 
-    public bool $userInputRequested = false;
-
     #[Validate('required|string|min:3|max:1000')]
     public string $msgContent = '';
 
@@ -56,7 +54,6 @@ class ControlChat extends Component
 
         $this->keepGenerating = true;
         $this->isDispatching = true;
-        $this->userInputRequested = false;
 
         GenerationStarted::dispatch($this->projectId);
         MessageGenerator::dispatch($this->projectId);
@@ -81,7 +78,6 @@ class ControlChat extends Component
         // generating state, so their button shows "pause" and they can stop too.
         $this->keepGenerating = true;
         $this->isDispatching = true;
-        $this->userInputRequested = false;
     }
 
     #[On('echo-private:projects.{projectId},.GenerationStopped')]
@@ -100,27 +96,7 @@ class ControlChat extends Component
         $this->isDispatching = $this->keepGenerating;
 
         // The browser-side `message_generated` event is dispatched by
-        // ProjectChat after IT re-rendered (so voice-stage's data-*
-        // attributes are fresh). Duplicating the dispatch here would race
-        // ahead of the DOM morph.
-    }
-
-    #[On('echo-private:projects.{projectId},.UserInputRequested')]
-    public function onUserInputRequested(array $event = []): void
-    {
-        // Generation has halted for everyone.
-        $this->keepGenerating = false;
-        $this->isDispatching = false;
-
-        // Only the addressed user gets the "your input is requested" prompt. A
-        // null target (unresolved hand-off) falls back to prompting everyone.
-        $targetUserId = $event['targetUserId'] ?? null;
-        if ($targetUserId !== null && $targetUserId !== auth()->id()) {
-            return;
-        }
-
-        $this->userInputRequested = true;
-        $this->dispatch('user-input-requested', projectId: $this->projectId);
+        // ProjectChat; dispatching it here too would double the pop sound.
     }
 
     public function sendMessage(): void
@@ -133,9 +109,7 @@ class ControlChat extends Component
         $this->project->addMessage($this->msgContent, auth()->user());
         MessageSent::dispatch($this->projectId, auth()->id());
         $this->dispatch('message_sent');
-        $this->dispatch('user-input-cleared', projectId: $this->projectId);
         $this->reset('msgContent');
-        $this->userInputRequested = false;
     }
 
     /**
@@ -145,14 +119,6 @@ class ControlChat extends Component
     public function heartbeat(): void
     {
         ProjectJob::markViewing($this->projectId);
-    }
-
-    public function updatedMsgContent(string $value): void
-    {
-        if ($this->userInputRequested && trim($value) !== '') {
-            $this->userInputRequested = false;
-            $this->dispatch('user-input-cleared', projectId: $this->projectId);
-        }
     }
 
     #[On(['contributors_modified'])]
@@ -172,15 +138,6 @@ class ControlChat extends Component
             $disabledControlsHint = __('Waiting for the current expert message…');
         }
 
-        $mentionables = $this->project->contributingExperts()
-            ->map(fn($expert) => [
-                'name'       => $expert->name,
-                'job'        => $expert->job,
-                'avatar_url' => $expert->avatar_url,
-            ])
-            ->values()
-            ->all();
-
         return view('livewire.projects.control-chat', [
             'disableInput' => $jobRunning || $this->isDispatching,
             // The START button is disabled while a turn is mid-flight; the STOP
@@ -189,8 +146,6 @@ class ControlChat extends Component
             'disableStop' => false,
             'showGenerate' => ! $this->keepGenerating,
             'disabledControlsHint' => $disabledControlsHint,
-            'userInputRequested' => $this->userInputRequested,
-            'mentionables' => $mentionables,
         ]);
     }
 }

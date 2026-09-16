@@ -25,7 +25,7 @@ class DiscussionPipeline
      *   RunModeratorSelect → RunThink → SelectWinner → Speak
      *   → PersistMessage → UpdateState → MaybeSummarize
      *
-     * @return array{stop: bool, reason: ?string, user_id: ?int}
+     * @return array{stop: bool, reason: ?string}
      */
     public function run(): array
     {
@@ -43,13 +43,8 @@ class DiscussionPipeline
             ->thenReturn();
 
         return [
-            'stop'    => $ctx->stop,
-            'reason'  => $ctx->reason,
-            // The concrete user the expert handed off to (if any), so only that
-            // user is prompted for input — not everyone in the project.
-            'user_id' => $ctx->message?->handsBackToUser()
-                ? $ctx->message->adjacency_partner_id
-                : null,
+            'stop'   => $ctx->stop,
+            'reason' => $ctx->reason,
         ];
     }
 }

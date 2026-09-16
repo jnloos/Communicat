@@ -8,8 +8,8 @@ return [
     |--------------------------------------------------------------------------
     | Which CandidateStrategy the pipeline uses to build a turn's candidate pool.
     | 'funnel' (default) lets the moderator narrow to a subset; 'all' offers
-    | every contributing expert. Direct address (incl. @-mentions) is inferred
-    | by the moderator from the transcript, not special-cased in code.
+    | every contributing expert. Direct address is inferred by the moderator
+    | from the transcript, not special-cased in code.
     */
     'candidate_strategy' => env('DISCUSSION_CANDIDATE_STRATEGY', 'funnel'),
 

@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Communicat: Datenfluss eines Turns",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      520
+    ],
+    "views": [
+      {
+        "id": "main-turn",
+        "label": "Hauptpfad",
+        "focus": [
+          "gen",
+          "route",
+          "think",
+          "select",
+          "speak",
+          "message"
+        ],
+        "note": "Die Stufen der DiscussionPipeline in ihrer Reihenfolge."
+      },
+      {
+        "id": "turn-end",
+        "label": "Turn-Ende",
+        "focus": [
+          "message",
+          "events",
+          "next"
+        ],
+        "note": "Nach dem Speichern: Broadcast an alle Clients, dann nächster Job oder Stopp."
+      }
+    ]
+  },
+  "stages": [
+    {
+      "label": "Auslöser"
+    },
+    {
+      "label": "Routing"
+    },
+    {
+      "label": "Denken"
+    },
+    {
+      "label": "Sprechen"
+    },
+    {
+      "label": "Ergebnis"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "ctrl",
+      "type": "frontend",
+      "label": "ControlChat",
+      "sublabel": "Start, Nachricht",
+      "stage": 0,
+      "row": 0,
+      "width": 120
+    },
+    {
+      "id": "gen",
+      "type": "backend",
+      "label": "Turn-Job",
+      "sublabel": "MessageGenerator",
+      "stage": 0,
+      "row": 1,
+      "tag": "Queue-Job",
+      "width": 120
+    },
+    {
+      "id": "route",
+      "type": "backend",
+      "label": "Route",
+      "sublabel": "moderator:route",
+      "stage": 1,
+      "row": 1,
+      "tag": "fast",
+      "width": 120
+    },
+    {
+      "id": "think",
+      "type": "backend",
+      "label": "THINK",
+      "sublabel": "pro Kandidat",
+      "stage": 2,
+      "row": 1,
+      "tag": "slow, parallel",
+      "width": 120
+    },
+    {
+      "id": "memory",
+      "type": "database",
+      "label": "Summary",
+      "sublabel": "Gedächtnis",
+      "stage": 2,
+      "row": 2,
+      "width": 120
+    },
+    {
+      "id": "select",
+      "type": "backend",
+      "label": "Select",
+      "sublabel": "moderator:select",
+      "stage": 3,
+      "row": 0,
+      "tag": "fast",
+      "width": 120
+    },
+    {
+      "id": "speak",
+      "type": "backend",
+      "label": "SPEAK",
+      "sublabel": "Text im Persona-Stil",
+      "stage": 3,
+      "row": 1,
+      "tag": "fast",
+      "width": 120
+    },
+    {
+      "id": "message",
+      "type": "database",
+      "label": "Message",
+      "sublabel": "adjacency_partner",
+      "stage": 4,
+      "row": 1,
+      "width": 120
+    },
+    {
+      "id": "events",
+      "type": "messagebus",
+      "label": "Reverb",
+      "sublabel": "MessageGenerated",
+      "stage": 4,
+      "row": 0,
+      "width": 120
+    },
+    {
+      "id": "next",
+      "type": "backend",
+      "label": "Schleife",
+      "sublabel": "nächster Job, Stopp",
+      "stage": 4,
+      "row": 2,
+      "width": 120
+    }
+  ],
+  "flows": [
+    {
+      "id": "start",
+      "from": "ctrl",
+      "to": "gen",
+      "label": "dispatch",
+      "variant": "emphasis",
+      "labelDy": 24
+    },
+    {
+      "id": "context",
+      "from": "gen",
+      "to": "route",
+      "label": "TurnContext",
+      "variant": "emphasis"
+    },
+    {
+      "id": "candidates",
+      "from": "route",
+      "to": "think",
+      "label": "Kandidaten",
+      "classification": "Directive",
+      "variant": "emphasis"
+    },
+    {
+      "id": "memory-update",
+      "from": "think",
+      "to": "memory",
+      "label": "Memory-Update",
+      "variant": "dashed",
+      "labelDy": 24
+    },
+    {
+      "id": "intents",
+      "from": "think",
+      "to": "select",
+      "label": "Beitragsabsichten"
+    },
+    {
+      "id": "winner",
+      "from": "select",
+      "to": "speak",
+      "label": "Gewinner",
+      "labelDy": 24
+    },
+    {
+      "id": "persist",
+      "from": "speak",
+      "to": "message",
+      "label": "Text + STEUERUNG",
+      "variant": "emphasis"
+    },
+    {
+      "id": "broadcast",
+      "from": "message",
+      "to": "events",
+      "label": "Broadcast",
+      "variant": "dashed"
+    },
+    {
+      "id": "loop",
+      "from": "message",
+      "to": "next",
+      "label": "Lesepause",
+      "labelDy": 24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Moderator",
+      "items": [
+        "route liefert Kandidaten-IDs und eine Directive",
+        "select entscheidet nur bei mehreren Kandidaten",
+        "Teilnehmer heißen im Prompt E{id} und U{id}"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Nach dem Speichern",
+      "items": [
+        "addressUser übergibt an einen Nutzer und stoppt die Schleife",
+        "UpdateState schreibt Agenda-Phase und Sprecherverlauf",
+        "Summarizer verdichtet ab summary_trigger_at"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Modelle",
+      "items": [
+        "fast: route, select, SPEAK",
+        "slow: THINK, Summarizer"
+      ]
+    }
+  ]
+}

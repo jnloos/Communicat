@@ -86,7 +86,6 @@ class PipelineModeratorTest extends TestCase
         $this->assertSame('Frage→Antwort', $msg->adjacency_pair_type);
         $this->assertSame(Expert::class, $msg->adjacency_partner_type);
         $this->assertSame($this->expert2->id, $msg->adjacency_partner_id);
-        $this->assertFalse($msg->handsBackToUser());
     }
 
     public function test_address_user_hands_back_to_owner_regardless_of_trailer(): void
@@ -112,14 +111,13 @@ class PipelineModeratorTest extends TestCase
 
         $msg = $this->project->messages()->whereNotNull('expert_id')->latest('id')->first();
         $this->assertSame($this->expert2->id, $msg->expert_id);
-        $this->assertTrue($msg->handsBackToUser());
         $this->assertSame(User::class, $msg->adjacency_partner_type);
         $this->assertSame($this->user->id, $msg->adjacency_partner_id);
         $this->assertSame(Message::PAIR_ABSCHLUSS_NUTZER, $msg->adjacency_pair_type);
 
         $this->assertTrue($result['stop']);
         $this->assertSame('user_addressed', $result['reason']);
-        $this->assertSame($this->user->id, $result['user_id']);
+        $this->assertArrayNotHasKey('user_id', $result);
     }
 
     public function test_turn_updates_project_state(): void

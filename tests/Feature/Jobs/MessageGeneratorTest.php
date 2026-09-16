@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Jobs;
 
+use App\Events\GenerationStopped;
 use App\Jobs\Dependencies\ProjectJob;
 use App\Jobs\MessageGenerator;
 use App\Models\Expert;
@@ -10,6 +11,7 @@ use App\Models\User;
 use App\Services\Clients\OpenAIClient;
 use App\Services\PromptingPipeline\Support\PromptBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Mockery;
 use Tests\TestCase;
@@ -98,6 +100,7 @@ class MessageGeneratorTest extends TestCase
     public function test_does_not_queue_follow_up_on_user_handoff(): void
     {
         Queue::fake();
+        Event::fake([GenerationStopped::class]);
         ProjectJob::startGenerating($this->project->id);
         ProjectJob::markViewing($this->project->id);
 
@@ -131,5 +134,10 @@ class MessageGeneratorTest extends TestCase
         (new MessageGenerator($this->project->id))->handle();
 
         Queue::assertNotPushed(MessageGenerator::class);
+        Event::assertDispatched(
+            GenerationStopped::class,
+            fn (GenerationStopped $event) => $event->projectId === $this->project->id
+        );
+        $this->assertFalse(ProjectJob::isGenerating($this->project->id));
     }
 }

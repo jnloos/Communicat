@@ -14,8 +14,7 @@ use Illuminate\Queue\SerializesModels;
  *   'routing'  — the moderator is picking candidates (no experts yet)
  *   'thinking' — the candidate experts run THINK (experts = candidates)
  *   'speaking' — the winner writes the visible turn (experts = [winner])
- * Cleared client-side by MessageGenerated / GenerationStopped /
- * UserInputRequested.
+ * Cleared client-side by MessageGenerated / GenerationStopped.
  */
 class PipelineStageChanged implements ShouldBroadcastNow
 {

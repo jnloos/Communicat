@@ -15,9 +15,9 @@ use Closure;
  * trigger note, agenda phase, a pending/unanswered user message) and let the
  * configured CandidateStrategy build the pool and the turn Directive.
  *
- * User priority is no longer hard-coded: the pending user excerpt is exposed to
- * the moderator, which decides addressUser itself. There is no @-mention special
- * case either — the moderator infers direct address from the visible transcript.
+ * User priority is not hard-coded: the pending user excerpt is exposed to the
+ * moderator, which decides addressUser itself and infers direct address from
+ * the visible transcript.
  */
 class RunOrchestratorInstructions
 {

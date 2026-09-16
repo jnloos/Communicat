@@ -37,10 +37,6 @@ class Message extends Model
         return $this->morphTo();
     }
 
-    public function handsBackToUser(): bool {
-        return $this->adjacency_partner_type === User::class;
-    }
-
     public function isAssistant(): bool {
         return is_null($this->expert_id) && is_null($this->user_id);
     }

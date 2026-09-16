@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
@@ -23,21 +22,11 @@ class Expert extends Model
         return Attribute::get(fn () => 'E' . $this->id);
     }
 
-    protected $casts = [
-        'core_beliefs'     => 'array',
-        'knowledge_limits' => 'array',
-    ];
-
     protected $fillable = [
         'name',
         'avatar_url',
         'job',
         'description',
-        'profile',
-        'core_beliefs',
-        'knowledge_limits',
-        'style',
-        'voice_id',
     ];
 
     public function summaries(): HasMany
@@ -48,11 +37,6 @@ class Expert extends Model
     public function projects(): MorphToMany
     {
         return $this->morphToMany(Project::class, 'contributor', 'project_contributors');
-    }
-
-    public function tags(): BelongsToMany
-    {
-        return $this->belongsToMany(Tag::class);
     }
 
     public function thoughtsAbout(int|Project $project): Summary
@@ -75,41 +59,13 @@ class Expert extends Model
 
     public function asPromptArray(Project $project): array
     {
-        $summary = $this->thoughtsAbout($project);
-
-        $persona = collect([
-            'Profil'            => $this->profile,
-            'Kernüberzeugungen' => $this->formatPersonaList($this->core_beliefs),
-            'Wissensgrenzen'    => $this->formatPersonaList($this->knowledge_limits),
-            'Stil'              => $this->style,
-        ])
-            ->filter()
-            ->map(fn ($v, $k) => "[$k]\n$v")
-            ->implode("\n\n");
-
         return [
             'name'        => $this->name,
             'expert_id'   => $this->id,
             'prompt_id'   => $this->promptId,
             'job'         => $this->job,
-            'description' => $persona,
-            'thoughts'    => $summary,
+            'description' => $this->description,
+            'thoughts'    => $this->thoughtsAbout($project),
         ];
-    }
-
-    private function formatPersonaList(mixed $items): ?string
-    {
-        if (empty($items)) {
-            return null;
-        }
-        if (is_string($items)) {
-            return $items;
-        }
-        $filtered = array_values(array_filter($items, fn ($v) => trim((string) $v) !== ''));
-        if (empty($filtered)) {
-            return null;
-        }
-
-        return implode("\n", array_map(fn ($v, $i) => ($i + 1) . '. ' . $v, $filtered, array_keys($filtered)));
     }
 }

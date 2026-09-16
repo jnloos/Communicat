@@ -15,9 +15,4 @@ return [
             'speak' => env('OPENAI_REASONING_SPEAK', 'low'),
         ],
     ],
-    'elevenlabs' => [
-        'api_key' => env('ELEVENLABS_API_KEY'),
-        'model' => env('ELEVENLABS_MODEL', 'eleven_multilingual_v2'),
-        'default_voice' => env('ELEVENLABS_DEFAULT_VOICE', 'EXAVITQu4vr4xnSDxMaL'),
-    ],
 ];

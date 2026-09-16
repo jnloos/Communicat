@@ -3,23 +3,7 @@
     'messages'
 ])
 
-<div
-    class="w-full"
-    x-data="{
-        mode: 'text',
-        init() {
-            this.$store.discussionMode.initForProject('{{ $project->id }}');
-            this.mode = this.$store.discussionMode.value;
-
-            this.$watch('$store.discussionMode.value', (value) => {
-                this.mode = value;
-            });
-        },
-        setMode(value) {
-            this.$store.discussionMode.setMode(value);
-        }
-    }"
->
+<div class="w-full">
     <!-- Modals -->
     <livewire:projects.select-contributors :project="$project" />
     <livewire:projects.edit-project :project="$project" />
@@ -27,7 +11,7 @@
 
     <!-- Project Management -->
     <div class="flex items-center gap-2">
-        {{-- Left: settings/leave + title (equal flex so the tabs stay centered) --}}
+        {{-- Left: settings/leave + title --}}
         <div class="flex-1 min-w-0 flex items-center">
             @can('manage-project', $project)
                 <flux:tooltip :content="__('Project settings')" position="bottom">
@@ -55,12 +39,6 @@
             </flux:heading>
         </div>
 
-        {{-- Center: tab selection — always exactly centered --}}
-        <flux:radio.group variant="segmented" x-model="mode" x-on:change="setMode(mode)" class="shrink-0">
-            <flux:radio value="text" icon="chat-bubble-left-right">{{ __('Text') }}</flux:radio>
-            <flux:radio value="voice" icon="microphone">{{ __('Voice') }}</flux:radio>
-        </flux:radio.group>
-
         {{-- Right: contributors (equal flex, right-aligned) --}}
         <div class="flex-1 min-w-0 flex justify-end">
             <x-projects.contributor-group :contributors="$project->experts()->get()->concat($project->users()->whereKeyNot(auth()->id())->get())" :label="__('Set Contributors')" @click="$wire.dispatch('select_contributors')">
@@ -70,7 +48,7 @@
     </div>
 
     <!-- Chat -->
-    <div class="relative py-6" x-show="mode === 'text'">
+    <div class="relative py-6">
         <!-- Fade top -->
         <div class="absolute top-6 left-0 right-0 h-2 bg-linear-to-b from-white dark:from-zinc-800 to-transparent z-10 pointer-events-none"></div>
         <div id="chat" class="relative w-full mx-auto overflow-y-auto marker" style="max-height: 84vh;"
@@ -147,10 +125,6 @@
                 <x-projects.pipeline-indicator :project="$project" />
             </div>
         </div>
-    </div>
-
-    <div x-show="mode === 'voice'" class="py-6">
-        <x-projects.voice-stage :project="$project" :messages="$messages" />
     </div>
 
     <!-- Chat Control -->

@@ -26,17 +26,11 @@ class ProjectExport
             ],
             'experts' => $project->contributingExperts()
                 ->map(fn ($e) => [
-                    'id'               => $e->id,
-                    'name'             => $e->name,
-                    'job'              => $e->job,
-                    'description'      => $e->description,
-                    'profile'          => $e->profile,
-                    'core_beliefs'     => $e->core_beliefs,
-                    'knowledge_limits' => $e->knowledge_limits,
-                    'style'            => $e->style,
-                    'voice_id'         => $e->voice_id,
-                    'avatar_url'       => $e->avatar_url,
-                    'tags'             => $e->tags->pluck('name')->all(),
+                    'id'          => $e->id,
+                    'name'        => $e->name,
+                    'job'         => $e->job,
+                    'description' => $e->description,
+                    'avatar_url'  => $e->avatar_url,
                 ])
                 ->values()
                 ->all(),

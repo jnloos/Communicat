@@ -1,0 +1,298 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Communicat: Systemarchitektur",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1310,
+      620
+    ],
+    "views": [
+      {
+        "id": "turn-loop",
+        "label": "Generierungsschleife",
+        "focus": [
+          "browser",
+          "web",
+          "queue",
+          "job",
+          "pipeline",
+          "openai"
+        ],
+        "note": "Start im ControlChat, dann erzeugt jeder Job einen Turn und stellt den nächsten in die Queue."
+      },
+      {
+        "id": "realtime",
+        "label": "Echtzeit-Rückkanal",
+        "focus": [
+          "job",
+          "reverb",
+          "browser"
+        ],
+        "note": "Events laufen über Reverb auf den privaten Kanal projects.{id} zurück in die Livewire-Komponenten."
+      },
+      {
+        "id": "state",
+        "label": "Zustand",
+        "focus": [
+          "web",
+          "job",
+          "cache",
+          "pipeline",
+          "db"
+        ],
+        "note": "Schleifensteuerung liegt im Cache, fachliche Daten in der Datenbank."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "browser",
+      "type": "frontend",
+      "label": "Browser",
+      "sublabel": "Livewire + Flux",
+      "tag": "Echo",
+      "pos": [
+        30,
+        300
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "web",
+      "type": "backend",
+      "label": "Laravel Web",
+      "sublabel": "Livewire, Controller",
+      "pos": [
+        240,
+        300
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "queue",
+      "type": "messagebus",
+      "label": "Queue",
+      "sublabel": "database",
+      "pos": [
+        460,
+        300
+      ],
+      "size": [
+        130,
+        64
+      ]
+    },
+    {
+      "id": "job",
+      "type": "backend",
+      "label": "MessageGenerator",
+      "sublabel": "ein Turn pro Job",
+      "pos": [
+        660,
+        300
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "pipeline",
+      "type": "backend",
+      "label": "DiscussionPipeline",
+      "sublabel": "7 Stufen",
+      "tag": "Blade-Prompts",
+      "pos": [
+        900,
+        300
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "openai",
+      "type": "external",
+      "label": "OpenAI",
+      "sublabel": "fast / slow",
+      "pos": [
+        1170,
+        300
+      ],
+      "size": [
+        110,
+        64
+      ]
+    },
+    {
+      "id": "reverb",
+      "type": "messagebus",
+      "label": "Reverb",
+      "sublabel": "WebSocket",
+      "tag": "projects.{id}",
+      "pos": [
+        460,
+        110
+      ],
+      "size": [
+        130,
+        64
+      ]
+    },
+    {
+      "id": "cache",
+      "type": "database",
+      "label": "Cache",
+      "sublabel": "Flags + Lock",
+      "pos": [
+        460,
+        490
+      ],
+      "size": [
+        130,
+        64
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "Datenbank",
+      "sublabel": "Eloquent",
+      "pos": [
+        900,
+        490
+      ],
+      "size": [
+        170,
+        64
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Laravel-Anwendung",
+      "wraps": [
+        "web",
+        "queue",
+        "job",
+        "pipeline",
+        "reverb",
+        "cache",
+        "db"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "browser-web",
+      "from": "browser",
+      "to": "web",
+      "label": "HTTP",
+      "variant": "emphasis"
+    },
+    {
+      "id": "web-queue",
+      "from": "web",
+      "to": "queue",
+      "label": "dispatch",
+      "variant": "emphasis"
+    },
+    {
+      "id": "queue-job",
+      "from": "queue",
+      "to": "job",
+      "variant": "emphasis"
+    },
+    {
+      "id": "job-pipeline",
+      "from": "job",
+      "to": "pipeline",
+      "label": "run()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "pipeline-openai",
+      "from": "pipeline",
+      "to": "openai",
+      "label": "Responses API"
+    },
+    {
+      "id": "job-reverb",
+      "from": "job",
+      "to": "reverb",
+      "label": "Events",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "right"
+    },
+    {
+      "id": "reverb-browser",
+      "from": "reverb",
+      "to": "browser",
+      "label": "push",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "top"
+    },
+    {
+      "id": "web-cache",
+      "from": "web",
+      "to": "cache",
+      "label": "Start, Heartbeat",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "job-cache",
+      "from": "job",
+      "to": "cache",
+      "label": "Lock, Flag",
+      "fromSide": "bottom",
+      "toSide": "right"
+    },
+    {
+      "id": "pipeline-db",
+      "from": "pipeline",
+      "to": "db",
+      "label": "Messages, Memory",
+      "labelDy": 24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Schleife",
+      "items": [
+        "ControlChat setzt das Flag und startet MessageGenerator",
+        "Jeder Job erzeugt einen Turn und stellt den nächsten mit Lesepause ein",
+        "Stopp bei Nutzer-Übergabe, Fehler oder ohne Viewer"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Echtzeit",
+      "items": [
+        "Events wie MessageGenerated und PipelineStageChanged",
+        "Livewire hört per echo-private:projects.{id}"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Zustand",
+      "items": [
+        "Cache: generating, viewers, Projekt-Lock",
+        "DB: Projects, Experts, Messages, Summaries, Logs"
+      ]
+    }
+  ]
+}

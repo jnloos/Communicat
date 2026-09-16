@@ -3,9 +3,6 @@
     'experts',
     'users',
     'hasFilters' => false,
-    'suggestedIdSet' => [],
-    'suggestionReasons' => [],
-    'hasSuggestions' => false,
     'canAddExpert' => true,
     'expertLimit' => 5,
     'limitWarning' => null,
@@ -27,49 +24,6 @@
 
         <flux:tab.panel name="experts" selected>
             <div class="space-y-4">
-                <div class="flex items-center justify-between gap-2">
-                    @if(!$hasSuggestions)
-                        <flux:button
-                            size="sm"
-                            icon="sparkles"
-                            wire:click="suggestExperts"
-                            wire:loading.attr="disabled"
-                            wire:target="suggestExperts"
-                            class="cursor-pointer"
-                        >
-                            <span wire:loading.remove wire:target="suggestExperts">{{ __('Suggest experts') }}</span>
-                            <span wire:loading wire:target="suggestExperts">{{ __('Suggesting...') }}</span>
-                        </flux:button>
-                    @else
-                        <div class="flex items-center gap-2">
-                            <flux:button
-                                size="sm"
-                                variant="ghost"
-                                icon="arrow-path"
-                                wire:click="suggestExperts"
-                                wire:loading.attr="disabled"
-                                wire:target="suggestExperts"
-                                class="cursor-pointer"
-                            >
-                                <span wire:loading.remove wire:target="suggestExperts">{{ __('Refresh suggestions') }}</span>
-                                <span wire:loading wire:target="suggestExperts">{{ __('Suggesting...') }}</span>
-                            </flux:button>
-                            <flux:button
-                                size="sm"
-                                variant="ghost"
-                                icon="x-mark"
-                                wire:click="clearSuggestions"
-                                class="cursor-pointer"
-                                :title="__('Clear suggestions')"
-                            />
-                        </div>
-                    @endif
-                </div>
-
-                @if($suggestionError)
-                    <p class="text-xs text-red-500 dark:text-red-400">{{ $suggestionError }}</p>
-                @endif
-
                 @if($limitWarning)
                     <p class="text-xs rounded-md bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700/60 text-amber-800 dark:text-amber-200 px-3 py-2">
                         {{ $limitWarning }}
@@ -93,7 +47,6 @@
                 @else
                     @foreach ($experts as $expert)
                         @php($active = $expert->isContributing($project))
-                        @php($isSuggested = isset($suggestedIdSet[$expert->id]))
                         @php($limitBlocked = !$active && !$canAddExpert)
                         <x-contributors.contributors-card
                             class="cursor-pointer {{ $limitBlocked ? 'opacity-50' : '' }} {{ $active ? 'ring-2 ring-primary' : '' }}"
@@ -101,8 +54,6 @@
                             :job="$expert->job"
                             :avatar-url="$expert->avatar_url ?? null"
                             :seed="$expert->id"
-                            :suggested="$isSuggested"
-                            :suggestion-reason="$isSuggested ? ($suggestionReasons[$expert->id] ?? null) : null"
                             wire:loading.attr="disabled"
                             wire:click="{{ $active ? 'removeExpert' : 'addExpert' }}({{ $expert->id }})"
                         />

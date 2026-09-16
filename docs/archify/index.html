@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Communicat Übersicht</title>
+<style>
+  :root { --bg: #f7f8fa; --fg: #1f2933; --muted: #5f6b7a; --line: #d9dee5; --accent: #0e9f6e; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #11151a; --fg: #e6e9ee; --muted: #9aa5b1; --line: #2a313a; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 ui-monospace, "JetBrains Mono", monospace; display: flex; flex-direction: column; height: 100vh; }
+  header { padding: 12px 20px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+  h1 { font-size: 16px; margin: 0; }
+  nav { display: flex; gap: 8px; }
+  button { font: inherit; color: var(--fg); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 4px 12px; cursor: pointer; }
+  button[aria-selected="true"] { border-color: var(--accent); color: var(--accent); }
+  p { margin: 0; color: var(--muted); flex: 1 1 320px; }
+  iframe { flex: 1; width: 100%; border: 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Communicat</h1>
+  <nav>
+    <button data-src="architektur.html" aria-selected="true">Architektur</button>
+    <button data-src="turn-datenfluss.html" aria-selected="false">Datenfluss eines Turns</button>
+  </nav>
+  <p id="hint">Welche Teile es gibt und wie sie zusammenhängen.</p>
+</header>
+<iframe id="view" src="architektur.html" title="Diagramm"></iframe>
+<script>
+  const hints = {
+    "architektur.html": "Welche Teile es gibt und wie sie zusammenhängen.",
+    "turn-datenfluss.html": "Was innerhalb eines MessageGenerator-Jobs passiert, von der Route bis zur gespeicherten Nachricht."
+  };
+  const buttons = document.querySelectorAll("nav button");
+  buttons.forEach(button => button.addEventListener("click", () => {
+    buttons.forEach(b => b.setAttribute("aria-selected", String(b === button)));
+    document.getElementById("view").src = button.dataset.src;
+    document.getElementById("hint").textContent = hints[button.dataset.src];
+  }));
+</script>
+</body>
+</html>

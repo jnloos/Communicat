@@ -19,26 +19,7 @@
         $addressed = $partner;
     }
 
-    // Render the message body and rewrite "@PersonaName" into clickable badges
-    // that open the matching expert's thoughts flyout. Longest contributor name
-    // first so "@Sophie Wagner" wins over a partial "@Sophie" match.
     $renderedContent = Markdown::parse($msg->content);
-
-    $projectContributors = \App\Models\Expert::whereHas(
-            'projects',
-            fn($q) => $q->whereKey($msg->project_id)
-        )
-        ->get(['id', 'name'])
-        ->sortByDesc(fn($e) => mb_strlen($e->name));
-
-    foreach ($projectContributors as $contributor) {
-        $pattern = '/(?<![\w@])@' . preg_quote($contributor->name, '/') . '(?!\w)/u';
-        // @-mentions are only emphasised (bold) in the message body. The
-        // adjacency-pair target is shown separately by the arrow below the
-        // bubble, so the mention itself is no longer an interactive button.
-        $replacement = sprintf('<strong class="font-semibold">@%s</strong>', e($contributor->name));
-        $renderedContent = preg_replace($pattern, $replacement, $renderedContent);
-    }
 @endphp
 
 <div class="block">

@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\Expert;
-use App\Models\Tag;
 use Illuminate\Console\Command;
 
 class InitExperts extends Command
@@ -51,35 +50,15 @@ class InitExperts extends Command
             $avatarUrl = ! empty($expert['avatar_url']) ? asset($expert['avatar_url']) : null;
 
             $attributes = [
-                'description'      => $expert['description'],
-                'job'              => $expert['job'],
-                'profile'          => $expert['profile'] ?? null,
-                'core_beliefs'     => $expert['core_beliefs'] ?? null,
-                'knowledge_limits' => $expert['knowledge_limits'] ?? null,
-                'style'            => $expert['style'] ?? null,
-                'avatar_url'       => $avatarUrl,
+                'description' => $expert['description'],
+                'job'         => $expert['job'],
+                'avatar_url'  => $avatarUrl,
             ];
-
-            if (array_key_exists('voice_id', $expert)) {
-                $voiceId = $expert['voice_id'];
-                $attributes['voice_id'] = is_string($voiceId) && trim($voiceId) !== ''
-                    ? trim($voiceId)
-                    : null;
-            }
 
             $model = Expert::updateOrCreate(
                 ['name' => $expert['name']],
                 $attributes
             );
-
-            $tagIds = collect($expert['tags'] ?? [])
-                ->filter(fn ($name) => is_string($name) && trim($name) !== '')
-                ->map(fn (string $name) => Tag::firstOrCreateByName($name)->id)
-                ->unique()
-                ->values()
-                ->all();
-
-            $model->tags()->sync($tagIds);
 
             $model->wasRecentlyCreated ? $created++ : $updated++;
         }

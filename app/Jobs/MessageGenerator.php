@@ -5,7 +5,6 @@ namespace App\Jobs;
 use App\Events\GenerationStopped;
 use App\Events\JobLogged;
 use App\Events\MessageGenerated;
-use App\Events\UserInputRequested;
 use App\Jobs\Dependencies\ProjectJob;
 use App\Models\JobLog;
 use App\Models\Message;
@@ -55,7 +54,7 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
             OpenAIClient::bindJobLog($log->id);
 
             // Whether the discussion loop should keep running after this turn.
-            // Any stop signal (user input requested, hard failure) clears the
+            // Any stop signal (hand-off to a user, hard failure) clears the
             // shared flag so no further turn is dispatched.
             $continue = true;
 
@@ -67,11 +66,7 @@ class MessageGenerator extends ProjectJob implements ShouldQueue
                 if (! empty($pipelineResult['stop'])) {
                     $continue = false;
                     ProjectJob::stopGenerating($project->id);
-                    UserInputRequested::dispatch(
-                        $project->id,
-                        $pipelineResult['reason'] ?? 'stop',
-                        $pipelineResult['user_id'] ?? null,
-                    );
+                    GenerationStopped::dispatch($project->id);
                 }
             } catch (Exception $e) {
                 Log::error(sprintf('%s: %s', $e->getMessage(), $e->getTraceAsString()));

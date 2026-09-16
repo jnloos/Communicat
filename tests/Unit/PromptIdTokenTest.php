@@ -62,20 +62,4 @@ class PromptIdTokenTest extends TestCase
         $this->assertSame("E{$alice->id}", $expertMsg->toPromptArray()['prompt_id']);
         $this->assertSame("U{$owner->id}", $userMsg->toPromptArray()['prompt_id']);
     }
-
-    public function test_hands_back_to_user_reflects_partner_type(): void
-    {
-        [$project, $alice, $owner] = $this->project();
-
-        $toUser = $project->addMessage('Frage an dich', $alice);
-        $toUser->adjacencyPartner()->associate($owner);
-        $toUser->save();
-
-        $toExpert = $project->addMessage('Antwort', $alice);
-        $toExpert->adjacencyPartner()->associate($alice);
-        $toExpert->save();
-
-        $this->assertTrue($toUser->handsBackToUser());
-        $this->assertFalse($toExpert->handsBackToUser());
-    }
 }

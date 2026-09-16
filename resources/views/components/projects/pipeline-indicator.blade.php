@@ -4,8 +4,8 @@
     Live "thinking bubble" / typing indicator for the generation pipeline.
     Driven purely client-side by the PipelineStageChanged broadcasts (see
     resources/js/app.js → Alpine.data('pipelineIndicator')), so stage changes
-    never trigger a Livewire round-trip. Cleared by MessageGenerated,
-    GenerationStopped and UserInputRequested.
+    never trigger a Livewire round-trip. Cleared by MessageGenerated and
+    GenerationStopped.
 --}}
 <div
     x-data="pipelineIndicator({{ $project->id }})"

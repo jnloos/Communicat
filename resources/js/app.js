@@ -57,9 +57,7 @@ document.addEventListener('alpine:init', () => {
                 this.clear();
             });
 
-            const clear = () => this.clear();
-            channel.listen('.GenerationStopped', clear);
-            channel.listen('.UserInputRequested', clear);
+            channel.listen('.GenerationStopped', () => this.clear());
         },
 
         clearCountdown() {
@@ -101,23 +99,4 @@ document.addEventListener('alpine:init', () => {
             return '';
         },
     }));
-
-    window.Alpine.store('discussionMode', {
-        value: 'text',
-        projectId: null,
-        initForProject(projectId) {
-            this.projectId = String(projectId);
-            const saved = window.localStorage.getItem(this.storageKey());
-            this.value = saved === 'voice' ? 'voice' : 'text';
-        },
-        storageKey() {
-            return `discussionMode:${this.projectId ?? 'global'}`;
-        },
-        setMode(mode) {
-            this.value = mode === 'voice' ? 'voice' : 'text';
-            if (this.projectId !== null) {
-                window.localStorage.setItem(this.storageKey(), this.value);
-            }
-        },
-    });
 });
