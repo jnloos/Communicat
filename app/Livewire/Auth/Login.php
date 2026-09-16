@@ -74,4 +74,9 @@ class Login extends Component
     {
         return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
     }
+
+    public function render(): mixed
+    {
+        return view('livewire.auth.login')->title(__('login.sign_in.title'));
+    }
 }

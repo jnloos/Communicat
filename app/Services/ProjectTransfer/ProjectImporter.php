@@ -33,7 +33,7 @@ class ProjectImporter
         return DB::transaction(function () use ($data, $projectData, $owner, $existingIds, $missing) {
             $project = new Project();
             $project->user_id     = $owner->id;
-            $project->title       = trim((string) ($projectData['title'] ?? 'Projekt')) . ' ' . __('(Kopie)');
+            $project->title       = trim((string) ($projectData['title'] ?? __('projects.import.untitled'))) . ' ' . __('projects.import.copy_suffix');
             $project->description = $projectData['description'] ?? '';
             $project->settings    = [];
             $project->save(); // creating/created hooks add a welcome message + sync the owner

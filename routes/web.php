@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Debug\JobDebugPanel;
 use App\Livewire\Settings\Users;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
@@ -55,6 +56,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/password', Password::class)->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
     Route::get('settings/users', Users::class)->middleware('admin')->name('settings.users');
+
+    Route::get('debug/jobs', JobDebugPanel::class)->name('debug.jobs');
 });
 
 require __DIR__.'/auth.php';

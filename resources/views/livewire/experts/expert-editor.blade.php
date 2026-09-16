@@ -2,74 +2,66 @@
     '$isUpdate' => false,
 ])
 
-<flux:modal name="edit-expert" variant="flyout" class="md:w-[52rem]">
+<flux:modal name="edit-expert" variant="flyout" class="w-full p-5! sm:p-8! md:w-[40rem]">
     <form wire:submit.prevent="save" class="space-y-6">
-        <div class="space-y-1">
+        <div class="space-y-1 pe-8">
             <flux:heading size="lg">
-                {{ $isUpdate ? __('Update Expert') : __('Create Expert') }}
+                {{ $isUpdate ? __('experts.editor.update') : __('experts.editor.create') }}
             </flux:heading>
-            <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">
-                {{ __('Define this expert\'s identity.') }}
+            <flux:text size="sm">
+                {{ __('experts.editor.subheading') }}
             </flux:text>
         </div>
 
-        {{-- Avatar --}}
-        <div class="flex flex-col items-center gap-3">
-            <input type="file" class="hidden" wire:model="avatarUpload" accept="image/*" x-ref="fileInput"/>
-            <button type="button" @click="$refs.fileInput.click()"
-                class="group rounded-full cursor-pointer transition-transform hover:scale-105
-                       focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
-                wire:loading.class="opacity-60" wire:target="avatarUpload">
-                <div class="rounded-full ring-2 ring-transparent group-hover:ring-amber-400 transition-shadow">
-                    @if (!is_null($avatarUrl))
-                        <flux:avatar circle src="{!! $avatarUrl !!}" alt="{{ $name }} Avatar" class="cut-avatar w-32 h-32" wire:key="avatar-{{ $avatarUrl }}">
-                            <x-slot:badge class="h-8 w-8 translate-y-4">
-                                <flux:icon.pencil/>
-                            </x-slot:badge>
-                        </flux:avatar>
-                    @else
-                        <flux:avatar circle name="{{ $name }}" color="auto" color:seed="{{ $name }}" class="cut-avatar w-32 h-32" wire:key="initials-{{ $name }}">
-                            <x-slot:badge class="h-8 w-8 translate-y-4">
-                                <flux:icon.pencil/>
-                            </x-slot:badge>
-                        </flux:avatar>
-                    @endif
-                </div>
-            </button>
-            <flux:text size="xs" class="text-zinc-400 dark:text-zinc-500">
-                <span wire:loading.remove wire:target="avatarUpload">{{ __('Click to change avatar') }}</span>
-                <span wire:loading wire:target="avatarUpload">{{ __('Uploading…') }}</span>
-            </flux:text>
-        </div>
+        <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
+            {{-- Avatar --}}
+            <div class="flex shrink-0 flex-col items-center gap-2">
+                <input type="file" class="hidden" wire:model="avatarUpload" accept="image/*" x-ref="fileInput"/>
+                <x-contributors.avatar-button
+                    size="xl"
+                    :name="$name"
+                    :avatar-url="$avatarUrl"
+                    wire:key="avatar-{{ $avatarUrl ?? 'initials-' . $name }}"
+                    x-on:click="$refs.fileInput.click()"
+                    :aria-label="__('experts.editor.change_avatar')"
+                    wire:loading.class="opacity-60"
+                    wire:target="avatarUpload"
+                >
+                    <x-slot:badge><flux:icon.pencil variant="micro"/></x-slot:badge>
+                </x-contributors.avatar-button>
+                <flux:text size="xs" class="text-center">
+                    <span wire:loading.remove wire:target="avatarUpload">{{ __('experts.editor.change_avatar') }}</span>
+                    <span wire:loading wire:target="avatarUpload">{{ __('experts.editor.uploading') }}</span>
+                </flux:text>
+                <flux:error name="avatarUpload" />
+            </div>
 
-        <flux:accordion transition>
             {{-- Identity --}}
-            <x-accordion-section :heading="__('Identity')" icon="identification" :error-fields="['name', 'job', 'description']">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <flux:input :label="__('Name')" wire:model.defer="name" />
-                    <flux:input :label="__('Job')" wire:model.defer="job" />
-                </div>
-                <flux:textarea
-                    :label="__('Description')"
-                    :description="__('Wird in der UI angezeigt und ist der Persona-Kern im Prompt.')"
-                    wire:model.defer="description"
-                    rows="4"
-                />
-            </x-accordion-section>
-        </flux:accordion>
+            <div class="min-w-0 flex-1 space-y-4">
+                <flux:input :label="__('common.fields.name')" wire:model.defer="name" />
+                <flux:input :label="__('experts.editor.job')" wire:model.defer="job" />
+            </div>
+        </div>
 
-        <div class="flex items-center justify-between pt-2">
+        <flux:textarea
+            :label="__('common.fields.description')"
+            :description="__('experts.editor.description_help')"
+            wire:model.defer="description"
+            rows="8"
+        />
+
+        <div class="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
             @if ($isUpdate)
-                <flux:button type="button" variant="danger" class="cursor-pointer"
+                <flux:button type="button" variant="danger" icon="trash" class="cursor-pointer"
                     wire:click="needsConfirmation('delete')">
-                    {{ __('Delete Expert') }}
+                    {{ __('experts.editor.delete') }}
                 </flux:button>
             @else
-                <div></div>
+                <div class="hidden sm:block"></div>
             @endif
 
             <flux:button type="submit" variant="primary" class="cursor-pointer">
-                {{ $isUpdate ? __('Update Expert') : __('Create Expert') }}
+                {{ $isUpdate ? __('experts.editor.update') : __('experts.editor.create') }}
             </flux:button>
         </div>
     </form>

@@ -7,13 +7,13 @@
 ])
 
 @php
-    $sendTooltip = $disableInput && $disabledControlsHint ? $disabledControlsHint : __('Send your message');
-    $aiRunTooltip = $disableGenerate && $disabledControlsHint ? $disabledControlsHint : __('Run expert discussion');
-    $aiPauseTooltip = $disableGenerate && $disabledControlsHint ? $disabledControlsHint : __('Pause expert discussion');
+    $sendTooltip = $disableInput && $disabledControlsHint ? $disabledControlsHint : __('chat.composer.send');
+    $aiRunTooltip = $disableGenerate && $disabledControlsHint ? $disabledControlsHint : __('chat.composer.run');
+    $aiPauseTooltip = $disableGenerate && $disabledControlsHint ? $disabledControlsHint : __('chat.composer.pause');
 @endphp
 
 <div
-    class="fixed bottom-0 left-0 w-full lg:left-[15vw] lg:w-[85vw] z-50"
+    class="relative z-10 shrink-0 bg-white dark:bg-zinc-800"
     @unless($showGenerate) wire:poll.30s="heartbeat" @endunless
     x-data="{
         popEnabled: true,
@@ -82,42 +82,41 @@
     }"
     @keydown.capture="onComposerKeydown($event)"
 >
-    <!-- Fade: messages disappear behind control -->
-    <div class="h-2 bg-linear-to-t from-white dark:from-zinc-800 to-transparent pointer-events-none"></div>
-    <!-- Solid control area -->
-    <div class="bg-white dark:bg-zinc-800">
-        <div class="max-w-240 mx-auto pb-4 px-4 relative">
+    <!-- Fade: messages disappear behind the composer -->
+    <div class="pointer-events-none absolute inset-x-0 -top-6 h-6 bg-linear-to-t from-white to-transparent dark:from-zinc-800"></div>
+    <div>
+        <div class="mx-auto w-full max-w-3xl px-3 pb-3 sm:px-6 sm:pb-5">
             <form wire:submit="sendMessage">
                 <flux:composer
                     wire:model.live.debounce.300ms="msgContent"
-                    rows="3"
+                    rows="2"
                     max-rows="8"
-                    :placeholder="__('Contribute to the specification...')"
+                    :placeholder="__('chat.composer.placeholder')"
                 >
                     <x-slot name="actionsTrailing">
                         <div class="flex items-center gap-2">
                             <span x-show="popEnabled">
-                                <flux:tooltip :content="__('Nachrichtenton ausschalten')" position="top">
+                                <flux:tooltip :content="__('chat.composer.sound_off')" position="top">
                                     <flux:button
                                         type="button"
                                         size="sm"
                                         variant="subtle"
                                         icon="bell"
                                         x-on:click="togglePop()"
-                                        :aria-label="__('Nachrichtenton ausschalten')"
+                                        :aria-label="__('chat.composer.sound_off')"
                                         class="cursor-pointer"
                                     />
                                 </flux:tooltip>
                             </span>
                             <span x-show="!popEnabled" x-cloak>
-                                <flux:tooltip :content="__('Nachrichtenton einschalten')" position="top">
+                                <flux:tooltip :content="__('chat.composer.sound_on')" position="top">
                                     <flux:button
                                         type="button"
                                         size="sm"
                                         variant="subtle"
                                         icon="bell-slash"
                                         x-on:click="togglePop()"
-                                        :aria-label="__('Nachrichtenton einschalten')"
+                                        :aria-label="__('chat.composer.sound_on')"
                                         class="cursor-pointer"
                                     />
                                 </flux:tooltip>
@@ -134,7 +133,9 @@
                                         :disabled="$disableGenerate"
                                         :aria-label="$aiRunTooltip"
                                         class="cursor-pointer"
-                                    />
+                                    >
+                                        <span class="hidden sm:inline">{{ __('chat.composer.start_label') }}</span>
+                                    </flux:button>
                                 </flux:tooltip>
                             @else
                                 <flux:tooltip :content="$aiPauseTooltip" position="top">
@@ -147,7 +148,9 @@
                                         :disabled="$disableStop"
                                         :aria-label="$aiPauseTooltip"
                                         class="cursor-pointer"
-                                    />
+                                    >
+                                        <span class="hidden sm:inline">{{ __('chat.composer.pause_label') }}</span>
+                                    </flux:button>
                                 </flux:tooltip>
                             @endif
 

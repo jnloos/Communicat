@@ -3,31 +3,39 @@
     'label' => null,
 ])
 
-<div class="flex items-center space-x-3">
-    <flux:avatar.group class="**:ring-zinc-100 dark:**:ring-zinc-800">
-        @php
-            $visible   = collect($contributors)->take(3);
-            $remaining = count($contributors) - $visible->count();
-        @endphp
+@php
+    $contributors = collect($contributors);
+    $visible      = $contributors->take(3);
+    $remaining    = $contributors->count() - $visible->count();
+@endphp
 
-        @foreach ($visible as $contributor)
-            <x-contributors.contributors-avatar :name="$contributor->name" :avatar-url="$contributor->avatar_url" class="h-12 w-12"/>
-        @endforeach
+<div class="flex shrink-0 items-center gap-2 sm:gap-3">
+    @if ($contributors->isNotEmpty())
+        <flux:tooltip :content="$contributors->pluck('name')->implode(', ')" position="bottom">
+            <flux:avatar.group class="hidden sm:flex **:ring-white dark:**:ring-zinc-800">
+                @foreach ($visible as $contributor)
+                    <x-contributors.contributors-avatar :name="$contributor->name" :avatar-url="$contributor->avatar_url" class="size-9"/>
+                @endforeach
 
-        <div>
-            @if ($remaining > 0)
-                <flux:avatar circle class="cut-avatar w-12 h-12 rounded-full">
-                    {{ $remaining }}+
-                </flux:avatar>
-            @else
-                <div class="w-0 h-0 overflow-hidden"></div>
+                @if ($remaining > 0)
+                    <flux:avatar circle class="size-9 text-xs">+{{ $remaining }}</flux:avatar>
+                @endif
+            </flux:avatar.group>
+        </flux:tooltip>
+    @endif
+
+    <flux:button
+        variant="primary"
+        icon="user-group"
+        {{ $attributes->merge(['type' => 'button']) }}
+        class="shrink-0 cursor-pointer"
+        :aria-label="$label"
+    >
+        @if (! is_null($label))
+            <span class="hidden sm:inline">{{ $label }}</span>
+            @if ($contributors->isNotEmpty())
+                <span class="sm:hidden">{{ $contributors->count() }}</span>
             @endif
-        </div>
-    </flux:avatar.group>
-
-    <flux:button variant="primary" {{ $attributes->merge(['type' => 'button']) }} class="ms-4 relative group transition flex items-center space-x-2 cursor-pointer">
-        @if (!is_null($label))
-            <span>{{ $label }}</span>
         @endif
     </flux:button>
 </div>

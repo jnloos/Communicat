@@ -22,6 +22,11 @@ class ForgotPassword extends Component
 
         Password::sendResetLink($this->only('email'));
 
-        session()->flash('status', __('A reset link will be sent if the account exists.'));
+        session()->flash('status', __('login.forgot_password.link_sent'));
+    }
+
+    public function render(): mixed
+    {
+        return view('livewire.auth.forgot-password')->title(__('login.forgot_password.title'));
     }
 }

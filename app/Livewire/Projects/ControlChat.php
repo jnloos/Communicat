@@ -133,9 +133,9 @@ class ControlChat extends Component
 
         $disabledControlsHint = null;
         if ($jobRunning) {
-            $disabledControlsHint = __('Another operation is in progress. Try again in a moment.');
+            $disabledControlsHint = __('chat.composer.busy_hint');
         } elseif ($this->isDispatching) {
-            $disabledControlsHint = __('Waiting for the current expert message…');
+            $disabledControlsHint = __('chat.composer.waiting_hint');
         }
 
         return view('livewire.projects.control-chat', [

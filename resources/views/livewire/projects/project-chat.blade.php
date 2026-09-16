@@ -3,127 +3,120 @@
     'messages'
 ])
 
-<div class="w-full">
+<div class="flex h-[calc(100dvh-3.5rem-1px)] flex-col lg:h-dvh">
     <!-- Modals -->
     <livewire:projects.select-contributors :project="$project" />
     <livewire:projects.edit-project :project="$project" />
     <livewire:projects.expert-thoughts-flyout :project="$project" />
 
-    <!-- Project Management -->
-    <div class="flex items-center gap-2">
-        {{-- Left: settings/leave + title --}}
-        <div class="flex-1 min-w-0 flex items-center">
-            @can('manage-project', $project)
-                <flux:tooltip :content="__('Project settings')" position="bottom">
-                    <flux:button
-                        variant="primary"
-                        icon="cog"
-                        class="me-3 cursor-pointer shrink-0"
-                        :aria-label="__('Project settings')"
-                        @click="$wire.dispatch('edit_project')"
-                    />
-                </flux:tooltip>
-            @else
-                <flux:tooltip :content="__('Leave project')" position="bottom">
-                    <flux:button
-                        variant="primary"
-                        icon="arrow-left-end-on-rectangle"
-                        class="me-3 cursor-pointer shrink-0"
-                        :aria-label="__('Leave project')"
-                        wire:click="needsConfirmation('leaveProject')"
-                    />
-                </flux:tooltip>
-            @endcan
-            <flux:heading size="xl" class="my-auto truncate">
-                {{ $project->title }}
-            </flux:heading>
-        </div>
+    <!-- Project header -->
+    <header class="flex shrink-0 items-center gap-2 border-b border-zinc-200 px-4 py-3 sm:gap-3 sm:px-6 dark:border-zinc-700">
+        @can('manage-project', $project)
+            <flux:tooltip :content="__('chat.header.project_settings')" position="bottom">
+                <flux:button
+                    variant="subtle"
+                    icon="cog-6-tooth"
+                    class="shrink-0 cursor-pointer"
+                    :aria-label="__('chat.header.project_settings')"
+                    @click="$wire.dispatch('edit_project')"
+                />
+            </flux:tooltip>
+        @else
+            <flux:tooltip :content="__('chat.header.leave_project')" position="bottom">
+                <flux:button
+                    variant="subtle"
+                    icon="arrow-left-end-on-rectangle"
+                    class="shrink-0 cursor-pointer"
+                    :aria-label="__('chat.header.leave_project')"
+                    wire:click="needsConfirmation('leaveProject')"
+                />
+            </flux:tooltip>
+        @endcan
 
-        {{-- Right: contributors (equal flex, right-aligned) --}}
-        <div class="flex-1 min-w-0 flex justify-end">
-            <x-projects.contributor-group :contributors="$project->experts()->get()->concat($project->users()->whereKeyNot(auth()->id())->get())" :label="__('Set Contributors')" @click="$wire.dispatch('select_contributors')">
-                {{ __('Add ') }}
-            </x-projects.contributor-group>
-        </div>
-    </div>
+        <flux:heading size="lg" level="1" class="min-w-0 flex-1 truncate sm:text-xl" :title="$project->title">
+            {{ $project->title }}
+        </flux:heading>
+
+        <x-projects.contributor-group
+            :contributors="$project->experts()->get()->concat($project->users()->whereKeyNot(auth()->id())->get())"
+            :label="__('chat.header.set_contributors')"
+            @click="$wire.dispatch('select_contributors')"
+        />
+    </header>
 
     <!-- Chat -->
-    <div class="relative py-6">
-        <!-- Fade top -->
-        <div class="absolute top-6 left-0 right-0 h-2 bg-linear-to-b from-white dark:from-zinc-800 to-transparent z-10 pointer-events-none"></div>
-        <div id="chat" class="relative w-full mx-auto overflow-y-auto marker" style="max-height: 84vh;"
-            x-data="{
-                loading: false,
-                hasMore: @entangle('hasMore'),
-                scrollThreshold: 300,
-                isNearBottom() {
-                    const el = this.$el;
-                    return el.scrollHeight - el.scrollTop - el.clientHeight <= this.scrollThreshold;
-                },
-                scrollToBottom() {
-                    this.$el.scrollTop = this.$el.scrollHeight;
-                },
-                init() {
-                    const el    = this.$el;
-                    let locked  = false;
+    <div id="chat" class="relative min-h-0 flex-1 overflow-y-auto overscroll-contain"
+        x-data="{
+            loading: false,
+            hasMore: @entangle('hasMore'),
+            scrollThreshold: 300,
+            isNearBottom() {
+                const el = this.$el;
+                return el.scrollHeight - el.scrollTop - el.clientHeight <= this.scrollThreshold;
+            },
+            scrollToBottom() {
+                this.$el.scrollTop = this.$el.scrollHeight;
+            },
+            init() {
+                const el    = this.$el;
+                let locked  = false;
 
-                    // Beim ersten Render ganz nach unten scrollen
+                // Beim ersten Render ganz nach unten scrollen
+                this.$nextTick(() => {
+                    el.scrollTop = el.scrollHeight;
+                });
+
+                const nearTop = () => el.scrollTop <= 50;
+
+                // Scrollback Pagination: ältere Nachrichten laden
+                el.addEventListener('scroll', async () => {
+                    if (!locked && this.hasMore && nearTop()) {
+                        locked       = true;
+                        this.loading = true;
+                        const before = el.scrollHeight;
+
+                        await $wire.loadMore();
+
+                        this.$nextTick(() => {
+                            el.scrollTop = el.scrollHeight - before;
+                            this.loading = false;
+                            locked       = false;
+                        });
+                    }
+                });
+
+                // Auto-scroll on new message, only if already near the bottom
+                window.addEventListener('message_generated', () => {
+                    const wasNearBottom = this.isNearBottom();
                     this.$nextTick(() => {
-                        el.scrollTop = el.scrollHeight;
+                        if (wasNearBottom) this.scrollToBottom();
                     });
+                });
 
-                    const nearTop = () => el.scrollTop <= 50;
-
-                    // Scrollback Pagination: ältere Nachrichten laden
-                    el.addEventListener('scroll', async () => {
-                        if (!locked && this.hasMore && nearTop()) {
-                            locked       = true;
-                            this.loading = true;
-                            const before = el.scrollHeight;
-
-                            await $wire.loadMore();
-
-                            this.$nextTick(() => {
-                                el.scrollTop = el.scrollHeight - before;
-                                this.loading = false;
-                                locked       = false;
-                            });
-                        }
+                // Keep the pipeline indicator (thinking/typing bubble) in
+                // view when it appears or grows, same near-bottom rule.
+                window.addEventListener('pipeline_stage_changed', () => {
+                    const wasNearBottom = this.isNearBottom();
+                    this.$nextTick(() => {
+                        if (wasNearBottom) this.scrollToBottom();
                     });
+                });
+            }
+        }"
+    >
+        <!-- Spinner -->
+        <div x-show="loading" x-cloak class="flex justify-center py-8">
+            <flux:icon.loading class="w-5 h-5 text-gray-500" />
+        </div>
 
-                    // Auto-scroll on new message, only if already near the bottom
-                    window.addEventListener('message_generated', () => {
-                        const wasNearBottom = this.isNearBottom();
-                        this.$nextTick(() => {
-                            if (wasNearBottom) this.scrollToBottom();
-                        });
-                    });
+        <!-- Nachrichten -->
+        <div class="mx-auto w-full max-w-3xl space-y-6 px-4 py-6 sm:px-6">
+            @foreach ($messages as $msg)
+                <x-projects.chat-message :id="$msg->id" :msg="$msg" />
+            @endforeach
 
-                    // Keep the pipeline indicator (thinking/typing bubble) in
-                    // view when it appears or grows, same near-bottom rule.
-                    window.addEventListener('pipeline_stage_changed', () => {
-                        const wasNearBottom = this.isNearBottom();
-                        this.$nextTick(() => {
-                            if (wasNearBottom) this.scrollToBottom();
-                        });
-                    });
-                }
-            }"
-        >
-            <!-- Spinner -->
-            <div x-show="loading" x-cloak class="flex justify-center py-8">
-                <flux:icon.loading class="w-5 h-5 text-gray-500" />
-            </div>
-
-            <!-- Nachrichten -->
-            <div class="space-y-8 pb-24 max-w-220 mx-auto">
-                @foreach ($messages as $msg)
-                    <x-projects.chat-message :id="$msg->id" :msg="$msg" />
-                @endforeach
-
-                <!-- Denkblase / Tipp-Indikator der Generierungs-Pipeline -->
-                <x-projects.pipeline-indicator :project="$project" />
-            </div>
+            <!-- Denkblase / Tipp-Indikator der Generierungs-Pipeline -->
+            <x-projects.pipeline-indicator :project="$project" />
         </div>
     </div>
 

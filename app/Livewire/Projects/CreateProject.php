@@ -42,14 +42,14 @@ class CreateProject extends Component
 
         $data = json_decode(file_get_contents($this->importFile->getRealPath()), true);
         if (! is_array($data) || ! isset($data['project'])) {
-            $this->addError('importFile', __('Invalid export file.'));
+            $this->addError('importFile', __('projects.import.invalid_file'));
             return;
         }
 
         $result = app(ProjectImporter::class)->import($data, auth()->user());
 
         if (! empty($result['missing_experts'])) {
-            session()->flash('import_warning', __('Some experts no longer exist and were skipped.'));
+            session()->flash('import_warning', __('projects.import.missing_experts'));
         }
 
         $this->redirect(route('project.show', $result['project']), navigate: true);

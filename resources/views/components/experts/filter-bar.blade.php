@@ -6,7 +6,7 @@
     <flux:input
         type="search"
         icon="magnifying-glass"
-        :placeholder="__('Search experts by name, job, or description...')"
+        :placeholder="__('experts.filter.search_placeholder')"
         wire:model.live.debounce.300ms="{{ $searchModel }}"
     />
 </div>

@@ -71,4 +71,9 @@ class Profile extends Component
 
         Session::flash('status', 'verification-link-sent');
     }
+
+    public function render(): mixed
+    {
+        return view('livewire.settings.profile')->title(__('settings.nav.profile'));
+    }
 }

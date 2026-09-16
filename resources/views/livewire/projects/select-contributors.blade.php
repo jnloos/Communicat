@@ -8,17 +8,17 @@
     'limitWarning' => null,
 ])
 
-<flux:modal name="select-contributors" variant="flyout" class="md:w-[32rem]">
-    <flux:heading size="lg">
-        {{ __('Choose Contributors') }}
-    </flux:heading>
-    <flux:spacer/>
+<flux:modal name="select-contributors" variant="flyout" class="w-full p-5! sm:p-8! md:w-[32rem]">
+    <div class="space-y-1 pe-8">
+        <flux:heading size="lg">{{ __('projects.contributors.heading') }}</flux:heading>
+        <flux:text size="sm">{{ trans_choice('projects.contributors.subheading', $expertLimit) }}</flux:text>
+    </div>
 
     <flux:tab.group class="mt-5 w-full">
         <flux:tabs variant="segmented" class="w-full -mb-5 cursor-pointer">
-            <flux:tab name="experts" selected>{{ __('Experts') }}</flux:tab>
+            <flux:tab name="experts" selected>{{ __('projects.contributors.tab_experts') }}</flux:tab>
             @can('manage-contributors', $project)
-                <flux:tab name="users">{{ __('Users') }}</flux:tab>
+                <flux:tab name="users">{{ __('projects.contributors.tab_users') }}</flux:tab>
             @endcan
         </flux:tabs>
 
@@ -30,30 +30,30 @@
                     </p>
                 @elseif(!$canAddExpert)
                     <p class="text-xs text-zinc-500 dark:text-zinc-400">
-                        {{ __('Limit erreicht: maximal :n Experten pro Projekt.', ['n' => $expertLimit]) }}
+                        {{ trans_choice('projects.contributors.limit_reached', $expertLimit) }}
                     </p>
                 @endif
 
                 <x-experts.filter-bar />
 
                 @if($experts->isEmpty())
-                    <p class="text-sm text-zinc-500 dark:text-zinc-400 text-center py-6">
+                    <x-empty-state :icon="$hasFilters ? 'magnifying-glass' : 'user-circle'">
                         @if($hasFilters)
-                            {{ __('No experts match the current filters.') }}
+                            {{ __('projects.contributors.no_expert_matches') }}
                         @else
-                            {{ __('Keine Einträge') }}
+                            {{ __('common.no_entries') }}
                         @endif
-                    </p>
+                    </x-empty-state>
                 @else
                     @foreach ($experts as $expert)
                         @php($active = $expert->isContributing($project))
                         @php($limitBlocked = !$active && !$canAddExpert)
                         <x-contributors.contributors-card
-                            class="cursor-pointer {{ $limitBlocked ? 'opacity-50' : '' }} {{ $active ? 'ring-2 ring-primary' : '' }}"
+                            :selected="$active"
+                            :dimmed="$limitBlocked"
                             :name="$expert->name"
                             :job="$expert->job"
                             :avatar-url="$expert->avatar_url ?? null"
-                            :seed="$expert->id"
                             wire:loading.attr="disabled"
                             wire:click="{{ $active ? 'removeExpert' : 'addExpert' }}({{ $expert->id }})"
                         />
@@ -68,23 +68,23 @@
                     <flux:input
                         type="search"
                         icon="magnifying-glass"
-                        :placeholder="__('Search users by name or email...')"
+                        :placeholder="__('projects.contributors.search_users')"
                         wire:model.live.debounce.300ms="userSearch"
                     />
 
                     @if($users->isEmpty())
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 text-center py-6">
+                        <x-empty-state :icon="trim($userSearch) !== '' ? 'magnifying-glass' : 'users'">
                             @if(trim($userSearch) !== '')
-                                {{ __('No users match the current filters.') }}
+                                {{ __('projects.contributors.no_user_matches') }}
                             @else
-                                {{ __('Keine Einträge') }}
+                                {{ __('common.no_entries') }}
                             @endif
-                        </p>
+                        </x-empty-state>
                     @else
                         @foreach ($users as $user)
                             @php($active = $project->users()->whereKey($user->id)->exists())
                             <x-contributors.contributors-card
-                                class="cursor-pointer {{ $active ? 'ring-2 ring-primary' : '' }}"
+                                :selected="$active"
                                 :name="$user->name"
                                 :job="$user->email"
                                 :avatar-url="$user->avatar_url ?? null"

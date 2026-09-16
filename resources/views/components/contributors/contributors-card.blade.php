@@ -3,35 +3,40 @@
     'job' => 'Mannequin',
     'description' => null,
     'avatarUrl' => null,
+    'selected' => null, {{-- null: plain card; bool: selectable card with state indicator --}}
+    'dimmed' => false,
 ])
 
-@php use Illuminate\Support\Str; @endphp
+@php $selectable = ! is_null($selected); @endphp
 
 <button type="button"
+    @if ($selectable) aria-pressed="{{ $selected ? 'true' : 'false' }}" @endif
     {{ $attributes->merge([
-        'class' => 'w-full h-full text-left rounded-xl transition hover:bg-zinc-50 dark:hover:bg-zinc-700 focus:outline-none cursor-pointer active:scale-[.98]'
+        'class' => 'group block w-full h-full text-start rounded-xl cursor-pointer transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent' . ($dimmed ? ' opacity-50' : '')
     ]) }}>
-    <flux:card size="sm" class="h-full relative">
-        <div class="flex flex-col justify-between p-2">
-            <div class="flex items-center gap-4">
-                <x-contributors.contributors-avatar :name="$name" :avatar-url="$avatarUrl" class="h-16 w-16"/>
-                <div>
-                    <div class="text-sm font-medium text-zinc-900 dark:text-white">
-                        {{ $name }}
-                    </div>
-                    <div class="text-sm text-zinc-500 dark:text-zinc-400">
-                        {{ $job }}
-                    </div>
-                </div>
-            </div>
-            <div class="h-full"/>
+    <flux:card size="sm" @class([
+        'h-full transition-colors group-hover:bg-zinc-50 dark:group-hover:bg-zinc-700/60',
+        'border-accent! dark:border-accent!' => $selected,
+    ])>
+        <div class="flex items-center gap-3">
+            <x-contributors.contributors-avatar :name="$name" :avatar-url="$avatarUrl" class="size-10 shrink-0 sm:size-12"/>
 
-            @if(isset($description))
-                <div class="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
-                    {{ $description }}
-                </div>
+            <div class="min-w-0 flex-1">
+                <div class="truncate text-sm font-medium text-zinc-900 dark:text-white">{{ $name }}</div>
+                <div class="line-clamp-2 text-sm text-zinc-500 dark:text-zinc-400">{{ $job }}</div>
+            </div>
+
+            @if ($selectable)
+                @if ($selected)
+                    <flux:icon.check-circle variant="solid" class="size-6 shrink-0 text-accent" aria-hidden="true" />
+                @else
+                    <flux:icon.plus-circle class="size-6 shrink-0 text-zinc-300 transition-colors group-hover:text-zinc-500 dark:text-zinc-600 dark:group-hover:text-zinc-400" aria-hidden="true" />
+                @endif
             @endif
         </div>
+
+        @if (filled($description))
+            <p class="mt-3 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{{ $description }}</p>
+        @endif
     </flux:card>
 </button>
-

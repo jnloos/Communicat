@@ -73,4 +73,9 @@ class ResetPassword extends Component
 
         $this->redirectRoute('login', navigate: true);
     }
+
+    public function render(): mixed
+    {
+        return view('livewire.auth.reset-password')->title(__('login.reset_password.title'));
+    }
 }

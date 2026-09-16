@@ -149,7 +149,6 @@
       <path value="$PROJECT_DIR$/vendor/clue/redis-react" />
       <path value="$PROJECT_DIR$/vendor/clue/redis-protocol" />
       <path value="$PROJECT_DIR$/vendor/ratchet/rfc6455" />
-      <path value="$PROJECT_DIR$/vendor/paragonie/sodium_compat" />
       <path value="$PROJECT_DIR$/vendor/pusher/pusher-php-server" />
       <path value="$PROJECT_DIR$/vendor/_laravel_idea" />
     </include_path>

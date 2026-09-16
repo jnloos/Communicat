@@ -4,15 +4,15 @@ namespace App\Livewire\Debug;
 
 use App\Models\JobLog;
 use App\Models\Project;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 class JobDebugPanel extends Component
 {
-    /** Modal visibility, bound via wire:model so it survives re-renders. */
-    public bool $show = false;
-
-    /** The project currently being viewed; the panel only shows its jobs. */
+    /** The project whose jobs are listed; kept in the URL so links can deep-link. */
+    #[Url(as: 'project')]
     public ?int $projectId = null;
 
     /** When false, incoming job updates are ignored so the view stays frozen for reading. */
@@ -22,15 +22,16 @@ class JobDebugPanel extends Component
 
     public function mount(): void
     {
-        // The panel lives in the global sidebar, so it derives the current
-        // project from the route-model-bound {project} parameter.
-        $project = request()->route('project');
-        $this->projectId = $project instanceof Project ? $project->id : null;
+        abort_unless(config('app.debug'), 404);
+
+        if (! $this->accessibleProjects()->contains('id', $this->projectId)) {
+            $this->projectId = $this->accessibleProjects()->first()?->id;
+        }
     }
 
-    public function open(): void
+    public function updatedProjectId(): void
     {
-        $this->show = true;
+        $this->selectedJobId = null;
     }
 
     public function togglePause(): void
@@ -46,11 +47,18 @@ class JobDebugPanel extends Component
     #[On('echo-private:debug,.JobLogUpdated')]
     public function onJobLogUpdated(): void
     {
-        // Paused or panel closed → don't re-render, so an open job stays put
-        // while the user reads it.
-        if (! $this->live || ! $this->show) {
+        // Paused → don't re-render, so an open job stays put while reading.
+        if (! $this->live) {
             $this->skipRender();
         }
+    }
+
+    /** @return Collection<int, Project> */
+    protected function accessibleProjects(): Collection
+    {
+        return Project::whereHas('users', fn ($q) => $q->where('users.id', auth()->id()))
+            ->orderBy('updated_at', 'desc')
+            ->get(['id', 'title']);
     }
 
     public function render(): mixed
@@ -65,7 +73,6 @@ class JobDebugPanel extends Component
                 ->find($this->selectedJobId)
             : null;
 
-        // Only the current project's jobs; none when not on a project page.
         $logs = $this->projectId
             ? JobLog::with('project')
                 ->where('project_id', $this->projectId)
@@ -75,8 +82,9 @@ class JobDebugPanel extends Component
             : collect();
 
         return view('livewire.debug.job-debug-panel', [
+            'projects' => $this->accessibleProjects(),
             'logs'     => $logs,
             'selected' => $selected,
-        ]);
+        ])->title(__('debug.title'));
     }
 }

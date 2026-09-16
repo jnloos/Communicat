@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-6">
     <x-auth-header
-        :title="__('Confirm password')"
-        :description="__('This is a secure area of the application. Please confirm your password before continuing.')"
+        :title="__('login.confirm_password.heading')"
+        :description="__('login.confirm_password.description')"
     />
 
     <!-- Session Status -->
@@ -11,13 +11,13 @@
         <!-- Password -->
         <flux:input
             wire:model="password"
-            :label="__('Password')"
+            :label="__('common.fields.password')"
             type="password"
             required
             autocomplete="new-password"
-            :placeholder="__('Password')"
+            :placeholder="__('common.fields.password')"
         />
 
-        <flux:button variant="primary" type="submit" class="w-full cursor-pointer">{{ __('Confirm') }}</flux:button>
+        <flux:button variant="primary" type="submit" class="w-full cursor-pointer">{{ __('common.actions.confirm') }}</flux:button>
     </form>
 </div>

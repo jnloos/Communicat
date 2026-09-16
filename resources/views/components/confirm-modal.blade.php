@@ -25,9 +25,9 @@
             <flux:text x-text="message"></flux:text>
             <div class="flex justify-end gap-2">
                 <flux:modal.close>
-                    <flux:button variant="filled" class="cursor-pointer">{{ __('Cancel') }}</flux:button>
+                    <flux:button variant="filled" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
                 </flux:modal.close>
-                <flux:button variant="danger" class="cursor-pointer" x-on:click="confirm()">{{ __('Confirm') }}</flux:button>
+                <flux:button variant="danger" class="cursor-pointer" x-on:click="confirm()">{{ __('common.actions.confirm') }}</flux:button>
             </div>
         </div>
     </flux:modal>

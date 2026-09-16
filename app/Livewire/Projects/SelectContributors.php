@@ -55,9 +55,9 @@ class SelectContributors extends Component
     public function addExpert(int $expertId): void
     {
         if (! $this->forProject->canAddExpert()) {
-            $this->limitWarning = __(
-                'Maximal :n Experten pro Projekt.',
-                ['n' => Project::MAX_CONTRIBUTING_EXPERTS]
+            $this->limitWarning = trans_choice(
+                'projects.contributors.limit_warning',
+                Project::MAX_CONTRIBUTING_EXPERTS
             );
             return;
         }

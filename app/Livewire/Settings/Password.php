@@ -40,4 +40,9 @@ class Password extends Component
 
         $this->dispatch('password-updated');
     }
+
+    public function render(): mixed
+    {
+        return view('livewire.settings.password')->title(__('settings.nav.password'));
+    }
 }

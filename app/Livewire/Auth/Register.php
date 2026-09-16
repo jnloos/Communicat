@@ -40,4 +40,9 @@ class Register extends Component
 
         $this->redirect(route('dashboard', absolute: false), navigate: true);
     }
+
+    public function render(): mixed
+    {
+        return view('livewire.auth.register')->title(__('login.register.title'));
+    }
 }

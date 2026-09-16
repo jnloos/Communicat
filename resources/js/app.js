@@ -21,7 +21,10 @@ document.addEventListener('alpine:init', () => {
     // Pipeline indicator: only the visible "writing" step and the post-message
     // reading countdown. Routing/thinking stages still broadcast server-side but
     // are intentionally hidden so the bubble never overlaps the info button area.
-    window.Alpine.data('pipelineIndicator', (projectId) => ({
+    // `labels` carries the translated strings rendered server-side by the
+    // pipeline-indicator Blade component (writingOne, writingMany, nextIn, nextSoon).
+    window.Alpine.data('pipelineIndicator', (projectId, labels = {}) => ({
+        labels,
         stage: null,
         experts: [],
         countdown: 0,
@@ -87,16 +90,25 @@ document.addEventListener('alpine:init', () => {
         label() {
             if (this.stage === 'waiting') {
                 return this.countdown > 0
-                    ? `Next contribution in ${this.countdown}s`
-                    : 'Next contribution soon';
+                    ? this.translate('nextIn', { seconds: this.countdown })
+                    : this.translate('nextSoon');
             }
 
-            const names = this.experts.map((e) => e.name).join(', ');
             if (this.stage === 'speaking') {
-                return `${names} is writing`;
+                const names = this.experts.map((e) => e.name).join(', ');
+                const key = this.experts.length > 1 ? 'writingMany' : 'writingOne';
+                return this.translate(key, { names });
             }
 
             return '';
+        },
+
+        // Resolves a server-provided label and fills Laravel-style `:placeholder`s.
+        translate(key, replacements = {}) {
+            return Object.entries(replacements).reduce(
+                (text, [name, value]) => text.replaceAll(`:${name}`, String(value)),
+                this.labels[key] ?? '',
+            );
         },
     }));
 });

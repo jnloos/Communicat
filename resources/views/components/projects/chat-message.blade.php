@@ -7,9 +7,10 @@
 
 @php
     $sender = $msg->sender();
+    $isOwn  = $msg->isCurrUser();
 
     // Resolve the "speaks to" target from the polymorphic adjacency_partner:
-    // an expert or a user (no global name lookup). No self-arrow.
+    // an expert or a user (no global name lookup). No self-reference.
     $partner = $msg->adjacencyPartner;
     $addressedIsExpert = $partner instanceof \App\Models\Expert;
     $addressed = null;
@@ -22,87 +23,41 @@
     $renderedContent = Markdown::parse($msg->content);
 @endphp
 
-<div class="block">
-    @if($msg->isCurrUser())
-        <div class="flex justify-end">
-            <div id="{{ $id }}" wire:key="{{ $id }}" class="rounded-lg w-full sm:w-auto sm:min-w-sm z-0 px-5 pt-4 pb-8 break-words ms-2 sm:ms-30 bg-zinc-300 dark:bg-zinc-600">
-                <flux:heading size="lg" class="mb-2 font-bold">{{ $sender->name }}</flux:heading>
-                <span class="markdown-html">
-                    {!! $renderedContent !!}
-                </span>
-            </div>
+@if ($msg->isAssistant() || is_null($sender))
+    {{-- System notice (welcome text): centered, quiet, full width --}}
+    <div id="{{ $id }}" wire:key="{{ $id }}" class="flex justify-center">
+        <div class="markdown-html w-full rounded-xl border border-dashed border-zinc-300 px-5 py-4 text-sm text-zinc-600 dark:border-zinc-600 dark:text-zinc-300">
+            {!! $renderedContent !!}
         </div>
-    @elseif($msg->isAssistant())
-        <div class="flex justify-center mt-2">
-            <div id="{{ $id }}" wire:key="{{ $id }}" class="rounded-lg w-full sm:w-auto sm:min-w-sm z-0 px-5 py-4 break-words bg-zinc-200">
-                <span class="markdown-html text-zinc-900">
-                    {!! $renderedContent !!}
-                </span>
-            </div>
-        </div>
-    @else {{-- Other user or expert --}}
-        <div class="flex justify-start">
-            <div id="{{ $id }}" wire:key="{{ $id }}" class="rounded-lg w-full sm:w-auto sm:min-w-sm z-0 px-5 pt-4 pb-8 break-words me-2 sm:me-30 bg-zinc-100 dark:bg-zinc-700">
-                <flux:heading size="lg" class="mb-2 font-bold">{{ $sender->name }}</flux:heading>
-                <span class="markdown-html">
-                    {!! $renderedContent !!}
-                </span>
-            </div>
-        </div>
-    @endif
-
-    <div class="-translate-y-5">
-        @if($msg->isCurrUser())
-            <div class="flex items-center justify-end me-5 gap-2">
-                @if ($addressed)
-                    <x-projects.addressed-arrow :addressed="$addressed" :is-expert="$addressedIsExpert" flip />
-                @endif
-                <x-contributors.contributors-avatar :name="$sender->name" :avatar-url="$sender->avatar_url" class="w-12 h-12"/>
-            </div>
-        @elseif($msg->isAssistant())
-            {{-- No avatar for assistant messages --}}
-        @elseif($msg->isExpert())
-            <div class="flex items-center ms-5 gap-2">
-                <div class="relative group">
-                    <button
-                        type="button"
-                        title="{{ __('Gedanken von') }} {{ $sender->name }}"
-                        @click="$dispatch('open-expert-thoughts', { expertId: {{ $sender->id }} })"
-                        class="rounded-full cursor-pointer transition-transform hover:scale-105 group-hover:scale-105 group-active:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-                    >
-                        <x-contributors.contributors-avatar :name="$sender->name" :avatar-url="$sender->avatar_url" class="w-12 h-12"/>
-                    </button>
-                    <button
-                        type="button"
-                        title="{{ __('Gedächtnis anzeigen') }}"
-                        @click="$dispatch('open-expert-thoughts', { expertId: {{ $sender->id }} })"
-                        class="absolute -bottom-1 -right-1 inline-flex items-center justify-center
-                               w-5 h-5 rounded-full
-                               bg-white dark:bg-zinc-800
-                               ring-2 ring-white dark:ring-zinc-800
-                               text-zinc-500 dark:text-zinc-300
-                               hover:text-amber-600 dark:hover:text-amber-400
-                               group-hover:text-amber-600 dark:group-hover:text-amber-400
-                               group-active:text-amber-600 dark:group-active:text-amber-400
-                               cursor-pointer transition-colors
-                               focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-                        aria-label="{{ __('Gedächtnis anzeigen') }}"
-                    >
-                        <x-icons.brain class="w-3 h-3"/>
-                    </button>
-                </div>
-
-                @if ($addressed)
-                    <x-projects.addressed-arrow :addressed="$addressed" :is-expert="$addressedIsExpert" />
-                @endif
-            </div>
-        @else {{-- Other user --}}
-            <div class="flex items-center ms-5 gap-2">
-                <x-contributors.contributors-avatar :name="$sender->name" :avatar-url="$sender->avatar_url" class="w-12 h-12"/>
-                @if ($addressed)
-                    <x-projects.addressed-arrow :addressed="$addressed" :is-expert="$addressedIsExpert" />
-                @endif
+    </div>
+@else
+    <div id="{{ $id }}" wire:key="{{ $id }}" @class(['group/message flex items-start gap-3', 'flex-row-reverse' => $isOwn])>
+        {{-- Sender avatar: experts open their memory flyout --}}
+        @if ($msg->isExpert())
+            <x-experts.memory-avatar class="mt-0.5" :expert-id="$sender->id" :name="$sender->name" :avatar-url="$sender->avatar_url" />
+        @else
+            <div class="mt-0.5 shrink-0">
+                <x-contributors.contributors-avatar :name="$sender->name" :avatar-url="$sender->avatar_url" class="size-9 sm:size-10"/>
             </div>
         @endif
+
+        <div @class(['flex min-w-0 max-w-[85%] flex-col gap-1 sm:max-w-[75%]', 'items-end' => $isOwn])>
+            {{-- Meta line: who speaks and whom the message addresses --}}
+            <div @class(['flex flex-wrap items-center gap-x-2 gap-y-1 px-1 text-sm', 'flex-row-reverse' => $isOwn])>
+                <span class="font-semibold text-zinc-800 dark:text-zinc-100">{{ $sender->name }}</span>
+
+                @if ($addressed)
+                    <x-projects.addressed-chip :addressed="$addressed" :is-expert="$addressedIsExpert" />
+                @endif
+            </div>
+
+            <div @class([
+                'markdown-html rounded-2xl px-4 py-3 break-words',
+                'rounded-tr-md bg-zinc-200 dark:bg-zinc-600' => $isOwn,
+                'rounded-tl-md bg-zinc-100 dark:bg-zinc-700' => ! $isOwn,
+            ])>
+                {!! $renderedContent !!}
+            </div>
+        </div>
     </div>
-</div>
+@endif

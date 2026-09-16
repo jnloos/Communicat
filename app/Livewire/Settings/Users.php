@@ -86,6 +86,6 @@ class Users extends Component
     {
         return view('livewire.settings.users', [
             'users' => User::orderBy('name')->get(),
-        ]);
+        ])->title(__('settings.users.heading'));
     }
 }

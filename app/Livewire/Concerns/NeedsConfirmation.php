@@ -4,8 +4,9 @@ namespace App\Livewire\Concerns;
 
 trait NeedsConfirmation
 {
-    public string $confirmTitle   = 'Are you sure?';
-    public string $confirmMessage = 'This action cannot be undone.';
+    /** Optional per-component overrides; null falls back to the translated defaults. */
+    public ?string $confirmTitle   = null;
+    public ?string $confirmMessage = null;
     public ?string $pendingMethod = null;
     public array $pendingParams   = [];
 
@@ -16,8 +17,8 @@ trait NeedsConfirmation
 
         $this->dispatch('open-confirm',
             componentId: $this->getId(),
-            title:       $this->confirmTitle,
-            message:     $this->confirmMessage,
+            title:       $this->confirmTitle ?? __('common.confirm_dialog.title'),
+            message:     $this->confirmMessage ?? __('common.confirm_dialog.message'),
         );
     }
 

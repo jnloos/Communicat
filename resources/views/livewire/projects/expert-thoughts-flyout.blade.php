@@ -1,5 +1,5 @@
 <div>
-    <flux:modal name="expert-thoughts-flyout" variant="flyout" class="w-[560px] max-w-full">
+    <flux:modal name="expert-thoughts-flyout" variant="flyout" class="w-full p-5! sm:p-8! md:w-[560px]">
         @if ($expert)
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
@@ -14,17 +14,14 @@
                     </div>
                 </div>
 
-                <div class="text-[10px] uppercase tracking-wide text-zinc-500">
-                    {{ __('Gedächtnis zur Diskussion') }}
+                <div class="text-xs font-medium uppercase tracking-wide text-zinc-500">
+                    {{ __('experts.memory.heading') }}
                 </div>
 
                 @if (!$thoughts?->content)
-                    <div class="rounded-md border border-dashed border-zinc-200 dark:border-zinc-700 p-6 text-center">
-                        <p class="text-sm text-zinc-400">
-                            {{ __('Noch kein Gedächtnis vorhanden.') }} {{ $expert->name }}
-                            {{ __('hat sich bislang keine Notizen gemacht.') }}
-                        </p>
-                    </div>
+                    <x-empty-state icon="light-bulb">
+                        {{ __('experts.memory.empty', ['name' => $expert->name]) }}
+                    </x-empty-state>
                 @elseif ($memory['structured'])
                     <div class="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
                         @if (!empty($memory['user']))
@@ -35,7 +32,7 @@
                                         <circle cx="12" cy="7" r="4"/>
                                     </svg>
                                     <h4 class="text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300">
-                                        {{ __('Über den Nutzer') }}
+                                        {{ __('experts.memory.about_user') }}
                                     </h4>
                                 </header>
                                 <p class="px-4 py-3 text-sm whitespace-pre-wrap text-zinc-700 dark:text-zinc-200">{{ $memory['user'] }}</p>
@@ -50,7 +47,7 @@
                                         <circle cx="12" cy="7" r="4"/>
                                     </svg>
                                     <h4 class="text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300">
-                                        {{ __('Über') }} {{ $name }}
+                                        {{ __('experts.memory.about', ['name' => $name]) }}
                                     </h4>
                                 </header>
                                 <p class="px-4 py-3 text-sm whitespace-pre-wrap text-zinc-700 dark:text-zinc-200">{{ $note }}</p>
@@ -62,26 +59,12 @@
                             <section class="rounded-md border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-900/40 overflow-hidden">
                                 <header class="flex items-center gap-2 px-4 py-2 bg-zinc-100/70 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-700">
                                     @if ($avatar)
-                                        <button
-                                            type="button"
-                                            title="{{ __('Gedanken von') }} {{ $name }}"
-                                            @click="$dispatch('open-expert-thoughts', { expertId: {{ $avatar['id'] }} })"
-                                            class="rounded-full cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
-                                        >
-                                            <x-contributors.contributors-avatar
-                                                :name="$name"
-                                                :avatar-url="$avatar['avatar_url']"
-                                                class="w-6 h-6"
-                                            />
-                                        </button>
+                                        <x-experts.memory-avatar size="xs" :expert-id="$avatar['id']" :name="$name" :avatar-url="$avatar['avatar_url']" />
                                     @else
-                                        <x-contributors.contributors-avatar
-                                            :name="$name"
-                                            class="w-6 h-6"
-                                        />
+                                        <x-contributors.contributors-avatar :name="$name" class="size-7"/>
                                     @endif
                                     <h4 class="text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300">
-                                        {{ __('Über') }} {{ $name }}
+                                        {{ __('experts.memory.about', ['name' => $name]) }}
                                     </h4>
                                 </header>
                                 <p class="px-4 py-3 text-sm whitespace-pre-wrap text-zinc-700 dark:text-zinc-200">{{ $note }}</p>
@@ -97,7 +80,7 @@
                                         <line x1="12" y1="17" x2="12.01" y2="17"/>
                                     </svg>
                                     <h4 class="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
-                                        {{ __('Offene Fragen') }}
+                                        {{ __('experts.memory.open_questions') }}
                                     </h4>
                                 </header>
                                 <ul class="px-4 py-3 space-y-1 text-sm text-zinc-700 dark:text-zinc-200 list-disc list-inside">
@@ -116,7 +99,7 @@
                                         <circle cx="12" cy="12" r="10"/>
                                     </svg>
                                     <h4 class="text-xs font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300">
-                                        {{ __('Letzter Gesprächsstand') }}
+                                        {{ __('experts.memory.last_state') }}
                                     </h4>
                                 </header>
                                 <p class="px-4 py-3 text-sm whitespace-pre-wrap text-zinc-700 dark:text-zinc-200">{{ $memory['state'] }}</p>
@@ -126,14 +109,14 @@
                 @else
                     <div class="rounded-md border border-zinc-200 dark:border-zinc-700 p-4 bg-zinc-50 dark:bg-zinc-900/40 space-y-2">
                         <p class="text-[11px] text-zinc-500 italic">
-                            {{ __('Format wird beim nächsten Update aktualisiert.') }}
+                            {{ __('experts.memory.legacy_format') }}
                         </p>
                         <pre class="text-xs whitespace-pre-wrap font-mono text-zinc-700 dark:text-zinc-300 max-h-[60vh] overflow-auto">{{ $memory['raw'] }}</pre>
                     </div>
                 @endif
             </div>
         @else
-            <p class="text-sm text-zinc-400 py-8 text-center">{{ __('Kein Experte ausgewählt.') }}</p>
+            <p class="text-sm text-zinc-400 py-8 text-center">{{ __('experts.memory.none_selected') }}</p>
         @endif
     </flux:modal>
 </div>

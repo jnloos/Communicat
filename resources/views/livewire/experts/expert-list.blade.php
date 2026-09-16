@@ -3,39 +3,41 @@
     'hasFilters' => false,
 ])
 
-<div>
-    <div class="flex items-center justify-between">
-        <flux:heading size="xl">{{ __('Edit Experts') }}</flux:heading>
-        <flux:button variant="primary" @click="$wire.dispatch('edit_expert')" class="cursor-pointer">
-            {{ __('Create Expert') }}
+<div class="mx-auto w-full max-w-6xl">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <flux:heading size="xl" level="1">{{ __('experts.list.heading') }}</flux:heading>
+            <flux:text class="mt-1">{{ trans_choice('experts.list.count', $experts->count()) }}</flux:text>
+        </div>
+        <flux:button variant="primary" icon="plus" @click="$wire.dispatch('edit_expert')" class="cursor-pointer">
+            {{ __('experts.list.create') }}
         </flux:button>
     </div>
 
-    <div class="my-5 space-y-5">
+    <div class="my-6 space-y-5">
         <livewire:experts.expert-editor/>
 
         <x-experts.filter-bar />
 
         @if($experts->isEmpty())
-            <div class="text-center py-12 text-sm text-zinc-500 dark:text-zinc-400">
+            <x-empty-state :icon="$hasFilters ? 'magnifying-glass' : 'user-circle'">
                 @if($hasFilters)
-                    {{ __('No experts match the current filters.') }}
+                    {{ __('experts.list.no_matches') }}
                 @else
-                    {{ __('No experts yet.') }}
+                    {{ __('experts.list.empty') }}
                 @endif
-            </div>
+            </x-empty-state>
         @else
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 @foreach ($experts as $expert)
-                    <div class="relative">
-                        <x-contributors.contributors-card @click="$wire.dispatch('edit_expert', { id: {{ $expert->id }} })"
-                            :name="$expert->name"
-                            :job="$expert->job"
-                            :avatar-url="$expert->avatar_url ?? null"
-                            :description="$expert->description"
-                            :seed="$expert->id"
-                        />
-                    </div>
+                    <x-contributors.contributors-card
+                        wire:key="expert-{{ $expert->id }}"
+                        @click="$wire.dispatch('edit_expert', { id: {{ $expert->id }} })"
+                        :name="$expert->name"
+                        :job="$expert->job"
+                        :avatar-url="$expert->avatar_url ?? null"
+                        :description="Str::limit($expert->description, 140)"
+                    />
                 @endforeach
             </div>
         @endif
