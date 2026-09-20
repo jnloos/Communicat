@@ -24,6 +24,8 @@
   <nav>
     <button data-src="architektur.html" aria-selected="true">Architektur</button>
     <button data-src="turn-datenfluss.html" aria-selected="false">Datenfluss eines Turns</button>
+    <button data-src="ziel-architektur.html" aria-selected="false">Ziel: Architektur</button>
+    <button data-src="ziel-pipelines.html" aria-selected="false">Ziel: Pipelines</button>
   </nav>
   <p id="hint">Welche Teile es gibt und wie sie zusammenhängen.</p>
 </header>
@@ -31,7 +33,9 @@
 <script>
   const hints = {
     "architektur.html": "Welche Teile es gibt und wie sie zusammenhängen.",
-    "turn-datenfluss.html": "Was innerhalb eines MessageGenerator-Jobs passiert, von der Route bis zur gespeicherten Nachricht."
+    "turn-datenfluss.html": "Was innerhalb eines MessageGenerator-Jobs passiert, von der Route bis zur gespeicherten Nachricht.",
+    "ziel-architektur.html": "Entwurf: generischer Pipeline-Kern, austauschbare Strategien und provider-neutraler LLM-Client.",
+    "ziel-pipelines.html": "Entwurf: die vier Studien-Pipelines als unterschiedliche Reihenfolge derselben Stages."
   };
   const buttons = document.querySelectorAll("nav button");
   buttons.forEach(button => button.addEventListener("click", () => {

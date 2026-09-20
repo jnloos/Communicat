@@ -1,0 +1,312 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Communicat: Vier Pipelines aus denselben Stages",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "external": {
+          "label": "Turn-Start"
+        },
+        "security": {
+          "label": "Think-Stages, je eigene Klasse + View"
+        },
+        "cloud": {
+          "label": "SelectSpeaker mit Selector"
+        },
+        "backend": {
+          "label": "Speak, identisch"
+        },
+        "database": {
+          "label": "Gemeinsamer Abschluss"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "rr",
+      "label": "Round Robin"
+    },
+    {
+      "id": "score",
+      "label": "Select by score (Self-Prioritization)"
+    },
+    {
+      "id": "shared",
+      "label": "Gemeinsam für alle Bedingungen"
+    },
+    {
+      "id": "orch",
+      "label": "Orchestrator-Selection"
+    },
+    {
+      "id": "quality",
+      "label": "Quality of proposal (Orchestrator Evaluation)"
+    }
+  ],
+  "mainPath": [
+    "start",
+    "or_select",
+    "or_think",
+    "or_speak",
+    "persist",
+    "summarize"
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "lane": "shared",
+      "col": 0,
+      "type": "external",
+      "label": "TurnRunner",
+      "sublabel": "neuer TurnPayload",
+      "width": 170,
+      "tag": "protokolliert danach immer"
+    },
+    {
+      "id": "persist",
+      "lane": "shared",
+      "col": 4,
+      "type": "database",
+      "label": "PersistMessage",
+      "sublabel": "speichert die Nachricht",
+      "width": 160,
+      "height": 48
+    },
+    {
+      "id": "summarize",
+      "lane": "shared",
+      "col": 5,
+      "type": "database",
+      "label": "Summarize",
+      "sublabel": "Position frei wählbar",
+      "width": 170,
+      "height": 48
+    },
+    {
+      "id": "rr_select",
+      "lane": "rr",
+      "col": 1,
+      "type": "cloud",
+      "label": "SelectSpeaker",
+      "sublabel": "RoundRobinSelector",
+      "width": 150,
+      "height": 48
+    },
+    {
+      "id": "rr_think",
+      "lane": "rr",
+      "col": 2,
+      "type": "security",
+      "label": "ThinkAsSpeaker",
+      "sublabel": "Sprecher: Gedanke",
+      "width": 150,
+      "height": 48
+    },
+    {
+      "id": "rr_speak",
+      "lane": "rr",
+      "col": 3,
+      "type": "backend",
+      "label": "Speak",
+      "width": 110,
+      "height": 48
+    },
+    {
+      "id": "sc_think",
+      "lane": "score",
+      "col": 1,
+      "type": "security",
+      "label": "ThinkAndPrioritize",
+      "sublabel": "alle: Gedanke + Priorität",
+      "width": 170,
+      "height": 48
+    },
+    {
+      "id": "sc_select",
+      "lane": "score",
+      "col": 2,
+      "type": "cloud",
+      "label": "SelectSpeaker",
+      "sublabel": "HighestBidSelector",
+      "width": 150,
+      "height": 48
+    },
+    {
+      "id": "sc_speak",
+      "lane": "score",
+      "col": 3,
+      "type": "backend",
+      "label": "Speak",
+      "width": 110,
+      "height": 48
+    },
+    {
+      "id": "or_select",
+      "lane": "orch",
+      "col": 1,
+      "type": "cloud",
+      "label": "SelectSpeaker",
+      "sublabel": "OrchestratorSelector",
+      "width": 150,
+      "height": 48
+    },
+    {
+      "id": "or_think",
+      "lane": "orch",
+      "col": 2,
+      "type": "security",
+      "label": "ThinkAsSpeaker",
+      "sublabel": "Sprecher: Gedanke",
+      "width": 150,
+      "height": 48
+    },
+    {
+      "id": "or_speak",
+      "lane": "orch",
+      "col": 3,
+      "type": "backend",
+      "label": "Speak",
+      "width": 110,
+      "height": 48
+    },
+    {
+      "id": "qu_think",
+      "lane": "quality",
+      "col": 1,
+      "type": "security",
+      "label": "ThinkAndPropose",
+      "sublabel": "alle: Gedanke + Proposal",
+      "width": 170,
+      "height": 48
+    },
+    {
+      "id": "qu_select",
+      "lane": "quality",
+      "col": 2,
+      "type": "cloud",
+      "label": "SelectSpeaker",
+      "sublabel": "JudgeSelector",
+      "width": 150,
+      "height": 48
+    },
+    {
+      "id": "qu_speak",
+      "lane": "quality",
+      "col": 3,
+      "type": "backend",
+      "label": "Speak",
+      "width": 110,
+      "height": 48
+    }
+  ],
+  "edges": [
+    {
+      "id": "start-rr",
+      "from": "start",
+      "to": "rr_select",
+      "role": "branch"
+    },
+    {
+      "id": "start-score",
+      "from": "start",
+      "to": "sc_think",
+      "role": "branch"
+    },
+    {
+      "id": "start-orch",
+      "from": "start",
+      "to": "or_select",
+      "variant": "emphasis"
+    },
+    {
+      "id": "start-quality",
+      "from": "start",
+      "to": "qu_think",
+      "role": "branch"
+    },
+    {
+      "id": "rr-1",
+      "from": "rr_select",
+      "to": "rr_think",
+      "label": "Sprecher"
+    },
+    {
+      "id": "rr-2",
+      "from": "rr_think",
+      "to": "rr_speak",
+      "label": "Memory"
+    },
+    {
+      "id": "sc-1",
+      "from": "sc_think",
+      "to": "sc_select",
+      "label": "Score"
+    },
+    {
+      "id": "sc-2",
+      "from": "sc_select",
+      "to": "sc_speak",
+      "label": "Sprecher"
+    },
+    {
+      "id": "or-1",
+      "from": "or_select",
+      "to": "or_think",
+      "label": "Sprecher",
+      "variant": "emphasis"
+    },
+    {
+      "id": "or-2",
+      "from": "or_think",
+      "to": "or_speak",
+      "label": "Memory",
+      "variant": "emphasis"
+    },
+    {
+      "id": "qu-1",
+      "from": "qu_think",
+      "to": "qu_select",
+      "label": "Proposal"
+    },
+    {
+      "id": "qu-2",
+      "from": "qu_select",
+      "to": "qu_speak",
+      "label": "Sprecher"
+    },
+    {
+      "id": "rr-end",
+      "from": "rr_speak",
+      "to": "persist",
+      "role": "branch"
+    },
+    {
+      "id": "sc-end",
+      "from": "sc_speak",
+      "to": "persist",
+      "role": "branch"
+    },
+    {
+      "id": "or-end",
+      "from": "or_speak",
+      "to": "persist",
+      "variant": "emphasis"
+    },
+    {
+      "id": "qu-end",
+      "from": "qu_speak",
+      "to": "persist",
+      "role": "branch"
+    },
+    {
+      "id": "persist-summarize",
+      "from": "persist",
+      "to": "summarize",
+      "variant": "emphasis"
+    }
+  ]
+}

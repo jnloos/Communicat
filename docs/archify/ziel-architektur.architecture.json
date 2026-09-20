@@ -1,0 +1,481 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Communicat: Zielarchitektur der generischen Pipeline",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "frontend": {
+          "label": "Einstieg und UI"
+        },
+        "backend": {
+          "label": "Pipeline-Kern"
+        },
+        "cloud": {
+          "label": "Selector, die Studienbedingung"
+        },
+        "messagebus": {
+          "label": "Payload, Memory, Persona"
+        },
+        "security": {
+          "label": "LLM-Abstraktion"
+        },
+        "database": {
+          "label": "Protokoll und Auswertung"
+        },
+        "external": {
+          "label": "Provider-API"
+        }
+      }
+    },
+    "views": [
+      {
+        "id": "turn",
+        "label": "Ein Turn",
+        "focus": [
+          "job",
+          "runner",
+          "registry",
+          "pipeline",
+          "stage",
+          "llm",
+          "apis",
+          "turnlogs"
+        ],
+        "note": "Der TurnRunner holt die Pipeline über ihren Klassennamen, führt die Stages aus und protokolliert danach immer."
+      },
+      {
+        "id": "erweitern",
+        "label": "Neue Pipeline hinzufügen",
+        "focus": [
+          "ui",
+          "registry",
+          "pipeline",
+          "stage",
+          "selector"
+        ],
+        "note": "Eine neue Klasse im Pipelines-Ordner genügt. Die Registry findet sie, das Dropdown zeigt sie an."
+      },
+      {
+        "id": "messung",
+        "label": "Messung",
+        "focus": [
+          "runner",
+          "turnlogs",
+          "metrics",
+          "llm",
+          "llmcalls"
+        ],
+        "note": "Der Runner schreibt turn_logs, der Logging-Decorator llm_calls. Keine Pipeline kann das abschalten."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "ui",
+      "type": "frontend",
+      "label": "Projekt anlegen",
+      "sublabel": "Dropdown der Pipelines",
+      "pos": [
+        30,
+        50
+      ],
+      "size": [
+        190,
+        56
+      ]
+    },
+    {
+      "id": "job",
+      "type": "frontend",
+      "label": "MessageGenerator",
+      "sublabel": "Job, interaktiver UI-Loop",
+      "pos": [
+        30,
+        136
+      ],
+      "size": [
+        190,
+        56
+      ]
+    },
+    {
+      "id": "cmd",
+      "type": "frontend",
+      "label": "RunExperiment",
+      "sublabel": "Command, kopflos, Matrix",
+      "pos": [
+        30,
+        229
+      ],
+      "size": [
+        190,
+        56
+      ]
+    },
+    {
+      "id": "registry",
+      "type": "backend",
+      "label": "PipelineRegistry",
+      "sublabel": "Auto-Discovery per Ordner",
+      "pos": [
+        290,
+        60
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "pipeline",
+      "type": "backend",
+      "label": "TurnPipeline",
+      "sublabel": "Interface: stages()",
+      "tag": "eine Klasse je Pipeline",
+      "pos": [
+        550,
+        60
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "runner",
+      "type": "backend",
+      "label": "TurnRunner",
+      "sublabel": "ein Turn, protokolliert immer",
+      "pos": [
+        290,
+        214
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "stage",
+      "type": "backend",
+      "label": "TurnStage",
+      "sublabel": "Interface: handle(payload, next)",
+      "tag": "7 Bausteine",
+      "pos": [
+        550,
+        214
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "payload",
+      "type": "messagebus",
+      "label": "TurnPayload",
+      "sublabel": "Thought, Selection, Contribution",
+      "pos": [
+        810,
+        60
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "memory",
+      "type": "messagebus",
+      "label": "Memory",
+      "sublabel": "History, Short-Term, Long-Term",
+      "pos": [
+        810,
+        214
+      ],
+      "size": [
+        190,
+        64
+      ],
+      "tag": "für Think, Speak, Selector"
+    },
+    {
+      "id": "persona",
+      "type": "messagebus",
+      "label": "PersonaRenderer",
+      "sublabel": "Enum StatusCondition + Text",
+      "pos": [
+        290,
+        522
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "selector",
+      "type": "cloud",
+      "label": "SpeakerSelector",
+      "sublabel": "Interface: select(payload)",
+      "tag": "4 Selektoren",
+      "pos": [
+        550,
+        368
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "models",
+      "type": "security",
+      "label": "LlmFactory",
+      "sublabel": "Modell des Projekts → Client",
+      "pos": [
+        1070,
+        214
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "llm",
+      "type": "security",
+      "label": "LlmClient",
+      "sublabel": "Interface + Logging-Decorator",
+      "pos": [
+        810,
+        368
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "apis",
+      "type": "external",
+      "label": "OpenAI, Anthropic, Gemini",
+      "sublabel": "je ein Adapter",
+      "pos": [
+        1070,
+        368
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "turnlogs",
+      "type": "database",
+      "label": "turn_logs",
+      "sublabel": "je Turn, auch Fehlschläge",
+      "pos": [
+        290,
+        368
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "metrics",
+      "type": "database",
+      "label": "Auswertungsskript",
+      "sublabel": "Anteile, Entropie, Gini",
+      "pos": [
+        30,
+        368
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "llmcalls",
+      "type": "database",
+      "label": "llm_calls",
+      "sublabel": "ersetzt prompt_logs",
+      "pos": [
+        810,
+        522
+      ],
+      "size": [
+        190,
+        64
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Pipeline-Kern, kennt keine Bedingung",
+      "wraps": [
+        "registry",
+        "pipeline",
+        "runner",
+        "stage"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ui-registry",
+      "from": "ui",
+      "to": "registry",
+      "label": "listet"
+    },
+    {
+      "id": "job-runner",
+      "from": "job",
+      "to": "runner",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cmd-runner",
+      "from": "cmd",
+      "to": "runner",
+      "variant": "emphasis"
+    },
+    {
+      "id": "runner-registry",
+      "from": "runner",
+      "to": "registry",
+      "label": "Klassenname"
+    },
+    {
+      "id": "registry-pipeline",
+      "from": "registry",
+      "to": "pipeline",
+      "label": "findet"
+    },
+    {
+      "id": "pipeline-stage",
+      "from": "pipeline",
+      "to": "stage",
+      "label": "Reihenfolge",
+      "labelDy": 24
+    },
+    {
+      "id": "runner-stage",
+      "from": "runner",
+      "to": "stage",
+      "label": "führt aus",
+      "variant": "emphasis"
+    },
+    {
+      "id": "runner-turnlogs",
+      "from": "runner",
+      "to": "turnlogs",
+      "label": "immer",
+      "variant": "emphasis",
+      "labelDy": 24
+    },
+    {
+      "id": "metrics-turnlogs",
+      "from": "metrics",
+      "to": "turnlogs",
+      "label": "liest"
+    },
+    {
+      "id": "stage-payload",
+      "from": "stage",
+      "to": "payload",
+      "label": "liest, schreibt"
+    },
+    {
+      "id": "stage-memory",
+      "from": "stage",
+      "to": "memory"
+    },
+    {
+      "id": "stage-selector",
+      "from": "stage",
+      "to": "selector",
+      "label": "SelectSpeaker",
+      "labelDy": 24
+    },
+    {
+      "id": "stage-persona",
+      "from": "stage",
+      "to": "persona",
+      "label": "Think, Speak"
+    },
+    {
+      "id": "stage-llm",
+      "from": "stage",
+      "to": "llm",
+      "label": "Beiträge",
+      "variant": "emphasis"
+    },
+    {
+      "id": "selector-llm",
+      "from": "selector",
+      "to": "llm",
+      "label": "Orchestrator, Richter",
+      "variant": "dashed",
+      "labelDy": 49
+    },
+    {
+      "id": "models-llm",
+      "from": "models",
+      "to": "llm",
+      "label": "Client + Config",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "llm-apis",
+      "from": "llm",
+      "to": "apis",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "llm-llmcalls",
+      "from": "llm",
+      "to": "llmcalls",
+      "label": "jeder Aufruf",
+      "labelDy": 24
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Neue Pipeline in drei Schritten",
+      "items": [
+        "Klasse in app/Discussion/Pipelines anlegen",
+        "stages() gibt die geordnete Liste zurück",
+        "Erscheint von selbst im Dropdown und im Smoke-Test"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Zwei Erweiterungspunkte",
+      "items": [
+        "Stage: neuer Baustein als Klasse",
+        "SpeakerSelector: neue Studienbedingung",
+        "Think-Varianten als eigene Stages mit eigenem View"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Nicht abschaltbar",
+      "items": [
+        "Der TurnRunner protokolliert jeden Turn",
+        "Fehlschläge zählen mit",
+        "Wörter und Zeichen, nie Tokens"
+      ]
+    }
+  ]
+}
