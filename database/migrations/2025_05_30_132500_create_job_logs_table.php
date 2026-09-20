@@ -14,6 +14,16 @@ return new class extends Migration
             $table->foreignId('project_id')->nullable()->constrained('projects')->nullOnDelete();
             $table->enum('status', ['running', 'success', 'failed'])->default('running');
             $table->json('payload')->nullable();
+            $table->unsignedInteger('turn_index')->nullable();
+            $table->foreignId('expert_id')->nullable()->constrained('experts')->nullOnDelete();
+            $table->unsignedSmallInteger('seat')->nullable();
+            $table->unsignedInteger('words')->nullable();
+            $table->unsignedInteger('chars')->nullable();
+            $table->unsignedInteger('thought_words')->nullable();
+            $table->unsignedInteger('thought_chars')->nullable();
+            $table->unsignedInteger('reasoning_tokens')->nullable();
+            $table->json('selection')->nullable();
+            $table->text('error')->nullable();
             $table->timestamp('started_at');
             $table->timestamp('finished_at')->nullable();
             $table->timestamps();

@@ -39,4 +39,17 @@ return [
     'summary_trigger_at' => 100,
     'summary_keep_recent' => 30,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Pipeline und Memory
+    |--------------------------------------------------------------------------
+    | default_pipeline — kurzer Klassenname aus app/Discussion/Pipelines.
+    | history_keep     — n: so viele jüngste Nachrichten bleiben wörtlich (History).
+    | summarize_batch  — b: Summarize läuft, sobald mehr als n + b Nachrichten
+    |                    unzusammengefasst sind, und verdichtet alles bis auf n.
+    */
+    'default_pipeline' => env('DISCUSSION_DEFAULT_PIPELINE', 'RoundRobinPipeline'),
+    'history_keep' => (int) env('DISCUSSION_HISTORY_KEEP', 20),
+    'summarize_batch' => (int) env('DISCUSSION_SUMMARIZE_BATCH', 10),
+
 ];

@@ -8,8 +8,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class JobLog extends Model
 {
-    protected $fillable = ['job_class', 'project_id', 'status', 'payload', 'started_at', 'finished_at'];
-    protected $casts = ['payload' => 'array', 'started_at' => 'datetime', 'finished_at' => 'datetime'];
+    protected $fillable = [
+        'job_class', 'project_id', 'status', 'payload', 'started_at', 'finished_at',
+        'turn_index', 'expert_id', 'seat', 'words', 'chars',
+        'thought_words', 'thought_chars', 'reasoning_tokens', 'selection', 'error',
+    ];
+
+    protected $casts = [
+        'payload' => 'array',
+        'selection' => 'array',
+        'started_at' => 'datetime',
+        'finished_at' => 'datetime',
+    ];
 
     public function project(): BelongsTo
     {
@@ -28,7 +38,10 @@ class JobLog extends Model
 
     public function duration(): ?float
     {
-        if (!$this->finished_at) return null;
+        if (! $this->finished_at) {
+            return null;
+        }
+
         return $this->started_at->diffInSeconds($this->finished_at);
     }
 }

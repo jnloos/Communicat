@@ -13,9 +13,13 @@ class Project extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'description', 'settings', 'user_id', 'model'];
+    protected $fillable = [
+        'title', 'description', 'settings', 'user_id',
+        'model', 'pipeline', 'turn_budget', 'seed', 'run_config',
+        'long_term_memory', 'summarized_until_message_id',
+    ];
 
-    protected $casts = ['settings' => 'array'];
+    protected $casts = ['settings' => 'array', 'run_config' => 'array'];
 
     public const MAX_CONTRIBUTING_EXPERTS = 4;
 
@@ -39,7 +43,10 @@ class Project extends Model
 
     public function experts(): MorphToMany
     {
-        return $this->morphedByMany(Expert::class, 'contributor', 'project_contributors');
+        return $this->morphedByMany(Expert::class, 'contributor', 'project_contributors')
+            ->withPivot('seat')
+            ->orderBy('project_contributors.seat')
+            ->orderBy('experts.id');
     }
 
     public function users(): MorphToMany
@@ -59,12 +66,23 @@ class Project extends Model
 
     public function addContributingExpert(Expert $expert): void
     {
-        $this->experts()->syncWithoutDetaching($expert->id);
+        if ($this->experts()->whereKey($expert->id)->exists()) {
+            return;
+        }
+
+        $this->experts()->attach($expert->id, ['seat' => $this->nextSeat()]);
+        $this->cachedContributingExperts = null;
     }
 
     public function removeContributingExpert(Expert $expert): void
     {
         $this->experts()->detach($expert->id);
+        $this->cachedContributingExperts = null;
+    }
+
+    private function nextSeat(): int
+    {
+        return (int) $this->experts()->max('project_contributors.seat') + 1;
     }
 
     public function contributingExperts(): Collection
@@ -152,6 +170,10 @@ class Project extends Model
             if (auth()->check()) {
                 $project->user_id = auth()->id();
             }
+
+            $project->pipeline ??= config('discussion.default_pipeline');
+            $project->model ??= config('llm.default');
+            $project->seed ??= random_int(1, 2_000_000_000);
         });
 
         static::created(function (Project $project): void {
@@ -184,7 +206,7 @@ class Project extends Model
     }
 
     /** Messages from participants (expert or user), excluding system/assistant. */
-    private function participantMessages(): HasMany
+    public function participantMessages(): HasMany
     {
         return $this->messages()->where(function ($q) {
             $q->whereNotNull('expert_id')->orWhereNotNull('user_id');

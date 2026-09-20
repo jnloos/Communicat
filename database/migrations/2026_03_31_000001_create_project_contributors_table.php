@@ -15,6 +15,7 @@ return new class extends Migration
             $table->foreignId('project_id')->constrained('projects')->cascadeOnDelete();
             $table->string('contributor_type');
             $table->unsignedBigInteger('contributor_id');
+            $table->unsignedSmallInteger('seat')->nullable();
             $table->timestamps();
             $table->unique(['project_id', 'contributor_type', 'contributor_id'], 'project_contributor_unique');
         });
