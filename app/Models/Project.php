@@ -14,12 +14,12 @@ class Project extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'description', 'settings', 'user_id',
+        'title', 'description', 'user_id',
         'model', 'pipeline', 'turn_budget', 'seed', 'run_config',
         'long_term_memory', 'summarized_until_message_id',
     ];
 
-    protected $casts = ['settings' => 'array', 'run_config' => 'array'];
+    protected $casts = ['run_config' => 'array'];
 
     public const MAX_CONTRIBUTING_EXPERTS = 4;
 
@@ -149,21 +149,6 @@ class Project extends Model
         return $this->isOwner($user) || $this->users()->whereKey($user->id)->exists();
     }
 
-    /**
-     * Resolve the concrete user a turn hands the floor back to: the author of
-     * the pending (unanswered) user message when there is one, otherwise the
-     * project owner. Replaces the generic 'Nutzer' sentinel so multi-user
-     * projects know which human is addressed.
-     */
-    public function handoffUser(?Message $pendingUser = null): ?User
-    {
-        if ($pendingUser !== null && $pendingUser->user_id !== null) {
-            return $pendingUser->user;
-        }
-
-        return $this->owner;
-    }
-
     protected static function booted(): void
     {
         static::creating(function (Project $project): void {
@@ -201,36 +186,5 @@ class Project extends Model
     public function latestParticipantMessage(): ?Message
     {
         return $this->participantMessages()->latest('id')->first();
-    }
-
-    public function asPromptArray(int $numMsg = -1): array
-    {
-        $lastSummarizedId = $this->settings['last_summarized_id'] ?? 0;
-
-        // Pull newest-first so an optional take($numMsg) yields the most
-        // recent window, then reverse to chronological order before handing
-        // the list to prompts — LLMs read top-down and treat the last line
-        // as the most recent turn, so the user's latest message must be
-        // last in the rendered list.
-        $query = $this->participantMessages()
-            ->where('id', '>', $lastSummarizedId)
-            ->orderBy('id', 'desc');
-
-        if ($numMsg > -1) {
-            $query->take($numMsg);
-        }
-
-        $messages = $query->get()
-            ->reverse()
-            ->map(fn (Message $msg) => $msg->toPromptArray())
-            ->values()
-            ->all();
-
-        return [
-            'title' => $this->title,
-            'description' => $this->description,
-            'chat_summary' => $this->settings['chat_summary'] ?? '',
-            'messages' => $messages,
-        ];
     }
 }

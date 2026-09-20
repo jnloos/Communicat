@@ -15,8 +15,8 @@ class PromptIdTokenTest extends TestCase
     private function project(): array
     {
         $owner = User::factory()->create();
-        $project = Project::withoutEvents(fn() => Project::create([
-            'title' => 't', 'description' => 'd', 'settings' => [], 'user_id' => $owner->id,
+        $project = Project::withoutEvents(fn () => Project::create([
+            'title' => 't', 'description' => 'd', 'user_id' => $owner->id,
         ]));
         $alice = Expert::factory()->create(['name' => 'Alice']);
         $project->addContributingExpert($alice);
@@ -28,7 +28,7 @@ class PromptIdTokenTest extends TestCase
     public function test_prompt_id_accessors_are_type_prefixed(): void
     {
         $alice = Expert::factory()->create();
-        $user  = User::factory()->create();
+        $user = User::factory()->create();
 
         $this->assertSame("E{$alice->id}", $alice->promptId);
         $this->assertSame("U{$user->id}", $user->promptId);
@@ -50,16 +50,5 @@ class PromptIdTokenTest extends TestCase
         $this->assertNull($project->contributorByPromptId('Alice'));
         $this->assertNull($project->contributorByPromptId(null));
         $this->assertNull($project->contributorByPromptId('X7'));
-    }
-
-    public function test_message_to_prompt_array_carries_token(): void
-    {
-        [$project, $alice, $owner] = $this->project();
-
-        $expertMsg = $project->addMessage('Hi', $alice);
-        $userMsg   = $project->addMessage('Hallo', $owner);
-
-        $this->assertSame("E{$alice->id}", $expertMsg->toPromptArray()['prompt_id']);
-        $this->assertSame("U{$owner->id}", $userMsg->toPromptArray()['prompt_id']);
     }
 }

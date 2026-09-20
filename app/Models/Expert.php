@@ -19,7 +19,7 @@ class Expert extends Model
      */
     protected function promptId(): Attribute
     {
-        return Attribute::get(fn () => 'E' . $this->id);
+        return Attribute::get(fn () => 'E'.$this->id);
     }
 
     protected $fillable = [
@@ -55,17 +55,5 @@ class Expert extends Model
     public function isContributing(Project $project): bool
     {
         return $this->projects()->whereKey($project->id)->exists();
-    }
-
-    public function asPromptArray(Project $project): array
-    {
-        return [
-            'name'        => $this->name,
-            'expert_id'   => $this->id,
-            'prompt_id'   => $this->promptId,
-            'job'         => $this->job,
-            'description' => $this->description,
-            'thoughts'    => $this->thoughtsAbout($project),
-        ];
     }
 }

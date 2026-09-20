@@ -2,35 +2,41 @@
 
 namespace App\Services\ProjectTransfer;
 
+use App\Models\Expert;
 use App\Models\Project;
+use App\Models\User;
 
 class ProjectExport
 {
     /** Current export schema version (consumed by ProjectImporter). */
-    public const SCHEMA_VERSION = 3;
+    public const SCHEMA_VERSION = 4;
 
     /**
-     * Build the full clone payload for a project: settings, contributing experts,
-     * all messages with metadata, and per-expert memory (summaries). The shape is
-     * the contract consumed by {@see ProjectImporter::import()}.
+     * Build the full clone payload for a project: pipeline/model config,
+     * contributing experts (in seat order), all messages with metadata, and
+     * per-expert memory (summaries). The shape is the contract consumed by
+     * {@see ProjectImporter::import()}.
      */
     public function toArray(Project $project): array
     {
         return [
             'schema_version' => self::SCHEMA_VERSION,
             'project' => [
-                'title'       => $project->title,
+                'title' => $project->title,
                 'description' => $project->description,
-                'settings'    => $project->settings ?? [],
-                'created_at'  => optional($project->created_at)->toIso8601String(),
+                'pipeline' => $project->pipeline,
+                'model' => $project->model,
+                'long_term_memory' => $project->long_term_memory,
+                'summarized_until_message_id' => $project->summarized_until_message_id,
+                'created_at' => optional($project->created_at)->toIso8601String(),
             ],
             'experts' => $project->contributingExperts()
                 ->map(fn ($e) => [
-                    'id'          => $e->id,
-                    'name'        => $e->name,
-                    'job'         => $e->job,
+                    'id' => $e->id,
+                    'name' => $e->name,
+                    'job' => $e->job,
                     'description' => $e->description,
-                    'avatar_url'  => $e->avatar_url,
+                    'avatar_url' => $e->avatar_url,
                 ])
                 ->values()
                 ->all(),
@@ -39,17 +45,17 @@ class ProjectExport
                 ->orderBy('id')
                 ->get()
                 ->map(fn ($m) => [
-                    'id'                  => $m->id,
-                    'content'             => $m->content,
-                    'expert_id'           => $m->expert_id,
-                    'is_user'             => $m->user_id !== null,
-                    'sender_name'         => $m->expert?->name ?? $m->user?->name,
+                    'id' => $m->id,
+                    'content' => $m->content,
+                    'expert_id' => $m->expert_id,
+                    'is_user' => $m->user_id !== null,
+                    'sender_name' => $m->expert?->name ?? $m->user?->name,
                     'adjacency_pair_type' => $m->adjacency_pair_type,
                     // Polymorphic addressee, flattened: the expert id (re-linkable)
                     // or a user flag (reassigned to the importing owner).
-                    'adjacency_partner_expert_id' => $m->adjacency_partner_type === \App\Models\Expert::class ? $m->adjacency_partner_id : null,
-                    'adjacency_partner_is_user'   => $m->adjacency_partner_type === \App\Models\User::class,
-                    'created_at'          => optional($m->created_at)->toIso8601String(),
+                    'adjacency_partner_expert_id' => $m->adjacency_partner_type === Expert::class ? $m->adjacency_partner_id : null,
+                    'adjacency_partner_is_user' => $m->adjacency_partner_type === User::class,
+                    'created_at' => optional($m->created_at)->toIso8601String(),
                 ])
                 ->values()
                 ->all(),
@@ -57,7 +63,7 @@ class ProjectExport
                 ->get()
                 ->map(fn ($s) => [
                     'expert_id' => $s->expert_id,
-                    'content'   => $s->content,
+                    'content' => $s->content,
                 ])
                 ->values()
                 ->all(),

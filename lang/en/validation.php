@@ -200,7 +200,6 @@ return [
         'current_password' => 'current password',
         'description' => 'description',
         'email' => 'email address',
-        'frequency' => 'memory reduction',
         'importFile' => 'import file',
         'is_admin' => 'administrator',
         'job' => 'job',

@@ -25,8 +25,8 @@ class ContributorLimitTest extends TestCase
     public function test_can_add_up_to_limit(): void
     {
         $user = User::factory()->create();
-        $project = Project::withoutEvents(fn() => Project::create([
-            'title' => 't', 'description' => 'd', 'settings' => [], 'user_id' => $user->id,
+        $project = Project::withoutEvents(fn () => Project::create([
+            'title' => 't', 'description' => 'd', 'user_id' => $user->id,
         ]));
 
         $experts = Expert::factory()->count(Project::MAX_CONTRIBUTING_EXPERTS)->create();
@@ -41,8 +41,8 @@ class ContributorLimitTest extends TestCase
     public function test_cannot_add_beyond_limit_via_component(): void
     {
         $user = User::factory()->create();
-        $project = Project::withoutEvents(fn() => Project::create([
-            'title' => 't', 'description' => 'd', 'settings' => [], 'user_id' => $user->id,
+        $project = Project::withoutEvents(fn () => Project::create([
+            'title' => 't', 'description' => 'd', 'user_id' => $user->id,
         ]));
 
         $experts = Expert::factory()->count(Project::MAX_CONTRIBUTING_EXPERTS)->create();
@@ -54,7 +54,7 @@ class ContributorLimitTest extends TestCase
         $this->actingAs($user);
         Livewire::test(SelectContributors::class, ['project' => $project])
             ->call('addExpert', $extra->id)
-            ->assertSet('limitWarning', fn($v) => is_string($v) && str_contains($v, (string) Project::MAX_CONTRIBUTING_EXPERTS));
+            ->assertSet('limitWarning', fn ($v) => is_string($v) && str_contains($v, (string) Project::MAX_CONTRIBUTING_EXPERTS));
 
         $this->assertFalse(
             $project->experts()->whereKey($extra->id)->exists(),
@@ -65,8 +65,8 @@ class ContributorLimitTest extends TestCase
     public function test_removing_clears_warning_and_allows_add(): void
     {
         $user = User::factory()->create();
-        $project = Project::withoutEvents(fn() => Project::create([
-            'title' => 't', 'description' => 'd', 'settings' => [], 'user_id' => $user->id,
+        $project = Project::withoutEvents(fn () => Project::create([
+            'title' => 't', 'description' => 'd', 'user_id' => $user->id,
         ]));
 
         $experts = Expert::factory()->count(Project::MAX_CONTRIBUTING_EXPERTS)->create();

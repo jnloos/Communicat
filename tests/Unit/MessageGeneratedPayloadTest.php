@@ -17,7 +17,7 @@ class MessageGeneratedPayloadTest extends TestCase
     {
         $owner = User::factory()->create();
         $project = Project::withoutEvents(fn () => Project::create([
-            'title' => 't', 'description' => 'd', 'settings' => [], 'user_id' => $owner->id,
+            'title' => 't', 'description' => 'd', 'user_id' => $owner->id,
         ]));
         $alice = Expert::factory()->create(['name' => 'Alice']);
         $bob = Expert::factory()->create(['name' => 'Bob']);
@@ -42,7 +42,7 @@ class MessageGeneratedPayloadTest extends TestCase
     {
         $owner = User::factory()->create();
         $project = Project::withoutEvents(fn () => Project::create([
-            'title' => 't', 'description' => 'd', 'settings' => [], 'user_id' => $owner->id,
+            'title' => 't', 'description' => 'd', 'user_id' => $owner->id,
         ]));
         $alice = Expert::factory()->create(['name' => 'Alice']);
         $project->addContributingExpert($alice);
@@ -61,7 +61,7 @@ class MessageGeneratedPayloadTest extends TestCase
     {
         $owner = User::factory()->create();
         $project = Project::withoutEvents(fn () => Project::create([
-            'title' => 't', 'description' => 'd', 'settings' => [], 'user_id' => $owner->id,
+            'title' => 't', 'description' => 'd', 'user_id' => $owner->id,
         ]));
 
         $payload = (new MessageGenerated($project->id))->broadcastWith();

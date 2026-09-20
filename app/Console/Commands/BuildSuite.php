@@ -14,10 +14,12 @@ class BuildSuite extends Command
 
     protected $description = 'Builds a development suite with default settings.';
 
-    public function handle(): int {
+    public function handle(): int
+    {
         $this->warn('This command will destroy the database and fill it with test entries.');
-        if (!$this->confirm('Do you really want to do this?')) {
+        if (! $this->confirm('Do you really want to do this?')) {
             $this->info('Operation cancelled.');
+
             return 0;
         }
 
@@ -33,7 +35,7 @@ class BuildSuite extends Command
         $this->call('init:experts');
 
         $this->comment('Creating a admin user...');
-        $admin = new User();
+        $admin = new User;
         $admin->id = 1;
         $admin->name = 'admin';
         $admin->email = 'admin@localhost';
@@ -43,7 +45,7 @@ class BuildSuite extends Command
         $this->info("Default admin created: $admin->name ($admin->email)");
 
         $this->comment('Creating test user...');
-        $test = new User();
+        $test = new User;
         $test->name = 'test';
         $test->email = 'test@localhost';
         $test->password = Hash::make('test');
@@ -54,29 +56,29 @@ class BuildSuite extends Command
 
         $projects = [
             [
-                'title'       => 'Tempolimit auf Autobahnen',
+                'title' => 'Tempolimit auf Autobahnen',
                 'description' => 'Sollte Deutschland ein generelles Tempolimit von 130 km/h auf Autobahnen einführen? Diskutiert konkret das CO₂-Einsparpotenzial, Unfall- und Todeszahlen, die Folgen für Pendler und Logistik sowie das Freiheitsargument — und ringt um eine gemeinsame, begründete Empfehlung.',
-                'experts'     => ['Lisa Graf', 'David Kaufmann', 'Tim Hofmann', 'Paul Neumann'],
+                'experts' => ['Lisa Graf', 'David Kaufmann', 'Tim Hofmann', 'Paul Neumann'],
             ],
             [
-                'title'       => 'KI-Werkzeuge an Schulen',
+                'title' => 'KI-Werkzeuge an Schulen',
                 'description' => 'Sollen Schülerinnen und Schüler KI-Werkzeuge wie ChatGPT im Unterricht und bei Hausaufgaben nutzen dürfen? Klärt konkret: Welche Aufgaben bleiben bewusst KI-frei, wie wird Leistung fair bewertet, welche Datenschutzregeln gelten für Minderjährige, und wie verändert sich die Rolle der Lehrkraft?',
-                'experts'     => ['Stefan Maier', 'Nina Keller', 'Katharina Wolf', 'Paul Neumann'],
+                'experts' => ['Stefan Maier', 'Nina Keller', 'Katharina Wolf', 'Paul Neumann'],
             ],
             [
-                'title'       => 'EU-Chatkontrolle',
+                'title' => 'EU-Chatkontrolle',
                 'description' => 'Sollen Messenger-Dienste verpflichtet werden, auch Ende-zu-Ende-verschlüsselte Nachrichten automatisiert auf Missbrauchsdarstellungen zu durchsuchen (Client-Side-Scanning)? Wägt Kinderschutz, IT-Sicherheit, Grundrechte und technische Umsetzbarkeit gegeneinander ab.',
-                'experts'     => ['Sarah Vogel', 'Katharina Wolf', 'Tim Hofmann', 'Paul Neumann'],
+                'experts' => ['Sarah Vogel', 'Katharina Wolf', 'Tim Hofmann', 'Paul Neumann'],
             ],
             [
-                'title'       => 'Rückkehr ins Büro oder Remote-First',
+                'title' => 'Rückkehr ins Büro oder Remote-First',
                 'description' => 'Soll unser Unternehmen eine verbindliche Büro-Anwesenheit von drei Tagen pro Woche einführen oder remote-first bleiben? Diskutiert konkret Produktivität, Teamzusammenhalt, Bürokosten, Fairness gegenüber Eltern und Pendlern sowie die Wirkung auf das Recruiting.',
-                'experts'     => ['Marie Hoffmann', 'Clara Schmidt', 'David Kaufmann', 'Paul Neumann'],
+                'experts' => ['Marie Hoffmann', 'Clara Schmidt', 'David Kaufmann', 'Paul Neumann'],
             ],
             [
-                'title'       => 'Vier-Tage-Woche bei vollem Lohn',
+                'title' => 'Vier-Tage-Woche bei vollem Lohn',
                 'description' => 'Sollte die Vier-Tage-Woche bei vollem Lohnausgleich (32 Stunden, 100 % Gehalt) politisch gefördert werden? Klärt konkret die Auswirkungen auf Produktivität, Lohnkosten, Fachkräftemangel, Gesundheit und internationale Wettbewerbsfähigkeit.',
-                'experts'     => ['David Kaufmann', 'Lisa Graf', 'Marie Hoffmann', 'Paul Neumann'],
+                'experts' => ['David Kaufmann', 'Lisa Graf', 'Marie Hoffmann', 'Paul Neumann'],
             ],
         ];
 
@@ -96,11 +98,10 @@ class BuildSuite extends Command
      */
     private function createDiscussionProject(User $admin, string $title, string $description, array $expertNames): void
     {
-        $project = new Project();
-        $project->user_id    = $admin->id;
-        $project->title       = $title;
+        $project = new Project;
+        $project->user_id = $admin->id;
+        $project->title = $title;
         $project->description = $description;
-        $project->settings    = ['summary_frequency' => 10];
         $project->save();
         $project->users()->syncWithoutDetaching($admin->id);
 
@@ -108,6 +109,8 @@ class BuildSuite extends Command
         foreach ($experts as $expert) {
             $project->addContributingExpert($expert);
         }
+
+        $project->addMessage(view('components.projects.welcome-message', ['project' => $project])->render());
 
         $this->info("  • {$title} — {$experts->count()} Experten");
     }

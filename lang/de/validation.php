@@ -192,7 +192,6 @@ return [
         'current_password' => 'Aktuelles Passwort',
         'description' => 'Beschreibung',
         'email' => 'E-Mail-Adresse',
-        'frequency' => 'Gedächtnisreduktion',
         'importFile' => 'Importdatei',
         'is_admin' => 'Administrator',
         'job' => 'Beruf',

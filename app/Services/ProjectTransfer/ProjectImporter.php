@@ -2,6 +2,7 @@
 
 namespace App\Services\ProjectTransfer;
 
+use App\Discussion\Pipelines\PipelineRegistry;
 use App\Models\Expert;
 use App\Models\Message;
 use App\Models\Project;
@@ -35,12 +36,18 @@ class ProjectImporter
             $project->user_id = $owner->id;
             $project->title = trim((string) ($projectData['title'] ?? __('projects.import.untitled'))).' '.__('projects.import.copy_suffix');
             $project->description = $projectData['description'] ?? '';
-            $project->settings = [];
+            $project->pipeline = $this->knownPipeline($projectData['pipeline'] ?? null);
+            $project->model = $this->knownModel($projectData['model'] ?? null);
+            $project->long_term_memory = $projectData['long_term_memory'] ?? null;
             $project->save();
             $project->addContributingUser($owner);
 
-            if (! empty($existingIds)) {
-                $project->experts()->syncWithoutDetaching($existingIds);
+            foreach ($data['experts'] ?? [] as $exported) {
+                $expert = Expert::find((int) ($exported['id'] ?? 0));
+
+                if ($expert !== null) {
+                    $project->addContributingExpert($expert);
+                }
             }
 
             // Recreate messages; track old→new ids to remap the summary watermark.
@@ -94,15 +101,24 @@ class ProjectImporter
                 ]);
             }
 
-            // Carry settings over, remapping the summarization watermark to the new id.
-            $settings = $projectData['settings'] ?? [];
-            if (! empty($settings['last_summarized_id'])) {
-                $settings['last_summarized_id'] = $idMap[(int) $settings['last_summarized_id']] ?? 0;
-            }
-            $project->settings = $settings;
+            // Remap the long-term memory watermark to the recreated message.
+            $watermark = (int) ($projectData['summarized_until_message_id'] ?? 0);
+            $project->summarized_until_message_id = $idMap[$watermark] ?? null;
             $project->save();
 
             return ['project' => $project, 'missing_experts' => $missing];
         });
+    }
+
+    private function knownPipeline(?string $name): string
+    {
+        $pipelines = app(PipelineRegistry::class);
+
+        return $name !== null && $pipelines->has($name) ? $name : $pipelines->default();
+    }
+
+    private function knownModel(?string $key): string
+    {
+        return $key !== null && config("llm.models.{$key}") !== null ? $key : (string) config('llm.default');
     }
 }

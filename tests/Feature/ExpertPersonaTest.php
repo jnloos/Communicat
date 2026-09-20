@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Discussion\Support\PromptRenderer;
 use App\Livewire\Experts\ExpertEditor;
 use App\Models\Expert;
-use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
@@ -15,14 +15,14 @@ class ExpertPersonaTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_prompt_description_is_the_plain_expert_description(): void
+    public function test_the_persona_prompt_block_carries_the_plain_description(): void
     {
         $expert = Expert::factory()->create(['description' => 'Pragmatische Architektin.']);
-        $project = Project::factory()->create();
 
-        $prompt = $expert->asPromptArray($project);
+        $prompt = app(PromptRenderer::class)
+            ->render('prompts.partials.persona', ['expert' => $expert]);
 
-        $this->assertSame('Pragmatische Architektin.', $prompt['description']);
+        $this->assertStringContainsString('Pragmatische Architektin.', $prompt);
     }
 
     public function test_experts_table_only_has_identity_columns(): void

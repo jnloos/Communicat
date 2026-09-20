@@ -22,9 +22,6 @@ return new class extends Migration
             // Watermark only, compared with ">". Deliberately no foreign key:
             // projects → messages → projects would be a circular constraint.
             $table->unsignedBigInteger('summarized_until_message_id')->nullable();
-            // All mutable project state (moderator counters, agenda phase, chat
-            // summary, summarizer thresholds, …) lives in this JSON blob.
-            $table->json('settings')->default('{}');
             $table->timestamps();
         });
     }

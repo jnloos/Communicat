@@ -15,7 +15,6 @@ class ProjectFactory extends Factory
         return [
             'title' => fake()->sentence(3),
             'description' => fake()->paragraph(),
-            'settings' => [],
             'user_id' => User::factory(),
             'model' => 'openai',
         ];
