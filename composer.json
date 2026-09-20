@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "anthropic-ai/sdk": "^0.50.0",
         "erusev/parsedown": "^1.7",
         "guzzlehttp/guzzle": "^7.10",
         "laravel/framework": "^12.0",
