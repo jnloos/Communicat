@@ -9,10 +9,17 @@
             <flux:input wire:model.defer="title" :label="__('common.fields.title')"/>
             <flux:textarea wire:model.defer="description" :label="__('common.fields.description')" rows="10"/>
 
-            <flux:select wire:model.defer="frequency" :label="__('projects.fields.memory_reduction')">
-                <option value="5">{{ __('projects.fields.reduction.high') }}</option>
-                <option value="10">{{ __('projects.fields.reduction.standard') }}</option>
-                <option value="20">{{ __('projects.fields.reduction.low') }}</option>
+            <flux:select wire:model.defer="pipeline" :label="__('projects.fields.pipeline')" :disabled="$runStarted">
+                @foreach ($pipelines as $name => $label)
+                    <option value="{{ $name }}">{{ $label }}</option>
+                @endforeach
+            </flux:select>
+
+            <flux:select wire:model.defer="model" :label="__('projects.fields.model')" :disabled="$runStarted"
+                :description="$runStarted ? __('projects.fields.run_started_help') : null">
+                @foreach ($models as $key => $label)
+                    <option value="{{ $key }}">{{ $label }}</option>
+                @endforeach
             </flux:select>
 
             <div class="flex justify-end">

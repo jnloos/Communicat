@@ -10,10 +10,16 @@
 
             <flux:textarea wire:model.defer="description" :label="__('common.fields.description')" rows="8" :description="__('projects.fields.description_help')"/>
 
-            <flux:select wire:model.defer="frequency" :label="__('projects.fields.memory_reduction')" :description="__('projects.fields.memory_reduction_help')">
-                <option value="5">{{ __('projects.fields.reduction.high') }}</option>
-                <option selected value="10">{{ __('projects.fields.reduction.standard') }}</option>
-                <option value="20">{{ __('projects.fields.reduction.low') }}</option>
+            <flux:select wire:model.defer="pipeline" :label="__('projects.fields.pipeline')" :description="__('projects.fields.pipeline_help')">
+                @foreach ($pipelines as $name => $label)
+                    <option value="{{ $name }}">{{ $label }}</option>
+                @endforeach
+            </flux:select>
+
+            <flux:select wire:model.defer="model" :label="__('projects.fields.model')" :description="__('projects.fields.model_help')">
+                @foreach ($models as $key => $label)
+                    <option value="{{ $key }}">{{ $label }}</option>
+                @endforeach
             </flux:select>
 
             <div class="flex justify-end">

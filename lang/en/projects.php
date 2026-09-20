@@ -12,13 +12,11 @@ return [
     'fields' => [
         'title_help' => 'Enter a concise and recognizable project title.',
         'description_help' => 'Describe the project in a clear and concise way. This description will be used by AI systems, so make sure it\'s easy to understand and captures the core idea precisely.',
-        'memory_reduction' => 'Memory Reduction',
-        'memory_reduction_help' => 'This setting controls how many messages will be sent to the LLM. High reduction reduces token usage, but may also reduce the quality of the discussion.',
-        'reduction' => [
-            'high' => 'High',
-            'standard' => 'Standard',
-            'low' => 'Low',
-        ],
+        'pipeline' => 'Pipeline',
+        'pipeline_help' => 'Determines how the next speaker is chosen.',
+        'model' => 'Model',
+        'model_help' => 'Every agent in this project runs on this one model.',
+        'run_started_help' => 'Pipeline and model are fixed once the discussion has started.',
     ],
 
     'create' => [

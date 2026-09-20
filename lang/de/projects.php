@@ -12,13 +12,11 @@ return [
     'fields' => [
         'title_help' => 'Geben Sie einen kurzen, gut wiedererkennbaren Projekttitel ein.',
         'description_help' => 'Beschreiben Sie das Projekt klar und knapp. Diese Beschreibung wird von KI-Systemen genutzt – sie sollte daher leicht verständlich sein und die Kernidee präzise erfassen.',
-        'memory_reduction' => 'Gedächtnisreduktion',
-        'memory_reduction_help' => 'Diese Einstellung steuert, wie viele Nachrichten an das LLM gesendet werden. Eine hohe Reduktion spart Tokens, kann aber auch die Qualität der Diskussion mindern.',
-        'reduction' => [
-            'high' => 'Hoch',
-            'standard' => 'Standard',
-            'low' => 'Niedrig',
-        ],
+        'pipeline' => 'Pipeline',
+        'pipeline_help' => 'Legt fest, nach welchem Verfahren der nächste Sprecher bestimmt wird.',
+        'model' => 'Modell',
+        'model_help' => 'Alle Agenten dieses Projekts laufen auf diesem einen Modell.',
+        'run_started_help' => 'Pipeline und Modell sind fest, sobald die Diskussion begonnen hat.',
     ],
 
     'create' => [

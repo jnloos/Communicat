@@ -28,18 +28,16 @@ class ProjectImporter
         $exportedIds = collect($data['experts'] ?? [])
             ->pluck('id')->filter()->map(fn ($i) => (int) $i)->all();
         $existingIds = Expert::whereIn('id', $exportedIds)->pluck('id')->all();
-        $missing     = array_values(array_diff($exportedIds, $existingIds));
+        $missing = array_values(array_diff($exportedIds, $existingIds));
 
         return DB::transaction(function () use ($data, $projectData, $owner, $existingIds, $missing) {
-            $project = new Project();
-            $project->user_id     = $owner->id;
-            $project->title       = trim((string) ($projectData['title'] ?? __('projects.import.untitled'))) . ' ' . __('projects.import.copy_suffix');
+            $project = new Project;
+            $project->user_id = $owner->id;
+            $project->title = trim((string) ($projectData['title'] ?? __('projects.import.untitled'))).' '.__('projects.import.copy_suffix');
             $project->description = $projectData['description'] ?? '';
-            $project->settings    = [];
-            $project->save(); // creating/created hooks add a welcome message + sync the owner
-
-            // Drop the auto-generated welcome message so the clone matches the source.
-            $project->messages()->delete();
+            $project->settings = [];
+            $project->save();
+            $project->addContributingUser($owner);
 
             if (! empty($existingIds)) {
                 $project->experts()->syncWithoutDetaching($existingIds);
@@ -48,9 +46,9 @@ class ProjectImporter
             // Recreate messages; track old→new ids to remap the summary watermark.
             $idMap = [];
             foreach ($data['messages'] ?? [] as $m) {
-                $msg = new Message();
+                $msg = new Message;
                 $msg->project_id = $project->id;
-                $msg->content    = $m['content'] ?? '';
+                $msg->content = $m['content'] ?? '';
 
                 $expertId = isset($m['expert_id']) ? (int) $m['expert_id'] : null;
                 if ($expertId !== null && in_array($expertId, $existingIds, true)) {
@@ -67,11 +65,11 @@ class ProjectImporter
                 // (the export carries no stable user id), mirroring user messages.
                 $apExpert = isset($m['adjacency_partner_expert_id']) ? (int) $m['adjacency_partner_expert_id'] : null;
                 if ($apExpert !== null && in_array($apExpert, $existingIds, true)) {
-                    $msg->adjacency_partner_type = \App\Models\Expert::class;
-                    $msg->adjacency_partner_id   = $apExpert;
+                    $msg->adjacency_partner_type = Expert::class;
+                    $msg->adjacency_partner_id = $apExpert;
                 } elseif (! empty($m['adjacency_partner_is_user'])) {
-                    $msg->adjacency_partner_type = \App\Models\User::class;
-                    $msg->adjacency_partner_id   = $owner->id;
+                    $msg->adjacency_partner_type = User::class;
+                    $msg->adjacency_partner_id = $owner->id;
                 }
                 if (! empty($m['created_at'])) {
                     $msg->created_at = Carbon::parse($m['created_at']);
@@ -91,8 +89,8 @@ class ProjectImporter
                 }
                 Summary::create([
                     'project_id' => $project->id,
-                    'expert_id'  => $expertId,
-                    'content'    => $s['content'] ?? '',
+                    'expert_id' => $expertId,
+                    'content' => $s['content'] ?? '',
                 ]);
             }
 

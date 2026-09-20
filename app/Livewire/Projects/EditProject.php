@@ -2,11 +2,14 @@
 
 namespace App\Livewire\Projects;
 
+use App\Discussion\Pipelines\PipelineRegistry;
 use App\Livewire\Concerns\NeedsConfirmation;
+use App\Llm\LlmFactory;
 use App\Models\Project;
 use Flux\Flux;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
@@ -25,36 +28,59 @@ class EditProject extends Component
     #[Validate('nullable|string')]
     public string $description = '';
 
-    #[Validate('required|in:5,10,20')]
-    public int $frequency = 10;
+    public string $pipeline = '';
 
-    public function mount(Project $project): void {
+    public string $model = '';
+
+    /** Pipeline and model are part of the run's identity; frozen after the first turn. */
+    public bool $runStarted = false;
+
+    public function mount(Project $project): void
+    {
         $this->forProjectId = $project->id;
-        $this->title        = $project->title;
-        $this->description  = $project->description;
-        $this->frequency    = $project->settings['summary_frequency'] ?? 10;
+        $this->title = $project->title;
+        $this->description = $project->description;
+        $this->pipeline = $project->pipeline;
+        $this->model = $project->model;
+        $this->runStarted = $project->run_config !== null;
     }
 
     #[On('edit_project')]
-    public function select(): void {
+    public function select(): void
+    {
         Flux::modal('edit-project')->show();
     }
 
-    public function save(): void {
+    protected function rules(): array
+    {
+        return [
+            'pipeline' => ['required', Rule::in(array_keys(app(PipelineRegistry::class)->options()))],
+            'model' => ['required', Rule::in(array_keys(app(LlmFactory::class)->options()))],
+        ];
+    }
+
+    public function save(): void
+    {
         $project = Project::findOrFail($this->forProjectId);
         Gate::authorize('manage-project', $project);
         $this->validate();
 
-        $project->title       = $this->title;
+        $project->title = $this->title;
         $project->description = $this->description;
-        $project->settings    = ['summary_frequency' => $this->frequency];
+
+        if ($project->run_config === null) {
+            $project->pipeline = $this->pipeline;
+            $project->model = $this->model;
+        }
+
         $project->save();
 
         $this->dispatch('project_edited');
         Flux::modal('edit-project')->close();
     }
 
-    public function delete(): void {
+    public function delete(): void
+    {
         $project = Project::findOrFail($this->forProjectId);
         Gate::authorize('manage-project', $project);
         $project->delete();
@@ -63,7 +89,11 @@ class EditProject extends Component
         $this->redirectRoute('dashboard');
     }
 
-    public function render(): mixed {
-        return view('livewire.projects.edit-project');
+    public function render(): mixed
+    {
+        return view('livewire.projects.edit-project', [
+            'pipelines' => app(PipelineRegistry::class)->options(),
+            'models' => app(LlmFactory::class)->options(),
+        ]);
     }
 }

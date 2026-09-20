@@ -167,24 +167,9 @@ class Project extends Model
     protected static function booted(): void
     {
         static::creating(function (Project $project): void {
-            if (auth()->check()) {
-                $project->user_id = auth()->id();
-            }
-
             $project->pipeline ??= config('discussion.default_pipeline');
             $project->model ??= config('llm.default');
             $project->seed ??= random_int(1, 2_000_000_000);
-        });
-
-        static::created(function (Project $project): void {
-            if (auth()->check()) {
-                $project->users()->syncWithoutDetaching(auth()->id());
-            }
-
-            $welcomeMsg = view('components.projects.welcome-message', [
-                'project' => $project,
-            ])->render();
-            $project->addMessage($welcomeMsg);
         });
     }
 
