@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Models\Expert;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -28,6 +29,20 @@ class PipelineStageChanged implements ShouldBroadcastNow
         public readonly string $stage,
         public readonly array $experts = [],
     ) {}
+
+    /**
+     * @param  iterable<Expert>  $experts  the experts the indicator should show
+     */
+    public static function announce(int $projectId, string $stage, iterable $experts = []): void
+    {
+        $shown = [];
+
+        foreach ($experts as $expert) {
+            $shown[] = ['id' => $expert->id, 'name' => $expert->name, 'avatar_url' => $expert->avatar_url];
+        }
+
+        static::dispatch($projectId, $stage, $shown);
+    }
 
     public function broadcastOn(): array
     {
