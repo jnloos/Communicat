@@ -1,96 +1,104 @@
 @startuml
-title Diskussions-Pipeline — Prompt- & Sprachtheorie-Sicht (ein Turn)
+title Generische Turn-Pipeline — RoundRobinPipeline (ein Turn)
 
 skinparam dpi 110
 skinparam defaultFontSize 11
 skinparam noteFontSize 10
 
 legend top right
-  |<#E8F0FE> Moderator-Call|
-  |<#E6F4EA> Agent-Call|
-  |<#FFF4E5> Sprachtheorie|
+  |<#E8F0FE> LLM-Call|
+  |<#FFF4E5> TurnPayload-Feld, das die Stage schreibt|
   |<#FFFFFF> System / deterministisch|
 endlegend
 
 start
-floating note left #FFFFFF
-  **system.blade.php** vor jedem LLM-Call:
-  akad. Simulation, Personas fiktiv, keine
-  KI-Distanzierung, Ausgabeformat wörtlich.
-end note
 
-partition "1. Moderator route()" {
-  #E8F0FE:**moderator/route.blade.php**
-  In: Kontext + Teilnehmer "Name [E7]" + Nachrichten
-  + Advisory (agenda_phase, pending_user)
-  Out (JSON): candidates[] + Directive
-  {role, agenda_step, convergence_intent, address_user};
-  note right #FFF4E5
-    **Turn-Allocation** (Sacks/Schegloff 1974):
-    Floor-Vergabe. Vorrang: offene Nutzerfrage
-    > offenes Adjazenzpaar an Experten.
+partition "MessageGenerator → TurnRunner" {
+  :**MessageGenerator** (Job)
+  ruft **TurnRunner::run(Project)** auf;
+  note right #FFFFFF
+    GenerationLoop hält nur den UI-Loop-Zustand
+    (generating-Flag, Viewer-Heartbeat, Lock) —
+    TurnRunner kennt keine Queue, keine Viewer.
   end note
-}
 
-partition "2. Agent think() (parallel)" {
-  #E6F4EA:**agent/think.blade.php** je Kandidat
-  In: Persona + Kontext + eigenes Gedächtnis + Nachrichten
-  Out: GEDÄCHTNIS-UPDATE (persistiert)
-  + BEITRAGSABSICHT (1 Satz, nur Auswahlsignal);
-  note right #FFF4E5
-    **Gedächtnis-Struktur = Theorie:**
-    [Token] je Teilnehmer = partner-spez. Modell
-    (Clark, Recipient Design); [OFFENE_FRAGEN] =
-    konditionelle Relevanz / offene Paare;
-    [STAND] = Common Ground.
-    Absicht ≠ Äußerung.
-  end note
-}
-
-partition "3. Moderator select()" {
-  if (n > 1 Kandidaten?) then (ja)
-    #E8F0FE:**moderator/select.blade.php**
-    In: Beitragsabsichten + recent_speakers/-types
-    Out (JSON): winner;
-    note right #FFF4E5
-      Rangfolge: Nutzerfrage > Adjazenzpaar
-      > **Kein Back-to-Back** (Sprecherwechsel).
-    end note
+  if (keine Experten oder Turn-Budget erschöpft?) then (ja)
+    :TurnResult::stop();
+    stop
   else (nein)
-    :Pass-through;
   endif
+
+  :**PipelineRegistry::resolve(project.pipeline)**
+  findet Pipeline per Ordner-Scan
+  (app/Discussion/Pipelines/*.php);
+  :run_config einfrieren (einmalig):
+  Pipeline, Stages, Modell-Konfiguration,
+  history_keep/summarize_batch, System-Prompt;
+  :**JobLog** anlegen (status=running,
+  turn_index++);
+  :neuer **TurnPayload**(project, turnIndex, jobLogId);
 }
 
-partition "4. Agent speak()" {
-  #E6F4EA:**agent/speak.blade.php** (Gewinner)
-  +BLOCK 4 Reaktions-Typen, +BLOCK 5 Reparatur,
-  +Anti-Echo-Einstiege, +Directive
-  Out: Turn-Text + ---STEUERUNG--- (ADRESSAT + PAARTYP);
+partition "RoundRobinPipeline::stages()" {
+  :**1. SelectSpeaker**:RoundRobinSelector
+  In: letzter Sprecher (Message.expert_id)
+  Out: TurnPayload->select(Selection);
   note right #FFF4E5
-    BLOCK 4 = **Präferenzorganisation** (Pomerantz):
-    Ablehnung mit Verzögerungssignal + Begründung.
-    BLOCK 5 = **Reparatur** (Schegloff 1977):
-    Selbst- vor Fremdkorrektur.
-    PAARTYP = **Adjazenzpaar-Typ**.
+    schreibt: **selection** (Sprecher, Sitzplatz)
+    Event: PipelineStageChanged("routing")
   end note
-}
 
-partition "5.–6. System (deterministisch)" {
-  :**Persist:** Nachricht + adjacency_partner (Paar materialisiert);
-  :**State:** recent_speakers/-types, Agenda-Phase fortschreiben;
-}
+  :**2. ThinkAsSpeaker** (LLM: purpose=think)
+  In: Persona + Memory (History/Short-/Long-Term)
+  des gewählten Sprechers
+  Out: Marker "GEDANKE:" extrahiert;<<#E8F0FE>>
+  note right #FFF4E5
+    schreibt: **thoughts[speaker.id]**
+    persistiert nach **summaries** (Short-Term)
+    Event: PipelineStageChanged("thinking")
+  end note
 
-partition "7. Summarizer (bei Schwelle)" {
-  if (unsummierte Nachrichten > Schwelle?) then (ja)
-    :**shorten-chat.blade.php** → Chat-Summary
-    (neueste N Nachrichten bleiben roh);
+  :**3. Speak** (LLM: purpose=speak)
+  In: Persona + Memory + eigener Gedanke (proposal)
+  Out: sichtbarer Text + Trennmarker Speak::MARKER_CONTROL
+  + Trailer (ADRESSAT, PAARTYP);<<#E8F0FE>>
+  note right #FFF4E5
+    schreibt: **contribution** (Text, Partner-Token,
+    Paartyp, LlmResponse)
+    Event: PipelineStageChanged("speaking")
+  end note
+
+  :**4. PersistMessage**
+  speichert Message, löst ADRESSAT über
+  contributorByPromptId() auf;
+  note right #FFF4E5
+    schreibt: **message**
+    (adjacency_partner, adjacency_pair_type)
+  end note
+
+  if (unsummierte Nachrichten > history_keep + summarize_batch?) then (ja)
+    :**5. Summarize** (LLM: purpose=summarize)
+    verdichtet alles außer den jüngsten
+    history_keep Nachrichten;<<#E8F0FE>>
     note right #FFF4E5
-      Kontextfenster-Management: ältere Turns
-      verdichtet, Common Ground bleibt erhalten.
+      schreibt: projects.long_term_memory,
+      projects.summarized_until_message_id
     end note
   else (nein)
     :keine Summary;
   endif
+}
+
+partition "TurnRunner (Abschluss)" {
+  :**measure()**: Wörter/Zeichen von Gedanke
+  und Beitrag, Reasoning-Tokens, Auswahl-Daten;
+  :**JobLog** schließen
+  (status=success|failed, Messung, error);
+  note right #FFFFFF
+    Jeder LLM-Call (think/speak/summarize) wird
+    unabhängig davon von **LoggingLlmClient** nach
+    **prompt_logs** geloggt — auch bei Fehlern.
+  end note
 }
 
 stop
