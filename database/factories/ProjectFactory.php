@@ -13,10 +13,11 @@ class ProjectFactory extends Factory
     public function definition(): array
     {
         return [
-            'title'       => fake()->sentence(3),
+            'title' => fake()->sentence(3),
             'description' => fake()->paragraph(),
-            'settings'    => [],
-            'user_id'     => User::factory(),
+            'settings' => [],
+            'user_id' => User::factory(),
+            'model' => 'openai',
         ];
     }
 }

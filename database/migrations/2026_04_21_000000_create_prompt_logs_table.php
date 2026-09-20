@@ -16,6 +16,17 @@ return new class extends Migration
             $table->longText('prompt');
             $table->longText('response');
             $table->unsignedInteger('latency_ms')->nullable();
+            $table->string('provider')->nullable();
+            $table->string('checkpoint')->nullable();
+            $table->json('config')->nullable();
+            $table->string('purpose')->nullable();
+            $table->foreignId('expert_id')->nullable()->constrained('experts')->nullOnDelete();
+            $table->longText('reasoning')->nullable();
+            $table->unsignedInteger('tokens_in')->nullable();
+            $table->unsignedInteger('tokens_out')->nullable();
+            $table->unsignedInteger('tokens_reasoning')->nullable();
+            $table->string('status')->default('ok');
+            $table->text('error')->nullable();
             $table->timestamps();
 
             $table->index('job_log_id');

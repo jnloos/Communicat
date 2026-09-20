@@ -13,7 +13,7 @@ class Project extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'description', 'settings', 'user_id'];
+    protected $fillable = ['title', 'description', 'settings', 'user_id', 'model'];
 
     protected $casts = ['settings' => 'array'];
 
@@ -22,43 +22,53 @@ class Project extends Model
     /** Per-instance cache for contributingExperts() (hit several times per turn). */
     private ?Collection $cachedContributingExperts = null;
 
-    public function messages(): HasMany {
+    public function messages(): HasMany
+    {
         return $this->hasMany(Message::class);
     }
 
-    public function summaries(): HasMany {
+    public function summaries(): HasMany
+    {
         return $this->hasMany(Summary::class);
     }
 
-    public function owner(): BelongsTo {
+    public function owner(): BelongsTo
+    {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function experts(): MorphToMany {
+    public function experts(): MorphToMany
+    {
         return $this->morphedByMany(Expert::class, 'contributor', 'project_contributors');
     }
 
-    public function users(): MorphToMany {
+    public function users(): MorphToMany
+    {
         return $this->morphedByMany(User::class, 'contributor', 'project_contributors');
     }
 
-    public function isOwner(User $user): bool {
+    public function isOwner(User $user): bool
+    {
         return $this->user_id === $user->id;
     }
 
-    public function isPersistent(): bool {
+    public function isPersistent(): bool
+    {
         return $this->experts()->count() > 0 || $this->users()->count() > 1;
     }
 
-    public function addContributingExpert(Expert $expert): void {
+    public function addContributingExpert(Expert $expert): void
+    {
         $this->experts()->syncWithoutDetaching($expert->id);
     }
 
-    public function removeContributingExpert(Expert $expert): void {
+    public function removeContributingExpert(Expert $expert): void
+    {
         $this->experts()->detach($expert->id);
     }
 
-    public function contributingExperts(): Collection {
+    public function contributingExperts(): Collection
+    {
         return $this->cachedContributingExperts ??= $this->experts()->get();
     }
 
@@ -69,11 +79,13 @@ class Project extends Model
      *
      * @return Collection<int, Expert>
      */
-    public function contributorMap(): Collection {
+    public function contributorMap(): Collection
+    {
         return $this->contributingExperts()->keyBy('id');
     }
 
-    public function canAddExpert(): bool {
+    public function canAddExpert(): bool
+    {
         return $this->experts()->count() < self::MAX_CONTRIBUTING_EXPERTS;
     }
 
@@ -83,8 +95,9 @@ class Project extends Model
      * Experts resolve against the contributor map; users against the project's
      * participants (including the owner). Unknown/malformed tokens yield null.
      */
-    public function contributorByPromptId(?string $token): Expert|User|null {
-        if (!is_string($token) || !preg_match('/^([EU])(\d+)$/', trim($token), $m)) {
+    public function contributorByPromptId(?string $token): Expert|User|null
+    {
+        if (! is_string($token) || ! preg_match('/^([EU])(\d+)$/', trim($token), $m)) {
             return null;
         }
 
@@ -98,19 +111,23 @@ class Project extends Model
             ?? ($this->owner?->id === $id ? $this->owner : null);
     }
 
-    public function addContributingUser(User $user): void {
+    public function addContributingUser(User $user): void
+    {
         $this->users()->syncWithoutDetaching($user->id);
     }
 
-    public function removeContributingUser(User $user): void {
+    public function removeContributingUser(User $user): void
+    {
         $this->users()->detach($user->id);
     }
 
-    public function contributingUsers(): Collection {
+    public function contributingUsers(): Collection
+    {
         return $this->users()->get();
     }
 
-    public function hasContributor(User $user): bool {
+    public function hasContributor(User $user): bool
+    {
         return $this->isOwner($user) || $this->users()->whereKey($user->id)->exists();
     }
 
@@ -120,7 +137,8 @@ class Project extends Model
      * project owner. Replaces the generic 'Nutzer' sentinel so multi-user
      * projects know which human is addressed.
      */
-    public function handoffUser(?Message $pendingUser = null): ?User {
+    public function handoffUser(?Message $pendingUser = null): ?User
+    {
         if ($pendingUser !== null && $pendingUser->user_id !== null) {
             return $pendingUser->user;
         }
@@ -128,7 +146,8 @@ class Project extends Model
         return $this->owner;
     }
 
-    protected static function booted(): void {
+    protected static function booted(): void
+    {
         static::creating(function (Project $project): void {
             if (auth()->check()) {
                 $project->user_id = auth()->id();
@@ -141,14 +160,15 @@ class Project extends Model
             }
 
             $welcomeMsg = view('components.projects.welcome-message', [
-                'project' => $project
+                'project' => $project,
             ])->render();
             $project->addMessage($welcomeMsg);
         });
     }
 
-    public function addMessage(string $content, Expert|User|null $sender = null): Message {
-        $message = new Message();
+    public function addMessage(string $content, Expert|User|null $sender = null): Message
+    {
+        $message = new Message;
         $message->project_id = $this->id;
         $message->content = $content;
 
@@ -159,21 +179,25 @@ class Project extends Model
         }
 
         $message->save();
+
         return $message;
     }
 
     /** Messages from participants (expert or user), excluding system/assistant. */
-    private function participantMessages(): HasMany {
+    private function participantMessages(): HasMany
+    {
         return $this->messages()->where(function ($q) {
             $q->whereNotNull('expert_id')->orWhereNotNull('user_id');
         });
     }
 
-    public function latestParticipantMessage(): ?Message {
+    public function latestParticipantMessage(): ?Message
+    {
         return $this->participantMessages()->latest('id')->first();
     }
 
-    public function asPromptArray(int $numMsg = -1): array {
+    public function asPromptArray(int $numMsg = -1): array
+    {
         $lastSummarizedId = $this->settings['last_summarized_id'] ?? 0;
 
         // Pull newest-first so an optional take($numMsg) yields the most
@@ -191,15 +215,15 @@ class Project extends Model
 
         $messages = $query->get()
             ->reverse()
-            ->map(fn(Message $msg) => $msg->toPromptArray())
+            ->map(fn (Message $msg) => $msg->toPromptArray())
             ->values()
             ->all();
 
         return [
-            'title'        => $this->title,
-            'description'  => $this->description,
+            'title' => $this->title,
+            'description' => $this->description,
             'chat_summary' => $this->settings['chat_summary'] ?? '',
-            'messages'     => $messages,
+            'messages' => $messages,
         ];
     }
 }

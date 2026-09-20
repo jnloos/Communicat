@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('title');
             $table->longText('description');
+            $table->string('model')->default('openai');
             // All mutable project state (moderator counters, agenda phase, chat
             // summary, summarizer thresholds, …) lives in this JSON blob.
             $table->json('settings')->default('{}');
