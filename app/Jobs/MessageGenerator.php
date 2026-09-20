@@ -2,123 +2,64 @@
 
 namespace App\Jobs;
 
+use App\Discussion\GenerationLoop;
+use App\Discussion\Support\ReadingPause;
+use App\Discussion\TurnRunner;
 use App\Events\GenerationStopped;
-use App\Events\JobLogged;
 use App\Events\MessageGenerated;
-use App\Jobs\Dependencies\ProjectJob;
-use App\Models\JobLog;
-use App\Models\Message;
 use App\Models\Project;
-use App\Services\Clients\OpenAIClient;
-use App\Services\PromptingPipeline\DiscussionPipeline;
-use App\Services\PromptingPipeline\Support\ReadingPause;
-use Exception;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
-class MessageGenerator extends ProjectJob implements ShouldQueue
+/**
+ * The interactive UI loop: runs one turn, then queues itself again after a
+ * reading pause. Everything about the turn itself lives in TurnRunner.
+ */
+class MessageGenerator implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $timeout = 280;
 
-    public function __construct(int $projectId)
-    {
-        $this->setProject($projectId);
-    }
+    public function __construct(public int $projectId) {}
 
-    public function handle(): void
+    public function handle(GenerationLoop $loop, TurnRunner $runner): void
     {
         // A delayed follow-up may have been queued before the user pressed stop.
-        if (! ProjectJob::isGenerating($this->project->id)) {
+        if (! $loop->isGenerating($this->projectId)) {
             return;
         }
 
-        $this->withProjectLock(function (Project $project) {
-            if (! ProjectJob::isGenerating($project->id)) {
+        $loop->withLock($this->projectId, function () use ($loop, $runner) {
+            if (! $loop->isGenerating($this->projectId)) {
                 return;
             }
 
-            $log = JobLog::create([
-                'job_class' => static::class,
-                'project_id' => $project->id,
-                'status' => 'running',
-                'started_at' => now(),
-            ]);
-            JobLogged::dispatch($log);
+            $project = Project::findOrFail($this->projectId);
+            $continue = ! $runner->run($project)->stop;
 
-            OpenAIClient::bindJobLog($log->id);
+            $latest = $project->messages()->whereNotNull('expert_id')->latest('id')->first();
+            $pause = $continue && $latest !== null ? ReadingPause::secondsFor($latest->content) : 0;
 
-            // Whether the discussion loop should keep running after this turn.
-            // Any stop signal (hand-off to a user, hard failure) clears the
-            // shared flag so no further turn is dispatched.
-            $continue = true;
+            MessageGenerated::dispatch($project->id, $latest?->id, $pause);
 
-            try {
-                $pipelineResult = (new DiscussionPipeline($project, $log->id))->run();
-                $log->update(['status' => 'success', 'finished_at' => now()]);
-                JobLogged::dispatch($log->fresh());
-
-                if (! empty($pipelineResult['stop'])) {
-                    $continue = false;
-                    ProjectJob::stopGenerating($project->id);
-                    GenerationStopped::dispatch($project->id);
-                }
-            } catch (Exception $e) {
-                Log::error(sprintf('%s: %s', $e->getMessage(), $e->getTraceAsString()));
-                $log->update([
-                    'status' => 'failed',
-                    'finished_at' => now(),
-                    'payload' => ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()],
-                ]);
-                JobLogged::dispatch($log->fresh());
-
-                // A failed turn ends the loop and tells every client to flip
-                // back to the "start" state.
-                $continue = false;
-                ProjectJob::stopGenerating($project->id);
+            // Never run unattended: stop once nobody has the discussion open.
+            if (! $continue || ! $loop->hasViewers($project->id)) {
+                $loop->stop($project->id);
                 GenerationStopped::dispatch($project->id);
-            } finally {
-                OpenAIClient::bindJobLog(null);
+
+                return;
             }
 
-            /** @var Message|null $latestMessage */
-            $latestMessage = $project->messages()
-                ->whereNotNull('expert_id')
-                ->latest('id')
-                ->first();
+            // A user may have pressed stop during this turn.
+            if ($loop->isGenerating($project->id)) {
+                $next = static::dispatch($project->id);
 
-            $nextTurnDelay = 0;
-            if ($continue && $latestMessage !== null) {
-                $nextTurnDelay = ReadingPause::secondsFor($latestMessage->content);
-            }
-
-            MessageGenerated::dispatch(
-                $project->id,
-                $latestMessage?->id,
-                $nextTurnDelay,
-            );
-
-            // Halt the loop if nobody has the discussion open anymore, so it can
-            // never run unattended (no accidental generations).
-            if ($continue && ! ProjectJob::hasViewers($project->id)) {
-                $continue = false;
-                ProjectJob::stopGenerating($project->id);
-                GenerationStopped::dispatch($project->id);
-            }
-
-            // Server-driven loop: keep going only while the shared flag is still
-            // set (a user may have pressed stop during this turn). The next job
-            // is queued with a reading pause so the message is visible first.
-            if ($continue && ProjectJob::isGenerating($project->id)) {
-                $dispatch = static::dispatch($project->id);
-
-                if ($nextTurnDelay > 0) {
-                    $dispatch->delay(now()->addSeconds($nextTurnDelay));
+                if ($pause > 0) {
+                    $next->delay(now()->addSeconds($pause));
                 }
             }
         });

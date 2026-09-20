@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\PromptingPipeline\Support;
+namespace App\Discussion\Support;
 
 /**
  * Computes a human reading pause from the visible length of a persona turn.

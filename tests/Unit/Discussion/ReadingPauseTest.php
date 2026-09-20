@@ -1,8 +1,8 @@
 <?php
 
-namespace Tests\Unit\Pipeline;
+namespace Tests\Unit\Discussion;
 
-use App\Services\PromptingPipeline\Support\ReadingPause;
+use App\Discussion\Support\ReadingPause;
 use Tests\TestCase;
 
 class ReadingPauseTest extends TestCase

@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Projects;
 
+use App\Discussion\GenerationLoop;
 use App\Events\GenerationStarted;
 use App\Events\GenerationStopped;
 use App\Events\MessageSent;
-use App\Jobs\Dependencies\ProjectJob;
 use App\Jobs\MessageGenerator;
 use App\Models\Project;
 use Livewire\Attributes\Locked;
@@ -38,19 +38,24 @@ class ControlChat extends Component
         $this->project = Project::findOrFail($this->projectId);
     }
 
+    private function loop(): GenerationLoop
+    {
+        return app(GenerationLoop::class);
+    }
+
     public function startGenerate(): void
     {
-        if (ProjectJob::isRunningFor($this->projectId)) {
+        if ($this->loop()->isTurnRunning($this->projectId)) {
             return;
         }
 
         // Raise the shared flag FIRST so the self-perpetuating job loop knows to
         // keep going; the per-component flags below are only for this browser's
         // button state and are kept in sync via broadcasts.
-        ProjectJob::startGenerating($this->projectId);
+        $this->loop()->start($this->projectId);
         // Seed presence so the very first continuation check sees this viewer
         // even before the heartbeat poll has fired.
-        ProjectJob::markViewing($this->projectId);
+        $this->loop()->markViewing($this->projectId);
 
         $this->keepGenerating = true;
         $this->isDispatching = true;
@@ -64,7 +69,7 @@ class ControlChat extends Component
         // Authoritative, shared stop: clearing the flag halts the loop after the
         // current turn for every connected user. Broadcast flips all clients'
         // buttons back to "start".
-        ProjectJob::stopGenerating($this->projectId);
+        $this->loop()->stop($this->projectId);
         $this->keepGenerating = false;
         $this->isDispatching = false;
 
@@ -101,7 +106,7 @@ class ControlChat extends Component
 
     public function sendMessage(): void
     {
-        if (ProjectJob::isRunningFor($this->projectId)) {
+        if ($this->loop()->isTurnRunning($this->projectId)) {
             return;
         }
 
@@ -118,7 +123,7 @@ class ControlChat extends Component
      */
     public function heartbeat(): void
     {
-        ProjectJob::markViewing($this->projectId);
+        $this->loop()->markViewing($this->projectId);
     }
 
     #[On(['contributors_modified'])]
@@ -127,9 +132,9 @@ class ControlChat extends Component
         // The shared cache flag is the source of truth for "is the discussion
         // generating", so even a user who opened the page mid-run shows the
         // correct (pause) button and can stop it.
-        $this->keepGenerating = ProjectJob::isGenerating($this->projectId);
+        $this->keepGenerating = $this->loop()->isGenerating($this->projectId);
 
-        $jobRunning = ProjectJob::isRunningFor($this->projectId);
+        $jobRunning = $this->loop()->isTurnRunning($this->projectId);
 
         $disabledControlsHint = null;
         if ($jobRunning) {

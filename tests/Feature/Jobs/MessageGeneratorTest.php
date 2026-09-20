@@ -2,142 +2,99 @@
 
 namespace Tests\Feature\Jobs;
 
+use App\Discussion\GenerationLoop;
+use App\Discussion\TurnRunner;
 use App\Events\GenerationStopped;
-use App\Jobs\Dependencies\ProjectJob;
+use App\Events\JobLogged;
+use App\Events\MessageGenerated;
+use App\Events\PipelineStageChanged;
 use App\Jobs\MessageGenerator;
+use App\Llm\LlmFactory;
 use App\Models\Expert;
+use App\Models\Message;
 use App\Models\Project;
-use App\Models\User;
-use App\Services\Clients\OpenAIClient;
-use App\Services\PromptingPipeline\Support\PromptBuilder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
-use Mockery;
+use Tests\Fakes\FakeLlmClient;
+use Tests\Fakes\FakeLlmFactory;
 use Tests\TestCase;
 
 class MessageGeneratorTest extends TestCase
 {
     use RefreshDatabase;
 
+    private FakeLlmClient $llm;
+
     private Project $project;
 
-    private Expert $expert1;
+    private GenerationLoop $loop;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        config([
-            'discussion.reading_chars_per_second' => 10,
-            'discussion.reading_delay_min_seconds' => 2,
-            'discussion.reading_delay_max_seconds' => 15,
-        ]);
-
-        $user = User::factory()->create();
-        $this->project = Project::withoutEvents(fn () => Project::create([
-            'title' => 'Test Project',
-            'description' => 'Test',
-            'settings' => [],
-            'user_id' => $user->id,
-        ]));
-        $this->expert1 = Expert::factory()->create(['name' => 'Alice']);
-        $this->project->addContributingExpert($this->expert1);
-        $this->project->addMessage('Hallo', $user);
-    }
-
-    private function mockPipelineDependencies(): void
-    {
-        $routeJson = json_encode([
-            'candidates' => ["E{$this->expert1->id}"],
-            'directive' => [
-                'role' => 'vertiefen',
-                'agenda_step' => 'divergenz',
-                'convergence_intent' => 'x',
-                'address_user' => false,
-            ],
-            'reasoning' => 'Test.',
-        ]);
-
-        $client = Mockery::mock(OpenAIClient::class);
-        $client->shouldReceive('sendFast')->andReturn(
-            $routeJson,
-            "Alice antwortet kurz.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion"
-        );
-        $client->shouldReceive('sendSlow')->once()
-            ->andReturn("GEDÄCHTNIS-UPDATE:\n[STAND]\nx\nBEITRAGSABSICHT: y.");
-
-        $prompts = Mockery::mock(PromptBuilder::class);
-        $prompts->shouldReceive('moderatorRoute')->andReturn('route-prompt');
-        $prompts->shouldReceive('think')->andReturn('think-prompt');
-        $prompts->shouldReceive('speak')->andReturn('speak-prompt');
-
-        $this->instance(OpenAIClient::class, $client);
-        $this->instance(PromptBuilder::class, $prompts);
-    }
-
-    public function test_dispatches_next_turn_with_reading_delay(): void
-    {
         Queue::fake();
-        ProjectJob::startGenerating($this->project->id);
-        ProjectJob::markViewing($this->project->id);
-        $this->mockPipelineDependencies();
+        Event::fake([PipelineStageChanged::class, JobLogged::class, MessageGenerated::class, GenerationStopped::class]);
 
-        (new MessageGenerator($this->project->id))->handle();
+        $this->llm = (new FakeLlmClient)
+            ->push('think', 'GEDANKE: Ich will antworten.')
+            ->push('speak', "Alice antwortet kurz.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion");
+        $this->app->instance(LlmFactory::class, new FakeLlmFactory($this->llm));
 
-        Queue::assertPushed(MessageGenerator::class, fn (MessageGenerator $job) => $job->delay !== null);
+        $this->project = Project::factory()->create();
+        $this->project->addContributingExpert(Expert::factory()->create(['name' => 'Alice']));
+
+        $this->loop = app(GenerationLoop::class);
     }
 
-    public function test_skips_execution_when_generation_flag_cleared(): void
+    private function runJob(): void
     {
-        $before = $this->project->messages()->count();
-
-        (new MessageGenerator($this->project->id))->handle();
-
-        $this->assertSame($before, $this->project->messages()->count());
+        (new MessageGenerator($this->project->id))->handle($this->loop, app(TurnRunner::class));
     }
 
-    public function test_does_not_queue_follow_up_on_user_handoff(): void
+    public function test_does_nothing_unless_the_loop_is_switched_on(): void
     {
-        Queue::fake();
-        Event::fake([GenerationStopped::class]);
-        ProjectJob::startGenerating($this->project->id);
-        ProjectJob::markViewing($this->project->id);
+        $this->runJob();
 
-        $routeJson = json_encode([
-            'candidates' => ["E{$this->expert1->id}"],
-            'directive' => [
-                'role' => 'Nutzer einbeziehen',
-                'agenda_step' => 'konvergenz',
-                'convergence_intent' => 'Präferenz klären',
-                'address_user' => true,
-            ],
-            'reasoning' => 'Nutzer fragen.',
-        ]);
+        $this->assertSame(0, Message::whereNotNull('expert_id')->count());
+        Queue::assertNothingPushed();
+    }
 
-        $client = Mockery::mock(OpenAIClient::class);
-        $client->shouldReceive('sendFast')->andReturn(
-            $routeJson,
-            "Alice fragt dich.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion"
-        );
-        $client->shouldReceive('sendSlow')->once()
-            ->andReturn("GEDÄCHTNIS-UPDATE:\n[STAND]\nx\nBEITRAGSABSICHT: y.");
+    public function test_generates_a_turn_and_queues_the_next_one_with_a_reading_pause(): void
+    {
+        $this->loop->start($this->project->id);
+        $this->loop->markViewing($this->project->id);
 
-        $prompts = Mockery::mock(PromptBuilder::class);
-        $prompts->shouldReceive('moderatorRoute')->andReturn('route-prompt');
-        $prompts->shouldReceive('think')->andReturn('think-prompt');
-        $prompts->shouldReceive('speak')->andReturn('speak-prompt');
+        $this->runJob();
 
-        $this->instance(OpenAIClient::class, $client);
-        $this->instance(PromptBuilder::class, $prompts);
+        $this->assertSame(1, Message::whereNotNull('expert_id')->count());
+        Event::assertDispatched(MessageGenerated::class);
+        Queue::assertPushed(MessageGenerator::class, fn (MessageGenerator $job) => $job->projectId === $this->project->id && $job->delay !== null);
+    }
 
-        (new MessageGenerator($this->project->id))->handle();
+    public function test_halts_when_nobody_is_watching(): void
+    {
+        $this->loop->start($this->project->id);
 
-        Queue::assertNotPushed(MessageGenerator::class);
-        Event::assertDispatched(
-            GenerationStopped::class,
-            fn (GenerationStopped $event) => $event->projectId === $this->project->id
-        );
-        $this->assertFalse(ProjectJob::isGenerating($this->project->id));
+        $this->runJob();
+
+        $this->assertSame(1, Message::whereNotNull('expert_id')->count());
+        $this->assertFalse($this->loop->isGenerating($this->project->id));
+        Event::assertDispatched(GenerationStopped::class);
+        Queue::assertNothingPushed();
+    }
+
+    public function test_a_failed_turn_stops_the_loop(): void
+    {
+        $this->llm->failOn('speak', 'kaputt');
+        $this->loop->start($this->project->id);
+        $this->loop->markViewing($this->project->id);
+
+        $this->runJob();
+
+        $this->assertFalse($this->loop->isGenerating($this->project->id));
+        Event::assertDispatched(GenerationStopped::class);
+        Queue::assertNothingPushed();
     }
 }
