@@ -135,6 +135,35 @@ class TurnRunnerTest extends TestCase
         $this->assertSame(1, JobLog::count());
     }
 
+    public function test_a_turn_that_speaks_but_then_fails_in_summarize_still_consumes_budget(): void
+    {
+        // Force Summarize to actually run: pending participant messages must
+        // exceed history_keep + summarize_batch once this turn's own message
+        // is added (same trick as SummarizeTest).
+        config(['discussion.history_keep' => 1, 'discussion.summarize_batch' => 1]);
+        $this->project->update(['turn_budget' => 1]);
+        $this->project->addMessage('eins', $this->experts[0]);
+        $this->project->addMessage('zwei', $this->experts[1]);
+        $this->llm->failOn('summarize', 'Zusammenfassung nicht erreichbar');
+
+        $result = app(TurnRunner::class)->run($this->project);
+
+        $this->assertTrue($result->stop);
+        $this->assertSame('failed', $result->reason);
+
+        $log = JobLog::sole();
+        $this->assertSame('failed', $log->status);
+        $this->assertNotNull($log->words);
+        $this->assertStringContainsString('Zusammenfassung nicht erreichbar', $log->error);
+        $this->assertSame('Alice antwortet kurz.', Message::whereNotNull('expert_id')->latest('id')->first()->content);
+
+        $second = app(TurnRunner::class)->run($this->project);
+
+        $this->assertTrue($second->stop);
+        $this->assertSame('turn_budget', $second->reason);
+        $this->assertSame(1, JobLog::count());
+    }
+
     public function test_the_first_turn_snapshots_the_run_configuration(): void
     {
         app(TurnRunner::class)->run($this->project);

@@ -38,6 +38,9 @@ return [
             'model' => env('GEMINI_MODEL', 'gemini-2.5-pro'),
             'max_output_tokens' => 8000,
             'temperature' => null,
+            // Must stay null: Gemini has no effort levels (only a thinkingBudget token
+            // count with no verified mapping to one). GeminiClient::make() throws if
+            // this is ever set to anything else.
             'reasoning_effort' => null,
         ],
     ],

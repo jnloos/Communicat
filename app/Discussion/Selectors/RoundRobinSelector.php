@@ -18,6 +18,10 @@ class RoundRobinSelector implements SpeakerSelector
             ->latest('id')
             ->value('expert_id');
 
+        // If the last speaker is no longer seated (roster changed since), search()
+        // returns false and rotation restarts at seat 1. Not balancing — it never
+        // favours a rare speaker — but it is the one place a roster change perturbs
+        // the position sequence.
         $lastIndex = $experts->search(fn (Expert $expert) => $expert->id === $lastSpeakerId);
         $nextIndex = $lastIndex === false ? 0 : ($lastIndex + 1) % $experts->count();
         $speaker = $experts[$nextIndex];

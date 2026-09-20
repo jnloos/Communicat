@@ -8,6 +8,7 @@ use App\Llm\ModelConfig;
 use App\Llm\Providers\GeminiClient;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use InvalidArgumentException;
 use Tests\TestCase;
 
 class GeminiClientTest extends TestCase
@@ -88,5 +89,15 @@ class GeminiClientTest extends TestCase
         $this->expectException(LlmException::class);
 
         $this->adapter()->mapResponse($this->body([], 'SAFETY'), 10);
+    }
+
+    public function test_make_rejects_a_configured_reasoning_effort(): void
+    {
+        $config = new ModelConfig('gemini', 'Gemini', 'gemini', 'gemini-x', 4000, null, 'low');
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('gemini');
+
+        GeminiClient::make($config);
     }
 }

@@ -66,7 +66,7 @@ class JobDebugPanel extends Component
         $selected = $this->selectedJobId && $this->projectId
             ? JobLog::with([
                 'project',
-                'promptLogs:id,job_log_id,label,model,prompt,response,latency_ms,created_at',
+                'promptLogs:id,job_log_id,label,model,prompt,response,latency_ms,created_at,status,error,provider,checkpoint,purpose,reasoning,tokens_in,tokens_out,tokens_reasoning',
                 'messages.expert',
             ])
                 ->where('project_id', $this->projectId)
@@ -83,7 +83,7 @@ class JobDebugPanel extends Component
 
         return view('livewire.debug.job-debug-panel', [
             'projects' => $this->accessibleProjects(),
-            'logs'     => $logs,
+            'logs' => $logs,
             'selected' => $selected,
         ])->title(__('debug.title'));
     }

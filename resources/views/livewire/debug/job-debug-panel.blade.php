@@ -79,7 +79,7 @@
                                 @if ($log->status === 'success')
                                     <span class="font-mono text-xs text-emerald-600 dark:text-emerald-400">{{ __('debug.status.success') }}</span>
                                 @elseif ($log->status === 'failed')
-                                    <span class="font-mono text-xs text-red-600 dark:text-red-400" title="{{ $log->payload['error'] ?? '' }}">{{ __('debug.status.failed') }}</span>
+                                    <span class="font-mono text-xs text-red-600 dark:text-red-400" title="{{ $log->error ?? '' }}">{{ __('debug.status.failed') }}</span>
                                 @else
                                     <span class="font-mono text-xs text-amber-600 dark:text-amber-400">{{ __('debug.status.running') }}</span>
                                 @endif
@@ -121,9 +121,9 @@
                     </flux:tooltip>
                 </div>
 
-                @if ($selected->status === 'failed' && !empty($selected->payload['error']))
+                @if ($selected->status === 'failed' && !empty($selected->error))
                     <div class="mb-3 rounded bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-2 text-xs font-mono text-red-700 dark:text-red-300 whitespace-pre-wrap max-h-48 overflow-auto">
-                        {{ $selected->payload['error'] }}
+                        {{ $selected->error }}
                     </div>
                 @endif
 
@@ -150,11 +150,17 @@
                                     class="w-full cursor-pointer px-3 py-2 text-xs flex items-center gap-2 flex-wrap text-left"
                                 >
                                     <svg class="h-3 w-3 shrink-0 text-zinc-400 transition-transform" :class="open && 'rotate-90'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                                    @if ($plog->status === 'failed')
+                                        <span class="h-2 w-2 shrink-0 rounded-full bg-red-500" title="{{ __('debug.status.failed') }}"></span>
+                                    @endif
                                     <span class="font-mono text-amber-700 dark:text-amber-400">{{ $plog->label ?? '–' }}</span>
                                     <span class="text-zinc-400">·</span>
                                     <span class="font-mono text-zinc-600 dark:text-zinc-400">{{ $plog->model }}</span>
                                     <span class="text-zinc-400">·</span>
                                     <span class="font-mono text-zinc-500">{{ $plog->latency_ms !== null ? $plog->latency_ms . ' ms' : '–' }}</span>
+                                    @if ($plog->status === 'failed')
+                                        <span class="font-mono text-red-600 dark:text-red-400">{{ __('debug.status.failed') }}</span>
+                                    @endif
                                     <span class="ml-auto font-mono text-zinc-400">{{ $plog->created_at?->format('H:i:s') }}</span>
                                 </button>
                                 <div x-show="open" x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-zinc-200 dark:border-zinc-700">
@@ -163,8 +169,13 @@
                                         <pre class="text-xs whitespace-pre-wrap font-mono text-zinc-700 dark:text-zinc-300 max-h-80 overflow-auto">{{ $plog->prompt }}</pre>
                                     </div>
                                     <div class="p-3">
-                                        <div class="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">{{ __('debug.detail.response') }}</div>
-                                        <pre class="text-xs whitespace-pre-wrap font-mono text-zinc-700 dark:text-zinc-300 max-h-80 overflow-auto">{{ $plog->response }}</pre>
+                                        @if ($plog->status === 'failed')
+                                            <div class="text-[10px] uppercase tracking-wide text-red-500 mb-1">{{ __('debug.detail.error') }}</div>
+                                            <pre class="text-xs whitespace-pre-wrap font-mono text-red-700 dark:text-red-300 max-h-80 overflow-auto">{{ $plog->error }}</pre>
+                                        @else
+                                            <div class="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">{{ __('debug.detail.response') }}</div>
+                                            <pre class="text-xs whitespace-pre-wrap font-mono text-zinc-700 dark:text-zinc-300 max-h-80 overflow-auto">{{ $plog->response }}</pre>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

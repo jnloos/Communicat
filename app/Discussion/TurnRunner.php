@@ -72,7 +72,12 @@ class TurnRunner
             return false;
         }
 
-        $done = JobLog::where('project_id', $project->id)->where('status', 'success')->count();
+        // Counts turns that produced a public contribution, not turns that finished
+        // cleanly: PersistMessage saves the message before later stages (e.g. Summarize)
+        // run, so a turn can fail after speaking. The study's unit of analysis is the
+        // spoken turn, so that turn must still consume budget even though its status
+        // ends up 'failed'.
+        $done = JobLog::where('project_id', $project->id)->whereNotNull('words')->count();
 
         return $done >= $project->turn_budget;
     }

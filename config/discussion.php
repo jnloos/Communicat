@@ -22,6 +22,10 @@ return [
     | history_keep     — n: so viele jüngste Nachrichten bleiben wörtlich (History).
     | summarize_batch  — b: Summarize läuft, sobald mehr als n + b Nachrichten
     |                    unzusammengefasst sind, und verdichtet alles bis auf n.
+    |                    history_keep ist also kein hartes Fenster-Limit, sondern
+    |                    der Zielwert, auf den Summarize herunterkomprimiert — das
+    |                    tatsächliche Fenster pendelt zwischen history_keep und
+    |                    history_keep + summarize_batch.
     */
     'default_pipeline' => env('DISCUSSION_DEFAULT_PIPELINE', 'RoundRobinPipeline'),
     'history_keep' => (int) env('DISCUSSION_HISTORY_KEEP', 20),

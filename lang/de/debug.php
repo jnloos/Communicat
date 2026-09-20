@@ -40,6 +40,7 @@ return [
         'tab_messages' => 'Nachrichten (:count)',
         'prompt' => 'Prompt',
         'response' => 'Antwort',
+        'error' => 'Fehler',
         'no_prompts' => 'Keine Prompts für diesen Job aufgezeichnet.',
         'no_messages' => 'Keine Nachrichten von diesem Job erzeugt.',
         'system_sender' => 'System',

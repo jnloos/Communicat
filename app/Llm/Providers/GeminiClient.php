@@ -8,6 +8,7 @@ use App\Llm\LlmRequest;
 use App\Llm\LlmResponse;
 use App\Llm\ModelConfig;
 use Illuminate\Support\Facades\Http;
+use InvalidArgumentException;
 use Throwable;
 
 final class GeminiClient implements LlmClient
@@ -23,6 +24,15 @@ final class GeminiClient implements LlmClient
 
     public static function make(ModelConfig $config): static
     {
+        // Gemini's API has no "effort" level, only a thinkingBudget token count, and
+        // we have no verified mapping from one to the other. Reject rather than drop
+        // it silently: a silent drop would leave prompt_logs.config and the frozen
+        // projects.run_config claiming a reasoning level that was never sent to the
+        // provider, which corrupts the study's reproducibility record.
+        if ($config->reasoningEffort !== null) {
+            throw new InvalidArgumentException("Gemini has no reasoning-effort levels; model key [{$config->key}] sets one.");
+        }
+
         return new self($config, (string) config('llm.keys.gemini'));
     }
 
