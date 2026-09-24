@@ -9,13 +9,13 @@ use App\Models\User;
 class ProjectExport
 {
     /** Current export schema version (consumed by ProjectImporter). */
-    public const SCHEMA_VERSION = 4;
+    public const SCHEMA_VERSION = 5;
 
     /**
      * Build the full clone payload for a project: pipeline/model config,
-     * contributing experts (in seat order), all messages with metadata, and
-     * per-expert memory (summaries). The shape is the contract consumed by
-     * {@see ProjectImporter::import()}.
+     * summarization parameters, contributing experts (in seat order), all
+     * messages with metadata, and per-expert memory (summaries). The shape is
+     * the contract consumed by {@see ProjectImporter::import()}.
      */
     public function toArray(Project $project): array
     {
@@ -26,6 +26,10 @@ class ProjectExport
                 'description' => $project->description,
                 'pipeline' => $project->pipeline,
                 'model' => $project->model,
+                // The raw columns, not the effective values: a project that
+                // follows the configured defaults must keep following them.
+                'summarize_threshold' => $project->summarize_threshold,
+                'summarize_oldest' => $project->summarize_oldest,
                 'long_term_memory' => $project->long_term_memory,
                 'summarized_until_message_id' => $project->summarized_until_message_id,
                 'created_at' => optional($project->created_at)->toIso8601String(),

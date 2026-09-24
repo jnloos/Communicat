@@ -179,6 +179,9 @@ return [
     */
 
     'custom' => [
+        'summarizeOldest' => [
+            'lt' => 'Not every pending message may be summarized — the number must be smaller than the summarization threshold (:value).',
+        ],
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
@@ -207,6 +210,8 @@ return [
         'name' => 'name',
         'password' => 'password',
         'password_confirmation' => 'password confirmation',
+        'summarizeOldest' => 'messages to summarize',
+        'summarizeThreshold' => 'summarization threshold',
         'title' => 'title',
         'token' => 'token',
     ],

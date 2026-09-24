@@ -173,6 +173,9 @@ return [
     */
 
     'custom' => [
+        'summarizeOldest' => [
+            'lt' => 'Es dürfen nicht alle wartenden Nachrichten verdichtet werden – die Zahl muss kleiner als die Verdichtungsschwelle (:value) sein.',
+        ],
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
@@ -199,6 +202,8 @@ return [
         'name' => 'Name',
         'password' => 'Passwort',
         'password_confirmation' => 'Passwortbestätigung',
+        'summarizeOldest' => 'Zu verdichtende Nachrichten',
+        'summarizeThreshold' => 'Verdichtungsschwelle',
         'title' => 'Titel',
         'token' => 'Token',
     ],

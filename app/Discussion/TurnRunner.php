@@ -92,8 +92,8 @@ class TurnRunner
             'pipeline' => $project->pipeline,
             'stages' => $pipeline->stages(),
             'model' => ModelConfig::fromConfig($project->model)->toArray(),
-            'history_keep' => (int) config('discussion.history_keep'),
-            'summarize_batch' => (int) config('discussion.summarize_batch'),
+            'summarize_threshold' => $project->summarizeThreshold(),
+            'summarize_oldest' => $project->summarizeOldest(),
             'system_prompt' => $this->prompts->system(),
         ];
         $project->save();

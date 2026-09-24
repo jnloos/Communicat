@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\Projects\CreateProject;
 use App\Livewire\Projects\EditProject;
+use App\Models\JobLog;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,6 +25,8 @@ class ProjectFormsTest extends TestCase
             ->set('title', 'KI an Schulen')
             ->set('description', 'Sollen Schulen KI-Werkzeuge erlauben?')
             ->set('model', 'anthropic')
+            ->set('summarizeThreshold', '30')
+            ->set('summarizeOldest', '10')
             ->call('save')
             ->assertHasNoErrors();
 
@@ -31,6 +34,8 @@ class ProjectFormsTest extends TestCase
 
         $this->assertSame('RoundRobinPipeline', $project->pipeline);
         $this->assertSame('anthropic', $project->model);
+        $this->assertSame(30, $project->summarize_threshold);
+        $this->assertSame(10, $project->summarize_oldest);
         $this->assertSame($user->id, $project->user_id);
         $this->assertTrue($project->users()->whereKey($user->id)->exists());
         $this->assertSame(1, $project->messages()->count());
@@ -80,7 +85,87 @@ class ProjectFormsTest extends TestCase
         $this->assertSame($message->id, $project->summarized_until_message_id);
     }
 
-    public function test_pipeline_and_model_are_frozen_once_the_run_has_started(): void
+    public function test_a_mid_run_change_is_applied_and_recorded_in_the_snapshot(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+
+        $project = Project::factory()->create([
+            'user_id' => $owner->id,
+            'pipeline' => 'RoundRobinPipeline',
+            'model' => 'openai',
+            'run_config' => ['pipeline' => 'RoundRobinPipeline', 'model' => ['key' => 'openai']],
+        ]);
+        JobLog::create(['job_class' => 'X', 'project_id' => $project->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => 7]);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->assertSet('runStarted', true)
+            ->set('model', 'gemini')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $project->refresh();
+
+        $this->assertSame('gemini', $project->model);
+        // The original snapshot keys stay put beside the trail.
+        $this->assertSame('RoundRobinPipeline', $project->run_config['pipeline']);
+        $this->assertSame(['key' => 'openai'], $project->run_config['model']);
+        $this->assertSame([[
+            'after_turn' => 7,
+            'field' => 'model',
+            'from' => 'openai',
+            'to' => 'gemini',
+        ]], $project->run_config['changes']);
+    }
+
+    public function test_a_mid_run_edit_that_changes_neither_pipeline_nor_model_records_nothing(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+
+        $project = Project::factory()->create([
+            'user_id' => $owner->id,
+            'run_config' => ['pipeline' => 'RoundRobinPipeline'],
+        ]);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->set('title', 'Anderer Titel')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertArrayNotHasKey('changes', $project->fresh()->run_config);
+    }
+
+    public function test_a_mid_run_pipeline_switch_is_recorded_alongside_a_model_switch(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+
+        // RoundRobinPipeline is the only registered pipeline, so the switch has to
+        // start from a name the registry no longer offers to be a switch at all.
+        $project = Project::factory()->create([
+            'user_id' => $owner->id,
+            'pipeline' => 'GonePipeline',
+            'model' => 'openai',
+            'run_config' => ['pipeline' => 'GonePipeline'],
+        ]);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->set('pipeline', 'RoundRobinPipeline')
+            ->set('model', 'gemini')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $changes = $project->fresh()->run_config['changes'];
+
+        $this->assertSame(['pipeline', 'model'], array_column($changes, 'field'));
+        $this->assertSame(['GonePipeline', 'openai'], array_column($changes, 'from'));
+        $this->assertSame(['RoundRobinPipeline', 'gemini'], array_column($changes, 'to'));
+        // No turn has run yet, so the switch lands after turn 0.
+        $this->assertSame([0, 0], array_column($changes, 'after_turn'));
+    }
+
+    public function test_successive_mid_run_changes_each_get_their_own_entry(): void
     {
         $owner = User::factory()->create();
         $this->actingAs($owner);
@@ -92,12 +177,65 @@ class ProjectFormsTest extends TestCase
         ]);
 
         Livewire::test(EditProject::class, ['project' => $project])
-            ->assertSet('runStarted', true)
             ->set('model', 'gemini')
+            ->call('save');
+
+        Livewire::test(EditProject::class, ['project' => $project->fresh()])
+            ->set('model', 'anthropic')
+            ->call('save');
+
+        $changes = $project->fresh()->run_config['changes'];
+
+        $this->assertSame(['openai', 'gemini'], array_column($changes, 'from'));
+        $this->assertSame(['gemini', 'anthropic'], array_column($changes, 'to'));
+    }
+
+    public function test_the_summarize_settings_must_leave_a_history_behind(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+
+        $project = Project::factory()->create(['user_id' => $owner->id]);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->set('summarizeThreshold', '20')
+            ->set('summarizeOldest', '20')
+            ->call('save')
+            ->assertHasErrors(['summarizeOldest' => 'lt']);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->set('summarizeThreshold', '1')
+            ->set('summarizeOldest', '0')
+            ->call('save')
+            ->assertHasErrors(['summarizeThreshold' => 'min', 'summarizeOldest' => 'min']);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->set('summarizeThreshold', 'viele')
+            ->call('save')
+            ->assertHasErrors(['summarizeThreshold' => 'integer']);
+
+        $this->assertNull($project->fresh()->summarize_threshold);
+    }
+
+    public function test_editing_stores_the_summarize_settings(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+
+        $project = Project::factory()->create(['user_id' => $owner->id]);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->assertSet('summarizeThreshold', (string) config('discussion.summarize_threshold'))
+            ->assertSet('summarizeOldest', (string) config('discussion.summarize_oldest'))
+            ->set('summarizeThreshold', '60')
+            ->set('summarizeOldest', '30')
             ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertSame('openai', $project->fresh()->model);
+        $project->refresh();
+
+        $this->assertSame(60, $project->summarize_threshold);
+        $this->assertSame(30, $project->summarize_oldest);
     }
 
     public function test_pipeline_and_model_can_change_before_the_first_turn(): void
@@ -106,12 +244,19 @@ class ProjectFormsTest extends TestCase
         $this->actingAs($owner);
 
         $project = Project::factory()->create(['user_id' => $owner->id, 'model' => 'openai']);
+        $this->assertNull($project->run_config);
 
         Livewire::test(EditProject::class, ['project' => $project])
+            ->assertSet('runStarted', false)
             ->set('model', 'gemini')
             ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertSame('gemini', $project->fresh()->model);
+        $project->refresh();
+
+        $this->assertSame('gemini', $project->model);
+        // Nothing to contradict yet: no snapshot exists, so no change is recorded and
+        // the first turn is still free to freeze the run as it actually starts.
+        $this->assertNull($project->run_config);
     }
 }

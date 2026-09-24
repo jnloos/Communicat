@@ -16,7 +16,11 @@ return [
         'pipeline_help' => 'Legt fest, nach welchem Verfahren der nächste Sprecher bestimmt wird.',
         'model' => 'Modell',
         'model_help' => 'Alle Agenten dieses Projekts laufen auf diesem einen Modell.',
-        'run_started_help' => 'Pipeline und Modell sind fest, sobald die Diskussion begonnen hat.',
+        'summarize_threshold' => 'Verdichtungsschwelle',
+        'summarize_threshold_help' => 'Sobald so viele Nachrichten noch nicht verdichtet sind, läuft die Zusammenfassung.',
+        'summarize_oldest' => 'Zu verdichtende Nachrichten',
+        'summarize_oldest_help' => 'So viele der ältesten Nachrichten wandern dann in das Langzeitgedächtnis; sie muss kleiner als die Schwelle sein.',
+        'run_started_help' => 'Die Diskussion läuft bereits – eine Änderung wird im run_config-Snapshot mit der Turn-Nummer protokolliert.',
     ],
 
     'create' => [

@@ -137,9 +137,9 @@ class TurnRunnerTest extends TestCase
     public function test_a_turn_that_speaks_but_then_fails_in_summarize_still_consumes_budget(): void
     {
         // Force Summarize to actually run: pending participant messages must
-        // exceed history_keep + summarize_batch once this turn's own message
-        // is added (same trick as SummarizeTest).
-        config(['discussion.history_keep' => 1, 'discussion.summarize_batch' => 1]);
+        // reach summarize_threshold once this turn's own message is added
+        // (same trick as SummarizeTest).
+        config(['discussion.summarize_threshold' => 3, 'discussion.summarize_oldest' => 1]);
         $this->project->update(['turn_budget' => 1]);
         $this->project->addMessage('eins', $this->experts[0]);
         $this->project->addMessage('zwei', $this->experts[1]);
@@ -173,7 +173,21 @@ class TurnRunnerTest extends TestCase
         $this->assertCount(5, $config['stages']);
         $this->assertSame($this->project->model, $config['model']['key']);
         $this->assertSame(config("ai.models.{$this->project->model}.model"), $config['model']['model']);
-        $this->assertSame(config('discussion.history_keep'), $config['history_keep']);
+        $this->assertSame(config('discussion.summarize_threshold'), $config['summarize_threshold']);
+        $this->assertSame(config('discussion.summarize_oldest'), $config['summarize_oldest']);
+        $this->assertArrayNotHasKey('changes', $config);
         $this->assertStringContainsString('Diskussionssimulation', $config['system_prompt']);
+    }
+
+    public function test_the_snapshot_records_the_projects_own_summarize_settings(): void
+    {
+        $this->project->update(['summarize_threshold' => 12, 'summarize_oldest' => 5]);
+
+        app(TurnRunner::class)->run($this->project);
+
+        $config = $this->project->fresh()->run_config;
+
+        $this->assertSame(12, $config['summarize_threshold']);
+        $this->assertSame(5, $config['summarize_oldest']);
     }
 }

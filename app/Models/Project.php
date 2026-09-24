@@ -17,6 +17,7 @@ class Project extends Model
         'title', 'description', 'user_id',
         'model', 'pipeline', 'turn_budget', 'seed', 'run_config',
         'long_term_memory', 'summarized_until_message_id',
+        'summarize_threshold', 'summarize_oldest',
     ];
 
     protected $casts = ['run_config' => 'array'];
@@ -186,5 +187,21 @@ class Project extends Model
     public function latestParticipantMessage(): ?Message
     {
         return $this->participantMessages()->latest('id')->first();
+    }
+
+    /**
+     * How many unsummarized messages must pile up before Summarize folds (x).
+     * The single place the config fallback lives — the stage and the run_config
+     * snapshot both read the effective value from here.
+     */
+    public function summarizeThreshold(): int
+    {
+        return (int) ($this->summarize_threshold ?? config('discussion.summarize_threshold'));
+    }
+
+    /** How many of the oldest unsummarized messages a fold compresses (y, < x). */
+    public function summarizeOldest(): int
+    {
+        return (int) ($this->summarize_oldest ?? config('discussion.summarize_oldest'));
     }
 }

@@ -23,7 +23,8 @@ class SummarizeTest extends TestCase
     {
         parent::setUp();
 
-        config(['discussion.history_keep' => 2, 'discussion.summarize_batch' => 1]);
+        // x = 4: fold once four messages are unsummarized; y = 2: fold the two oldest.
+        config(['discussion.summarize_threshold' => 4, 'discussion.summarize_oldest' => 2]);
 
         FakeAgents::always(SummarizeAgent::class, 'Zusammenfassung.');
 
@@ -37,11 +38,15 @@ class SummarizeTest extends TestCase
         app(Summarize::class)->handle(new TurnPayload($this->project, 1), fn (TurnPayload $p) => $p);
     }
 
-    public function test_does_nothing_while_the_window_is_small_enough(): void
+    /** @param  array<int, string>  $texts */
+    private function addMessages(array $texts): array
     {
-        foreach (['eins', 'zwei', 'drei'] as $text) {
-            $this->project->addMessage($text, $this->expert);
-        }
+        return array_map(fn (string $text) => $this->project->addMessage($text, $this->expert), $texts);
+    }
+
+    public function test_does_nothing_below_the_threshold(): void
+    {
+        $this->addMessages(['eins', 'zwei', 'drei']);
 
         $this->summarize();
 
@@ -49,18 +54,16 @@ class SummarizeTest extends TestCase
         $this->assertNull($this->project->fresh()->long_term_memory);
     }
 
-    public function test_compresses_everything_but_the_newest_n_messages(): void
+    public function test_folds_the_y_oldest_messages_once_the_threshold_is_reached(): void
     {
-        $messages = [];
-        foreach (['eins', 'zwei', 'drei', 'vier'] as $text) {
-            $messages[] = $this->project->addMessage($text, $this->expert);
-        }
+        $messages = $this->addMessages(['eins', 'zwei', 'drei', 'vier']);
         FakeAgents::always(SummarizeAgent::class, 'Zusammenfassung A.');
 
         $this->summarize();
 
         $project = $this->project->fresh();
         $this->assertSame('Zusammenfassung A.', $project->long_term_memory);
+        // The watermark stops at the newest compressed message, not at the newest one.
         $this->assertSame($messages[1]->id, $project->summarized_until_message_id);
 
         SummarizeAgent::assertPromptedTimes(1);
@@ -72,14 +75,12 @@ class SummarizeTest extends TestCase
 
     public function test_a_later_run_carries_the_previous_summary_forward(): void
     {
-        foreach (['eins', 'zwei', 'drei', 'vier'] as $text) {
-            $this->project->addMessage($text, $this->expert);
-        }
+        $this->addMessages(['eins', 'zwei', 'drei', 'vier']);
         FakeAgents::inOrder(SummarizeAgent::class, ['Zusammenfassung A.', 'Zusammenfassung B.']);
         $this->summarize();
 
-        $this->project->addMessage('fünf', $this->expert);
-        $this->project->addMessage('sechs', $this->expert);
+        // 'drei' and 'vier' are still pending; two more messages reach the threshold again.
+        $this->addMessages(['fünf', 'sechs']);
         $this->summarize();
 
         SummarizeAgent::assertPromptedTimes(2);
@@ -91,5 +92,32 @@ class SummarizeTest extends TestCase
             && ! str_contains($prompt->prompt, 'eins'));
 
         $this->assertSame('Zusammenfassung B.', $this->project->fresh()->long_term_memory);
+    }
+
+    public function test_the_project_columns_override_the_configured_defaults(): void
+    {
+        $messages = $this->addMessages(['eins', 'zwei']);
+        $this->project->update(['summarize_threshold' => 2, 'summarize_oldest' => 1]);
+
+        $this->summarize();
+
+        SummarizeAgent::assertPromptedTimes(1);
+        SummarizeAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'eins')
+            && ! str_contains($prompt->prompt, 'zwei'));
+        $this->assertSame($messages[0]->id, $this->project->fresh()->summarized_until_message_id);
+    }
+
+    public function test_null_columns_fall_back_to_the_configured_defaults(): void
+    {
+        $this->assertNull($this->project->summarize_threshold);
+        $this->assertNull($this->project->summarize_oldest);
+
+        $this->assertSame(4, $this->project->summarizeThreshold());
+        $this->assertSame(2, $this->project->summarizeOldest());
+
+        $this->project->update(['summarize_threshold' => 9, 'summarize_oldest' => 3]);
+
+        $this->assertSame(9, $this->project->summarizeThreshold());
+        $this->assertSame(3, $this->project->summarizeOldest());
     }
 }

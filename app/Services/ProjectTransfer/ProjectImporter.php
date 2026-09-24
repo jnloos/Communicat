@@ -38,6 +38,10 @@ class ProjectImporter
             $project->description = $projectData['description'] ?? '';
             $project->pipeline = $this->knownPipeline($projectData['pipeline'] ?? null);
             $project->model = $this->knownModel($projectData['model'] ?? null);
+            // Absent in schema < 5 (and null whenever the source followed the
+            // configured defaults): stays null, so the copy does too.
+            $project->summarize_threshold = $this->positiveOrNull($projectData['summarize_threshold'] ?? null);
+            $project->summarize_oldest = $this->positiveOrNull($projectData['summarize_oldest'] ?? null);
             $project->long_term_memory = $projectData['long_term_memory'] ?? null;
             $project->save();
             $project->addContributingUser($owner);
@@ -120,5 +124,11 @@ class ProjectImporter
     private function knownModel(?string $key): string
     {
         return $key !== null && config("ai.models.{$key}") !== null ? $key : (string) config('ai.default_model');
+    }
+
+    /** Keeps only a usable per-project override; anything else falls back to the config. */
+    private function positiveOrNull(mixed $value): ?int
+    {
+        return is_numeric($value) && (int) $value > 0 ? (int) $value : null;
     }
 }

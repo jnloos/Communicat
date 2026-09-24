@@ -25,6 +25,11 @@ class CreateProject extends Component
 
     public string $model = '';
 
+    /** Free-typed suggestions, so both are kept as text and cast when saved. */
+    public string $summarizeThreshold = '';
+
+    public string $summarizeOldest = '';
+
     #[Validate('nullable|file|max:20480')]
     public $importFile = null;
 
@@ -32,6 +37,8 @@ class CreateProject extends Component
     {
         $this->pipeline = $pipelines->default();
         $this->model = (string) config('ai.default_model');
+        $this->summarizeThreshold = (string) config('discussion.summarize_threshold');
+        $this->summarizeOldest = (string) config('discussion.summarize_oldest');
     }
 
     protected function rules(): array
@@ -39,6 +46,9 @@ class CreateProject extends Component
         return [
             'pipeline' => ['required', Rule::in(array_keys(app(PipelineRegistry::class)->options()))],
             'model' => ['required', Rule::in(array_keys(ModelConfig::options()))],
+            'summarizeThreshold' => ['required', 'integer', 'min:2'],
+            // Folding every pending message would leave no verbatim history at all.
+            'summarizeOldest' => ['required', 'integer', 'min:1', 'lt:summarizeThreshold'],
         ];
     }
 
@@ -52,6 +62,8 @@ class CreateProject extends Component
         $project->description = $this->description;
         $project->pipeline = $this->pipeline;
         $project->model = $this->model;
+        $project->summarize_threshold = (int) $this->summarizeThreshold;
+        $project->summarize_oldest = (int) $this->summarizeOldest;
         $project->save();
 
         $project->addContributingUser(auth()->user());

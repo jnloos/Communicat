@@ -20,7 +20,10 @@ class ProjectTransferTest extends TestCase
         $owner = User::factory()->create();
         [$alice, $bob] = Expert::factory()->count(2)->create()->all();
 
-        $source = Project::factory()->create(['user_id' => $owner->id, 'pipeline' => 'RoundRobinPipeline', 'model' => 'gemini']);
+        $source = Project::factory()->create([
+            'user_id' => $owner->id, 'pipeline' => 'RoundRobinPipeline', 'model' => 'gemini',
+            'summarize_threshold' => 30, 'summarize_oldest' => 10,
+        ]);
         $source->addContributingExpert($bob);
         $source->addContributingExpert($alice);
         $first = $source->addMessage('Alt', $bob);
@@ -30,13 +33,15 @@ class ProjectTransferTest extends TestCase
 
         $data = (new ProjectExport)->toArray($source->fresh());
 
-        $this->assertSame(4, $data['schema_version']);
+        $this->assertSame(5, $data['schema_version']);
         $this->assertArrayNotHasKey('settings', $data['project']);
 
         $copy = app(ProjectImporter::class)->import($data, $owner)['project']->fresh();
 
         $this->assertSame('RoundRobinPipeline', $copy->pipeline);
         $this->assertSame('gemini', $copy->model);
+        $this->assertSame(30, $copy->summarize_threshold);
+        $this->assertSame(10, $copy->summarize_oldest);
         $this->assertSame('Bisher: X.', $copy->long_term_memory);
         $this->assertSame([$bob->id, $alice->id], $copy->contributingExperts()->pluck('id')->all());
         $this->assertSame([1, 2], $copy->contributingExperts()->map(fn (Expert $e) => $e->pivot->seat)->all());
@@ -56,5 +61,21 @@ class ProjectTransferTest extends TestCase
 
         $this->assertSame(config('discussion.default_pipeline'), $copy->pipeline);
         $this->assertSame(config('ai.default_model'), $copy->model);
+    }
+
+    public function test_an_export_without_the_summarize_settings_still_imports(): void
+    {
+        $owner = User::factory()->create();
+
+        // Shape of a schema-4 export: the two keys did not exist yet.
+        $copy = app(ProjectImporter::class)->import([
+            'schema_version' => 4,
+            'project' => ['title' => 'Alt', 'description' => 'd', 'pipeline' => 'RoundRobinPipeline', 'model' => 'gemini'],
+        ], $owner)['project'];
+
+        $this->assertNull($copy->summarize_threshold);
+        $this->assertNull($copy->summarize_oldest);
+        $this->assertSame(config('discussion.summarize_threshold'), $copy->summarizeThreshold());
+        $this->assertSame(config('discussion.summarize_oldest'), $copy->summarizeOldest());
     }
 }

@@ -16,7 +16,11 @@ return [
         'pipeline_help' => 'Determines how the next speaker is chosen.',
         'model' => 'Model',
         'model_help' => 'Every agent in this project runs on this one model.',
-        'run_started_help' => 'Pipeline and model are fixed once the discussion has started.',
+        'summarize_threshold' => 'Summarization threshold',
+        'summarize_threshold_help' => 'Once this many messages are still unsummarized, the summarization runs.',
+        'summarize_oldest' => 'Messages to summarize',
+        'summarize_oldest_help' => 'That many of the oldest messages then move into the long-term memory; it must be smaller than the threshold.',
+        'run_started_help' => 'The discussion has already started — a change is recorded in the run_config snapshot together with the turn number.',
     ],
 
     'create' => [

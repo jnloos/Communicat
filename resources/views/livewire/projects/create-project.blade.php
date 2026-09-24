@@ -22,6 +22,19 @@
                 @endforeach
             </flux:select>
 
+            <flux:autocomplete wire:model.defer="summarizeThreshold" :label="__('projects.fields.summarize_threshold')" :description="__('projects.fields.summarize_threshold_help')">
+                <flux:autocomplete.item>20</flux:autocomplete.item>
+                <flux:autocomplete.item>30</flux:autocomplete.item>
+                <flux:autocomplete.item>40</flux:autocomplete.item>
+                <flux:autocomplete.item>60</flux:autocomplete.item>
+            </flux:autocomplete>
+
+            <flux:autocomplete wire:model.defer="summarizeOldest" :label="__('projects.fields.summarize_oldest')" :description="__('projects.fields.summarize_oldest_help')">
+                <flux:autocomplete.item>10</flux:autocomplete.item>
+                <flux:autocomplete.item>20</flux:autocomplete.item>
+                <flux:autocomplete.item>30</flux:autocomplete.item>
+            </flux:autocomplete>
+
             <div class="flex justify-end">
                 <flux:button type="submit" variant="primary" icon="chat-bubble-left-right" class="w-full cursor-pointer sm:w-auto">
                     {{ __('projects.create.submit') }}

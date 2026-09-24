@@ -11,9 +11,9 @@ use App\Models\Message;
 use Closure;
 
 /**
- * Maintains the shared Long-Term memory. Runs once more than n + b messages
- * are unsummarized and folds all but the newest n into the rolling summary,
- * so the History window always stays between n and n + b.
+ * Maintains the shared Long-Term memory. Runs once at least x messages are
+ * unsummarized and folds exactly the y oldest of them into the rolling summary,
+ * leaving the newer ones verbatim in the History.
  */
 class Summarize
 {
@@ -25,8 +25,7 @@ class Summarize
     public function handle(TurnPayload $payload, Closure $next)
     {
         $project = $payload->project;
-        $keep = (int) config('discussion.history_keep');
-        $batch = (int) config('discussion.summarize_batch');
+        $threshold = $project->summarizeThreshold();
 
         $pending = $project->participantMessages()
             ->where('id', '>', $project->summarized_until_message_id ?? 0)
@@ -34,8 +33,8 @@ class Summarize
             ->orderBy('id')
             ->get();
 
-        if ($pending->count() > $keep + $batch) {
-            $toCompress = $pending->take($pending->count() - $keep);
+        if ($pending->count() >= $threshold) {
+            $toCompress = $pending->take($project->summarizeOldest());
 
             $completion = (new SummarizeAgent(ModelConfig::fromConfig($project->model), $payload->jobLogId))
                 ->ask($this->prompts->render('prompts.summarize', [

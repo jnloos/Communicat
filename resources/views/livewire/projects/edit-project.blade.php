@@ -9,18 +9,31 @@
             <flux:input wire:model.defer="title" :label="__('common.fields.title')"/>
             <flux:textarea wire:model.defer="description" :label="__('common.fields.description')" rows="10"/>
 
-            <flux:select wire:model.defer="pipeline" :label="__('projects.fields.pipeline')" :disabled="$runStarted">
+            <flux:select wire:model.defer="pipeline" :label="__('projects.fields.pipeline')">
                 @foreach ($pipelines as $name => $label)
                     <option value="{{ $name }}">{{ $label }}</option>
                 @endforeach
             </flux:select>
 
-            <flux:select wire:model.defer="model" :label="__('projects.fields.model')" :disabled="$runStarted"
+            <flux:select wire:model.defer="model" :label="__('projects.fields.model')"
                 :description="$runStarted ? __('projects.fields.run_started_help') : null">
                 @foreach ($models as $key => $label)
                     <option value="{{ $key }}">{{ $label }}</option>
                 @endforeach
             </flux:select>
+
+            <flux:autocomplete wire:model.defer="summarizeThreshold" :label="__('projects.fields.summarize_threshold')" :description="__('projects.fields.summarize_threshold_help')">
+                <flux:autocomplete.item>20</flux:autocomplete.item>
+                <flux:autocomplete.item>30</flux:autocomplete.item>
+                <flux:autocomplete.item>40</flux:autocomplete.item>
+                <flux:autocomplete.item>60</flux:autocomplete.item>
+            </flux:autocomplete>
+
+            <flux:autocomplete wire:model.defer="summarizeOldest" :label="__('projects.fields.summarize_oldest')" :description="__('projects.fields.summarize_oldest_help')">
+                <flux:autocomplete.item>10</flux:autocomplete.item>
+                <flux:autocomplete.item>20</flux:autocomplete.item>
+                <flux:autocomplete.item>30</flux:autocomplete.item>
+            </flux:autocomplete>
 
             <div class="flex justify-end">
                 <flux:button type="submit" variant="primary" class="w-full cursor-pointer sm:w-auto">
