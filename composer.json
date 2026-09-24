@@ -9,10 +9,11 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.3",
         "anthropic-ai/sdk": "^0.50.0",
         "erusev/parsedown": "^1.7",
         "guzzlehttp/guzzle": "^7.10",
+        "laravel/ai": "1.0.*",
         "laravel/framework": "^12.0",
         "laravel/reverb": "^1.9",
         "laravel/tinker": "^2.10.1",
