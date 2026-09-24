@@ -191,9 +191,11 @@ select:focus[data-flux-control] {
     to { opacity: 1; }
 }
 
-/* Flux renders the modal's close button without a pointer cursor. The element
-   carrying the attribute is a zero-sized custom element, so the rule has to
-   reach the button inside it. */
-[data-flux-modal-close] button {
+/* Flux leaves several of its interactive elements on the default cursor. For
+   the modal's close button the rule has to reach the button inside, because the
+   element carrying the attribute is a zero-sized custom element. Menu items
+   carry the attribute themselves; disabled ones keep the default. */
+[data-flux-modal-close] button,
+[data-flux-menu-item]:not([disabled]):not([data-disabled]) {
     cursor: pointer;
 }
