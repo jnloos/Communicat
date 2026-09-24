@@ -6,8 +6,8 @@ use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Pipelines\TurnPipeline;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\Support\TextLength;
+use App\Discussion\Values\ModelConfig;
 use App\Events\JobLogged;
-use App\Llm\LlmFactory;
 use App\Models\JobLog;
 use App\Models\Project;
 use Illuminate\Pipeline\Pipeline;
@@ -23,7 +23,6 @@ class TurnRunner
 {
     public function __construct(
         private readonly PipelineRegistry $pipelines,
-        private readonly LlmFactory $llm,
         private readonly PromptRenderer $prompts,
     ) {}
 
@@ -92,7 +91,7 @@ class TurnRunner
         $project->run_config = [
             'pipeline' => $project->pipeline,
             'stages' => $pipeline->stages(),
-            'model' => $this->llm->forProject($project)->config()->toArray(),
+            'model' => ModelConfig::fromConfig($project->model)->toArray(),
             'history_keep' => (int) config('discussion.history_keep'),
             'summarize_batch' => (int) config('discussion.summarize_batch'),
             'system_prompt' => $this->prompts->system(),
@@ -131,7 +130,7 @@ class TurnRunner
             $measured += [
                 'words' => TextLength::words($contribution->text),
                 'chars' => TextLength::chars($contribution->text),
-                'reasoning_tokens' => $contribution->response->tokensReasoning,
+                'reasoning_tokens' => $contribution->completion->reasoningTokens,
             ];
         }
 

@@ -2,6 +2,9 @@
 
 namespace Tests\Feature\Jobs;
 
+use App\Discussion\Agents\SpeakAgent;
+use App\Discussion\Agents\SummarizeAgent;
+use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\GenerationLoop;
 use App\Discussion\TurnRunner;
 use App\Events\GenerationStopped;
@@ -9,22 +12,19 @@ use App\Events\JobLogged;
 use App\Events\MessageGenerated;
 use App\Events\PipelineStageChanged;
 use App\Jobs\MessageGenerator;
-use App\Llm\LlmFactory;
 use App\Models\Expert;
 use App\Models\Message;
 use App\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
-use Tests\Fakes\FakeLlmClient;
-use Tests\Fakes\FakeLlmFactory;
+use RuntimeException;
+use Tests\Fakes\FakeAgents;
 use Tests\TestCase;
 
 class MessageGeneratorTest extends TestCase
 {
     use RefreshDatabase;
-
-    private FakeLlmClient $llm;
 
     private Project $project;
 
@@ -37,10 +37,9 @@ class MessageGeneratorTest extends TestCase
         Queue::fake();
         Event::fake([PipelineStageChanged::class, JobLogged::class, MessageGenerated::class, GenerationStopped::class]);
 
-        $this->llm = (new FakeLlmClient)
-            ->push('think', 'GEDANKE: Ich will antworten.')
-            ->push('speak', "Alice antwortet kurz.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion");
-        $this->app->instance(LlmFactory::class, new FakeLlmFactory($this->llm));
+        FakeAgents::always(ThinkAgent::class, 'GEDANKE: Ich will antworten.');
+        FakeAgents::always(SpeakAgent::class, "Alice antwortet kurz.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion");
+        FakeAgents::always(SummarizeAgent::class, 'Zusammenfassung.');
 
         $this->project = Project::factory()->create();
         $this->project->addContributingExpert(Expert::factory()->create(['name' => 'Alice']));
@@ -87,7 +86,7 @@ class MessageGeneratorTest extends TestCase
 
     public function test_a_failed_turn_stops_the_loop(): void
     {
-        $this->llm->failOn('speak', 'kaputt');
+        FakeAgents::fails(SpeakAgent::class, new RuntimeException('kaputt'));
         $this->loop->start($this->project->id);
         $this->loop->markViewing($this->project->id);
 

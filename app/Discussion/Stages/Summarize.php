@@ -2,11 +2,11 @@
 
 namespace App\Discussion\Stages;
 
+use App\Discussion\Agents\SummarizeAgent;
 use App\Discussion\Memory\Memory;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\TurnPayload;
-use App\Llm\LlmFactory;
-use App\Llm\LlmRequest;
+use App\Discussion\Values\ModelConfig;
 use App\Models\Message;
 use Closure;
 
@@ -18,7 +18,6 @@ use Closure;
 class Summarize
 {
     public function __construct(
-        private readonly LlmFactory $llm,
         private readonly PromptRenderer $prompts,
         private readonly Memory $memory,
     ) {}
@@ -38,18 +37,14 @@ class Summarize
         if ($pending->count() > $keep + $batch) {
             $toCompress = $pending->take($pending->count() - $keep);
 
-            $response = $this->llm->forProject($project)->complete(new LlmRequest(
-                $this->prompts->system(),
-                $this->prompts->render('prompts.summarize', [
+            $completion = (new SummarizeAgent(ModelConfig::fromConfig($project->model), $payload->jobLogId))
+                ->ask($this->prompts->render('prompts.summarize', [
                     'project' => $project,
                     'previous' => (string) $project->long_term_memory,
                     'entries' => $toCompress->map(fn (Message $message) => $this->memory->describe($message))->all(),
-                ]),
-                LlmRequest::PURPOSE_SUMMARIZE,
-                $payload->jobLogId,
-            ));
+                ]));
 
-            $project->long_term_memory = $response->text;
+            $project->long_term_memory = $completion->text;
             $project->summarized_until_message_id = $toCompress->last()->id;
             $project->save();
         }

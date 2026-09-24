@@ -2,11 +2,11 @@
 
 namespace App\Discussion\Stages;
 
+use App\Discussion\ParseFailure;
 use App\Discussion\Support\Thinking;
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\Thought;
 use App\Events\PipelineStageChanged;
-use App\Llm\LlmException;
 use Closure;
 
 /** Only the already selected speaker thinks. Needs SelectSpeaker before it. */
@@ -29,9 +29,8 @@ class ThinkAsSpeaker
         $thought = Thinking::section($answers[$speaker->id], self::MARKER_THOUGHT);
 
         if ($thought === '') {
-            throw new LlmException(
-                "ThinkAsSpeaker: marker '".self::MARKER_THOUGHT."' missing in the answer of expert {$speaker->id}.",
-                LlmException::KIND_PARSE,
+            throw new ParseFailure(
+                "ThinkAsSpeaker: marker '".self::MARKER_THOUGHT."' missing in the answer of expert {$speaker->id}."
             );
         }
 

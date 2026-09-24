@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Discussion;
 
+use App\Discussion\Agents\SpeakAgent;
+use App\Discussion\Agents\SummarizeAgent;
+use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\TurnRunner;
 use App\Events\JobLogged;
 use App\Events\PipelineStageChanged;
-use App\Llm\LlmFactory;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Message;
@@ -14,14 +16,13 @@ use App\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Tests\Fakes\FakeLlmClient;
-use Tests\Fakes\FakeLlmFactory;
+use Tests\Fakes\FakeAgents;
 use Tests\TestCase;
 
 /**
  * Every pipeline the registry finds must survive two turns. A new pipeline is
- * covered the moment its class exists; if it needs other fake answers, extend
- * fakeAnswers().
+ * covered the moment its class exists; if it calls an agent these fakes do not
+ * cover, or needs a different answer from one of them, extend fakeAnswers().
  */
 class PipelineSmokeTest extends TestCase
 {
@@ -42,19 +43,18 @@ class PipelineSmokeTest extends TestCase
         return $names;
     }
 
-    private function fakeAnswers(): FakeLlmClient
+    private function fakeAnswers(): void
     {
-        return (new FakeLlmClient)
-            ->push('think', 'GEDANKE: Ich will etwas beitragen.')
-            ->push('speak', "Ein kurzer Beitrag.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion")
-            ->push('summarize', 'Zusammenfassung.');
+        FakeAgents::always(ThinkAgent::class, 'GEDANKE: Ich will etwas beitragen.');
+        FakeAgents::always(SpeakAgent::class, "Ein kurzer Beitrag.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion");
+        FakeAgents::always(SummarizeAgent::class, 'Zusammenfassung.');
     }
 
     #[DataProvider('pipelineNames')]
     public function test_pipeline_runs_two_turns(string $name): void
     {
         Event::fake([PipelineStageChanged::class, JobLogged::class]);
-        $this->app->instance(LlmFactory::class, new FakeLlmFactory($this->fakeAnswers()));
+        $this->fakeAnswers();
 
         $this->assertTrue(app(PipelineRegistry::class)->has($name), "The registry does not find [{$name}].");
 

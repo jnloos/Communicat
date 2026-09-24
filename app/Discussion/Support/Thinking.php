@@ -2,11 +2,10 @@
 
 namespace App\Discussion\Support;
 
+use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\Memory\Memory;
 use App\Discussion\TurnPayload;
-use App\Llm\LlmFactory;
-use App\Llm\LlmRequest;
-use App\Llm\LlmResponse;
+use App\Discussion\Values\ModelConfig;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\Summary;
@@ -15,7 +14,6 @@ use App\Models\Summary;
 class Thinking
 {
     public function __construct(
-        private readonly LlmFactory $llm,
         private readonly PromptRenderer $prompts,
         private readonly Memory $memory,
     ) {}
@@ -26,10 +24,10 @@ class Thinking
      */
     public function ask(TurnPayload $payload, iterable $experts, string $view, array $data = []): array
     {
-        $system = $this->prompts->system();
+        $model = ModelConfig::fromConfig($payload->project->model);
         $shared = $data + ['project' => $payload->project] + $this->prompts->participants($payload->project);
 
-        $requests = [];
+        $answers = [];
 
         foreach ($experts as $expert) {
             $prompt = $this->prompts->render($view, $shared + [
@@ -37,12 +35,12 @@ class Thinking
                 'memory' => $this->memory->viewFor($payload->project, $expert),
             ]);
 
-            $requests[$expert->id] = new LlmRequest($system, $prompt, LlmRequest::PURPOSE_THINK, $payload->jobLogId, $expert->id);
+            $answers[$expert->id] = (new ThinkAgent($model, $payload->jobLogId, $expert->id))
+                ->ask($prompt)
+                ->text;
         }
 
-        $responses = $this->llm->forProject($payload->project)->completeMany($requests);
-
-        return array_map(fn (LlmResponse $response) => $response->text, $responses);
+        return $answers;
     }
 
     /** Short-Term memory is one rolling thought per expert and project. */

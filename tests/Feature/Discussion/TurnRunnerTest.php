@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\Discussion;
 
+use App\Discussion\Agents\SpeakAgent;
+use App\Discussion\Agents\SummarizeAgent;
+use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\TurnRunner;
 use App\Events\JobLogged;
 use App\Events\PipelineStageChanged;
-use App\Llm\LlmFactory;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Message;
@@ -13,15 +15,13 @@ use App\Models\Project;
 use App\Models\PromptLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
-use Tests\Fakes\FakeLlmClient;
-use Tests\Fakes\FakeLlmFactory;
+use RuntimeException;
+use Tests\Fakes\FakeAgents;
 use Tests\TestCase;
 
 class TurnRunnerTest extends TestCase
 {
     use RefreshDatabase;
-
-    private FakeLlmClient $llm;
 
     private Project $project;
 
@@ -34,10 +34,9 @@ class TurnRunnerTest extends TestCase
 
         Event::fake([PipelineStageChanged::class, JobLogged::class]);
 
-        $this->llm = (new FakeLlmClient)
-            ->push('think', 'GEDANKE: Ich will widersprechen.')
-            ->push('speak', "Alice antwortet kurz.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion");
-        $this->app->instance(LlmFactory::class, new FakeLlmFactory($this->llm));
+        FakeAgents::always(ThinkAgent::class, 'GEDANKE: Ich will widersprechen.');
+        FakeAgents::always(SpeakAgent::class, "Alice antwortet kurz.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion");
+        FakeAgents::always(SummarizeAgent::class, 'Zusammenfassung.');
 
         $this->project = Project::factory()->create(['pipeline' => 'RoundRobinPipeline']);
         $this->experts = Expert::factory()->count(2)->create()->all();
@@ -95,7 +94,7 @@ class TurnRunnerTest extends TestCase
 
     public function test_a_failing_stage_is_recorded_and_stops_the_loop(): void
     {
-        $this->llm->failOn('speak', 'verweigert', 'refusal');
+        FakeAgents::fails(SpeakAgent::class, new RuntimeException('verweigert'));
 
         $result = app(TurnRunner::class)->run($this->project);
 
@@ -144,7 +143,7 @@ class TurnRunnerTest extends TestCase
         $this->project->update(['turn_budget' => 1]);
         $this->project->addMessage('eins', $this->experts[0]);
         $this->project->addMessage('zwei', $this->experts[1]);
-        $this->llm->failOn('summarize', 'Zusammenfassung nicht erreichbar');
+        FakeAgents::fails(SummarizeAgent::class, new RuntimeException('Zusammenfassung nicht erreichbar'));
 
         $result = app(TurnRunner::class)->run($this->project);
 
@@ -172,7 +171,8 @@ class TurnRunnerTest extends TestCase
 
         $this->assertSame('RoundRobinPipeline', $config['pipeline']);
         $this->assertCount(5, $config['stages']);
-        $this->assertSame('fake-model', $config['model']['model']);
+        $this->assertSame($this->project->model, $config['model']['key']);
+        $this->assertSame(config("llm.models.{$this->project->model}.model"), $config['model']['model']);
         $this->assertSame(config('discussion.history_keep'), $config['history_keep']);
         $this->assertStringContainsString('Diskussionssimulation', $config['system_prompt']);
     }

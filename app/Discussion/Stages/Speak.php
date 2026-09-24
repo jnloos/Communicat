@@ -2,15 +2,15 @@
 
 namespace App\Discussion\Stages;
 
+use App\Discussion\Agents\SpeakAgent;
 use App\Discussion\Memory\Memory;
+use App\Discussion\ParseFailure;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\TurnPayload;
+use App\Discussion\Values\Completion;
 use App\Discussion\Values\Contribution;
+use App\Discussion\Values\ModelConfig;
 use App\Events\PipelineStageChanged;
-use App\Llm\LlmException;
-use App\Llm\LlmFactory;
-use App\Llm\LlmRequest;
-use App\Llm\LlmResponse;
 use App\Models\Expert;
 use App\Models\Message;
 use App\Models\Project;
@@ -29,7 +29,6 @@ class Speak
     ];
 
     public function __construct(
-        private readonly LlmFactory $llm,
         private readonly PromptRenderer $prompts,
         private readonly Memory $memory,
     ) {}
@@ -40,15 +39,13 @@ class Speak
 
         PipelineStageChanged::announce($payload->project->id, 'speaking', [$speaker]);
 
-        $response = $this->llm->forProject($payload->project)->complete(new LlmRequest(
-            $this->prompts->system(),
-            $this->prompt($payload, $speaker),
-            LlmRequest::PURPOSE_SPEAK,
+        $completion = (new SpeakAgent(
+            ModelConfig::fromConfig($payload->project->model),
             $payload->jobLogId,
             $speaker->id,
-        ));
+        ))->ask($this->prompt($payload, $speaker));
 
-        $payload->contribute($this->parse($response, $payload->project));
+        $payload->contribute($this->parse($completion, $payload->project));
 
         return $next($payload);
     }
@@ -66,18 +63,18 @@ class Speak
     }
 
     /** The visible prose is never parsed; only the trailer after the marker is. */
-    private function parse(LlmResponse $response, Project $project): Contribution
+    private function parse(Completion $completion, Project $project): Contribution
     {
-        $position = mb_strpos($response->text, self::MARKER_CONTROL);
+        $position = mb_strpos($completion->text, self::MARKER_CONTROL);
 
-        $text = trim($position === false ? $response->text : mb_substr($response->text, 0, $position));
-        $trailer = $position === false ? '' : mb_substr($response->text, $position + mb_strlen(self::MARKER_CONTROL));
+        $text = trim($position === false ? $completion->text : mb_substr($completion->text, 0, $position));
+        $trailer = $position === false ? '' : mb_substr($completion->text, $position + mb_strlen(self::MARKER_CONTROL));
 
         if ($text === '') {
-            throw new LlmException('Speak: the answer has no visible contribution.', LlmException::KIND_PARSE);
+            throw new ParseFailure('Speak: the answer has no visible contribution.');
         }
 
-        return new Contribution($text, $this->partnerToken($trailer, $project), $this->pairType($trailer), $response);
+        return new Contribution($text, $this->partnerToken($trailer, $project), $this->pairType($trailer), $completion);
     }
 
     private function partnerToken(string $trailer, Project $project): ?string

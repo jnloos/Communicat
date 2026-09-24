@@ -4,9 +4,9 @@ namespace Tests\Unit\Discussion;
 
 use App\Discussion\Stages\PersistMessage;
 use App\Discussion\TurnPayload;
+use App\Discussion\Values\Completion;
 use App\Discussion\Values\Contribution;
 use App\Discussion\Values\Selection;
-use App\Llm\LlmResponse;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Message;
@@ -18,9 +18,9 @@ class PersistMessageTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function response(): LlmResponse
+    private function completion(): Completion
     {
-        return new LlmResponse('roh', '', 'm', 'm-1', 1, 1, 0, 1, 'completed');
+        return new Completion('roh', '', 1, 1, null);
     }
 
     public function test_saves_the_contribution_with_its_adjacency_metadata(): void
@@ -33,7 +33,7 @@ class PersistMessageTest extends TestCase
 
         $payload = new TurnPayload($project, 1, $log->id);
         $payload->select(new Selection($alice, 'RoundRobinSelector'));
-        $payload->contribute(new Contribution('Bob, wie meinst du das?', "E{$bob->id}", Message::PAIR_FRAGE_ANTWORT, $this->response()));
+        $payload->contribute(new Contribution('Bob, wie meinst du das?', "E{$bob->id}", Message::PAIR_FRAGE_ANTWORT, $this->completion()));
 
         (new PersistMessage)->handle($payload, fn (TurnPayload $p) => $p);
 
@@ -54,7 +54,7 @@ class PersistMessageTest extends TestCase
 
         $payload = new TurnPayload($project, 1);
         $payload->select(new Selection($alice, 'RoundRobinSelector'));
-        $payload->contribute(new Contribution('Ich sehe das anders.', null, null, $this->response()));
+        $payload->contribute(new Contribution('Ich sehe das anders.', null, null, $this->completion()));
 
         (new PersistMessage)->handle($payload, fn (TurnPayload $p) => $p);
 
