@@ -1,5 +1,5 @@
 @startuml
-title Generische Turn-Pipeline — RoundRobinPipeline (ein Turn)
+title Generische Turn-Pipeline — RoundRobinPipeline (ein Turn, eine von vier)
 
 skinparam dpi 110
 skinparam defaultFontSize 11
@@ -33,7 +33,12 @@ partition "MessageGenerator → TurnRunner" {
   (app/Discussion/Pipelines/*.php);
   :run_config einfrieren (einmalig):
   Pipeline, Stages, Modell-Konfiguration,
-  history_keep/summarize_batch, System-Prompt;
+  summarize_threshold/summarize_oldest, System-Prompt;
+  note right #FFFFFF
+    Pipeline, Modell und die zwei Zahlen bleiben
+    änderbar; eine Änderung danach hängt einen
+    Eintrag an run_config.changes.
+  end note
   :**JobLog** anlegen (status=running,
   turn_index++);
   :neuer **TurnPayload**(project, turnIndex, jobLogId);
@@ -44,8 +49,25 @@ partition "RoundRobinPipeline::stages()" {
   In: letzter Sprecher (Message.expert_id)
   Out: TurnPayload->select(Selection);
   note right #FFF4E5
-    schreibt: **selection** (Sprecher, Sitzplatz)
+    schreibt: **selection** (Sprecher, Sitzplatz,
+    signals, reasoning, tie_broken)
     Event: PipelineStageChanged("routing")
+  end note
+  note left #FFFFFF
+    Der Selector ist der eine Seam, den die Studie variiert:
+    **RoundRobinSelector** (Sitzplatz, kein LLM-Call)
+    **HighestBidSelector** (höchstes Gebot, kein LLM-Call)
+    **OrchestratorSelector** (ein Call über SelectorAgent)
+    **JudgeSelector** (ein Call über JudgeAgent)
+    Gleichstand → TieBreaker (projects.seed + turnIndex).
+  end note
+
+  note left #FFFFFF
+    In ScorePipeline und QualityPipeline steht statt dieser
+    Stage **ThinkAndPrioritize** bzw. **ThinkAndPropose** —
+    und zwar VOR der Wahl: dort denken alle Agenten in einer
+    parallelen Runde und liefern ein Gebot (PRIORITÄT:) oder
+    einen Entwurf (ENTWURF:).
   end note
 
   :**2. ThinkAsSpeaker** (**ThinkAgent**, purpose=think)
@@ -76,10 +98,10 @@ partition "RoundRobinPipeline::stages()" {
     (adjacency_partner, adjacency_pair_type)
   end note
 
-  if (unsummierte Nachrichten > history_keep + summarize_batch?) then (ja)
+  if (unsummierte Nachrichten >= summarize_threshold?) then (ja)
     :**5. Summarize** (**SummarizeAgent**, purpose=summarize)
-    verdichtet alles außer den jüngsten
-    history_keep Nachrichten;<<#E8F0FE>>
+    verdichtet die ältesten
+    summarize_oldest Nachrichten;<<#E8F0FE>>
     note right #FFF4E5
       schreibt: projects.long_term_memory,
       projects.summarized_until_message_id
