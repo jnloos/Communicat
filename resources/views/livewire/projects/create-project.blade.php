@@ -12,7 +12,7 @@
 
 
             <flux:accordion>
-                <flux:accordion.item expanded transition="true">
+                <flux:accordion.item transition="true">
                     <flux:accordion.heading>
                         <div class="flex gap-2 {{ $errors->hasAny(['pipeline', 'model']) ? 'text-red-500 dark:text-red-400' : '' }}">
                             <flux:icon.cpu-chip class="size-5"/> {{ __('projects.groups.llm') }}
@@ -55,12 +55,6 @@
                     </flux:accordion.content>
                 </flux:accordion.item>
             </flux:accordion>
-
-            <flux:autocomplete wire:model.defer="summarizeOldest" :label="__('projects.fields.summarize_oldest')" :description="__('projects.fields.summarize_oldest_help')">
-                <flux:autocomplete.item>10</flux:autocomplete.item>
-                <flux:autocomplete.item>20</flux:autocomplete.item>
-                <flux:autocomplete.item>30</flux:autocomplete.item>
-            </flux:autocomplete>
 
             <div class="flex justify-end">
                 <flux:button type="submit" variant="primary" icon="chat-bubble-left-right" class="w-full cursor-pointer sm:w-auto">
