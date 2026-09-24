@@ -3,7 +3,7 @@
 namespace App\Livewire\Projects;
 
 use App\Discussion\Pipelines\PipelineRegistry;
-use App\Llm\LlmFactory;
+use App\Discussion\Values\ModelConfig;
 use App\Models\Project;
 use App\Services\ProjectTransfer\ProjectImporter;
 use Illuminate\Validation\Rule;
@@ -31,14 +31,14 @@ class CreateProject extends Component
     public function mount(PipelineRegistry $pipelines): void
     {
         $this->pipeline = $pipelines->default();
-        $this->model = (string) config('llm.default');
+        $this->model = (string) config('ai.default_model');
     }
 
     protected function rules(): array
     {
         return [
             'pipeline' => ['required', Rule::in(array_keys(app(PipelineRegistry::class)->options()))],
-            'model' => ['required', Rule::in(array_keys(app(LlmFactory::class)->options()))],
+            'model' => ['required', Rule::in(array_keys(ModelConfig::options()))],
         ];
     }
 
@@ -85,7 +85,7 @@ class CreateProject extends Component
     {
         return view('livewire.projects.create-project', [
             'pipelines' => app(PipelineRegistry::class)->options(),
-            'models' => app(LlmFactory::class)->options(),
+            'models' => ModelConfig::options(),
         ]);
     }
 }

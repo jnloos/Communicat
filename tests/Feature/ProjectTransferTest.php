@@ -55,6 +55,6 @@ class ProjectTransferTest extends TestCase
         ], $owner)['project'];
 
         $this->assertSame(config('discussion.default_pipeline'), $copy->pipeline);
-        $this->assertSame(config('llm.default'), $copy->model);
+        $this->assertSame(config('ai.default_model'), $copy->model);
     }
 }

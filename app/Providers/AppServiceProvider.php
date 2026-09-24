@@ -2,13 +2,16 @@
 
 namespace App\Providers;
 
+use App\Discussion\Logging\GuardAgainstFailover;
 use App\Discussion\Logging\RecordPromptLog;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Services\Text\MarkdownParser;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Ai\Events\AgentFailed;
+use Laravel\Ai\Events\AgentFailedOver;
 use Laravel\Ai\Events\PromptingAgent;
+use Laravel\Ai\Events\ProviderFailedOver;
 use Laravel\Ai\Events\StepCompleted;
 use Laravel\Ai\Events\StepFailed;
 use Parsedown;
@@ -35,5 +38,9 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(StepCompleted::class, [RecordPromptLog::class, 'whenCompleted']);
         Event::listen(StepFailed::class, [RecordPromptLog::class, 'whenStepFailed']);
         Event::listen(AgentFailed::class, [RecordPromptLog::class, 'whenAgentFailed']);
+
+        // AgentFailedOver extends ProviderFailedOver, but Laravel's dispatcher does not
+        // walk parent classes — both have to be named for either one to be heard.
+        Event::listen([ProviderFailedOver::class, AgentFailedOver::class], [GuardAgainstFailover::class, 'handle']);
     }
 }

@@ -19,10 +19,10 @@ final readonly class ModelConfig
 
     public static function fromConfig(string $key): self
     {
-        $entry = config("llm.models.{$key}");
+        $entry = config("ai.models.{$key}");
 
         if (! is_array($entry)) {
-            throw new InvalidArgumentException("Unknown LLM model key [{$key}]. Check config/llm.php.");
+            throw new InvalidArgumentException("Unknown LLM model key [{$key}]. Check config/ai.php.");
         }
 
         return new self(
@@ -34,6 +34,18 @@ final readonly class ModelConfig
             temperature: isset($entry['temperature']) ? (float) $entry['temperature'] : null,
             reasoningEffort: $entry['reasoning_effort'] ?? null,
         );
+    }
+
+    /**
+     * The registry as the model dropdowns need it.
+     *
+     * @return array<string, string> model key → label
+     */
+    public static function options(): array
+    {
+        return collect(config('ai.models', []))
+            ->map(fn (array $entry, string $key) => $entry['label'] ?? $key)
+            ->all();
     }
 
     public function lab(): Lab

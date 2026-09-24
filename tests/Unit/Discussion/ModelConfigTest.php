@@ -11,7 +11,7 @@ class ModelConfigTest extends TestCase
 {
     public function test_builds_from_config(): void
     {
-        config(['llm.models.demo' => [
+        config(['ai.models.demo' => [
             'label' => 'Demo',
             'provider' => 'openai',
             'model' => 'gpt-x',
@@ -31,6 +31,15 @@ class ModelConfigTest extends TestCase
         $this->assertSame('gpt-x', $config->toArray()['model']);
     }
 
+    public function test_lists_model_options_for_dropdowns(): void
+    {
+        $options = ModelConfig::options();
+
+        $this->assertSame('OpenAI', $options['openai']);
+        $this->assertArrayHasKey('anthropic', $options);
+        $this->assertArrayHasKey('gemini', $options);
+    }
+
     public function test_unknown_key_throws(): void
     {
         $this->expectException(InvalidArgumentException::class);
@@ -40,7 +49,7 @@ class ModelConfigTest extends TestCase
 
     public function test_the_provider_string_maps_onto_the_sdk_lab_enum(): void
     {
-        config()->set('llm.models.probe', [
+        config()->set('ai.models.probe', [
             'label' => 'Probe', 'provider' => 'anthropic', 'model' => 'claude-opus-5',
             'max_output_tokens' => 8000, 'temperature' => null, 'reasoning_effort' => 'low',
         ]);
@@ -50,7 +59,7 @@ class ModelConfigTest extends TestCase
 
     public function test_the_snapshot_keys_are_unchanged(): void
     {
-        config()->set('llm.models.probe', [
+        config()->set('ai.models.probe', [
             'label' => 'Probe', 'provider' => 'openai', 'model' => 'gpt-5',
             'max_output_tokens' => 8000, 'temperature' => null, 'reasoning_effort' => 'low',
         ]);

@@ -66,4 +66,55 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Study Model Registry (not part of the AI SDK's config schema)
+    |--------------------------------------------------------------------------
+    |
+    | The two keys below belong to this application, not to laravel/ai: they
+    | are this study's registry of selectable models and the key new projects
+    | are preselected with. A project uses exactly one of them for every call
+    | it makes (think, selector, speak, summarize), so a run stays homogeneous.
+    | Do not fold "default_model" into the SDK's "default" above — that one
+    | names a provider, this one a key from the registry below.
+    |
+    */
+
+    'default_model' => env('LLM_DEFAULT_MODEL', 'openai'),
+
+    /*
+    | Selectable models. temperature = null means: do not send the parameter.
+    | Current Anthropic models and OpenAI reasoning models reject it.
+    | reasoning_effort = null means: provider default.
+    */
+    'models' => [
+        'openai' => [
+            'label' => 'OpenAI',
+            'provider' => 'openai',
+            'model' => env('OPENAI_MODEL', 'gpt-5'),
+            'max_output_tokens' => 8000,
+            'temperature' => null,
+            'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
+        ],
+        'anthropic' => [
+            'label' => 'Anthropic',
+            'provider' => 'anthropic',
+            'model' => env('ANTHROPIC_MODEL', 'claude-opus-5'),
+            'max_output_tokens' => 8000,
+            'temperature' => null,
+            'reasoning_effort' => env('ANTHROPIC_REASONING_EFFORT', 'low'),
+        ],
+        'gemini' => [
+            'label' => 'Google Gemini',
+            'provider' => 'gemini',
+            'model' => env('GEMINI_MODEL', 'gemini-2.5-pro'),
+            'max_output_tokens' => 8000,
+            'temperature' => null,
+            // Must stay null: Gemini has no effort levels (only a thinkingBudget token
+            // count with no verified mapping to one). StudyAgent throws if this is
+            // ever set to anything else.
+            'reasoning_effort' => null,
+        ],
+    ],
+
 ];

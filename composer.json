@@ -10,7 +10,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "anthropic-ai/sdk": "^0.50.0",
         "erusev/parsedown": "^1.7",
         "guzzlehttp/guzzle": "^7.10",
         "laravel/ai": "1.0.*",
@@ -20,7 +19,6 @@
         "livewire/flux": "^2.1",
         "livewire/flux-pro": "^2.5",
         "livewire/volt": "^1.7.0",
-        "openai-php/client": "^0.18.0",
         "pusher/pusher-php-server": "^7.2"
     },
     "require-dev": {

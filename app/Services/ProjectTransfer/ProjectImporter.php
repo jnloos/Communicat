@@ -119,6 +119,6 @@ class ProjectImporter
 
     private function knownModel(?string $key): string
     {
-        return $key !== null && config("llm.models.{$key}") !== null ? $key : (string) config('llm.default');
+        return $key !== null && config("ai.models.{$key}") !== null ? $key : (string) config('ai.default_model');
     }
 }

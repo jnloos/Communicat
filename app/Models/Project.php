@@ -153,7 +153,7 @@ class Project extends Model
     {
         static::creating(function (Project $project): void {
             $project->pipeline ??= config('discussion.default_pipeline');
-            $project->model ??= config('llm.default');
+            $project->model ??= config('ai.default_model');
             $project->seed ??= random_int(1, 2_000_000_000);
         });
     }

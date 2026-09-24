@@ -172,7 +172,7 @@ class TurnRunnerTest extends TestCase
         $this->assertSame('RoundRobinPipeline', $config['pipeline']);
         $this->assertCount(5, $config['stages']);
         $this->assertSame($this->project->model, $config['model']['key']);
-        $this->assertSame(config("llm.models.{$this->project->model}.model"), $config['model']['model']);
+        $this->assertSame(config("ai.models.{$this->project->model}.model"), $config['model']['model']);
         $this->assertSame(config('discussion.history_keep'), $config['history_keep']);
         $this->assertStringContainsString('Diskussionssimulation', $config['system_prompt']);
     }

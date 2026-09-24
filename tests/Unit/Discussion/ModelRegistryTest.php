@@ -9,7 +9,7 @@ class ModelRegistryTest extends TestCase
 {
     public function test_every_configured_model_names_a_provider_the_sdk_knows(): void
     {
-        $models = config('llm.models');
+        $models = config('ai.models');
 
         $this->assertNotEmpty($models);
 
@@ -25,6 +25,6 @@ class ModelRegistryTest extends TestCase
 
     public function test_the_default_model_exists(): void
     {
-        $this->assertArrayHasKey(config('llm.default'), config('llm.models'));
+        $this->assertArrayHasKey(config('ai.default_model'), config('ai.models'));
     }
 }
