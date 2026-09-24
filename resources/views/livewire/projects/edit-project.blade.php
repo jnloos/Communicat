@@ -71,9 +71,7 @@
             </div>
         </form>
 
-        <flux:separator class="my-4" />
-
-        <div class="flex flex-col gap-2 sm:flex-row sm:justify-between">
+        <div class="flex flex-col gap-2 pt-8 sm:flex-row sm:justify-between">
             <flux:button as="a" href="{{ route('project.export.json', $forProjectId) }}"
                 icon="arrow-down-tray" variant="ghost" class="cursor-pointer">
                 {{ __('projects.edit.export_json') }}
