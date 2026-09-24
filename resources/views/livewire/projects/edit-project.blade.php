@@ -71,7 +71,7 @@
             </div>
         </form>
 
-        <div class="mt-auto flex flex-col gap-2 pt-8 sm:flex-row sm:justify-between">
+        <div class="-mx-5 -mb-5 mt-auto flex flex-col gap-2 border-t border-zinc-200 bg-zinc-50 px-5 py-4 sm:-mx-8 sm:-mb-8 sm:flex-row sm:justify-between sm:px-8 dark:border-zinc-700 dark:bg-zinc-800/50">
             <flux:button as="a" href="{{ route('project.export.json', $forProjectId) }}"
                 icon="arrow-down-tray" variant="ghost" class="cursor-pointer">
                 {{ __('projects.edit.export_json') }}
