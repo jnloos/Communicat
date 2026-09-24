@@ -26,9 +26,8 @@ return [
         'pause_label' => 'Pause',
         'sound_off' => 'Mute message sound',
         'sound_on' => 'Unmute message sound',
-        'debug' => 'Debug view',
-        'stats' => 'Statistics',
-        'coming_soon' => 'coming soon',
+        'debug' => 'Debug view (coming soon)',
+        'stats' => 'Statistics (coming soon)',
         'aria_label' => 'Discussion controls',
         'busy_hint' => 'Another operation is in progress. Try again in a moment.',
         'waiting_hint' => 'Waiting for the current expert message…',
@@ -41,9 +40,9 @@ return [
     ],
 
     'welcome' => [
-        'intro' => 'Welcome to Communicat. This is the discussion titled **:title**.',
-        'purpose' => 'Use this chat to discuss the topic with your AI experts and other users.',
-        'start_hint' => 'Add at least one expert and use **:button** in the composer to start the discussion.',
-        'steer_hint' => 'You can also contribute your own messages to steer the conversation.',
+        'intro' => 'Discussion run on **:title**.',
+        'purpose' => 'The selected experts discuss the topic in turns. Every turn is logged.',
+        'start_hint' => 'Pick the experts, then start the run with **:button**.',
+        'observer_hint' => 'You read along. Posting messages yourself is not possible.',
     ],
 ];

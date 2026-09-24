@@ -26,9 +26,8 @@ return [
         'pause_label' => 'Pause',
         'sound_off' => 'Nachrichtenton ausschalten',
         'sound_on' => 'Nachrichtenton einschalten',
-        'debug' => 'Debug-Ansicht',
-        'stats' => 'Statistik',
-        'coming_soon' => 'kommt später',
+        'debug' => 'Debug-Ansicht (kommt später)',
+        'stats' => 'Statistik (kommt später)',
         'aria_label' => 'Steuerung der Diskussion',
         'busy_hint' => 'Ein anderer Vorgang läuft gerade. Bitte versuchen Sie es gleich noch einmal.',
         'waiting_hint' => 'Warte auf die aktuelle Expertennachricht…',
@@ -41,9 +40,9 @@ return [
     ],
 
     'welcome' => [
-        'intro' => 'Willkommen bei Communicat. Dies ist die Diskussion mit dem Titel **:title**.',
-        'purpose' => 'Nutzen Sie diesen Chat, um das Thema mit Ihren KI-Experten und anderen Nutzern zu diskutieren.',
-        'start_hint' => 'Fügen Sie mindestens einen Experten hinzu und starten Sie die Diskussion im Eingabefeld über **:button**.',
-        'steer_hint' => 'Sie können auch eigene Nachrichten schreiben, um das Gespräch zu lenken.',
+        'intro' => 'Diskussionslauf zum Thema **:title**.',
+        'purpose' => 'Die ausgewählten Experten diskutieren das Thema abwechselnd. Jeder Turn wird protokolliert.',
+        'start_hint' => 'Wählen Sie die Experten aus und starten Sie den Lauf über **:button**.',
+        'observer_hint' => 'Sie lesen mit. Eigene Beiträge sind nicht möglich.',
     ],
 ];

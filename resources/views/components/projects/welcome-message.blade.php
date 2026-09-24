@@ -4,5 +4,5 @@
 
 {{ __('chat.welcome.intro', ['title' => $project->title]) }}
 {{ __('chat.welcome.purpose') }}
-{{ __('chat.welcome.start_hint', ['button' => __('chat.controls.run')]) }}
-{{ __('chat.welcome.steer_hint') }}
+{{ __('chat.welcome.start_hint', ['button' => __('chat.controls.start_label')]) }}
+{{ __('chat.welcome.observer_hint') }}

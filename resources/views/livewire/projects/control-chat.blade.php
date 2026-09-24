@@ -8,8 +8,6 @@
 @php
     $aiRunTooltip = $disableGenerate && $disabledControlsHint ? $disabledControlsHint : __('chat.controls.run');
     $aiPauseTooltip = $disableGenerate && $disabledControlsHint ? $disabledControlsHint : __('chat.controls.pause');
-    $debugTooltip = __('chat.controls.debug').' — '.__('chat.controls.coming_soon');
-    $statsTooltip = __('chat.controls.stats').' — '.__('chat.controls.coming_soon');
 @endphp
 
 <div
@@ -146,24 +144,24 @@
 
                 {{-- Right: the panels still to come, disabled until they are wired up. --}}
                 <div class="flex items-center justify-end gap-2">
-                    <flux:tooltip :content="$debugTooltip" position="top">
+                    <flux:tooltip :content="__('chat.controls.debug')" position="top">
                         <flux:button
                             type="button"
                             size="sm"
                             variant="subtle"
                             icon="bug-ant"
                             disabled
-                            :aria-label="$debugTooltip"
+                            :aria-label="__('chat.controls.debug')"
                         />
                     </flux:tooltip>
-                    <flux:tooltip :content="$statsTooltip" position="top">
+                    <flux:tooltip :content="__('chat.controls.stats')" position="top">
                         <flux:button
                             type="button"
                             size="sm"
                             variant="subtle"
                             icon="chart-bar"
                             disabled
-                            :aria-label="$statsTooltip"
+                            :aria-label="__('chat.controls.stats')"
                         />
                     </flux:tooltip>
                 </div>
