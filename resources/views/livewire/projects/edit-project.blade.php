@@ -9,25 +9,54 @@
             <flux:input wire:model.defer="title" :label="__('common.fields.title')"/>
             <flux:textarea wire:model.defer="description" :label="__('common.fields.description')" rows="10"/>
 
-            <flux:select wire:model.defer="pipeline" :label="__('projects.fields.pipeline')">
-                @foreach ($pipelines as $name => $label)
-                    <option value="{{ $name }}">{{ $label }}</option>
-                @endforeach
-            </flux:select>
+            @if ($runStarted)
+                <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ __('projects.fields.run_started_help') }}</flux:text>
+            @endif
 
-            <flux:select wire:model.defer="model" :label="__('projects.fields.model')"
-                :description="$runStarted ? __('projects.fields.run_started_help') : null">
-                @foreach ($models as $key => $label)
-                    <option value="{{ $key }}">{{ $label }}</option>
-                @endforeach
-            </flux:select>
+            <flux:accordion>
+                <flux:accordion.item expanded transition="true">
+                    <flux:accordion.heading>
+                        <div class="flex gap-2 {{ $errors->hasAny(['pipeline', 'model']) ? 'text-red-500 dark:text-red-400' : '' }}">
+                            <flux:icon.cpu-chip class="size-5"/> {{ __('projects.groups.llm') }}
+                        </div>
+                    </flux:accordion.heading>
+                    <flux:accordion.content class="my-4 space-y-4">
+                        <flux:select wire:model.defer="pipeline" :label="__('projects.fields.pipeline')">
+                            @foreach ($pipelines as $name => $label)
+                                <option value="{{ $name }}">{{ $label }}</option>
+                            @endforeach
+                        </flux:select>
 
-            <flux:autocomplete wire:model.defer="summarizeThreshold" :label="__('projects.fields.summarize_threshold')" :description="__('projects.fields.summarize_threshold_help')">
-                <flux:autocomplete.item>20</flux:autocomplete.item>
-                <flux:autocomplete.item>30</flux:autocomplete.item>
-                <flux:autocomplete.item>40</flux:autocomplete.item>
-                <flux:autocomplete.item>60</flux:autocomplete.item>
-            </flux:autocomplete>
+                        <flux:select wire:model.defer="model" :label="__('projects.fields.model')">
+                            @foreach ($models as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </flux:select>
+                    </flux:accordion.content>
+                </flux:accordion.item>
+
+                <flux:accordion.item transition="true">
+                    <flux:accordion.heading>
+                        <div class="flex gap-2 {{ $errors->hasAny(['summarizeThreshold', 'summarizeOldest']) ? 'text-red-500 dark:text-red-400' : '' }}">
+                            <flux:icon.arrows-pointing-in class="size-5"/> {{ __('projects.groups.reduction') }}
+                        </div>
+                    </flux:accordion.heading>
+                    <flux:accordion.content class="my-4 space-y-4">
+                        <flux:autocomplete wire:model.defer="summarizeThreshold" :label="__('projects.fields.summarize_threshold')">
+                            <flux:autocomplete.item>20</flux:autocomplete.item>
+                            <flux:autocomplete.item>30</flux:autocomplete.item>
+                            <flux:autocomplete.item>40</flux:autocomplete.item>
+                            <flux:autocomplete.item>60</flux:autocomplete.item>
+                        </flux:autocomplete>
+
+                        <flux:autocomplete wire:model.defer="summarizeOldest" :label="__('projects.fields.summarize_oldest')">
+                            <flux:autocomplete.item>10</flux:autocomplete.item>
+                            <flux:autocomplete.item>20</flux:autocomplete.item>
+                            <flux:autocomplete.item>30</flux:autocomplete.item>
+                        </flux:autocomplete>
+                    </flux:accordion.content>
+                </flux:accordion.item>
+            </flux:accordion>
 
             <flux:autocomplete wire:model.defer="summarizeOldest" :label="__('projects.fields.summarize_oldest')" :description="__('projects.fields.summarize_oldest_help')">
                 <flux:autocomplete.item>10</flux:autocomplete.item>

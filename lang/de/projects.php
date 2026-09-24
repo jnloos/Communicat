@@ -9,6 +9,11 @@
 return [
     'page_title' => 'Projekte',
 
+    'groups' => [
+        'llm' => 'LLM',
+        'reduction' => 'Reduktion',
+    ],
+
     'fields' => [
         'title_help' => 'Geben Sie einen kurzen, gut wiedererkennbaren Projekttitel ein.',
         'description_help' => 'Beschreiben Sie das Projekt klar und knapp. Diese Beschreibung wird von KI-Systemen genutzt – sie sollte daher leicht verständlich sein und die Kernidee präzise erfassen.',

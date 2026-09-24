@@ -259,4 +259,62 @@ class ProjectFormsTest extends TestCase
         // the first turn is still free to freeze the run as it actually starts.
         $this->assertNull($project->run_config);
     }
+
+    public function test_a_mid_run_change_to_the_summarization_numbers_is_recorded(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+
+        // Both columns null, so the effective values are the configured defaults.
+        $project = Project::factory()->create([
+            'user_id' => $owner->id,
+            'summarize_threshold' => null,
+            'summarize_oldest' => null,
+            'run_config' => ['pipeline' => 'RoundRobinPipeline'],
+        ]);
+        JobLog::create(['job_class' => 'X', 'project_id' => $project->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => 3]);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->set('summarizeThreshold', '60')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $project->refresh();
+
+        $this->assertSame(60, $project->summarize_threshold);
+        // Unlike the model, these two leave no trail anywhere else: without this
+        // entry a mid-run change to them would be invisible in the data.
+        $this->assertSame([[
+            'after_turn' => 3,
+            'field' => 'summarize_threshold',
+            'from' => (int) config('discussion.summarize_threshold'),
+            'to' => 60,
+        ]], $project->run_config['changes']);
+    }
+
+    public function test_writing_the_configured_value_into_a_null_column_records_nothing(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+
+        $project = Project::factory()->create([
+            'user_id' => $owner->id,
+            'summarize_threshold' => null,
+            'summarize_oldest' => null,
+            'run_config' => ['pipeline' => 'RoundRobinPipeline'],
+        ]);
+        JobLog::create(['job_class' => 'X', 'project_id' => $project->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => 5]);
+
+        // mount() pre-fills both fields with the effective values, so saving
+        // unchanged turns the null columns into explicit ones.
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $project->refresh();
+
+        $this->assertSame((int) config('discussion.summarize_threshold'), $project->summarize_threshold);
+        // The stored column changed, the run's condition did not.
+        $this->assertArrayNotHasKey('changes', $project->run_config);
+    }
 }

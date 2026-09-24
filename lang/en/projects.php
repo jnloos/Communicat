@@ -9,6 +9,11 @@
 return [
     'page_title' => 'Projects',
 
+    'groups' => [
+        'llm' => 'LLM',
+        'reduction' => 'Reduction',
+    ],
+
     'fields' => [
         'title_help' => 'Enter a concise and recognizable project title.',
         'description_help' => 'Describe the project in a clear and concise way. This description will be used by AI systems, so make sure it\'s easy to understand and captures the core idea precisely.',

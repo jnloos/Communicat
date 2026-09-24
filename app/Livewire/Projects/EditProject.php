@@ -91,10 +91,24 @@ class EditProject extends Component
     }
 
     /**
-     * run_config describes the run as of its first turn. Pipeline and model stay
-     * editable, so a change mid-run would make that snapshot claim a condition
-     * that no longer holds: append one entry per change instead, naming the turn
-     * it took effect after. Called before the new values are assigned.
+     * run_config describes the run as of its first turn. Pipeline, model and the two
+     * summarization numbers all stay editable, so a change mid-run would make that
+     * snapshot claim a condition that no longer holds: append one entry per change
+     * instead, naming the turn it took effect after. Called before the new values
+     * are assigned.
+     *
+     * The summarization numbers are the ones that truly depend on this entry. The
+     * model leaves a trail in prompt_logs.config on every single call and the
+     * mechanism in job_logs.selection on every turn, so a switch of either can be
+     * reconstructed from the data alone — these two appear nowhere else.
+     *
+     * The numbers are compared as effective values (the accessors fall back to the
+     * configured default), so filling a null column with the value it already had
+     * is not a change of condition and records nothing.
+     *
+     * after_turn is the highest turn index that exists when the change is saved. A
+     * turn still running may pick the new values up, so read it as "from this turn
+     * onwards", not "strictly after it".
      */
     private function noteRunConfigChanges(Project $project): void
     {
@@ -102,8 +116,14 @@ class EditProject extends Component
             return;
         }
 
-        $wanted = ['pipeline' => $this->pipeline, 'model' => $this->model];
-        $changed = array_filter($wanted, fn (string $new, string $field) => $project->{$field} !== $new, ARRAY_FILTER_USE_BOTH);
+        $fields = [
+            'pipeline' => [$project->pipeline, $this->pipeline],
+            'model' => [$project->model, $this->model],
+            'summarize_threshold' => [$project->summarizeThreshold(), (int) $this->summarizeThreshold],
+            'summarize_oldest' => [$project->summarizeOldest(), (int) $this->summarizeOldest],
+        ];
+
+        $changed = array_filter($fields, fn (array $pair) => $pair[0] !== $pair[1]);
 
         if ($changed === []) {
             return;
@@ -112,12 +132,12 @@ class EditProject extends Component
         $afterTurn = (int) JobLog::where('project_id', $project->id)->max('turn_index');
         $snapshot = $project->run_config;
 
-        foreach ($changed as $field => $new) {
+        foreach ($changed as $field => [$from, $to]) {
             $snapshot['changes'][] = [
                 'after_turn' => $afterTurn,
                 'field' => $field,
-                'from' => $project->{$field},
-                'to' => $new,
+                'from' => $from,
+                'to' => $to,
             ];
         }
 
