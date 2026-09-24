@@ -10,7 +10,7 @@ return [
     'page_title' => 'Projekte',
 
     'groups' => [
-        'model' => 'Modell und Sprecherwahl',
+        'ai_pipeline' => 'AI Pipeline',
         'reduction' => 'Reduktion',
     ],
 

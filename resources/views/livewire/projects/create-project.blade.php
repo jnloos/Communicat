@@ -15,7 +15,7 @@
                 <flux:accordion.item transition="true">
                     <flux:accordion.heading>
                         <div class="flex gap-2 {{ $errors->hasAny(['pipeline', 'provider', 'model']) ? 'text-red-500 dark:text-red-400' : '' }}">
-                            <flux:icon.cpu-chip class="size-5"/> {{ __('projects.groups.model') }}
+                            <flux:icon.cpu-chip class="size-5"/> {{ __('projects.groups.ai_pipeline') }}
                         </div>
                     </flux:accordion.heading>
                     <flux:accordion.content class="my-4 space-y-4">
