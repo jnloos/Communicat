@@ -22,7 +22,7 @@ return [
     'controls' => [
         'run' => 'Expertendiskussion starten',
         'pause' => 'Expertendiskussion pausieren',
-        'start_label' => 'Start',
+        'start_label' => 'Diskutieren',
         'pause_label' => 'Pause',
         'sound_off' => 'Nachrichtenton ausschalten',
         'sound_on' => 'Nachrichtenton einschalten',

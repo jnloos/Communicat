@@ -22,7 +22,7 @@ return [
     'controls' => [
         'run' => 'Run expert discussion',
         'pause' => 'Pause expert discussion',
-        'start_label' => 'Start',
+        'start_label' => 'Discuss',
         'pause_label' => 'Pause',
         'sound_off' => 'Mute message sound',
         'sound_on' => 'Unmute message sound',
