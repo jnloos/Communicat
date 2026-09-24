@@ -5,6 +5,7 @@ namespace App\Discussion\Support;
 use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\Memory\Memory;
 use App\Discussion\TurnPayload;
+use App\Discussion\Values\Completion;
 use App\Discussion\Values\ModelConfig;
 use App\Models\Expert;
 use App\Models\Project;
@@ -16,6 +17,7 @@ class Thinking
     public function __construct(
         private readonly PromptRenderer $prompts,
         private readonly Memory $memory,
+        private readonly ParallelPrompts $parallel,
     ) {}
 
     /**
@@ -24,10 +26,11 @@ class Thinking
      */
     public function ask(TurnPayload $payload, iterable $experts, string $view, array $data = []): array
     {
-        $model = ModelConfig::fromConfig($payload->project->model);
+        $modelKey = $payload->project->model;
+        $jobLogId = $payload->jobLogId;
         $shared = $data + ['project' => $payload->project] + $this->prompts->participants($payload->project);
 
-        $answers = [];
+        $tasks = [];
 
         foreach ($experts as $expert) {
             $prompt = $this->prompts->render($view, $shared + [
@@ -35,12 +38,14 @@ class Thinking
                 'memory' => $this->memory->viewFor($payload->project, $expert),
             ]);
 
-            $answers[$expert->id] = (new ThinkAgent($model, $payload->jobLogId, $expert->id))
-                ->ask($prompt)
-                ->text;
+            $expertId = $expert->id;
+
+            // Only scalars are captured: the agent is built inside the child process.
+            $tasks[$expertId] = fn () => (new ThinkAgent(ModelConfig::fromConfig($modelKey), $jobLogId, $expertId))
+                ->ask($prompt);
         }
 
-        return $answers;
+        return array_map(fn (Completion $completion) => $completion->text, $this->parallel->run($tasks));
     }
 
     /** Short-Term memory is one rolling thought per expert and project. */
