@@ -56,7 +56,7 @@ class StudyAgentTest extends TestCase
 
         $this->assertSame([
             'thinking' => ['type' => 'adaptive', 'display' => 'summarized'],
-            'outputConfig' => ['effort' => 'low'],
+            'output_config' => ['effort' => 'low'],
         ], $options);
     }
 
@@ -77,5 +77,17 @@ class StudyAgentTest extends TestCase
     public function test_a_null_effort_sends_no_reasoning_options_at_all(): void
     {
         $this->assertSame([], (new SpeakAgent($this->model('openai', effort: null)))->providerOptions(Lab::OpenAI));
+    }
+
+    public function test_an_effort_on_a_lab_without_a_mapping_is_rejected_instead_of_silently_dropped(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new SpeakAgent($this->model('groq', effort: 'low')))->providerOptions(Lab::Groq);
+    }
+
+    public function test_a_lab_without_a_mapping_and_no_effort_needs_no_options(): void
+    {
+        $this->assertSame([], (new SpeakAgent($this->model('groq', effort: null)))->providerOptions(Lab::Groq));
     }
 }

@@ -63,11 +63,13 @@ abstract class StudyAgent implements Agent, HasProviderOptions
      * - Anthropic/Concerns/BuildsTextRequests.php:73 merges it onto the body last, so
      *   `thinking.type`/`thinking.display` arrive as written; the gateway sets
      *   `output_config` only for structured output (:44), which we never request.
-     *   CAVEAT: the gateway performs no camelCase→snake_case renaming, so the
-     *   `outputConfig` key — the named argument the anthropic-php SDK used to map to
-     *   the wire name `output_config` (MessageCreateParams.php:173) — now goes onto
-     *   the wire verbatim. Kept verbatim here on purpose; whether it must become
-     *   `output_config` is a spec question, not one for this class.
+     *   The key is spelled `output_config`, not `outputConfig`: the gateway hands
+     *   provider options to the API untouched and maps no camelCase, while the
+     *   Anthropic API is snake_case throughout (`max_tokens`, `stop_sequences`,
+     *   `budget_tokens`). The old adapter reached the same wire name via
+     *   anthropic-ai/sdk (MessageCreateParams.php:173), which mapped its camelCase
+     *   named argument. "Carried over verbatim" means what arrives at the provider,
+     *   not how the old adapter spelled it in PHP.
      * - Gemini/Concerns/BuildsTextRequests.php:105-128 folds it into
      *   `generation_config` with the key spelling preserved (`thinkingConfig` is not
      *   in TOP_LEVEL_INTERACTION_KEYS at :21-25), which is where the old adapter put
@@ -92,14 +94,24 @@ abstract class StudyAgent implements Agent, HasProviderOptions
             return [];
         }
 
+        // A lab without a mapping must not swallow a configured effort: run_config
+        // would claim a reasoning level the provider never received. Same fail-fast
+        // reasoning as the Gemini branch above.
         return match ($lab) {
             Lab::OpenAI => ['reasoning' => ['effort' => $effort, 'summary' => 'auto']],
             Lab::Anthropic => [
                 'thinking' => ['type' => 'adaptive', 'display' => 'summarized'],
-                'outputConfig' => ['effort' => $effort],
+                'output_config' => ['effort' => $effort],
             ],
-            default => [],
+            default => throw new InvalidArgumentException(
+                "No reasoning-effort mapping for lab [{$this->labName($lab, $provider)}]; model key [{$this->model->key}] sets one."
+            ),
         };
+    }
+
+    private function labName(?Lab $lab, Lab|string $provider): string
+    {
+        return $lab?->value ?? (is_string($provider) ? $provider : 'unknown');
     }
 
     /** One call, one Completion. Never returns an AgentResponse: it is not serializable. */
