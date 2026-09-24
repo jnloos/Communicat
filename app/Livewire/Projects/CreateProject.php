@@ -25,6 +25,9 @@ class CreateProject extends Component
 
     public string $model = '';
 
+    /** UI state only: the provider filters the model dropdown and is never stored. */
+    public string $provider = '';
+
     /** Free-typed suggestions, so both are kept as text and cast when saved. */
     public string $summarizeThreshold = '';
 
@@ -37,6 +40,7 @@ class CreateProject extends Component
     {
         $this->pipeline = $pipelines->default();
         $this->model = (string) config('ai.default_model');
+        $this->provider = ModelConfig::fromConfig($this->model)->provider;
         $this->summarizeThreshold = (string) config('discussion.summarize_threshold');
         $this->summarizeOldest = (string) config('discussion.summarize_oldest');
     }
@@ -45,11 +49,20 @@ class CreateProject extends Component
     {
         return [
             'pipeline' => ['required', Rule::in(array_keys(app(PipelineRegistry::class)->options()))],
-            'model' => ['required', Rule::in(array_keys(ModelConfig::options()))],
+            'provider' => ['required', Rule::in(array_keys(ModelConfig::providers()))],
+            // Against the provider's own models, so a forged request cannot pair
+            // a model with a provider it does not belong to.
+            'model' => ['required', Rule::in(array_keys(ModelConfig::optionsFor($this->provider)))],
             'summarizeThreshold' => ['required', 'integer', 'min:2'],
             // Folding every pending message would leave no verbatim history at all.
             'summarizeOldest' => ['required', 'integer', 'min:1', 'lt:summarizeThreshold'],
         ];
+    }
+
+    /** A new provider invalidates the chosen model: move to its first one. */
+    public function updatedProvider(): void
+    {
+        $this->model = (string) array_key_first(ModelConfig::optionsFor($this->provider));
     }
 
     public function save(): void
@@ -97,7 +110,8 @@ class CreateProject extends Component
     {
         return view('livewire.projects.create-project', [
             'pipelines' => app(PipelineRegistry::class)->options(),
-            'models' => ModelConfig::options(),
+            'providers' => ModelConfig::providers(),
+            'models' => ModelConfig::optionsFor($this->provider),
         ]);
     }
 }

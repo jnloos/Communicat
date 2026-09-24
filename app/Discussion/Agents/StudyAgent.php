@@ -7,10 +7,13 @@ use App\Discussion\Support\PromptRenderer;
 use App\Discussion\Values\Completion;
 use App\Discussion\Values\ModelConfig;
 use InvalidArgumentException;
+use Laravel\Ai\Approvals\Decisions;
 use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\AgentInput;
 use Laravel\Ai\Contracts\HasProviderOptions;
 use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Exceptions\AiException;
+use Laravel\Ai\Messages\UserMessage;
 use Laravel\Ai\Promptable;
 use Laravel\Ai\Responses\AgentResponse;
 use Laravel\Ai\Responses\Data\FinishReason;
@@ -26,7 +29,12 @@ use Laravel\Ai\Responses\Data\FinishReason;
  */
 abstract class StudyAgent implements Agent, HasProviderOptions
 {
-    use Promptable;
+    use Promptable {
+        // The trait's own prompt() stays reachable under this name; the override
+        // below is what callers get. A class method beats a trait method, so the
+        // alias is the only way back to the original.
+        prompt as private promptThroughSdk;
+    }
 
     public function __construct(
         public readonly ModelConfig $model,
@@ -119,6 +127,39 @@ abstract class StudyAgent implements Agent, HasProviderOptions
                 "No reasoning-effort mapping for lab [{$lab->value}]; model key [{$this->model->key}] sets one."
             ),
         };
+    }
+
+    /**
+     * Promptable::prompt() is public, and a caller reaching for it directly gets
+     * config('ai.default') — the SDK's default *provider* — instead of this
+     * project's model. That is a run with mixed model families which leaves no
+     * trace: not in job_logs, not in prompt_logs.provider, and not in the failover
+     * guard. ask() is the way in, and this override makes every other route fail
+     * loudly rather than quietly corrupt a cell of the study.
+     *
+     * Signature copied verbatim from the trait; any drift here would be a fatal
+     * incompatibility rather than a guard.
+     */
+    public function prompt(
+        AgentInput|UserMessage|Decisions|string $prompt,
+        array $attachments = [],
+        Lab|array|string|null $provider = null,
+        ?string $model = null,
+        ?int $timeout = null): AgentResponse
+    {
+        if ($provider !== $this->model->lab() || $model !== $this->model->model) {
+            throw new InvalidArgumentException(sprintf(
+                'Prompt %s through ask(): prompt() was called with provider [%s] and model [%s], but model key [%s] expects [%s] and [%s].',
+                static::class,
+                is_object($provider) ? $provider->value : var_export($provider, true),
+                var_export($model, true),
+                $this->model->key,
+                $this->model->lab()->value,
+                $this->model->model,
+            ));
+        }
+
+        return $this->promptThroughSdk($prompt, $attachments, $provider, $model, $timeout);
     }
 
     /** One call, one Completion. Never returns an AgentResponse: it is not serializable. */

@@ -16,7 +16,7 @@ class ProjectFactory extends Factory
             'title' => fake()->sentence(3),
             'description' => fake()->paragraph(),
             'user_id' => User::factory(),
-            'model' => 'openai',
+            'model' => 'openai-gpt-5',
         ];
     }
 }

@@ -19,7 +19,9 @@ final readonly class ModelConfig
 
     public static function fromConfig(string $key): self
     {
-        $entry = config("ai.models.{$key}");
+        // Array index, not dot notation: a model key may contain dots
+        // (gemini-2.5-pro), and config() would read those as nesting.
+        $entry = config('ai.models')[$key] ?? null;
 
         if (! is_array($entry)) {
             throw new InvalidArgumentException("Unknown LLM model key [{$key}]. Check config/ai.php.");
@@ -44,6 +46,34 @@ final readonly class ModelConfig
     public static function options(): array
     {
         return collect(config('ai.models', []))
+            ->map(fn (array $entry, string $key) => $entry['label'] ?? $key)
+            ->all();
+    }
+
+    /**
+     * The providers the registry actually offers, each exactly once, in registry order.
+     * Labels are UI text and live in lang/{de,en}/projects.php.
+     *
+     * @return array<string, string> provider key → provider label
+     */
+    public static function providers(): array
+    {
+        return collect(config('ai.models', []))
+            ->pluck('provider')
+            ->unique()
+            ->mapWithKeys(fn (string $provider) => [$provider => __("projects.providers.{$provider}")])
+            ->all();
+    }
+
+    /**
+     * The models of a single provider, as the dependent model dropdown needs them.
+     *
+     * @return array<string, string> model key → label
+     */
+    public static function optionsFor(string $provider): array
+    {
+        return collect(config('ai.models', []))
+            ->filter(fn (array $entry) => ($entry['provider'] ?? null) === $provider)
             ->map(fn (array $entry, string $key) => $entry['label'] ?? $key)
             ->all();
     }

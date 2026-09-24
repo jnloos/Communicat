@@ -2,12 +2,15 @@
 
 namespace Tests\Unit\Discussion;
 
+use App\Discussion\Agents\JudgeAgent;
+use App\Discussion\Agents\SelectorAgent;
 use App\Discussion\Agents\SpeakAgent;
 use App\Discussion\Agents\SummarizeAgent;
 use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\Purpose;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\Values\ModelConfig;
+use InvalidArgumentException;
 use Laravel\Ai\Approvals\Decisions;
 use Laravel\Ai\Contracts\AgentInput;
 use Laravel\Ai\Enums\Lab;
@@ -78,7 +81,7 @@ class StudyAgentTest extends TestCase
 
     public function test_an_effort_on_gemini_is_rejected_instead_of_silently_dropped(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         (new SpeakAgent($this->model('gemini', effort: 'low')))->providerOptions(Lab::Gemini);
     }
@@ -90,7 +93,7 @@ class StudyAgentTest extends TestCase
 
     public function test_an_effort_on_a_lab_without_a_mapping_is_rejected_instead_of_silently_dropped(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         (new SpeakAgent($this->model('groq', effort: 'low')))->providerOptions(Lab::Groq);
     }
@@ -102,7 +105,7 @@ class StudyAgentTest extends TestCase
 
     public function test_a_provider_the_sdk_cannot_resolve_is_rejected(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         (new SpeakAgent($this->model('gemini', effort: null)))->providerOptions('not-a-lab');
     }
@@ -134,6 +137,38 @@ class StudyAgentTest extends TestCase
         $this->agentReturning(
             $this->response('Teilweise geantwortet.', finishReason: FinishReason::ContentFilter)
         )->ask('Sag was.');
+    }
+
+    public function test_the_selector_and_judge_agents_carry_their_own_purpose(): void
+    {
+        $this->assertSame(Purpose::Select, (new SelectorAgent($this->model('openai')))->purpose());
+        $this->assertSame(Purpose::Judge, (new JudgeAgent($this->model('openai')))->purpose());
+    }
+
+    public function test_the_judge_purpose_is_stored_as_judge(): void
+    {
+        $this->assertSame('judge', Purpose::Judge->value);
+    }
+
+    public function test_prompting_with_a_foreign_provider_is_refused(): void
+    {
+        $agent = new SelectorAgent($this->model('openai'));
+
+        $this->expectException(InvalidArgumentException::class);
+
+        // Promptable::prompt() is public. Called directly with someone else's lab
+        // it would silently use that provider instead of the project's model.
+        $agent->prompt('Wer spricht?', provider: Lab::Anthropic, model: 'claude-opus-5');
+    }
+
+    public function test_prompting_without_a_provider_is_refused(): void
+    {
+        $agent = new SelectorAgent($this->model('openai'));
+
+        $this->expectException(InvalidArgumentException::class);
+
+        // No provider means config('ai.default') — the study's model choice bypassed.
+        $agent->prompt('Wer spricht?');
     }
 
     private function response(

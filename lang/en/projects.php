@@ -10,13 +10,23 @@ return [
     'page_title' => 'Projects',
 
     'groups' => [
-        'llm' => 'LLM',
+        'model' => 'Model and speaker selection',
         'reduction' => 'Reduction',
+    ],
+
+    'providers' => [
+        'openai' => 'OpenAI',
+        'anthropic' => 'Anthropic',
+        'gemini' => 'Google Gemini',
     ],
 
     'fields' => [
         'title_help' => 'Enter a concise and recognizable project title.',
         'description_help' => 'Describe the project in a clear and concise way. This description will be used by AI systems, so make sure it\'s easy to understand and captures the core idea precisely.',
+        'provider' => 'Provider',
+        'provider_help' => 'Narrows the model choice below to this provider; only the model is stored.',
+        'provider' => 'Provider',
+        'provider_help' => 'Determines which models you can choose from.',
         'pipeline' => 'Pipeline',
         'pipeline_help' => 'Determines how the next speaker is chosen.',
         'model' => 'Model',

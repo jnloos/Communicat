@@ -123,7 +123,10 @@ class ProjectImporter
 
     private function knownModel(?string $key): string
     {
-        return $key !== null && config("ai.models.{$key}") !== null ? $key : (string) config('ai.default_model');
+        // Array index, not dot notation: see ModelConfig::fromConfig().
+        return $key !== null && isset(config('ai.models')[$key])
+            ? $key
+            : (string) config('ai.default_model');
     }
 
     /** Keeps only a usable per-project override; anything else falls back to the config. */

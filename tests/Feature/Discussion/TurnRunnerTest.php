@@ -172,7 +172,7 @@ class TurnRunnerTest extends TestCase
         $this->assertSame('RoundRobinPipeline', $config['pipeline']);
         $this->assertCount(5, $config['stages']);
         $this->assertSame($this->project->model, $config['model']['key']);
-        $this->assertSame(config("ai.models.{$this->project->model}.model"), $config['model']['model']);
+        $this->assertSame(config('ai.models')[$this->project->model]['model'], $config['model']['model']);
         $this->assertSame(config('discussion.summarize_threshold'), $config['summarize_threshold']);
         $this->assertSame(config('discussion.summarize_oldest'), $config['summarize_oldest']);
         $this->assertArrayNotHasKey('changes', $config);

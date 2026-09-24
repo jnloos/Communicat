@@ -35,9 +35,41 @@ class ModelConfigTest extends TestCase
     {
         $options = ModelConfig::options();
 
-        $this->assertSame('OpenAI', $options['openai']);
-        $this->assertArrayHasKey('anthropic', $options);
-        $this->assertArrayHasKey('gemini', $options);
+        $this->assertSame('GPT-5', $options['openai-gpt-5']);
+        $this->assertArrayHasKey('anthropic-opus-5', $options);
+        $this->assertArrayHasKey('gemini-2.5-pro', $options);
+    }
+
+    public function test_lists_each_provider_once_in_registry_order(): void
+    {
+        config()->set('ai.models', [
+            'a-one' => ['label' => 'One', 'provider' => 'anthropic', 'model' => 'm1', 'max_output_tokens' => 10],
+            'o-one' => ['label' => 'Two', 'provider' => 'openai', 'model' => 'm2', 'max_output_tokens' => 10],
+            'a-two' => ['label' => 'Three', 'provider' => 'anthropic', 'model' => 'm3', 'max_output_tokens' => 10],
+        ]);
+
+        $this->assertSame(['anthropic', 'openai'], array_keys(ModelConfig::providers()));
+    }
+
+    public function test_provider_labels_come_from_the_translations(): void
+    {
+        $providers = ModelConfig::providers();
+
+        $this->assertSame(__('projects.providers.openai'), $providers['openai']);
+        $this->assertNotSame('projects.providers.openai', $providers['openai']);
+        $this->assertSame(['openai', 'anthropic', 'gemini'], array_keys($providers));
+    }
+
+    public function test_lists_only_the_models_of_one_provider(): void
+    {
+        config()->set('ai.models', [
+            'o-one' => ['label' => 'One', 'provider' => 'openai', 'model' => 'm1', 'max_output_tokens' => 10],
+            'a-one' => ['label' => 'Two', 'provider' => 'anthropic', 'model' => 'm2', 'max_output_tokens' => 10],
+            'o-two' => ['label' => 'Three', 'provider' => 'openai', 'model' => 'm3', 'max_output_tokens' => 10],
+        ]);
+
+        $this->assertSame(['o-one' => 'One', 'o-two' => 'Three'], ModelConfig::optionsFor('openai'));
+        $this->assertSame([], ModelConfig::optionsFor('gemini'));
     }
 
     public function test_unknown_key_throws(): void

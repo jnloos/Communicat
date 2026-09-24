@@ -16,14 +16,20 @@
             <flux:accordion>
                 <flux:accordion.item transition="true">
                     <flux:accordion.heading>
-                        <div class="flex gap-2 {{ $errors->hasAny(['pipeline', 'model']) ? 'text-red-500 dark:text-red-400' : '' }}">
-                            <flux:icon.cpu-chip class="size-5"/> {{ __('projects.groups.llm') }}
+                        <div class="flex gap-2 {{ $errors->hasAny(['pipeline', 'provider', 'model']) ? 'text-red-500 dark:text-red-400' : '' }}">
+                            <flux:icon.cpu-chip class="size-5"/> {{ __('projects.groups.model') }}
                         </div>
                     </flux:accordion.heading>
                     <flux:accordion.content class="my-4 space-y-4">
                         <flux:select wire:model.defer="pipeline" :label="__('projects.fields.pipeline')">
                             @foreach ($pipelines as $name => $label)
                                 <option value="{{ $name }}">{{ $label }}</option>
+                            @endforeach
+                        </flux:select>
+
+                        <flux:select wire:model.live="provider" :label="__('projects.fields.provider')">
+                            @foreach ($providers as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
                             @endforeach
                         </flux:select>
 
@@ -65,7 +71,7 @@
             </div>
         </form>
 
-        <flux:separator />
+        <flux:separator class="my-4" />
 
         <div class="flex flex-col gap-2 sm:flex-row sm:justify-between">
             <flux:button as="a" href="{{ route('project.export.json', $forProjectId) }}"

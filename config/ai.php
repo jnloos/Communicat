@@ -80,34 +80,39 @@ return [
     |
     */
 
-    'default_model' => env('LLM_DEFAULT_MODEL', 'openai'),
+    'default_model' => env('LLM_DEFAULT_MODEL', 'openai-gpt-5'),
 
     /*
-    | Selectable models. temperature = null means: do not send the parameter.
-    | Current Anthropic models and OpenAI reasoning models reject it.
-    | reasoning_effort = null means: provider default.
+    | Selectable models: one entry per model, never per provider. The key names the
+    | model, the label is what the dropdown shows, and "model" is a literal model id —
+    | not an env() placeholder, so a stored key always means the same model and an old
+    | run_config stays readable. Adding a model is one line here; the provider dropdown
+    | groups the entries by their "provider" on its own (see ModelConfig::providers()).
+    |
+    | temperature = null means: do not send the parameter. Current Anthropic models and
+    | OpenAI reasoning models reject it. reasoning_effort = null means: provider default.
     */
     'models' => [
-        'openai' => [
-            'label' => 'OpenAI',
+        'openai-gpt-5' => [
+            'label' => 'GPT-5',
             'provider' => 'openai',
-            'model' => env('OPENAI_MODEL', 'gpt-5'),
+            'model' => 'gpt-5',
             'max_output_tokens' => 8000,
             'temperature' => null,
             'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
         ],
-        'anthropic' => [
-            'label' => 'Anthropic',
+        'anthropic-opus-5' => [
+            'label' => 'Claude Opus 5',
             'provider' => 'anthropic',
-            'model' => env('ANTHROPIC_MODEL', 'claude-opus-5'),
+            'model' => 'claude-opus-5',
             'max_output_tokens' => 8000,
             'temperature' => null,
             'reasoning_effort' => env('ANTHROPIC_REASONING_EFFORT', 'low'),
         ],
-        'gemini' => [
-            'label' => 'Google Gemini',
+        'gemini-2.5-pro' => [
+            'label' => 'Gemini 2.5 Pro',
             'provider' => 'gemini',
-            'model' => env('GEMINI_MODEL', 'gemini-2.5-pro'),
+            'model' => 'gemini-2.5-pro',
             'max_output_tokens' => 8000,
             'temperature' => null,
             // Must stay null: Gemini has no effort levels (only a thinkingBudget token

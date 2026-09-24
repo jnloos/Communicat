@@ -43,7 +43,7 @@ class ProjectSeatsTest extends TestCase
         $project = Project::factory()->create()->fresh();
 
         $this->assertSame('RoundRobinPipeline', $project->pipeline);
-        $this->assertSame('openai', $project->model);
+        $this->assertSame('openai-gpt-5', $project->model);
         $this->assertGreaterThan(0, $project->seed);
         $this->assertNull($project->turn_budget);
     }
