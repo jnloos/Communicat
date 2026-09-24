@@ -95,12 +95,12 @@
                     />
                     <flux:checkbox wire:model="is_admin" :label="__('settings.users.administrator')" />
 
-                    <div class="flex justify-end gap-2 pt-2">
+                    <x-modal-footer padding="dialog">
                         <flux:modal.close>
                             <flux:button variant="filled" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
                         </flux:modal.close>
                         <flux:button type="submit" class="cursor-pointer" variant="primary">{{ __('common.actions.save') }}</flux:button>
-                    </div>
+                    </x-modal-footer>
                 </form>
             </div>
         </flux:modal>

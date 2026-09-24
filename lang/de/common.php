@@ -8,6 +8,7 @@
 
 return [
     'actions' => [
+        'more' => 'Weitere Aktionen',
         'save' => 'Speichern',
         'cancel' => 'Abbrechen',
         'delete' => 'Löschen',

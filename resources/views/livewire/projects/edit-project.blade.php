@@ -1,11 +1,30 @@
 <flux:modal name="edit-project" variant="flyout" class="flex w-full flex-col p-5! sm:p-8! md:w-[32rem]">
     <div class="flex flex-1 flex-col gap-6">
-        <div class="space-y-1 pe-8">
-            <flux:heading size="lg">{{ __('projects.edit.heading') }}</flux:heading>
-            <flux:text size="sm">{{ __('projects.edit.subheading') }}</flux:text>
+        <div class="flex items-start justify-between gap-4 pe-8">
+            <div class="space-y-1">
+                <flux:heading size="lg">{{ __('projects.edit.heading') }}</flux:heading>
+                <flux:text size="sm">{{ __('projects.edit.subheading') }}</flux:text>
+            </div>
+
+            {{-- What this modal does to the project, as opposed to what the form
+                 does: keeps the footer to cancel and save, like every other modal. --}}
+            <flux:dropdown position="bottom" align="end">
+                <flux:button variant="subtle" size="sm" icon="ellipsis-horizontal"
+                    :aria-label="__('common.actions.more')" class="cursor-pointer"/>
+                <flux:menu>
+                    <flux:menu.item icon="arrow-down-tray"
+                        href="{{ route('project.export.json', $forProjectId) }}">
+                        {{ __('projects.edit.export_json') }}
+                    </flux:menu.item>
+                    <flux:menu.separator/>
+                    <flux:menu.item variant="danger" icon="trash" wire:click="needsConfirmation('delete')">
+                        {{ __('projects.edit.delete') }}
+                    </flux:menu.item>
+                </flux:menu>
+            </flux:dropdown>
         </div>
 
-        <form wire:submit.prevent="save" class="space-y-6">
+        <form wire:submit.prevent="save" class="flex flex-1 flex-col gap-6">
             <flux:input wire:model.defer="title" :label="__('common.fields.title')"/>
             <flux:textarea wire:model.defer="description" :label="__('common.fields.description')" rows="10"/>
 
@@ -64,22 +83,14 @@
                 </flux:accordion.item>
             </flux:accordion>
 
-            <div class="flex justify-end">
-                <flux:button type="submit" variant="primary" class="w-full cursor-pointer sm:w-auto">
+            <x-modal-footer>
+                <flux:modal.close>
+                    <flux:button variant="filled" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
+                </flux:modal.close>
+                <flux:button type="submit" variant="primary" class="cursor-pointer">
                     {{ __('projects.edit.submit') }}
                 </flux:button>
-            </div>
+            </x-modal-footer>
         </form>
-
-        <div class="-mx-5 -mb-5 mt-auto flex flex-col gap-2 border-t border-zinc-200 bg-zinc-50 px-5 py-4 sm:-mx-8 sm:-mb-8 sm:flex-row sm:justify-between sm:px-8 dark:border-zinc-700 dark:bg-zinc-800/50">
-            <flux:button as="a" href="{{ route('project.export.json', $forProjectId) }}"
-                icon="arrow-down-tray" variant="ghost" class="cursor-pointer">
-                {{ __('projects.edit.export_json') }}
-            </flux:button>
-            <flux:button type="button" variant="danger" icon="trash" class="cursor-pointer"
-                wire:click="needsConfirmation('delete')">
-                {{ __('projects.edit.delete') }}
-            </flux:button>
-        </div>
     </div>
 </flux:modal>

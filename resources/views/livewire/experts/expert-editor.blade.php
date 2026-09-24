@@ -2,15 +2,30 @@
     '$isUpdate' => false,
 ])
 
-<flux:modal name="edit-expert" variant="flyout" class="w-full p-5! sm:p-8! md:w-[40rem]">
-    <form wire:submit.prevent="save" class="space-y-6">
-        <div class="space-y-1 pe-8">
-            <flux:heading size="lg">
-                {{ $isUpdate ? __('experts.editor.update') : __('experts.editor.create') }}
-            </flux:heading>
-            <flux:text size="sm">
-                {{ __('experts.editor.subheading') }}
-            </flux:text>
+<flux:modal name="edit-expert" variant="flyout" class="flex w-full flex-col p-5! sm:p-8! md:w-[40rem]">
+    <form wire:submit.prevent="save" class="flex flex-1 flex-col gap-6">
+        <div class="flex items-start justify-between gap-4 pe-8">
+            <div class="space-y-1">
+                <flux:heading size="lg">
+                    {{ $isUpdate ? __('experts.editor.update') : __('experts.editor.create') }}
+                </flux:heading>
+                <flux:text size="sm">
+                    {{ __('experts.editor.subheading') }}
+                </flux:text>
+            </div>
+
+            @if ($isUpdate)
+                {{-- What this modal does to the expert, as opposed to what the form does. --}}
+                <flux:dropdown position="bottom" align="end">
+                    <flux:button variant="subtle" size="sm" icon="ellipsis-horizontal"
+                        :aria-label="__('common.actions.more')" class="cursor-pointer"/>
+                    <flux:menu>
+                        <flux:menu.item variant="danger" icon="trash" wire:click="needsConfirmation('delete')">
+                            {{ __('experts.editor.delete') }}
+                        </flux:menu.item>
+                    </flux:menu>
+                </flux:dropdown>
+            @endif
         </div>
 
         <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
@@ -50,19 +65,13 @@
             rows="8"
         />
 
-        <div class="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
-            @if ($isUpdate)
-                <flux:button type="button" variant="danger" icon="trash" class="cursor-pointer"
-                    wire:click="needsConfirmation('delete')">
-                    {{ __('experts.editor.delete') }}
-                </flux:button>
-            @else
-                <div class="hidden sm:block"></div>
-            @endif
-
+        <x-modal-footer>
+            <flux:modal.close>
+                <flux:button variant="filled" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
+            </flux:modal.close>
             <flux:button type="submit" variant="primary" class="cursor-pointer">
                 {{ $isUpdate ? __('experts.editor.update') : __('experts.editor.create') }}
             </flux:button>
-        </div>
+        </x-modal-footer>
     </form>
 </flux:modal>

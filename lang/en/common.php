@@ -8,6 +8,7 @@
 
 return [
     'actions' => [
+        'more' => 'More actions',
         'save' => 'Save',
         'cancel' => 'Cancel',
         'delete' => 'Delete',
