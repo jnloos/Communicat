@@ -517,7 +517,8 @@ class ThinkAndPrioritizeTest extends TestCase
         }
     }
 
-    private function run(): TurnPayload
+    // Not run(): TestCase::run() is final and cannot be overridden.
+    private function prioritize(): TurnPayload
     {
         $payload = new TurnPayload($this->project, 1);
 
@@ -528,7 +529,7 @@ class ThinkAndPrioritizeTest extends TestCase
     {
         FakeAgents::always(ThinkAgent::class, "GEDANKE: Mein Gedanke.\nPRIORITÄT: 4");
 
-        $payload = $this->run();
+        $payload = $this->prioritize();
 
         $this->assertCount(3, $payload->thoughts());
 
@@ -544,7 +545,7 @@ class ThinkAndPrioritizeTest extends TestCase
     {
         FakeAgents::always(ThinkAgent::class, "GEDANKE: Mein Gedanke.\nPRIORITÄT: 2");
 
-        $this->run();
+        $this->prioritize();
 
         $this->assertSame(3, Summary::where('project_id', $this->project->id)->count());
     }
@@ -553,7 +554,7 @@ class ThinkAndPrioritizeTest extends TestCase
     {
         FakeAgents::always(ThinkAgent::class, 'GEDANKE: Mein Gedanke.');
 
-        $payload = $this->run();
+        $payload = $this->prioritize();
 
         $this->assertNull($payload->thoughtOf($this->project->contributingExperts()->first())->priority);
     }
@@ -562,7 +563,7 @@ class ThinkAndPrioritizeTest extends TestCase
     {
         FakeAgents::always(ThinkAgent::class, "GEDANKE: Mein Gedanke.\nPRIORITÄT: 9");
 
-        $payload = $this->run();
+        $payload = $this->prioritize();
 
         $this->assertNull($payload->thoughtOf($this->project->contributingExperts()->first())->priority);
     }
@@ -573,7 +574,7 @@ class ThinkAndPrioritizeTest extends TestCase
 
         $this->expectException(ParseFailure::class);
 
-        $this->run();
+        $this->prioritize();
     }
 }
 ```
@@ -1257,7 +1258,8 @@ class ThinkAndProposeTest extends TestCase
         }
     }
 
-    private function run(): TurnPayload
+    // Not run(): TestCase::run() is final and cannot be overridden.
+    private function propose(): TurnPayload
     {
         $payload = new TurnPayload($this->project, 1);
 
@@ -1268,7 +1270,7 @@ class ThinkAndProposeTest extends TestCase
     {
         FakeAgents::always(ThinkAgent::class, "GEDANKE: Mein Gedanke.\nENTWURF: Mein Entwurf lautet so.");
 
-        $payload = $this->run();
+        $payload = $this->propose();
 
         $this->assertCount(3, $payload->thoughts());
 
@@ -1283,7 +1285,7 @@ class ThinkAndProposeTest extends TestCase
     {
         FakeAgents::always(ThinkAgent::class, "GEDANKE: Mein Gedanke.\nENTWURF: Entwurf.");
 
-        $this->run();
+        $this->propose();
 
         $this->assertSame(3, Summary::where('project_id', $this->project->id)->count());
     }
@@ -1292,7 +1294,7 @@ class ThinkAndProposeTest extends TestCase
     {
         FakeAgents::always(ThinkAgent::class, 'GEDANKE: Mein Gedanke.');
 
-        $payload = $this->run();
+        $payload = $this->propose();
 
         $this->assertNull($payload->thoughtOf($this->project->contributingExperts()->first())->proposal);
     }
@@ -1303,7 +1305,7 @@ class ThinkAndProposeTest extends TestCase
 
         $this->expectException(ParseFailure::class);
 
-        $this->run();
+        $this->propose();
     }
 }
 ```
