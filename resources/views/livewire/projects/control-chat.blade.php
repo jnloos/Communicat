@@ -69,96 +69,104 @@
     <div class="pointer-events-none absolute inset-x-0 -top-6 h-6 bg-linear-to-t from-white to-transparent dark:from-zinc-800"></div>
     <div>
         <div class="mx-auto w-full max-w-3xl px-3 pb-3 sm:px-6 sm:pb-5">
-            {{-- Same shell the composer used (p-2, rounded-2xl, shadow-xl): the bar
-                 reads as the composer minus its text field, not as a leftover. --}}
+            {{-- Three zones with equal outer columns. Only a grid puts the primary
+                 action in the optical centre: with justify-between it would sit left
+                 of centre, because the right zone holds two buttons and the left one.
+                 The shell (rounded-2xl, shadow-xl) is the composer's, so the bar reads
+                 as its successor rather than as a leftover. --}}
             <div
-                class="flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-2 shadow-xl dark:bg-zinc-900 [&_[data-flux-button]]:rounded-lg"
+                class="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-2xl bg-white px-4 py-2 shadow-xl dark:bg-zinc-900 [&_[data-flux-button]]:rounded-lg"
                 role="toolbar"
                 aria-label="{{ __('chat.controls.aria_label') }}"
             >
-                {{-- Secondary controls: view settings and the panels still to come. --}}
-                <flux:tooltip :content="__('chat.controls.sound_off')" position="top">
-                    <flux:button
-                        type="button"
-                        size="sm"
-                        variant="subtle"
-                        icon="bell"
-                        x-show="popEnabled"
-                        x-on:click="togglePop()"
-                        :aria-label="__('chat.controls.sound_off')"
-                        class="cursor-pointer"
-                    />
-                </flux:tooltip>
-                <flux:tooltip :content="__('chat.controls.sound_on')" position="top">
-                    <flux:button
-                        type="button"
-                        size="sm"
-                        variant="subtle"
-                        icon="bell-slash"
-                        x-show="!popEnabled"
-                        x-cloak
-                        x-on:click="togglePop()"
-                        :aria-label="__('chat.controls.sound_on')"
-                        class="cursor-pointer"
-                    />
-                </flux:tooltip>
-
-                <div class="h-6 w-px shrink-0 bg-zinc-200 dark:bg-zinc-600" aria-hidden="true"></div>
-
-                {{-- Placeholders: wired up in a later step, disabled until then. --}}
-                <flux:tooltip :content="$debugTooltip" position="top">
-                    <flux:button
-                        type="button"
-                        size="sm"
-                        variant="subtle"
-                        icon="bug-ant"
-                        disabled
-                        :aria-label="$debugTooltip"
-                    />
-                </flux:tooltip>
-
-                <flux:tooltip :content="$statsTooltip" position="top">
-                    <flux:button
-                        type="button"
-                        size="sm"
-                        variant="subtle"
-                        icon="chart-bar"
-                        disabled
-                        :aria-label="$statsTooltip"
-                    />
-                </flux:tooltip>
-
-                @if($showGenerate)
-                    <flux:tooltip :content="$aiRunTooltip" position="top">
+                {{-- Left: view settings. --}}
+                <div class="flex items-center justify-start">
+                    <flux:tooltip :content="__('chat.controls.sound_off')" position="top">
                         <flux:button
                             type="button"
                             size="sm"
-                            variant="primary"
-                            icon="sparkles"
-                            wire:click.debounce="startGenerate"
-                            :disabled="$disableGenerate"
-                            :aria-label="$aiRunTooltip"
-                            class="cursor-pointer sm:min-w-36"
-                        >
-                            <span class="hidden sm:inline">{{ __('chat.controls.start_label') }}</span>
-                        </flux:button>
+                            variant="subtle"
+                            icon="bell"
+                            x-show="popEnabled"
+                            x-on:click="togglePop()"
+                            :aria-label="__('chat.controls.sound_off')"
+                            class="cursor-pointer"
+                        />
                     </flux:tooltip>
-                @else
-                    <flux:tooltip :content="$aiPauseTooltip" position="top">
+                    <flux:tooltip :content="__('chat.controls.sound_on')" position="top">
                         <flux:button
                             type="button"
                             size="sm"
-                            variant="primary"
-                            icon="pause"
-                            wire:click="stopGenerate"
-                            :disabled="$disableStop"
-                            :aria-label="$aiPauseTooltip"
-                            class="cursor-pointer sm:min-w-36"
-                        >
-                            <span class="hidden sm:inline">{{ __('chat.controls.pause_label') }}</span>
-                        </flux:button>
+                            variant="subtle"
+                            icon="bell-slash"
+                            x-show="!popEnabled"
+                            x-cloak
+                            x-on:click="togglePop()"
+                            :aria-label="__('chat.controls.sound_on')"
+                            class="cursor-pointer"
+                        />
                     </flux:tooltip>
-                @endif
+                </div>
+
+                {{-- Centre: the one action on this screen. Both states share a minimum
+                     width so the bar does not jump when the label switches. --}}
+                <div class="flex items-center justify-center">
+                    @if($showGenerate)
+                        <flux:tooltip :content="$aiRunTooltip" position="top">
+                            <flux:button
+                                type="button"
+                                size="sm"
+                                variant="primary"
+                                icon="sparkles"
+                                wire:click.debounce="startGenerate"
+                                :disabled="$disableGenerate"
+                                :aria-label="$aiRunTooltip"
+                                class="cursor-pointer sm:min-w-36"
+                            >
+                                <span class="hidden sm:inline">{{ __('chat.controls.start_label') }}</span>
+                            </flux:button>
+                        </flux:tooltip>
+                    @else
+                        <flux:tooltip :content="$aiPauseTooltip" position="top">
+                            <flux:button
+                                type="button"
+                                size="sm"
+                                variant="primary"
+                                icon="pause"
+                                wire:click="stopGenerate"
+                                :disabled="$disableStop"
+                                :aria-label="$aiPauseTooltip"
+                                class="cursor-pointer sm:min-w-36"
+                            >
+                                <span class="hidden sm:inline">{{ __('chat.controls.pause_label') }}</span>
+                            </flux:button>
+                        </flux:tooltip>
+                    @endif
+                </div>
+
+                {{-- Right: the panels still to come, disabled until they are wired up. --}}
+                <div class="flex items-center justify-end gap-2">
+                    <flux:tooltip :content="$debugTooltip" position="top">
+                        <flux:button
+                            type="button"
+                            size="sm"
+                            variant="subtle"
+                            icon="bug-ant"
+                            disabled
+                            :aria-label="$debugTooltip"
+                        />
+                    </flux:tooltip>
+                    <flux:tooltip :content="$statsTooltip" position="top">
+                        <flux:button
+                            type="button"
+                            size="sm"
+                            variant="subtle"
+                            icon="chart-bar"
+                            disabled
+                            :aria-label="$statsTooltip"
+                        />
+                    </flux:tooltip>
+                </div>
             </div>
         </div>
     </div>
