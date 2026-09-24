@@ -41,7 +41,7 @@ class Thinking
             $expertId = $expert->id;
 
             // Only scalars are captured: the agent is built inside the child process.
-            $tasks[$expertId] = fn () => (new ThinkAgent(ModelConfig::fromConfig($modelKey), $jobLogId, $expertId))
+            $tasks[$expertId] = static fn () => (new ThinkAgent(ModelConfig::fromConfig($modelKey), $jobLogId, $expertId))
                 ->ask($prompt);
         }
 

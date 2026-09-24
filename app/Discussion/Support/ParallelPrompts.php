@@ -9,8 +9,11 @@ use Illuminate\Support\Facades\Concurrency;
 /**
  * Runs several prompts at once. The SDK has no batch API — prompt() is
  * synchronous — so this stays our own code, built the way the provider adapters
- * did it before: nothing but value objects crosses the process boundary, and
- * each task builds its own agent inside the child process.
+ * did it before: each task builds its own agent inside the child process. The
+ * payload that actually crosses the process boundary is the caller's task
+ * closure itself (`ProcessDriver::run()` serialises it), so a task must stay a
+ * `static` closure capturing only scalars — never `$this`-bound — or the whole
+ * bound object gets dragged along and can fail to serialise.
  *
  * Tests must run the sync concurrency driver (see phpunit.xml): a child process
  * sees neither the in-memory SQLite nor the faked agents.
