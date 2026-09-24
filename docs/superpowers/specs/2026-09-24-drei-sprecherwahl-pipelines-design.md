@@ -153,10 +153,11 @@ Kein `HasStructuredOutput`, obwohl es sich für Gebote und Punkte anbietet: stru
 setzt jeder Anbieter anders um und kann die Antwort selbst verändern — bei drei Modellfamilien wäre
 das eine Störvariable. Die Marker-Konvention ist im Projekt etabliert und über alle Anbieter gleich.
 
-Die Selektor-Prompts sehen `Memory::sharedFor(Project): MemoryView` — dieselbe History und dasselbe
-Long-Term wie die Agenten, aber mit leerem Short-Term. Eine kleine Ergänzung an `Memory`, die
-sicherstellt, dass ein Selector die privaten Gedanken nicht sehen kann, statt sich darauf zu
-verlassen, dass der View sie nicht ausgibt.
+Die Selektor-Prompts rufen `Memory::viewFor($project)` **ohne** Expert. Das ist keine Ergänzung:
+`viewFor()` nimmt den Expert schon heute optional und liefert dann ein leeres Short-Term — der
+Docblock nennt genau diesen Fall ("Without an expert (selectors, summarizer) there is no private
+Short-Term layer"). Ein Selector kann die privaten Gedanken damit nicht sehen, unabhängig davon, was
+der View ausgibt. `Memory` ändert sich für diese Arbeit also nicht.
 
 ### 4.8 Fallback plus Protokoll
 
