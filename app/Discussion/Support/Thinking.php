@@ -14,6 +14,9 @@ use App\Models\Summary;
 /** What every Think stage shares: render per expert, ask in parallel, keep the thought. */
 class Thinking
 {
+    /** Every Think variant asks for the rolling thought under this marker. */
+    public const MARKER_THOUGHT = 'GEDANKE:';
+
     public function __construct(
         private readonly PromptRenderer $prompts,
         private readonly Memory $memory,

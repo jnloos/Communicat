@@ -12,8 +12,6 @@ use Closure;
 /** Only the already selected speaker thinks. Needs SelectSpeaker before it. */
 class ThinkAsSpeaker
 {
-    public const MARKER_THOUGHT = 'GEDANKE:';
-
     public function __construct(private readonly Thinking $thinking) {}
 
     public function handle(TurnPayload $payload, Closure $next)
@@ -23,14 +21,14 @@ class ThinkAsSpeaker
         PipelineStageChanged::announce($payload->project->id, 'thinking', [$speaker]);
 
         $answers = $this->thinking->ask($payload, [$speaker], 'prompts.think.speaker', [
-            'marker_thought' => self::MARKER_THOUGHT,
+            'marker_thought' => Thinking::MARKER_THOUGHT,
         ]);
 
-        $thought = Thinking::section($answers[$speaker->id], self::MARKER_THOUGHT);
+        $thought = Thinking::section($answers[$speaker->id], Thinking::MARKER_THOUGHT);
 
         if ($thought === '') {
             throw new ParseFailure(
-                "ThinkAsSpeaker: marker '".self::MARKER_THOUGHT."' missing in the answer of expert {$speaker->id}."
+                "ThinkAsSpeaker: marker '".Thinking::MARKER_THOUGHT."' missing in the answer of expert {$speaker->id}."
             );
         }
 

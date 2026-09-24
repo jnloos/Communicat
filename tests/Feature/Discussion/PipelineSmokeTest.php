@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Discussion;
 
+use App\Discussion\Agents\JudgeAgent;
+use App\Discussion\Agents\SelectorAgent;
 use App\Discussion\Agents\SpeakAgent;
 use App\Discussion\Agents\SummarizeAgent;
 use App\Discussion\Agents\ThinkAgent;
@@ -21,8 +23,8 @@ use Tests\TestCase;
 
 /**
  * Every pipeline the registry finds must survive two turns. A new pipeline is
- * covered the moment its class exists; if it calls an agent these fakes do not
- * cover, or needs a different answer from one of them, extend fakeAnswers().
+ * covered the moment its class exists, as long as it prompts one of the five
+ * agents fakeAnswers() covers; a new agent or a different answer goes in there.
  */
 class PipelineSmokeTest extends TestCase
 {
@@ -45,9 +47,26 @@ class PipelineSmokeTest extends TestCase
 
     private function fakeAnswers(): void
     {
-        FakeAgents::always(ThinkAgent::class, 'GEDANKE: Ich will etwas beitragen.');
-        FakeAgents::always(SpeakAgent::class, "Ein kurzer Beitrag.\n---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion");
+        // One answer per agent class, carrying every marker any stage parses: each
+        // think variant reads its own section out of it, so this covers the speaker,
+        // the bidding and the proposing stage alike.
+        FakeAgents::always(ThinkAgent::class, implode('
+', [
+            'GEDANKE: Ich will etwas beitragen.',
+            'PRIORITÄT: 3',
+            'ENTWURF: Ein kurzer Entwurf.',
+        ]));
+        FakeAgents::always(SpeakAgent::class, 'Ein kurzer Beitrag.
+---STEUERUNG---
+ADRESSAT: none
+PAARTYP: Beitrag→Diskussion');
         FakeAgents::always(SummarizeAgent::class, 'Zusammenfassung.');
+        // A token that need not exist: the selector then falls back to the tie
+        // breaker and records it, which is a pass for a smoke test either way.
+        FakeAgents::always(SelectorAgent::class, 'SPRECHER: E1
+BEGRÜNDUNG: Weil E1 noch nicht dran war.');
+        FakeAgents::always(JudgeAgent::class, 'BEWERTUNG: E1 7
+BEGRÜNDUNG: Der Entwurf ist konkret.');
     }
 
     #[DataProvider('pipelineNames')]

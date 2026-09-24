@@ -76,7 +76,7 @@ class ThinkAsSpeakerTest extends TestCase
         ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'Du bist Alice'));
         ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'KI an Schulen'));
         ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'Mein alter Gedanke.'));
-        ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, ThinkAsSpeaker::MARKER_THOUGHT));
+        ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, Thinking::MARKER_THOUGHT));
     }
 
     public function test_a_second_think_overwrites_the_thought(): void
@@ -99,7 +99,7 @@ class ThinkAsSpeakerTest extends TestCase
             app(ThinkAsSpeaker::class)->handle($this->payload(), fn (TurnPayload $p) => $p);
             $this->fail('expected a ParseFailure');
         } catch (ParseFailure $e) {
-            $this->assertStringContainsString(ThinkAsSpeaker::MARKER_THOUGHT, $e->getMessage());
+            $this->assertStringContainsString(Thinking::MARKER_THOUGHT, $e->getMessage());
         }
 
         $this->assertSame('bleibt', Summary::sole()->content);
