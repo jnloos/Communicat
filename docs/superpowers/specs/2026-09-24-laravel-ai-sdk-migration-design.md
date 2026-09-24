@@ -23,7 +23,7 @@ Was er nicht bringt: parallele Aufrufe. Die bleiben eigener Code (Abschnitt 4.5)
 | Umfang | `App\Llm` entfällt vollständig; kein eigenes Client-Interface bleibt als Port stehen |
 | Aufrufform | eine Agent-Klasse je Zweck unter `App\Discussion\Agents`, mit `Promptable` |
 | Prompts | die Blade-Views bleiben unangetastet; `instructions()` rendert `prompts.system`, der gerenderte View geht als Text in `prompt()` |
-| Modellwahl | `config/llm.php` bleibt als Studien-Registry, `config/ai.php` hält nur die Zugangsdaten |
+| Modellwahl | `config/llm.php` bleibt als Studien-Registry, `config/ai.php` hält nur die Zugangsdaten — **überholt, siehe 4.2**: der Nutzer hat entschieden, `config/llm.php` ganz aufzulösen; die Registry lebt jetzt in `config/ai.php` |
 | `ModelConfig` | bleibt unverändert — sie bestimmt das Format von `run_config` und `prompt_logs.config` |
 | Messung | ein Event-Listener auf `StepCompleted`/`StepFailed` ersetzt `LoggingLlmClient` |
 | Antwort-Träger | neues `Completion` ersetzt `LlmResponse`; schmal, weil es Prozessgrenzen überlebt |
@@ -93,6 +93,13 @@ Fällen `Think`, `Select`, `Speak`, `Summarize`. Die Werte bleiben zeichengleich
 bleiben müssen.
 
 ### 4.2 Modellwahl
+
+> **Korrektur (nach Umsetzung):** Der Nutzer hat entschieden, `config/llm.php` nicht zu behalten,
+> sondern ganz aufzulösen — nicht nur `providers` und `keys` zu streichen, wie der Rest dieses
+> Abschnitts noch beschreibt. Die Studien-Registry (`models`, `default_model`, vormals `default`)
+> lebt jetzt als eigener Block in `config/ai.php`, neben den SDK-eigenen Schlüsseln `default`
+> (Standard-*Provider*) und `providers` (Zugangsdaten). `config/llm.php` existiert nicht mehr. Der
+> Rest dieses Abschnitts beschreibt den ursprünglichen Plan und ist in dem Punkt überholt.
 
 `config/llm.php` bleibt, verliert aber den `providers`- und den `keys`-Block: Adapter-Klassen und
 Zugangsdaten sind Sache des SDK und stehen künftig in `config/ai.php`. Was bleibt, ist die
@@ -278,7 +285,9 @@ grün, abzüglich der gelöschten LLM-Adapter-Tests und zuzüglich der neuen.
   `^8.3`. Der Gemini-Zugriff lief über Guzzle; `guzzlehttp/guzzle` bleibt, weil Laravel es ohnehin
   zieht.
 - `config/ai.php` wird publiziert und auf die drei genutzten Anbieter reduziert.
-- `config/llm.php` verliert `providers` und `keys`.
+- `config/llm.php` verliert `providers` und `keys`. **Korrektur (nach Umsetzung):** der Nutzer hat
+  stattdessen entschieden, die Datei ganz aufzulösen; `models` und `default_model` (vormals
+  `default`) ziehen komplett nach `config/ai.php`, siehe 4.2.
 - `CLAUDE.md`: der Abschnitt „LLM layer" wird neu geschrieben, die Verbote aus Abschnitt 5 kommen
   dazu. Die sieben ohnehin offenen Verbesserungen an dieser Datei werden im selben Zug eingetragen.
 - `docs/pipeline.puml` nachziehen.
@@ -295,7 +304,9 @@ grün, abzüglich der gelöschten LLM-Adapter-Tests und zuzüglich der neuen.
    eine Zeile in `TurnRunner` anpassen. Stage-Tests wandern mit.
 5. `ParallelPrompts`, `CONCURRENCY_DRIVER=sync` in `phpunit.xml`.
 6. `app/Llm` und die beiden alten Anbieter-SDKs löschen, Fakes und `tests/Unit/Llm` entfernen, und
-   erst jetzt `providers` und `keys` aus `config/llm.php` streichen.
+   erst jetzt `providers` und `keys` aus `config/llm.php` streichen. **Korrektur (nach Umsetzung):**
+   tatsächlich wurde `config/llm.php` in diesem Schritt vollständig gelöscht, siehe 4.2 und
+   Abschnitt 8.
 7. Failover-Wächter, Doku, `vendor/bin/pint`, volle Suite.
 
 Nach jedem Schritt läuft die Suite. Schritt 4 ist der einzige, der die Pipeline berührt, und er ist
@@ -328,4 +339,5 @@ Streaming für die Turn-Aufrufe; der `TurnRunner` bleibt synchron.
   bei einem Anbieterfehler.
 - `projects.run_config` hat nach einem ersten Turn dasselbe Format wie vor dem Umstieg.
 - Die Suite ist grün, `vendor/bin/pint` meldet nichts.
-- Ein zweiter Anbieter ist eine Zeile in `config/llm.php`, keine neue Klasse.
+- Ein zweiter Anbieter ist eine Zeile in `config/llm.php`, keine neue Klasse. **Korrektur (nach
+  Umsetzung):** diese Zeile steht jetzt in `config/ai.php` unter `models`, siehe 4.2.

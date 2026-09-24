@@ -11,9 +11,8 @@ use Laravel\Ai\Events\StepFailed;
 use Throwable;
 
 /**
- * Records every model call, successful or not, in prompt_logs — the replacement
- * for LoggingLlmClient. Failures are never filtered: the study reports failure
- * rates per model.
+ * Records every model call, successful or not, in prompt_logs. Failures are
+ * never filtered: the study reports failure rates per model.
  *
  * Our agents carry no tools, so one prompt is exactly one step and exactly one
  * row. The prompt text only exists on the PromptingAgent event, so it is held

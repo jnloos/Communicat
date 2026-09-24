@@ -57,8 +57,14 @@ Geändert: `app/Discussion/Support/Thinking.php`, `app/Discussion/Stages/Speak.p
 `app/Discussion/TurnRunner.php` (eine Zeile), `app/Providers/AppServiceProvider.php`,
 `config/llm.php`, `composer.json`, `phpunit.xml`, `CLAUDE.md`, `docs/pipeline.puml`.
 
+> **Korrektur (nach Umsetzung):** `config/llm.php` wurde in Task 9 nicht nur geändert, sondern ganz
+> gelöscht — der Nutzer hat entschieden, die Datei aufzulösen statt sie auf die Studien-Registry zu
+> verschlanken. `models` und `default_model` (vormals `default`) leben jetzt in `config/ai.php`,
+> siehe Task 9 Step 3.
+
 Gelöscht in Task 9: `app/Llm/` vollständig, `tests/Fakes/FakeLlmClient.php`,
-`tests/Fakes/FakeLlmFactory.php`, `tests/Unit/Llm/`.
+`tests/Fakes/FakeLlmFactory.php`, `tests/Unit/Llm/`, sowie — abweichend von der ursprünglichen
+Planung oben — `config/llm.php` vollständig.
 
 ---
 
@@ -1306,6 +1312,7 @@ git commit -m "Prompt several agents at once through Laravel's Concurrency"
 - Delete: `tests/Fakes/FakeLlmClient.php`, `tests/Fakes/FakeLlmFactory.php`, `tests/Unit/Llm/`
 - Create: `app/Discussion/Logging/GuardAgainstFailover.php`
 - Modify: `config/llm.php`, `composer.json`, `app/Providers/AppServiceProvider.php`
+  (**Korrektur nach Umsetzung:** `config/llm.php` wurde gelöscht, nicht geändert — siehe Step 3)
 - Test: `tests/Unit/Discussion/GuardAgainstFailoverTest.php`
 
 **Interfaces:**
@@ -1333,6 +1340,13 @@ git rm -r app/Llm tests/Unit/Llm tests/Fakes/FakeLlmClient.php tests/Fakes/FakeL
 `temperature: null` und dem fehlenden Effort-Mapping bei Gemini. Der Kopfkommentar wird
 umgeschrieben: die Datei ist die Studien-Registry der wählbaren Modelle, nicht mehr die
 Anbieter-Konfiguration.
+
+> **Korrektur (nach Umsetzung):** So wurde es nicht gebaut. Der Nutzer hat entschieden,
+> `config/llm.php` nicht zu verschlanken, sondern ganz aufzulösen: `models` und `default_model`
+> (vormals `default`) sind als eigener, kommentierter Block in `config/ai.php` gelandet, direkt
+> neben den SDK-eigenen Schlüsseln `default` (Standard-*Provider*, nicht zu verwechseln mit unserem
+> `default_model`) und `providers` (Zugangsdaten). `config/llm.php` existiert nach Task 9 nicht
+> mehr. `ModelConfig::fromConfig()` liest entsprechend aus `config('ai.models.*')`.
 
 - [ ] **Step 4: Alte Anbieter-SDKs aus composer.json entfernen**
 

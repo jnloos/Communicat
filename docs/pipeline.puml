@@ -48,7 +48,7 @@ partition "RoundRobinPipeline::stages()" {
     Event: PipelineStageChanged("routing")
   end note
 
-  :**2. ThinkAsSpeaker** (LLM: purpose=think)
+  :**2. ThinkAsSpeaker** (**ThinkAgent**, purpose=think)
   In: Persona + Memory (History/Short-/Long-Term)
   des gewählten Sprechers
   Out: Marker "GEDANKE:" extrahiert;<<#E8F0FE>>
@@ -58,13 +58,13 @@ partition "RoundRobinPipeline::stages()" {
     Event: PipelineStageChanged("thinking")
   end note
 
-  :**3. Speak** (LLM: purpose=speak)
+  :**3. Speak** (**SpeakAgent**, purpose=speak)
   In: Persona + Memory + eigener Gedanke (proposal)
   Out: sichtbarer Text + Trennmarker Speak::MARKER_CONTROL
   + Trailer (ADRESSAT, PAARTYP);<<#E8F0FE>>
   note right #FFF4E5
     schreibt: **contribution** (Text, Partner-Token,
-    Paartyp, LlmResponse)
+    Paartyp, Completion)
     Event: PipelineStageChanged("speaking")
   end note
 
@@ -77,7 +77,7 @@ partition "RoundRobinPipeline::stages()" {
   end note
 
   if (unsummierte Nachrichten > history_keep + summarize_batch?) then (ja)
-    :**5. Summarize** (LLM: purpose=summarize)
+    :**5. Summarize** (**SummarizeAgent**, purpose=summarize)
     verdichtet alles außer den jüngsten
     history_keep Nachrichten;<<#E8F0FE>>
     note right #FFF4E5
@@ -96,8 +96,10 @@ partition "TurnRunner (Abschluss)" {
   (status=success|failed, Messung, error);
   note right #FFFFFF
     Jeder LLM-Call (think/speak/summarize) wird
-    unabhängig davon von **LoggingLlmClient** nach
-    **prompt_logs** geloggt — auch bei Fehlern.
+    unabhängig davon von **RecordPromptLog** (Listener auf
+    den SDK-Step-Events PromptingAgent/StepCompleted/
+    StepFailed/AgentFailed) nach **prompt_logs** geloggt —
+    auch bei Fehlern.
   end note
 }
 
