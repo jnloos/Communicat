@@ -19,15 +19,17 @@ return [
         'open_thoughts' => 'Open thoughts',
     ],
 
-    'composer' => [
-        'placeholder' => 'Write a message…',
-        'send' => 'Send your message',
+    'controls' => [
         'run' => 'Run expert discussion',
         'pause' => 'Pause expert discussion',
         'start_label' => 'Start',
         'pause_label' => 'Pause',
         'sound_off' => 'Mute message sound',
         'sound_on' => 'Unmute message sound',
+        'debug' => 'Debug view',
+        'stats' => 'Statistics',
+        'coming_soon' => 'coming soon',
+        'aria_label' => 'Discussion controls',
         'busy_hint' => 'Another operation is in progress. Try again in a moment.',
         'waiting_hint' => 'Waiting for the current expert message…',
     ],

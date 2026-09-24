@@ -5,12 +5,10 @@ namespace App\Livewire\Projects;
 use App\Discussion\GenerationLoop;
 use App\Events\GenerationStarted;
 use App\Events\GenerationStopped;
-use App\Events\MessageSent;
 use App\Jobs\MessageGenerator;
 use App\Models\Project;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Validate;
 use Livewire\Component;
 
 class ControlChat extends Component
@@ -18,24 +16,13 @@ class ControlChat extends Component
     #[Locked]
     public int $projectId;
 
-    protected Project $project;
-
     public bool $keepGenerating = false;
 
     public bool $isDispatching = false;
 
-    #[Validate('required|string|min:3|max:1000')]
-    public string $msgContent = '';
-
     public function mount(Project $project): void
     {
-        $this->project = $project;
         $this->projectId = $project->id;
-    }
-
-    public function hydrate(): void
-    {
-        $this->project = Project::findOrFail($this->projectId);
     }
 
     private function loop(): GenerationLoop
@@ -104,19 +91,6 @@ class ControlChat extends Component
         // ProjectChat; dispatching it here too would double the pop sound.
     }
 
-    public function sendMessage(): void
-    {
-        if ($this->loop()->isTurnRunning($this->projectId)) {
-            return;
-        }
-
-        $this->validate();
-        $this->project->addMessage($this->msgContent, auth()->user());
-        MessageSent::dispatch($this->projectId, auth()->id());
-        $this->dispatch('message_sent');
-        $this->reset('msgContent');
-    }
-
     /**
      * Viewer-presence heartbeat. Polled by open discussions while generating so
      * the server loop knows at least one user still has the chat open.
@@ -138,13 +112,12 @@ class ControlChat extends Component
 
         $disabledControlsHint = null;
         if ($jobRunning) {
-            $disabledControlsHint = __('chat.composer.busy_hint');
+            $disabledControlsHint = __('chat.controls.busy_hint');
         } elseif ($this->isDispatching) {
-            $disabledControlsHint = __('chat.composer.waiting_hint');
+            $disabledControlsHint = __('chat.controls.waiting_hint');
         }
 
         return view('livewire.projects.control-chat', [
-            'disableInput' => $jobRunning || $this->isDispatching,
             // The START button is disabled while a turn is mid-flight; the STOP
             // button must ALWAYS be clickable (that was the "can't stop" bug).
             'disableGenerate' => $jobRunning || $this->isDispatching,

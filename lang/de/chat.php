@@ -19,15 +19,17 @@ return [
         'open_thoughts' => 'Gedanken öffnen',
     ],
 
-    'composer' => [
-        'placeholder' => 'Nachricht schreiben…',
-        'send' => 'Nachricht senden',
+    'controls' => [
         'run' => 'Expertendiskussion starten',
         'pause' => 'Expertendiskussion pausieren',
         'start_label' => 'Start',
         'pause_label' => 'Pause',
         'sound_off' => 'Nachrichtenton ausschalten',
         'sound_on' => 'Nachrichtenton einschalten',
+        'debug' => 'Debug-Ansicht',
+        'stats' => 'Statistik',
+        'coming_soon' => 'kommt später',
+        'aria_label' => 'Steuerung der Diskussion',
         'busy_hint' => 'Ein anderer Vorgang läuft gerade. Bitte versuchen Sie es gleich noch einmal.',
         'waiting_hint' => 'Warte auf die aktuelle Expertennachricht…',
     ],
