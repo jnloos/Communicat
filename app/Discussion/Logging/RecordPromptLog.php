@@ -18,11 +18,10 @@ use Throwable;
  * Our agents carry no tools, so one prompt is exactly one step and exactly one
  * row. The prompt text only exists on the PromptingAgent event, so it is held
  * per invocation until the step that consumes it finishes.
- *
- * @var array<string, string>
  */
 class RecordPromptLog
 {
+    /** @var array<string, string> */
     private array $prompts = [];
 
     public function whenPrompting(PromptingAgent $event): void
@@ -42,6 +41,8 @@ class RecordPromptLog
             return;
         }
 
+        $rejection = StudyAgent::rejectionReason($event->response->text, $event->response->finishReason);
+
         $this->write($event->agent, $prompt, [
             'checkpoint' => $event->response->meta->model,
             'response' => $event->response->text,
@@ -50,7 +51,8 @@ class RecordPromptLog
             'tokens_out' => $event->response->usage->outputTokens,
             'tokens_reasoning' => $event->response->usage->reasoningTokens,
             'latency_ms' => (int) $event->time,
-            'status' => 'ok',
+            'status' => $rejection === null ? 'ok' : 'failed',
+            'error' => $rejection,
         ]);
     }
 

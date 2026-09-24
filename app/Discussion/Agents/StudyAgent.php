@@ -138,11 +138,35 @@ abstract class StudyAgent implements Agent, HasProviderOptions
     }
 
     /**
-     * The guard the provider adapters carried (AnthropicClient.php:73-75 and 90-92,
-     * with the same checks in OpenAiClient and GeminiClient). It belongs here rather
-     * than in a stage: Speak catches an empty visible text and ThinkAsSpeaker a
-     * missing GEDANKE: marker on their own, but Summarize would assign the empty
-     * string straight to projects.long_term_memory and silently erase the study's
+     * The rejection rule the provider adapters carried (AnthropicClient.php:73-75
+     * and 90-92, with the same checks in OpenAiClient and GeminiClient): an empty
+     * answer after trim, or a finish reason of ContentFilter (a provider refusal),
+     * disqualify a response. Static and shared with RecordPromptLog, which applies
+     * the same rule to StepCompleted so a refused or empty answer lands in
+     * prompt_logs as status 'failed' instead of 'ok' — ensureAnswered() below only
+     * ever sees that outcome after RecordPromptLog's listener has already run for
+     * the same event, so the two must agree on what counts as a rejection.
+     *
+     * Returns the reason to record, or null when the response is usable.
+     */
+    public static function rejectionReason(string $text, ?FinishReason $finishReason): ?string
+    {
+        if ($finishReason === FinishReason::ContentFilter) {
+            return 'The model refused to answer.';
+        }
+
+        if (trim($text) === '') {
+            return 'The model returned no text.';
+        }
+
+        return null;
+    }
+
+    /**
+     * The guard the provider adapters carried. It belongs here rather than in a
+     * stage: Speak catches an empty visible text and ThinkAsSpeaker a missing
+     * GEDANKE: marker on their own, but Summarize would assign the empty string
+     * straight to projects.long_term_memory and silently erase the study's
      * long-term memory, where the turn used to be logged as failed.
      *
      * A refusal is only reachable through the last step: AgentResponse carries no
@@ -151,14 +175,14 @@ abstract class StudyAgent implements Agent, HasProviderOptions
      */
     private function ensureAnswered(AgentResponse $response): void
     {
+        $reason = self::rejectionReason($response->text, $response->steps->last()?->finishReason);
+
+        if ($reason === null) {
+            return;
+        }
+
         $purpose = $this->purpose()->value;
 
-        if ($response->steps->last()?->finishReason === FinishReason::ContentFilter) {
-            throw new AiException("The model refused the {$purpose} call of model key [{$this->model->key}].");
-        }
-
-        if (trim($response->text) === '') {
-            throw new AiException("The model returned no text for the {$purpose} call of model key [{$this->model->key}].");
-        }
+        throw new AiException("{$reason} ({$purpose} call of model key [{$this->model->key}]).");
     }
 }
