@@ -1,5 +1,5 @@
-<flux:modal name="edit-project" variant="flyout" class="w-full p-5! sm:p-8! md:w-[32rem]">
-    <div class="flex min-h-full flex-col gap-6">
+<flux:modal name="edit-project" variant="flyout" class="flex w-full flex-col p-5! sm:p-8! md:w-[32rem]">
+    <div class="flex flex-1 flex-col gap-6">
         <div class="space-y-1 pe-8">
             <flux:heading size="lg">{{ __('projects.edit.heading') }}</flux:heading>
             <flux:text size="sm">{{ __('projects.edit.subheading') }}</flux:text>
