@@ -8,7 +8,16 @@ use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\Purpose;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\Values\ModelConfig;
+use Laravel\Ai\Approvals\Decisions;
+use Laravel\Ai\Contracts\AgentInput;
 use Laravel\Ai\Enums\Lab;
+use Laravel\Ai\Exceptions\AiException;
+use Laravel\Ai\Messages\UserMessage;
+use Laravel\Ai\Responses\AgentResponse;
+use Laravel\Ai\Responses\Data\FinishReason;
+use Laravel\Ai\Responses\Data\Meta;
+use Laravel\Ai\Responses\Data\Step;
+use Laravel\Ai\Responses\Data\TextUsage;
 use Tests\TestCase;
 
 class StudyAgentTest extends TestCase
@@ -89,5 +98,79 @@ class StudyAgentTest extends TestCase
     public function test_a_lab_without_a_mapping_and_no_effort_needs_no_options(): void
     {
         $this->assertSame([], (new SpeakAgent($this->model('groq', effort: null)))->providerOptions(Lab::Groq));
+    }
+
+    public function test_a_provider_the_sdk_cannot_resolve_is_rejected(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        (new SpeakAgent($this->model('gemini', effort: null)))->providerOptions('not-a-lab');
+    }
+
+    public function test_ask_maps_the_response_onto_a_completion(): void
+    {
+        $response = $this->response('Der Vorschlag trägt.', reasoning: 'Abgewogen.');
+
+        $completion = $this->agentReturning($response)->ask('Sag was.');
+
+        $this->assertSame('Der Vorschlag trägt.', $completion->text);
+        $this->assertSame('Abgewogen.', $completion->reasoning);
+        $this->assertSame(11, $completion->inputTokens);
+        $this->assertSame(22, $completion->outputTokens);
+        $this->assertSame(7, $completion->reasoningTokens);
+    }
+
+    public function test_an_empty_answer_is_an_error_rather_than_an_empty_completion(): void
+    {
+        $this->expectException(AiException::class);
+
+        $this->agentReturning($this->response("  \n "))->ask('Sag was.');
+    }
+
+    public function test_a_refused_answer_is_an_error(): void
+    {
+        $this->expectException(AiException::class);
+
+        $this->agentReturning(
+            $this->response('Teilweise geantwortet.', finishReason: FinishReason::ContentFilter)
+        )->ask('Sag was.');
+    }
+
+    private function response(
+        string $text,
+        string $reasoning = '',
+        FinishReason $finishReason = FinishReason::Stop,
+    ): AgentResponse {
+        $usage = new TextUsage(inputTokens: 11, outputTokens: 22, reasoningTokens: 7);
+        $meta = new Meta('openai', 'probe-model');
+
+        $response = new AgentResponse('probe-invocation', $text, $usage, $meta);
+        $response->reasoning = $reasoning;
+
+        return $response->withSteps(collect([
+            new Step($text, [], [], $finishReason, $usage, $meta, $reasoning, []),
+        ]));
+    }
+
+    /** Doubles the one seam ask() depends on, so the mapping and the guards are testable without a gateway. */
+    private function agentReturning(AgentResponse $response): SpeakAgent
+    {
+        return new class($this->model('openai'), $response) extends SpeakAgent
+        {
+            public function __construct(ModelConfig $model, private readonly AgentResponse $canned)
+            {
+                parent::__construct($model);
+            }
+
+            public function prompt(
+                AgentInput|UserMessage|Decisions|string $prompt,
+                array $attachments = [],
+                Lab|array|string|null $provider = null,
+                ?string $model = null,
+                ?int $timeout = null,
+            ): AgentResponse {
+                return $this->canned;
+            }
+        };
     }
 }

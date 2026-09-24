@@ -10,7 +10,10 @@ use InvalidArgumentException;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\HasProviderOptions;
 use Laravel\Ai\Enums\Lab;
+use Laravel\Ai\Exceptions\AiException;
 use Laravel\Ai\Promptable;
+use Laravel\Ai\Responses\AgentResponse;
+use Laravel\Ai\Responses\Data\FinishReason;
 
 /**
  * What every model call in this study shares. The metadata travels with the
@@ -80,6 +83,15 @@ abstract class StudyAgent implements Agent, HasProviderOptions
         $effort = $this->model->reasoningEffort;
         $lab = $provider instanceof Lab ? $provider : Lab::tryFrom($provider);
 
+        // An unresolvable provider string would fall past the Gemini branch and drop
+        // thinkingConfig.includeThoughts, so the reasoning texts would stop being
+        // recorded. Unreachable with the configured providers, cheap to close.
+        if ($lab === null) {
+            throw new InvalidArgumentException(
+                "Provider [{$provider}] is unknown to the AI SDK; model key [{$this->model->key}]."
+            );
+        }
+
         if ($lab === Lab::Gemini) {
             if ($effort !== null) {
                 throw new InvalidArgumentException(
@@ -104,20 +116,17 @@ abstract class StudyAgent implements Agent, HasProviderOptions
                 'output_config' => ['effort' => $effort],
             ],
             default => throw new InvalidArgumentException(
-                "No reasoning-effort mapping for lab [{$this->labName($lab, $provider)}]; model key [{$this->model->key}] sets one."
+                "No reasoning-effort mapping for lab [{$lab->value}]; model key [{$this->model->key}] sets one."
             ),
         };
-    }
-
-    private function labName(?Lab $lab, Lab|string $provider): string
-    {
-        return $lab?->value ?? (is_string($provider) ? $provider : 'unknown');
     }
 
     /** One call, one Completion. Never returns an AgentResponse: it is not serializable. */
     public function ask(string $prompt): Completion
     {
         $response = $this->prompt($prompt, provider: $this->model->lab(), model: $this->model->model);
+
+        $this->ensureAnswered($response);
 
         return new Completion(
             text: $response->text,
@@ -126,5 +135,30 @@ abstract class StudyAgent implements Agent, HasProviderOptions
             outputTokens: $response->usage->outputTokens,
             reasoningTokens: $response->usage->reasoningTokens,
         );
+    }
+
+    /**
+     * The guard the provider adapters carried (AnthropicClient.php:73-75 and 90-92,
+     * with the same checks in OpenAiClient and GeminiClient). It belongs here rather
+     * than in a stage: Speak catches an empty visible text and ThinkAsSpeaker a
+     * missing GEDANKE: marker on their own, but Summarize would assign the empty
+     * string straight to projects.long_term_memory and silently erase the study's
+     * long-term memory, where the turn used to be logged as failed.
+     *
+     * A refusal is only reachable through the last step: AgentResponse carries no
+     * finish reason of its own, and Anthropic's `refusal` stop reason arrives as
+     * FinishReason::ContentFilter (Anthropic/Concerns/ParsesTextResponses.php:226).
+     */
+    private function ensureAnswered(AgentResponse $response): void
+    {
+        $purpose = $this->purpose()->value;
+
+        if ($response->steps->last()?->finishReason === FinishReason::ContentFilter) {
+            throw new AiException("The model refused the {$purpose} call of model key [{$this->model->key}].");
+        }
+
+        if (trim($response->text) === '') {
+            throw new AiException("The model returned no text for the {$purpose} call of model key [{$this->model->key}].");
+        }
     }
 }
