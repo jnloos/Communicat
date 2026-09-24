@@ -190,3 +190,10 @@ select:focus[data-flux-control] {
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+/* Flux renders the modal's close button without a pointer cursor. The element
+   carrying the attribute is a zero-sized custom element, so the rule has to
+   reach the button inside it. */
+[data-flux-modal-close] button {
+    cursor: pointer;
+}

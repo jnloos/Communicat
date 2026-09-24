@@ -1,28 +1,26 @@
 <flux:modal name="edit-project" variant="flyout" class="flex w-full flex-col p-5! sm:p-8! md:w-[32rem]">
     <div class="flex flex-1 flex-col gap-6">
-        <div class="flex items-start justify-between gap-4 pe-8">
-            <div class="space-y-1">
-                <flux:heading size="lg">{{ __('projects.edit.heading') }}</flux:heading>
-                <flux:text size="sm">{{ __('projects.edit.subheading') }}</flux:text>
-            </div>
-
+        <x-modal-header :heading="__('projects.edit.heading')" :subheading="__('projects.edit.subheading')">
             {{-- What this modal does to the project, as opposed to what the form
                  does: keeps the footer to cancel and save, like every other modal. --}}
-            <flux:dropdown position="bottom" align="end">
-                <flux:button variant="subtle" size="sm" icon="ellipsis-horizontal"
-                    :aria-label="__('common.actions.more')" class="cursor-pointer"/>
-                <flux:menu>
-                    <flux:menu.item icon="arrow-down-tray"
-                        href="{{ route('project.export.json', $forProjectId) }}">
-                        {{ __('projects.edit.export_json') }}
-                    </flux:menu.item>
-                    <flux:menu.separator/>
-                    <flux:menu.item variant="danger" icon="trash" wire:click="needsConfirmation('delete')">
-                        {{ __('projects.edit.delete') }}
-                    </flux:menu.item>
-                </flux:menu>
-            </flux:dropdown>
-        </div>
+            <x-slot:actions>
+                <flux:dropdown position="bottom" align="end">
+                    <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal"
+                        :aria-label="__('common.actions.more')"
+                        class="cursor-pointer text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"/>
+                    <flux:menu>
+                        <flux:menu.item icon="arrow-down-tray"
+                            href="{{ route('project.export.json', $forProjectId) }}">
+                            {{ __('projects.edit.export_json') }}
+                        </flux:menu.item>
+                        <flux:menu.separator/>
+                        <flux:menu.item variant="danger" icon="trash" wire:click="needsConfirmation('delete')">
+                            {{ __('projects.edit.delete') }}
+                        </flux:menu.item>
+                    </flux:menu>
+                </flux:dropdown>
+            </x-slot:actions>
+        </x-modal-header>
 
         <form wire:submit.prevent="save" class="flex flex-1 flex-col gap-6">
             <flux:input wire:model.defer="title" :label="__('common.fields.title')"/>

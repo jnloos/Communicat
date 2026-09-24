@@ -4,29 +4,26 @@
 
 <flux:modal name="edit-expert" variant="flyout" class="flex w-full flex-col p-5! sm:p-8! md:w-[40rem]">
     <form wire:submit.prevent="save" class="flex flex-1 flex-col gap-6">
-        <div class="flex items-start justify-between gap-4 pe-8">
-            <div class="space-y-1">
-                <flux:heading size="lg">
-                    {{ $isUpdate ? __('experts.editor.update') : __('experts.editor.create') }}
-                </flux:heading>
-                <flux:text size="sm">
-                    {{ __('experts.editor.subheading') }}
-                </flux:text>
-            </div>
-
+        <x-modal-header
+            :heading="$isUpdate ? __('experts.editor.update') : __('experts.editor.create')"
+            :subheading="__('experts.editor.subheading')"
+        >
             @if ($isUpdate)
                 {{-- What this modal does to the expert, as opposed to what the form does. --}}
-                <flux:dropdown position="bottom" align="end">
-                    <flux:button variant="subtle" size="sm" icon="ellipsis-horizontal"
-                        :aria-label="__('common.actions.more')" class="cursor-pointer"/>
-                    <flux:menu>
-                        <flux:menu.item variant="danger" icon="trash" wire:click="needsConfirmation('delete')">
-                            {{ __('experts.editor.delete') }}
-                        </flux:menu.item>
-                    </flux:menu>
-                </flux:dropdown>
+                <x-slot:actions>
+                    <flux:dropdown position="bottom" align="end">
+                        <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal"
+                            :aria-label="__('common.actions.more')"
+                            class="cursor-pointer text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"/>
+                        <flux:menu>
+                            <flux:menu.item variant="danger" icon="trash" wire:click="needsConfirmation('delete')">
+                                {{ __('experts.editor.delete') }}
+                            </flux:menu.item>
+                        </flux:menu>
+                    </flux:dropdown>
+                </x-slot:actions>
             @endif
-        </div>
+        </x-modal-header>
 
         <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
             {{-- Avatar --}}
