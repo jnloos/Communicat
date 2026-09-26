@@ -83,10 +83,10 @@ partition "RoundRobinPipeline::stages()" {
   :**3. Speak** (**SpeakAgent**, purpose=speak)
   In: Persona + Memory + eigener Gedanke (proposal)
   Out: sichtbarer Text + Trennmarker Speak::MARKER_CONTROL
-  + Trailer (ADRESSAT, PAARTYP);<<#E8F0FE>>
+  + Trailer (ADRESSAT);<<#E8F0FE>>
   note right #FFF4E5
-    schreibt: **contribution** (Text, Partner-Token,
-    Paartyp, Completion)
+    schreibt: **contribution** (Text,
+    Adressaten-Token, Completion)
     Event: PipelineStageChanged("speaking")
   end note
 
@@ -95,7 +95,7 @@ partition "RoundRobinPipeline::stages()" {
   contributorByPromptId() auf;
   note right #FFF4E5
     schreibt: **message**
-    (adjacency_partner, adjacency_pair_type)
+    (addressee_expert_id)
   end note
 
   if (unsummierte Nachrichten >= summarize_threshold?) then (ja)
