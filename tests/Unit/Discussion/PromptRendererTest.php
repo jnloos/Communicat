@@ -47,6 +47,6 @@ class PromptRendererTest extends TestCase
 
     public function test_system_prompt_is_rendered_from_its_view(): void
     {
-        $this->assertStringContainsString('akademischen Diskussionssimulation', (new PromptRenderer)->system());
+        $this->assertStringContainsString('academic discussion simulation', (new PromptRenderer)->system());
     }
 }

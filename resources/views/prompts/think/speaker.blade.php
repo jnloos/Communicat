@@ -1,21 +1,21 @@
 @include('prompts.partials.persona', ['expert' => $expert])
 
-=== PROJEKT ===
-Titel: {{ $project->title }}
+=== PROJECT ===
+Title: {{ $project->title }}
 @if (!empty($project->description))
-Beschreibung: {{ $project->description }}
+Description: {{ $project->description }}
 @endif
 
 @include('prompts.partials.participants', ['experts' => $experts, 'users' => $users])
 
 @include('prompts.partials.memory', ['memory' => $memory])
 
-=== AUFGABE ===
-Du bist als Nächste oder Nächster an der Reihe. Bevor du sprichst, schreibst du dein Kurzzeitgedächtnis fort. Es ist ein einziger laufender Gedanke, den nur du siehst.
+=== TASK ===
+It is your turn next. Before you speak, you continue your short-term memory. It is a single running thought that only you see.
 
-Halte darin fest:
-- was dir an den jüngsten Nachrichten auffällt (Zustimmung, Widerspruch, Lücken, offene Fragen an dich),
-- was dir auf der Zunge brennt, also was du als {{ $expert->name }} jetzt unbedingt sagen willst,
-- was du dir für spätere Runden vornimmst, falls du jetzt nicht alles unterbringst.
+Record in it:
+- what strikes you about the most recent messages (agreement, contradiction, gaps, open questions directed at you),
+- what's on the tip of your tongue, i.e. what you as {{ $expert->name }} absolutely want to say now,
+- what you intend for later rounds, in case you can't fit everything in now.
 
-Übernimm aus deinem bisherigen Kurzzeitgedächtnis, was noch gilt, und streiche, was erledigt ist. Schreibe knapp, in ganzen Sätzen, höchstens sechs Sätze. Kein Gesprächsbeitrag, keine Anrede, keine Aufzählungszeichen.
+Carry over from your previous short-term memory what still applies, and strike what is done. Write concisely, in complete sentences, at most six sentences. No conversational contribution, no address, no bullet points.

@@ -1,23 +1,23 @@
 @include('prompts.partials.persona', ['expert' => $expert])
 
-=== PROJEKT ===
-Titel: {{ $project->title }}
+=== PROJECT ===
+Title: {{ $project->title }}
 @if (!empty($project->description))
-Beschreibung: {{ $project->description }}
+Description: {{ $project->description }}
 @endif
 
 @include('prompts.partials.participants', ['experts' => $experts, 'users' => $users])
 
 @include('prompts.partials.memory', ['memory' => $memory])
 
-=== AUFGABE ===
-Alle Beteiligten überlegen gleichzeitig, wer als Nächstes sprechen sollte. Schreibe zuerst dein Kurzzeitgedächtnis fort, dann melde, wie dringend du jetzt das Wort brauchst.
+=== TASK ===
+All participants simultaneously consider who should speak next. First continue your short-term memory, then report how urgently you need the floor right now.
 
-Halte im Gedanken fest:
-- was dir an den jüngsten Nachrichten auffällt (Zustimmung, Widerspruch, Lücken, offene Fragen an dich),
-- was du als {{ $expert->name }} jetzt sagen würdest, wenn du an der Reihe wärst,
-- was du dir für spätere Runden vornimmst.
+Record in the thought:
+- what strikes you about the most recent messages (agreement, contradiction, gaps, open questions directed at you),
+- what you as {{ $expert->name }} would say now if it were your turn,
+- what you intend for later rounds.
 
-Übernimm aus deinem bisherigen Kurzzeitgedächtnis, was noch gilt, und streiche, was erledigt ist. Höchstens sechs Sätze, kein Gesprächsbeitrag, keine Anrede.
+Carry over from your previous short-term memory what still applies, and strike what is done. At most six sentences, no conversational contribution, no address.
 
-Die Dringlichkeit ist eine Zahl von {{ $lowest }} bis {{ $highest }}: {{ $lowest }}, wenn du nichts beizutragen hast, {{ $highest }}, wenn dein Beitrag jetzt unbedingt nötig ist. Begründe sie nicht, gib nur die Zahl.
+Urgency is a number from {{ $lowest }} to {{ $highest }}: {{ $lowest }} if you have nothing to contribute, {{ $highest }} if your contribution is absolutely necessary right now. Do not justify it, just give the number.

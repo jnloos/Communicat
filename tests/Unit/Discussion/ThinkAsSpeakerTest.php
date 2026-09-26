@@ -73,7 +73,7 @@ class ThinkAsSpeakerTest extends TestCase
 
         app(ThinkAsSpeaker::class)->handle($this->payload(), fn (TurnPayload $p) => $p);
 
-        ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'Du bist Alice'));
+        ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'You are Alice'));
         ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'KI an Schulen'));
         ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'Mein alter Gedanke.'));
         // The format is no longer asked for in prose; the agent declares it.

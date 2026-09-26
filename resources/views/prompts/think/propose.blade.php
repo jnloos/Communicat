@@ -1,22 +1,22 @@
 @include('prompts.partials.persona', ['expert' => $expert])
 
-=== PROJEKT ===
-Titel: {{ $project->title }}
+=== PROJECT ===
+Title: {{ $project->title }}
 @if (!empty($project->description))
-Beschreibung: {{ $project->description }}
+Description: {{ $project->description }}
 @endif
 
 @include('prompts.partials.participants', ['experts' => $experts, 'users' => $users])
 
 @include('prompts.partials.memory', ['memory' => $memory])
 
-=== AUFGABE ===
-Alle Beteiligten entwerfen gleichzeitig einen Beitrag; anschließend entscheidet eine unabhängige Bewertung, welcher Entwurf gesprochen wird. Schreibe zuerst dein Kurzzeitgedächtnis fort, dann deinen Entwurf.
+=== TASK ===
+All participants simultaneously draft a contribution; afterwards an independent evaluation decides which draft gets spoken. First continue your short-term memory, then your draft.
 
-Halte im Gedanken fest:
-- was dir an den jüngsten Nachrichten auffällt (Zustimmung, Widerspruch, Lücken, offene Fragen an dich),
-- was du dir für spätere Runden vornimmst.
+Record in the thought:
+- what strikes you about the most recent messages (agreement, contradiction, gaps, open questions directed at you),
+- what you intend for later rounds.
 
-Übernimm aus deinem bisherigen Kurzzeitgedächtnis, was noch gilt, und streiche, was erledigt ist. Höchstens sechs Sätze.
+Carry over from your previous short-term memory what still applies, and strike what is done. At most six sentences.
 
-Der Entwurf ist dein Diskussionsbeitrag, wie du ihn sagen würdest: als {{ $expert->name }}, in ganzen Sätzen, ohne Anrede an die Bewertung und ohne Begründung, warum er gut sei.
+The draft is your discussion contribution, as you would say it: as {{ $expert->name }}, in complete sentences, without addressing the evaluation and without justifying why it is good.

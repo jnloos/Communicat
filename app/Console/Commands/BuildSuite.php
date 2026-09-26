@@ -56,28 +56,28 @@ class BuildSuite extends Command
 
         $projects = [
             [
-                'title' => 'Tempolimit auf Autobahnen',
-                'description' => 'Sollte Deutschland ein generelles Tempolimit von 130 km/h auf Autobahnen einführen? Diskutiert konkret das CO₂-Einsparpotenzial, Unfall- und Todeszahlen, die Folgen für Pendler und Logistik sowie das Freiheitsargument — und ringt um eine gemeinsame, begründete Empfehlung.',
+                'title' => 'Speed limit on motorways',
+                'description' => 'Should Germany introduce a general speed limit of 130 km/h on motorways? Discuss specifically the CO₂ savings potential, accident and fatality figures, the consequences for commuters and logistics, and the freedom argument — and work toward a shared, reasoned recommendation.',
                 'experts' => ['Lisa Graf', 'David Kaufmann', 'Tim Hofmann', 'Paul Neumann'],
             ],
             [
-                'title' => 'KI-Werkzeuge an Schulen',
-                'description' => 'Sollen Schülerinnen und Schüler KI-Werkzeuge wie ChatGPT im Unterricht und bei Hausaufgaben nutzen dürfen? Klärt konkret: Welche Aufgaben bleiben bewusst KI-frei, wie wird Leistung fair bewertet, welche Datenschutzregeln gelten für Minderjährige, und wie verändert sich die Rolle der Lehrkraft?',
+                'title' => 'AI tools in schools',
+                'description' => 'Should students be allowed to use AI tools like ChatGPT in class and for homework? Clarify specifically: which tasks deliberately stay AI-free, how is performance assessed fairly, what data protection rules apply to minors, and how does the teacher\'s role change?',
                 'experts' => ['Stefan Maier', 'Nina Keller', 'Katharina Wolf', 'Paul Neumann'],
             ],
             [
-                'title' => 'EU-Chatkontrolle',
-                'description' => 'Sollen Messenger-Dienste verpflichtet werden, auch Ende-zu-Ende-verschlüsselte Nachrichten automatisiert auf Missbrauchsdarstellungen zu durchsuchen (Client-Side-Scanning)? Wägt Kinderschutz, IT-Sicherheit, Grundrechte und technische Umsetzbarkeit gegeneinander ab.',
+                'title' => 'EU chat control',
+                'description' => 'Should messenger services be required to automatically scan even end-to-end encrypted messages for depictions of abuse (client-side scanning)? Weigh child protection, IT security, fundamental rights and technical feasibility against each other.',
                 'experts' => ['Sarah Vogel', 'Katharina Wolf', 'Tim Hofmann', 'Paul Neumann'],
             ],
             [
-                'title' => 'Rückkehr ins Büro oder Remote-First',
-                'description' => 'Soll unser Unternehmen eine verbindliche Büro-Anwesenheit von drei Tagen pro Woche einführen oder remote-first bleiben? Diskutiert konkret Produktivität, Teamzusammenhalt, Bürokosten, Fairness gegenüber Eltern und Pendlern sowie die Wirkung auf das Recruiting.',
+                'title' => 'Return to the office or remote-first',
+                'description' => 'Should our company introduce mandatory office attendance of three days a week, or stay remote-first? Discuss specifically productivity, team cohesion, office costs, fairness toward parents and commuters, and the effect on recruiting.',
                 'experts' => ['Marie Hoffmann', 'Clara Schmidt', 'David Kaufmann', 'Paul Neumann'],
             ],
             [
-                'title' => 'Vier-Tage-Woche bei vollem Lohn',
-                'description' => 'Sollte die Vier-Tage-Woche bei vollem Lohnausgleich (32 Stunden, 100 % Gehalt) politisch gefördert werden? Klärt konkret die Auswirkungen auf Produktivität, Lohnkosten, Fachkräftemangel, Gesundheit und internationale Wettbewerbsfähigkeit.',
+                'title' => 'Four-day week with full pay',
+                'description' => 'Should the four-day week with full wage compensation (32 hours, 100% pay) be promoted politically? Clarify specifically the effects on productivity, labor costs, skilled-worker shortage, health and international competitiveness.',
                 'experts' => ['David Kaufmann', 'Lisa Graf', 'Marie Hoffmann', 'Paul Neumann'],
             ],
         ];

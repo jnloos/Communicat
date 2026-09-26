@@ -176,7 +176,7 @@ class TurnRunnerTest extends TestCase
         $this->assertSame(config('discussion.summarize_threshold'), $config['summarize_threshold']);
         $this->assertSame(config('discussion.summarize_oldest'), $config['summarize_oldest']);
         $this->assertArrayNotHasKey('changes', $config);
-        $this->assertStringContainsString('Diskussionssimulation', $config['system_prompt']);
+        $this->assertStringContainsString('discussion simulation', $config['system_prompt']);
     }
 
     public function test_the_snapshot_records_the_projects_own_summarize_settings(): void

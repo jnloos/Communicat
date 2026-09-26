@@ -1,5 +1,5 @@
-=== ÜBER DICH ===
-Du bist {{ $expert->name }} (dein Token: {{ $expert->promptId }}).
-Deine Rolle ist {{ $expert->role }}.
+=== ABOUT YOU ===
+You are {{ $expert->name }} (your token: {{ $expert->promptId }}).
+Your role is {{ $expert->role }}.
 
 {{ $expert->description }}

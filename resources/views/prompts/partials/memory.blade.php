@@ -1,16 +1,16 @@
 @if ($memory->longTerm !== '')
-=== LANGZEITGEDÄCHTNIS (Zusammenfassung des bisherigen Gesprächs) ===
+=== LONG-TERM MEMORY (summary of the discussion so far) ===
 {{ $memory->longTerm }}
 
 @endif
-=== VERLAUF (jüngste Nachrichten) ===
+=== HISTORY (most recent messages) ===
 @forelse ($memory->history as $entry)
 {{ $entry['name'] }}{{ $entry['token'] ? ' ['.$entry['token'].']' : '' }}: {{ $entry['content'] }}
 @empty
-Noch keine Nachrichten.
+No messages yet.
 @endforelse
 @if ($showShortTerm ?? true)
 
-=== DEIN KURZZEITGEDÄCHTNIS (nur für dich sichtbar) ===
-{{ $memory->shortTerm !== '' ? $memory->shortTerm : 'Noch keine Gedanken notiert.' }}
+=== YOUR SHORT-TERM MEMORY (visible only to you) ===
+{{ $memory->shortTerm !== '' ? $memory->shortTerm : 'No thoughts noted yet.' }}
 @endif
