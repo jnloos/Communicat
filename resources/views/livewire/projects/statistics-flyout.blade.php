@@ -28,7 +28,7 @@
                                     <flux:chart.pie
                                         field="value"
                                         label-field="name"
-                                        class="cursor-pointer transition-opacity duration-150 data-inactive:opacity-35"
+                                        class="origin-center cursor-pointer transition-[opacity,transform] duration-150 data-inactive:opacity-35 data-active:scale-105"
                                     />
                                 </flux:chart.svg>
 
