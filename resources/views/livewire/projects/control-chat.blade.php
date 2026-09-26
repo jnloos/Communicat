@@ -163,8 +163,9 @@
                             size="sm"
                             variant="subtle"
                             icon="chart-bar"
-                            disabled
+                            x-on:click="$dispatch('open-statistics')"
                             :aria-label="__('chat.controls.stats')"
+                            class="cursor-pointer"
                         />
                     </flux:tooltip>
                 </div>

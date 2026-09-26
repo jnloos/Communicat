@@ -129,6 +129,24 @@ class JobDebugFlyoutTest extends TestCase
             ->assertViewHas('logs', fn ($logs) => $logs->count() === 1);
     }
 
+    /**
+     * TurnRunner broadcasts JobLogged twice per turn — once when the job opens
+     * as 'running', once when it closes. An open flyout must follow along.
+     */
+    public function test_an_open_flyout_picks_up_a_new_job(): void
+    {
+        $project = $this->project();
+        $this->jobFor($project);
+
+        $component = Livewire::test(JobDebugFlyout::class, ['project' => $project])->call('open');
+        $this->assertCount(1, $component->viewData('logs'));
+
+        $this->jobFor($project, 'running');
+        $component->dispatch('echo-private:debug,.JobLogUpdated');
+
+        $this->assertCount(2, $component->viewData('logs'));
+    }
+
     public function test_it_is_unreachable_when_debug_is_off(): void
     {
         config(['app.debug' => false]);

@@ -27,7 +27,7 @@ return [
         'sound_off' => 'Nachrichtenton ausschalten',
         'sound_on' => 'Nachrichtenton einschalten',
         'debug' => 'Debug-Report dieses Gesprächs',
-        'stats' => 'Statistik (kommt später)',
+        'stats' => 'Redeanteile dieses Gesprächs',
         'aria_label' => 'Steuerung der Diskussion',
         'busy_hint' => 'Ein anderer Vorgang läuft gerade. Bitte versuchen Sie es gleich noch einmal.',
         'waiting_hint' => 'Warte auf die aktuelle Expertennachricht…',

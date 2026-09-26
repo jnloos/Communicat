@@ -8,6 +8,7 @@
     <livewire:projects.select-contributors :project="$project" />
     <livewire:projects.edit-project :project="$project" />
     <livewire:projects.expert-thoughts-flyout :project="$project" />
+    <livewire:projects.statistics-flyout :project="$project" />
     @if (config('app.debug'))
         <livewire:debug.job-debug-flyout :project="$project" />
     @endif

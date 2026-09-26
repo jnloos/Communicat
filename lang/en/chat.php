@@ -27,7 +27,7 @@ return [
         'sound_off' => 'Mute message sound',
         'sound_on' => 'Unmute message sound',
         'debug' => "This discussion's job report",
-        'stats' => 'Statistics (coming soon)',
+        'stats' => "This discussion's speaking shares",
         'aria_label' => 'Discussion controls',
         'busy_hint' => 'Another operation is in progress. Try again in a moment.',
         'waiting_hint' => 'Waiting for the current expert message…',
