@@ -18,7 +18,9 @@
 - **Einordnungsregel für `Values`:** dorthin gehört, was unveränderlich ist, keinen Service kennt und nichts tut außer Werte tragen.
 - **Benennung:** `addressee`. Spalte `messages.addressee_expert_id`, Relation `$message->addressee()`, Wertobjekt-Feld `Contribution::$addresseeToken`, Exportschlüssel `addressee_expert_id`. Nicht `talks_to`, nicht `opens_pair_with`, nicht `partner`.
 - **Keine Abwärtskompatibilität** für Exportdateien im alten Format. Alte Dateien importieren fehlerfrei, nur ohne Adressaten.
-- **Nach jeder Aufgabe:** `php artisan test` grün und `vendor/bin/pint` sauber, bevor committet wird.
+- **Nach jeder Aufgabe:** `php artisan test` grün und Pint sauber, bevor committet wird. **Pint nur über die Pfade der Aufgabe aufrufen**, niemals ohne Pfad: das Repo ist nicht durchgehend Pint-rein, und ein repoweiter Lauf formatiert Dutzende unbeteiligter Dateien um. Beispiel: `vendor/bin/pint app/Discussion tests/Unit/Discussion`.
+- **`CLAUDE.md` ist in `.gitignore:32` ausgeschlossen und darf nicht nach git wandern.** Änderungen daran bleiben auf der Platte und werden nie gestaget — auch nicht mit `git add -f`.
+- **Namentlich stagen.** Kein `git add app resources tests` und kein `git add -A`: im Arbeitsbaum liegen unbeteiligte Änderungen (u. a. zwei `.idea/`-Dateien). Nur die Pfade stagen, die der Schritt nennt.
 - **Tests fassen nie einen echten Anbieter an.** `phpunit.xml` leert die API-Keys; Modellantworten kommen aus `Tests\Fakes\FakeAgents` (`always()`/`inOrder()` mit Closure, nie mit Array).
 - **Nicht Teil dieses Plans:** die Marker-Konstante `Speak::MARKER_CONTROL` und das Regex-Parsing des `ADRESSAT`-Feldes. Beides fällt erst mit Stück 3 der Roadmap (Structured Output). Dieser Plan nimmt dem `STEUERUNG`-Block nur die `PAARTYP`-Zeile.
 
@@ -234,7 +236,7 @@ Ausserdem in derselben Datei den Namensraum von `Purpose` korrigieren: `App\Disc
 - [ ] **Step 8: Commit**
 
 ```bash
-git add app/Discussion CLAUDE.md tests/Unit/Discussion/PromptRendererTest.php tests/Unit/Discussion/StudyAgentTest.php
+git add app/Discussion tests/Unit/Discussion/PromptRendererTest.php tests/Unit/Discussion/StudyAgentTest.php
 git commit -m "Put every value type in Values, not just most of them
 
 MemoryView, TurnResult and Purpose followed the same rule as the five
@@ -518,7 +520,7 @@ löschen. Der `@if ($msg->adjacency_partner_id)`-Block direkt darunter bleibt st
 
 ```bash
 php artisan test 2>&1 | tail -5
-vendor/bin/pint
+vendor/bin/pint app/Discussion app/Services/ProjectTransfer tests/Unit/Discussion
 grep -rn 'pairType\|PAIR_\|PAARTYP\|pair_types' app resources tests
 ```
 
@@ -527,7 +529,11 @@ Erwartet: Suite grün, Pint sauber. Der `grep` findet nur noch `adjacency_pair_t
 - [ ] **Step 10: Commit**
 
 ```bash
-git add app resources tests
+git add app/Discussion/Values/Contribution.php app/Discussion/Stages/Speak.php \
+        app/Discussion/Stages/PersistMessage.php resources/views/prompts/speak.blade.php \
+        app/Services/ProjectTransfer/ProjectExport.php app/Services/ProjectTransfer/ProjectImporter.php \
+        resources/views/livewire/debug/job-debug-panel.blade.php \
+        tests/Unit/Discussion/SpeakTest.php tests/Unit/Discussion/PersistMessageTest.php
 git commit -m "Stop asking the speaker to label its own speech act
 
 adjacency_pair_type held one of four labels the speaking model reported
@@ -782,7 +788,7 @@ In `resources/views/livewire/debug/job-debug-panel.blade.php`:
 ```bash
 php artisan test 2>&1 | tail -5
 php artisan migrate:fresh --force && php artisan dev:build-suite
-vendor/bin/pint
+vendor/bin/pint app/Discussion app/Events app/Models app/Services/ProjectTransfer database/migrations tests/Unit
 grep -rn 'adjacency\|adjacencyPartner\|PAIR_' app resources tests database
 ```
 
@@ -798,7 +804,7 @@ Erwartet: Suite grün, Migration und Seeder laufen durch, Pint sauber, `grep` oh
 
 Das ist der einzige Schritt, den kein Test abdeckt: die Blade-Änderungen in Step 8 hängen an einer Relation, deren Fehlen sich zur Laufzeit als stilles `null` zeigt, nicht als Fehler.
 
-- [ ] **Step 11: CLAUDE.md nachziehen**
+- [ ] **Step 11: CLAUDE.md nachziehen** (nur auf der Platte — die Datei ist gitignored und wird nicht gestaget)
 
 Drei Stellen:
 
@@ -815,7 +821,13 @@ Punkt 4 (`PersistMessage`): `resolves the addressee token back to a contributor 
 - [ ] **Step 12: Commit**
 
 ```bash
-git add app resources tests database CLAUDE.md
+git add app/Models/Message.php app/Discussion/Stages/PersistMessage.php app/Events/MessageGenerated.php \
+        app/Services/ProjectTransfer/ProjectExport.php app/Services/ProjectTransfer/ProjectImporter.php \
+        database/migrations/2025_05_30_152442_create_messages_table.php \
+        resources/views/components/projects/chat-message.blade.php \
+        resources/views/components/projects/addressed-chip.blade.php \
+        resources/views/livewire/debug/job-debug-panel.blade.php \
+        tests/Unit/Discussion/PersistMessageTest.php tests/Unit/MessageGeneratedPayloadTest.php
 git commit -m "One addressee column instead of a polymorphic pair
 
 adjacency_partner could point at an Expert or a User. Since the rollback
