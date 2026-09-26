@@ -3,6 +3,7 @@
 namespace Tests\Unit\Discussion;
 
 use App\Discussion\Memory\Memory;
+use App\Discussion\Support\PromptRenderer;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\Summary;
@@ -13,6 +14,56 @@ use Tests\TestCase;
 class MemoryTest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * Adapting Nonomura et al. (2025): the recipient of a turn travels with the
+     * message into every agent's history, so an open adjacency pair is visible
+     * rather than inferred from whether a name happens to appear in the prose.
+     */
+    public function test_the_history_carries_who_a_turn_was_addressed_to(): void
+    {
+        $project = Project::factory()->create();
+        [$alice, $bob] = Expert::factory()->count(2)->create(['name' => 'Alice'])->all();
+        $bob->update(['name' => 'Bob']);
+        $project->addContributingExpert($alice);
+        $project->addContributingExpert($bob);
+
+        $toBob = $project->addMessage('Woher kommt die Zahl?', $alice);
+        $toBob->addressee()->associate($bob);
+        $toBob->save();
+
+        $project->addMessage('Aus dem Quartalsbericht.', $bob);
+
+        $history = app(Memory::class)->viewFor($project->fresh(), $alice)->history;
+
+        $this->assertSame(['token' => $bob->promptId, 'name' => 'Bob'], $history[0]['addressee']);
+        $this->assertNull($history[1]['addressee'], 'a turn to the group carries no addressee');
+    }
+
+    /** The rendered history shows the arrow, and omits it for a turn to the group. */
+    public function test_the_rendered_history_shows_the_arrow_only_where_there_is_an_addressee(): void
+    {
+        $project = Project::factory()->create();
+        [$alice, $bob] = Expert::factory()->count(2)->create()->all();
+        $project->addContributingExpert($alice);
+        $project->addContributingExpert($bob);
+
+        $toBob = $project->addMessage('Woher kommt die Zahl?', $alice);
+        $toBob->addressee()->associate($bob);
+        $toBob->save();
+
+        $project->addMessage('Aus dem Quartalsbericht.', $bob);
+
+        $rendered = app(PromptRenderer::class)->render('prompts.partials.memory', [
+            'memory' => app(Memory::class)->viewFor($project->fresh(), $alice),
+        ]);
+
+        $this->assertStringContainsString(
+            "{$alice->name} [{$alice->promptId}] -> {$bob->name} [{$bob->promptId}]: Woher kommt die Zahl?",
+            $rendered,
+        );
+        $this->assertStringContainsString("{$bob->name} [{$bob->promptId}]: Aus dem Quartalsbericht.", $rendered);
+    }
 
     public function test_history_holds_participant_messages_after_the_watermark(): void
     {
@@ -31,8 +82,8 @@ class MemoryTest extends TestCase
         $view = (new Memory)->viewFor($project, $expert);
 
         $this->assertSame([
-            ['token' => "U{$user->id}", 'name' => 'Jana', 'content' => 'Frage'],
-            ['token' => "E{$expert->id}", 'name' => 'Alice', 'content' => 'Antwort'],
+            ['token' => "U{$user->id}", 'name' => 'Jana', 'content' => 'Frage', 'addressee' => null],
+            ['token' => "E{$expert->id}", 'name' => 'Alice', 'content' => 'Antwort', 'addressee' => null],
         ], $view->history);
         $this->assertSame('Bisher ging es um X.', $view->longTerm);
     }

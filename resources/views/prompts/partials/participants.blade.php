@@ -5,4 +5,3 @@
 @foreach ($users as $participant)
 - {{ $participant->name }} [{{ $participant->promptId }}] (user)
 @endforeach
-In the visible conversation you always address participants by name, never by token.

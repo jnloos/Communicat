@@ -5,7 +5,7 @@
 @endif
 === HISTORY (most recent messages) ===
 @forelse ($memory->history as $entry)
-{{ $entry['name'] }}{{ $entry['token'] ? ' ['.$entry['token'].']' : '' }}: {{ $entry['content'] }}
+{{ $entry['name'] }}{{ $entry['token'] ? ' ['.$entry['token'].']' : '' }}@if (!empty($entry['addressee'])) -> {{ $entry['addressee']['name'] }} [{{ $entry['addressee']['token'] }}]@endif: {{ $entry['content'] }}
 @empty
 No messages yet.
 @endforelse

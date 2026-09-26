@@ -19,7 +19,7 @@ class Memory
     {
         $history = $project->participantMessages()
             ->where('id', '>', $project->summarized_until_message_id ?? 0)
-            ->with(['expert:id,name', 'user:id,name'])
+            ->with(['expert:id,name', 'user:id,name', 'addressee:id,name'])
             ->orderBy('id')
             ->get()
             ->map(fn (Message $message) => $this->describe($message))
@@ -32,15 +32,32 @@ class Memory
         );
     }
 
-    /** @return array{token: ?string, name: string, content: string} */
+    /**
+     * One message as an agent reads it: who spoke, to whom, and what was said.
+     *
+     * The addressee travels with the message rather than only into the logs,
+     * adapting Nonomura et al. (2025): making the recipient explicit helps an
+     * agent see which adjacency pairs are open and which it is expected to
+     * close, instead of inferring it from whether its name appears in the prose.
+     *
+     * It is omitted when a turn spoke to the group -- a missing arrow says that
+     * unambiguously, and costs no tokens.
+     *
+     * @return array{token: ?string, name: string, content: string, addressee: ?array{token: string, name: string}}
+     */
     public function describe(Message $message): array
     {
         $sender = $message->sender();
+        $addressee = $message->addressee;
 
         return [
             'token' => $sender?->promptId,
             'name' => $sender?->name ?? 'System',
             'content' => $message->content,
+            'addressee' => $addressee === null ? null : [
+                'token' => $addressee->promptId,
+                'name' => $addressee->name,
+            ],
         ];
     }
 
