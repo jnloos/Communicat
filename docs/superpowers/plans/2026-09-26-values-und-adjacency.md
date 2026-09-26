@@ -18,7 +18,7 @@
 - **Einordnungsregel für `Values`:** dorthin gehört, was unveränderlich ist, keinen Service kennt und nichts tut außer Werte tragen.
 - **Benennung:** `addressee`. Spalte `messages.addressee_expert_id`, Relation `$message->addressee()`, Wertobjekt-Feld `Contribution::$addresseeToken`, Exportschlüssel `addressee_expert_id`. Nicht `talks_to`, nicht `opens_pair_with`, nicht `partner`.
 - **Keine Abwärtskompatibilität** für Exportdateien im alten Format. Alte Dateien importieren fehlerfrei, nur ohne Adressaten.
-- **Nach jeder Aufgabe:** `php artisan test` grün und Pint sauber, bevor committet wird. **Pint nur über die Pfade der Aufgabe aufrufen**, niemals ohne Pfad: das Repo ist nicht durchgehend Pint-rein, und ein repoweiter Lauf formatiert Dutzende unbeteiligter Dateien um. Beispiel: `vendor/bin/pint app/Discussion tests/Unit/Discussion`.
+- **Nach jeder Aufgabe:** `php artisan test` grün und Pint sauber, bevor committet wird. **Pint nur über die geänderten Dateien aufrufen — nicht über deren Verzeichnisse und niemals ohne Pfad.** Das Repo ist nicht durchgehend Pint-rein; ein Verzeichnis mitzugeben formatiert jede unbeteiligte Datei darin um, ein Aufruf ohne Pfad das halbe Repo. Verlässlich ist: `vendor/bin/pint $(git diff --name-only HEAD | tr '\n' ' ')` vor dem Commit, oder die Dateien einzeln nennen.
 - **`CLAUDE.md` ist in `.gitignore:32` ausgeschlossen und darf nicht nach git wandern.** Änderungen daran bleiben auf der Platte und werden nie gestaget — auch nicht mit `git add -f`.
 - **Namentlich stagen.** Kein `git add app resources tests` und kein `git add -A`: im Arbeitsbaum liegen unbeteiligte Änderungen (u. a. zwei `.idea/`-Dateien). Nur die Pfade stagen, die der Schritt nennt.
 - **Tests fassen nie einen echten Anbieter an.** `phpunit.xml` leert die API-Keys; Modellantworten kommen aus `Tests\Fakes\FakeAgents` (`always()`/`inOrder()` mit Closure, nie mit Array).
@@ -218,7 +218,7 @@ Erwartet: keine Ausgabe.
 
 ```bash
 php artisan test 2>&1 | tail -5
-vendor/bin/pint
+vendor/bin/pint $(git diff --name-only HEAD | tr '\n' ' ')
 ```
 
 Erwartet: dieselbe Testanzahl wie in Step 1, alles grün, Pint ohne Beanstandung.
@@ -520,7 +520,7 @@ löschen. Der `@if ($msg->adjacency_partner_id)`-Block direkt darunter bleibt st
 
 ```bash
 php artisan test 2>&1 | tail -5
-vendor/bin/pint app/Discussion app/Services/ProjectTransfer tests/Unit/Discussion
+vendor/bin/pint $(git diff --name-only HEAD | tr '\n' ' ')
 grep -rn 'pairType\|PAIR_\|PAARTYP\|pair_types' app resources tests
 ```
 
@@ -734,7 +734,11 @@ ersetzen durch
                 }
 ```
 
-Werden `use App\Models\Expert;` oder `use App\Models\User;` danach nirgends mehr gebraucht, entfernt Pint sie in Step 9 selbst — der `no_unused_imports`-Fixer gehört zum Laravel-Preset und ist empirisch geprüft. Also nicht von Hand nachräumen, sondern `vendor/bin/pint` laufen lassen und das Ergebnis mitcommitten.
+Werden `use App\Models\Expert;` oder `use App\Models\User;` danach nirgends mehr gebraucht, **von Hand entfernen und sich nicht auf Pint verlassen.** Der `no_unused_imports`-Fixer gehört zwar zum Laravel-Preset, seine Erkennung ist aber eine Namenssuche über die ganze Datei und lässt sich von einem Teilstring täuschen: `ProjectExport.php:35` enthält `contributingExperts()`, und allein deshalb hält Pint `use App\Models\Expert;` für benutzt und behält ihn. In einer Kontrolldatei ohne dieses Wort entfernt derselbe Aufruf ihn sofort — beides empirisch nachgestellt. Prüfen mit:
+
+```bash
+grep -n 'Expert::\|User::\|Expert \$\|User \$' app/Services/ProjectTransfer/ProjectExport.php app/Services/ProjectTransfer/ProjectImporter.php
+```
 
 - [ ] **Step 8: Die Ansichten umstellen**
 
@@ -788,7 +792,7 @@ In `resources/views/livewire/debug/job-debug-panel.blade.php`:
 ```bash
 php artisan test 2>&1 | tail -5
 php artisan migrate:fresh --force && php artisan dev:build-suite
-vendor/bin/pint app/Discussion app/Events app/Models app/Services/ProjectTransfer database/migrations tests/Unit
+vendor/bin/pint $(git diff --name-only HEAD | tr '\n' ' ')
 grep -rn 'adjacency\|adjacencyPartner\|PAIR_' app resources tests database
 ```
 
