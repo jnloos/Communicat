@@ -49,18 +49,22 @@ class InitExperts extends Command
         foreach ($experts as $expert) {
             $avatarUrl = ! empty($expert['avatar_url']) ? asset($expert['avatar_url']) : null;
 
-            $attributes = [
-                'description' => $expert['description'],
-                'role'        => $expert['role'],
-                'avatar_url'  => $avatarUrl,
-            ];
+            // One entry, two personas: the same knowledge profile once under the
+            // scenario's high-status label and once under its peer label. They are
+            // written from a single source on purpose -- kept as two entries they
+            // could drift, and a run would then differ in more than the title,
+            // which is the one thing the study manipulates.
+            foreach ($expert['roles'] as $role) {
+                $model = Expert::updateOrCreate(
+                    ['name' => $expert['name'], 'role' => $role],
+                    [
+                        'description' => $expert['description'],
+                        'avatar_url' => $avatarUrl,
+                    ],
+                );
 
-            $model = Expert::updateOrCreate(
-                ['name' => $expert['name']],
-                $attributes
-            );
-
-            $model->wasRecentlyCreated ? $created++ : $updated++;
+                $model->wasRecentlyCreated ? $created++ : $updated++;
+            }
         }
 
         $this->info("Experts initialized: {$created} created, {$updated} updated.");

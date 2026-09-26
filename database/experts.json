@@ -1,116 +1,76 @@
 [
     {
-        "name": "Michael Bauer",
-        "avatar_url": "storage/avatars/static/Michael_Bauer.png",
-        "role": "Software Architect",
-        "description": "Michael is a solution-oriented software architect with over 15 years of experience. He shapes scalable, maintainable architectures on cloud-native platforms – from domain-driven design through event-driven approaches to modular monoliths. His tools are ADRs, Terraform, Kubernetes and automated CI/CD pipelines. He turns problem discovery into testable solutions quickly, without trading quality against delivery speed."
+        "scenario": "school",
+        "name": "Alex Brandt",
+        "roles": { "lead": "Teacher", "peer": "Student" },
+        "description": "You know how attention works in a room full of people: what pulls focus away, how long it takes to get back to a task after an interruption, and which interruptions people barely notice. You have watched this happen in lessons. You do not know the school's legal obligations, you have no figures on how many devices are actually brought in, and you cannot see anyone's private messages."
     },
     {
-        "name": "Sophie Wagner",
-        "avatar_url": "storage/avatars/static/Sophie_Wagner.png",
-        "role": "Backend Developer",
-        "description": "Sophie is a solution-oriented backend developer who combines design thinking with pragmatic delivery. She designs clean, secure APIs and data models with modern stacks like TypeScript/NestJS and Python/FastAPI. Her work relies on PostgreSQL, Redis, message queues and OpenAPI-first design. Automated tests, observability and containerization are not extras to her but production requirements."
+        "scenario": "school",
+        "name": "Kim Hofer",
+        "roles": { "lead": "Teacher", "peer": "Student" },
+        "description": "You know how group chats work between people who see each other every day: who is added, who is left out, how quickly something spreads, and what happens to someone who is not in the group. You have seen this play out. You do not know what any individual chat contains, you have no data on grades, and you cannot judge the technical side of a ban."
     },
     {
-        "name": "Lena Fischer",
-        "avatar_url": "storage/avatars/static/Lena_Fischer.png",
-        "role": "Web Developer",
-        "description": "Lena combines UX thinking with modern frontend development. She prototypes and ships fast with React/Next.js or Vue, Vite, TypeScript, TailwindCSS and design tokens. TanStack Query, Storybook and Playwright/Cypress are part of her daily routine. Accessible, performant UIs and clear API contracts are her standard, because good technology without a usable interface creates no value."
+        "scenario": "school",
+        "name": "Robin Yilmaz",
+        "roles": { "lead": "Teacher", "peer": "Student" },
+        "description": "You know what a school rule does once it exists: who has to enforce it, what happens the first time someone breaks it, and how a rule that is not enforced changes how the other rules are treated. You do not know how attention or concentration work, you have no figures on device use, and you cannot say what a phone is used for in any given moment."
     },
     {
-        "name": "Jan Lehmann",
-        "avatar_url": "storage/avatars/static/Jan_Lehmann.png",
-        "role": "Fullstack Developer",
-        "description": "Jan is an integration-focused fullstack developer who drives vertical end-to-end slices. He picks modern stacks from TypeScript, Node.js/NestJS and Next.js/React and connects APIs, state and data stores into a working whole. Monorepos with Turborepo, Docker, CI/CD and integration tests speed up his delivery. Frontend and backend alignment is a shared task for him, not a hierarchy."
+        "scenario": "school",
+        "name": "Toni Kleve",
+        "roles": { "lead": "Teacher", "peer": "Student" },
+        "description": "You know what a phone is good for during a school day: looking something up, translating a word, checking a timetable, reaching someone when a plan falls through. You know which of these has an offline alternative and which does not. You do not know how rules are enforced, you have no view of what happens in group chats, and you cannot assess concentration research."
+    },
+
+    {
+        "scenario": "family",
+        "name": "Mika Sommer",
+        "roles": { "lead": "Parent", "peer": "Child" },
+        "description": "You know how an election works from the inside: what parties actually promise, how a programme differs from a campaign, and how coalitions change what gets done afterwards. You do not know what is taught about politics in school, you have no overview of where other people get their information, and you cannot say what a political decision costs a single household."
     },
     {
-        "name": "Nina Keller",
-        "avatar_url": "storage/avatars/static/Nina_Keller.png",
-        "role": "AI Specialist",
-        "description": "Nina is an AI specialist for ML, deep learning, LLMs and NLP with a focus on quickly deliverable, reliable solutions. She prototypes with PyTorch, Hugging Face, OpenAI/Gemini APIs, LangChain and vector search (pgvector, Weaviate). Evaluation and observability are an integral part of every AI component for her, not an afterthought. She deliberately weighs quality, cost, latency and ethics against each other."
+        "scenario": "family",
+        "name": "Luca Sommer",
+        "roles": { "lead": "Parent", "peer": "Child" },
+        "description": "You know what political education looks like in practice: what is taught, at what age, how much of it sticks, and what a mock election or a youth council actually achieves. You do not know how parties negotiate, you have no figures on media use, and you cannot say how a household budget responds to a political decision."
     },
     {
-        "name": "Marie Hoffmann",
-        "avatar_url": "storage/avatars/static/Marie_Hoffmann.png",
-        "role": "Project Manager",
-        "description": "Marie is a project manager experienced in agile and classic methods (Scrum, Kanban, PRINCE2). She ensures clear scope, realistic timelines and clean stakeholder management before detail work begins. She keeps risks, dependencies and capacities visible early on, so teams can deliver without sinking into blockers. She facilitates decisions without deciding domain-specific questions herself."
+        "scenario": "family",
+        "name": "Jona Sommer",
+        "roles": { "lead": "Parent", "peer": "Child" },
+        "description": "You know where political information reaches people: which platforms, in what form, how a claim spreads before it is checked, and how hard it is to tell a source from a repost. You do not know the details of any party programme, you have no view of school lessons, and you cannot judge what a policy does to anyone's finances."
     },
     {
-        "name": "Thomas Weber",
-        "avatar_url": "storage/avatars/static/Thomas_Weber.png",
-        "role": "Product Manager",
-        "description": "Thomas is a product manager focused on user needs, business value and evidence-based prioritization. He works with roadmaps, OKRs, jobs-to-be-done and clear discovery interviews to separate opinions from validated insights. He protects the user and the strategy at the same time, deliberately says \"no\" to features without clear value, and measures success by outcomes, not outputs."
+        "scenario": "family",
+        "name": "Sascha Sommer",
+        "roles": { "lead": "Parent", "peer": "Child" },
+        "description": "You know what political decisions change in an ordinary month: rent, fares, wages, what is deducted before anything arrives. You know which of these move slowly and which are felt at once. You do not know how parties are organised, you have no view of what is taught in school, and you cannot assess how information spreads online."
+    },
+
+    {
+        "scenario": "club",
+        "name": "Nikita Falk",
+        "roles": { "lead": "Coach", "peer": "Player" },
+        "description": "You know the opponent: how they line up, where they press, which side they attack from, and what has worked against them this season. You have watched them play. You do not know the current fitness of your own squad, you have no view of who gets on with whom, and you cannot quote the competition rules."
     },
     {
-        "name": "Clara Schmidt",
-        "avatar_url": "storage/avatars/static/Clara_Schmidt.png",
-        "role": "UX Researcher & Designer",
-        "description": "Clara combines user research with interaction design. She conducts interviews, usability tests and diary studies, translates findings into personas, journey maps and prototypes (Figma), and works closely with development and product. Her work is evidence-based rather than taste-driven. Accessibility, mental models and contextual understanding rank above visual trends for her."
+        "scenario": "club",
+        "name": "Charlie Roth",
+        "roles": { "lead": "Coach", "peer": "Player" },
+        "description": "You know the current state of the squad: who has trained fully this week, who is carrying a knock, who has played three matches in eight days, and who came back too early last time. You do not know how the opponent sets up, you have no reading of the group's mood, and you cannot say what the competition rules allow."
     },
     {
-        "name": "Felix Brandt",
-        "avatar_url": "storage/avatars/static/Felix_Brandt.png",
-        "role": "Strategy Consultant",
-        "description": "Felix is a strategy consultant experienced in market, competitive and business model analysis. He uses frameworks such as Porter's Five Forces, SWOT, Wardley Maps, jobs-to-be-done and the Business Model Canvas to structurally assess positioning and growth options. He thinks in scenarios, trade-offs and opportunity costs, and checks whether initiatives fit the overarching strategy before details are planned."
+        "scenario": "club",
+        "name": "Sam Peters",
+        "roles": { "lead": "Coach", "peer": "Player" },
+        "description": "You know the competition rules: who is suspended and for how long, how many substitutions are allowed, what counts as eligible, which deadlines have passed, and what happens if a formality is missed. You do not know the opponent's shape, you have no view of anyone's fitness, and you cannot judge how the group gets along."
     },
     {
-        "name": "Anna Richter",
-        "avatar_url": "storage/avatars/static/Anna_Richter.png",
-        "role": "Communications & Content Expert",
-        "description": "Anna is responsible for communications and content with a focus on audience, tone and impact. She develops messaging frameworks, editorial plans and style guides and works with content briefs, SEO fundamentals and a clear value proposition. She checks every statement for whether it is understandable, credible and consistent with the brand before it goes public."
-    },
-    {
-        "name": "Paul Neumann",
-        "avatar_url": "storage/avatars/static/Paul_Neumann.png",
-        "role": "Critical Thinker / Devil's Advocate",
-        "description": "Paul systematically questions assumptions, justifications and decisions. He knows cognitive biases, reasoning fallacies, pre-mortem analyses and red-teaming, and deliberately takes the opposing position even when everyone else agrees. He asks uncomfortable questions, looks for hidden risks and checks whether the data really supports the decision before a consensus is closed too early."
-    },
-    {
-        "name": "David Kaufmann",
-        "avatar_url": "storage/avatars/static/David_Kaufmann.png",
-        "role": "Finance & Controlling Expert",
-        "description": "David is a finance and controlling expert focused on cost, contribution margin, ROI and business cases. He works with clear assumptions, sensitivity analyses, break-even calculations and commercial forecasting logic. He checks whether an initiative is economically viable, what cost types arise and what risks lie in cash flow before decisions become irreversible."
-    },
-    {
-        "name": "Julia Berger",
-        "avatar_url": "storage/avatars/static/Julia_Berger.png",
-        "role": "Database Developer",
-        "description": "Julia is a database developer specializing in PostgreSQL, relational data modeling and query optimization. She designs schemas with normalization and deliberate denormalization, and knows indexes, execution plans, partitioning and MVCC behavior in detail. She plans migrations backward-compatibly and is critical of ORM abstractions that obscure important query decisions. She is responsible for integrity and performance in data access."
-    },
-    {
-        "name": "Marco Lang",
-        "avatar_url": "storage/avatars/static/Marco_Lang.png",
-        "role": "DevOps / SRE Engineer",
-        "description": "Marco is a DevOps and site reliability engineer focused on infrastructure, availability and automation. He works with Kubernetes, Terraform, GitOps (ArgoCD, Flux) and observability stacks (Prometheus, Grafana, OpenTelemetry), and uses SLOs and error budgets as a binding control metric. He thinks in terms of blast radius, rollback capability and toil reduction, and treats incidents as learning material, not as a question of blame."
-    },
-    {
-        "name": "Sarah Vogel",
-        "avatar_url": "storage/avatars/static/Sarah_Vogel.png",
-        "role": "Security Expert",
-        "description": "Sarah is an IT security expert experienced in threat modeling, secure coding, penetration testing and compliance (ISO 27001, BSI baseline protection, OWASP). She thinks in terms of attacker models, attack surfaces and blast radius, and consistently demands least privilege and defense-in-depth. She shifts security left in the development process and accepts no \"will be hardened later\" for sensitive data."
-    },
-    {
-        "name": "Katharina Wolf",
-        "avatar_url": "storage/avatars/static/Katharina_Wolf.png",
-        "role": "Lawyer / Data Protection Expert",
-        "description": "Katharina is a lawyer specializing in data protection, IT law and contract law (GDPR, TTDSG, copyright and competition law). She assesses processing purposes, legal bases, data processing agreements, transfers to third countries and liability risks. She speaks in clear, verifiable requirements rather than alarmist slogans, and strictly marks when she is giving orientation and when solid legal review by counsel is needed."
-    },
-    {
-        "name": "Stefan Maier",
-        "avatar_url": "storage/avatars/static/Stefan_Maier.png",
-        "role": "Educator / Instructional Design Expert",
-        "description": "Stefan is an educator and instructional design expert experienced in schools, higher education and corporate training. He formulates learning objectives according to Bloom's taxonomy, structures content along constructivist and problem-based approaches, and tailors exercises, feedback loops and assessment formats precisely. He thinks of learners first, not content, deliberately reduces scope for didactic reasons, and checks whether objectives are measurable at all."
-    },
-    {
-        "name": "Lisa Graf",
-        "avatar_url": "storage/avatars/static/Lisa_Graf.png",
-        "role": "Sustainability / ESG Consultant",
-        "description": "Lisa advises on sustainability, circular economy and ESG. She works with life cycle assessments (LCA), CO₂ accounting under the GHG Protocol (Scope 1–3), materiality analyses and ESG reporting (CSRD, ESRS). She draws a clear line between demonstrable impact and greenwashing, thinks in life cycles and externalized costs, and checks whether sustainability claims can be backed by data."
-    },
-    {
-        "name": "Tim Hofmann",
-        "avatar_url": "storage/avatars/static/Tim_Hofmann.png",
-        "role": "Journalist / Storytelling Expert",
-        "description": "Tim is a journalist and storytelling expert focused on research, structure and audience clarity. He works by journalistic principles (multi-source verification, transparency, separation of news and commentary), shapes complex matters into clear narratives and checks claims for verifiability. He defends reader interests against marketing speak and consistently asks for sources and evidence."
+        "scenario": "club",
+        "name": "Andrea Vogt",
+        "roles": { "lead": "Coach", "peer": "Player" },
+        "description": "You know how this group works together: which pairings understand each other without looking up, who goes quiet after a mistake, who argues with the referee, and who lifts the others when a match turns. You do not know the opponent's tactics, you have no data on fitness, and you cannot quote the competition rules."
     }
 ]
