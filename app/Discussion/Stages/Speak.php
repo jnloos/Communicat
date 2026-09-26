@@ -12,7 +12,6 @@ use App\Discussion\Values\Contribution;
 use App\Discussion\Values\ModelConfig;
 use App\Events\PipelineStageChanged;
 use App\Models\Expert;
-use App\Models\Message;
 use App\Models\Project;
 use Closure;
 
@@ -20,13 +19,6 @@ use Closure;
 class Speak
 {
     public const MARKER_CONTROL = '---STEUERUNG---';
-
-    public const PAIR_TYPES = [
-        Message::PAIR_FRAGE_ANTWORT,
-        Message::PAIR_ANSPRACHE_REAKTION,
-        Message::PAIR_BEITRAG_DISKUSSION,
-        Message::PAIR_SYNTHESE_DISKUSSION,
-    ];
 
     public function __construct(
         private readonly PromptRenderer $prompts,
@@ -58,7 +50,6 @@ class Speak
             'memory' => $this->memory->viewFor($payload->project, $speaker),
             'proposal' => $payload->thoughtOf($speaker)?->proposal,
             'marker_control' => self::MARKER_CONTROL,
-            'pair_types' => self::PAIR_TYPES,
         ] + $this->prompts->participants($payload->project));
     }
 
@@ -74,26 +65,15 @@ class Speak
             throw new ParseFailure('Speak: the answer has no visible contribution.');
         }
 
-        return new Contribution($text, $this->partnerToken($trailer, $project), $this->pairType($trailer), $completion);
+        return new Contribution($text, $this->addresseeToken($trailer, $project), $completion);
     }
 
-    private function partnerToken(string $trailer, Project $project): ?string
+    private function addresseeToken(string $trailer, Project $project): ?string
     {
         if (! preg_match('/ADRESSAT:\s*(\S+)/u', $trailer, $match)) {
             return null;
         }
 
         return $project->contributorByPromptId($match[1]) instanceof Expert ? $match[1] : null;
-    }
-
-    private function pairType(string $trailer): ?string
-    {
-        if (! preg_match('/PAARTYP:\s*(.+)/u', $trailer, $match)) {
-            return null;
-        }
-
-        $value = trim($match[1]);
-
-        return in_array($value, self::PAIR_TYPES, true) ? $value : null;
     }
 }

@@ -7,8 +7,7 @@ final readonly class Contribution
 {
     public function __construct(
         public string $text,
-        public ?string $partnerToken,
-        public ?string $pairType,
+        public ?string $addresseeToken,
         public Completion $completion,
     ) {}
 }

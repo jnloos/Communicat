@@ -191,10 +191,6 @@
                                     <span class="font-semibold text-zinc-700 dark:text-zinc-300">
                                         {{ $msg->expert?->name ?? __('debug.detail.system_sender') }}
                                     </span>
-                                    @if ($msg->adjacency_pair_type)
-                                        <span class="text-zinc-400">·</span>
-                                        <span class="font-mono text-zinc-500">{{ $msg->adjacency_pair_type }}</span>
-                                    @endif
                                     @if ($msg->adjacency_partner_id)
                                         <span class="text-zinc-400">→</span>
                                         <span class="text-zinc-500">{{ $msg->adjacencyPartner?->name }}</span>

@@ -69,8 +69,6 @@ class ProjectImporter
                 }
                 // otherwise a system message: both ids stay null
 
-                $msg->adjacency_pair_type = $m['adjacency_pair_type'] ?? null;
-
                 // Re-link the polymorphic addressee: an expert only if it survived
                 // re-linking; a user hand-off is reassigned to the importing owner
                 // (the export carries no stable user id), mirroring user messages.

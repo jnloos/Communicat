@@ -10,7 +10,6 @@ use App\Discussion\Values\Selection;
 use App\Discussion\Values\Thought;
 use App\Events\PipelineStageChanged;
 use App\Models\Expert;
-use App\Models\Message;
 use App\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -59,13 +58,24 @@ class SpeakTest extends TestCase
 
     public function test_splits_the_visible_text_from_the_control_trailer(): void
     {
-        FakeAgents::always(SpeakAgent::class, "Bob, woher nimmst du diese Zahl?\n---STEUERUNG---\nADRESSAT: E{$this->bob->id}\nPAARTYP: Frage→Antwort");
+        FakeAgents::always(SpeakAgent::class, "Bob, woher nimmst du diese Zahl?\n---STEUERUNG---\nADRESSAT: E{$this->bob->id}");
 
         $contribution = $this->speak($this->payload())->contribution();
 
         $this->assertSame('Bob, woher nimmst du diese Zahl?', $contribution->text);
-        $this->assertSame("E{$this->bob->id}", $contribution->partnerToken);
-        $this->assertSame(Message::PAIR_FRAGE_ANTWORT, $contribution->pairType);
+        $this->assertSame("E{$this->bob->id}", $contribution->addresseeToken);
+    }
+
+    public function test_a_leftover_pair_type_line_is_ignored(): void
+    {
+        // Ein Modell, das noch das alte Format liefert, darf keinen Fehler auslösen:
+        // der Trailer wird nur nach ADRESSAT durchsucht, alles andere fällt weg.
+        FakeAgents::always(SpeakAgent::class, "Text.\n---STEUERUNG---\nADRESSAT: E{$this->bob->id}\nPAARTYP: Frage→Antwort");
+
+        $contribution = $this->speak($this->payload())->contribution();
+
+        $this->assertSame('Text.', $contribution->text);
+        $this->assertSame("E{$this->bob->id}", $contribution->addresseeToken);
     }
 
     public function test_a_missing_trailer_degrades_to_a_plenum_contribution(): void
@@ -75,23 +85,21 @@ class SpeakTest extends TestCase
         $contribution = $this->speak($this->payload())->contribution();
 
         $this->assertSame('Ich sehe das anders.', $contribution->text);
-        $this->assertNull($contribution->partnerToken);
-        $this->assertNull($contribution->pairType);
+        $this->assertNull($contribution->addresseeToken);
     }
 
-    public function test_unknown_addressees_and_pair_types_are_dropped(): void
+    public function test_an_unknown_addressee_is_dropped(): void
     {
-        FakeAgents::always(SpeakAgent::class, "Text.\n---STEUERUNG---\nADRESSAT: E999\nPAARTYP: Abschluss→Nutzer");
+        FakeAgents::always(SpeakAgent::class, "Text.\n---STEUERUNG---\nADRESSAT: E999");
 
         $contribution = $this->speak($this->payload())->contribution();
 
-        $this->assertNull($contribution->partnerToken);
-        $this->assertNull($contribution->pairType);
+        $this->assertNull($contribution->addresseeToken);
     }
 
     public function test_an_empty_visible_text_is_a_parse_failure(): void
     {
-        FakeAgents::always(SpeakAgent::class, "---STEUERUNG---\nADRESSAT: none\nPAARTYP: Beitrag→Diskussion");
+        FakeAgents::always(SpeakAgent::class, "---STEUERUNG---\nADRESSAT: none");
 
         $this->expectException(ParseFailure::class);
 

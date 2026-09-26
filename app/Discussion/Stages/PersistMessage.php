@@ -4,7 +4,6 @@ namespace App\Discussion\Stages;
 
 use App\Discussion\TurnPayload;
 use App\Models\Expert;
-use App\Models\Message;
 use Closure;
 
 /** Saves the public contribution. Needs SelectSpeaker and Speak before it. */
@@ -15,13 +14,12 @@ class PersistMessage
         $contribution = $payload->contribution();
 
         $message = $payload->project->addMessage($contribution->text, $payload->selection()->speaker);
-        $message->adjacency_pair_type = $contribution->pairType ?? Message::PAIR_BEITRAG_DISKUSSION;
         $message->job_log_id = $payload->jobLogId;
 
-        $partner = $payload->project->contributorByPromptId($contribution->partnerToken);
+        $addressee = $payload->project->contributorByPromptId($contribution->addresseeToken);
 
-        if ($partner instanceof Expert) {
-            $message->adjacencyPartner()->associate($partner);
+        if ($addressee instanceof Expert) {
+            $message->adjacencyPartner()->associate($addressee);
         }
 
         $message->save();

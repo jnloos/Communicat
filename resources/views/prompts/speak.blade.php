@@ -70,7 +70,5 @@ STEUERUNG (verbindlich, NUR diese Form, NICHT Teil des sichtbaren Beitrags):
 Hänge nach deinem Beitrag exakt diesen Block an:
 {{ $marker_control }}
 ADRESSAT: <Token des Experten, den dein Beitrag anspricht, z. B. E7 — oder "none", wenn du ans Plenum sprichst>
-PAARTYP: <einer von: {{ implode(' | ', $pair_types) }}>
 - ADRESSAT ist NUR ein Experten-Token aus der TEILNEHMER-Liste oder "none". Niemals ein Nutzer, niemals ein Name.
-- PAARTYP: "Frage→Antwort" wenn dein Beitrag eine direkte Frage stellt, "Ansprache→Reaktion" wenn er auf eine Ansprache reagiert, "Synthese→Diskussion" wenn du verdichtest/zusammenführst, sonst "Beitrag→Diskussion".
 - Die Tokens und dieser Block erscheinen ausschließlich hier, niemals im sichtbaren Beitrag darüber.

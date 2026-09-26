@@ -9,7 +9,6 @@ use App\Discussion\Values\Contribution;
 use App\Discussion\Values\Selection;
 use App\Models\Expert;
 use App\Models\JobLog;
-use App\Models\Message;
 use App\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -23,7 +22,7 @@ class PersistMessageTest extends TestCase
         return new Completion('roh', '', 1, 1, null);
     }
 
-    public function test_saves_the_contribution_with_its_adjacency_metadata(): void
+    public function test_saves_the_contribution_with_its_addressee(): void
     {
         $project = Project::factory()->create();
         [$alice, $bob] = Expert::factory()->count(2)->create()->all();
@@ -33,7 +32,7 @@ class PersistMessageTest extends TestCase
 
         $payload = new TurnPayload($project, 1, $log->id);
         $payload->select(new Selection($alice, 'RoundRobinSelector'));
-        $payload->contribute(new Contribution('Bob, wie meinst du das?', "E{$bob->id}", Message::PAIR_FRAGE_ANTWORT, $this->completion()));
+        $payload->contribute(new Contribution('Bob, wie meinst du das?', "E{$bob->id}", $this->completion()));
 
         (new PersistMessage)->handle($payload, fn (TurnPayload $p) => $p);
 
@@ -42,11 +41,10 @@ class PersistMessageTest extends TestCase
         $this->assertSame('Bob, wie meinst du das?', $message->content);
         $this->assertSame($alice->id, $message->expert_id);
         $this->assertSame($log->id, $message->job_log_id);
-        $this->assertSame(Message::PAIR_FRAGE_ANTWORT, $message->adjacency_pair_type);
         $this->assertTrue($message->adjacencyPartner->is($bob));
     }
 
-    public function test_a_plenum_contribution_gets_the_default_pair_type_and_no_partner(): void
+    public function test_a_plenum_contribution_gets_no_addressee(): void
     {
         $project = Project::factory()->create();
         $alice = Expert::factory()->create();
@@ -54,13 +52,10 @@ class PersistMessageTest extends TestCase
 
         $payload = new TurnPayload($project, 1);
         $payload->select(new Selection($alice, 'RoundRobinSelector'));
-        $payload->contribute(new Contribution('Ich sehe das anders.', null, null, $this->completion()));
+        $payload->contribute(new Contribution('Ich sehe das anders.', null, $this->completion()));
 
         (new PersistMessage)->handle($payload, fn (TurnPayload $p) => $p);
 
-        $message = $payload->message()->fresh();
-
-        $this->assertSame(Message::PAIR_BEITRAG_DISKUSSION, $message->adjacency_pair_type);
-        $this->assertNull($message->adjacency_partner_id);
+        $this->assertNull($payload->message()->fresh()->adjacency_partner_id);
     }
 }
