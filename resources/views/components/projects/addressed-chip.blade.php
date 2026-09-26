@@ -1,11 +1,10 @@
 @props([
     'addressed',
-    'isExpert' => false,
 ])
 
-{{-- "speaks to" indicator: arrow plus the addressed participant. Display-only for
-     experts and users alike; the memory flyout opens from the sender avatar. --}}
-<span class="relative inline-flex min-w-0 items-center gap-1.5" data-addressed-{{ $isExpert ? 'expert' : 'user' }}-id="{{ $addressed->id }}">
+{{-- "speaks to" indicator: arrow plus the addressed expert. Display-only; the
+     memory flyout opens from the sender avatar. --}}
+<span class="relative inline-flex min-w-0 items-center gap-1.5" data-addressed-expert-id="{{ $addressed->id }}">
     <flux:icon.arrow-long-right variant="micro" class="size-3.5 shrink-0 text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
     <span class="sr-only">{{ __('chat.message.addressed') }}</span>
 

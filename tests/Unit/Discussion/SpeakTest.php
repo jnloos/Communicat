@@ -68,8 +68,8 @@ class SpeakTest extends TestCase
 
     public function test_a_leftover_pair_type_line_is_ignored(): void
     {
-        // Ein Modell, das noch das alte Format liefert, darf keinen Fehler auslösen:
-        // der Trailer wird nur nach ADRESSAT durchsucht, alles andere fällt weg.
+        // A model still answering in the old format must not cause an error:
+        // the trailer is only searched for ADRESSAT, and everything else is dropped.
         FakeAgents::always(SpeakAgent::class, "Text.\n---STEUERUNG---\nADRESSAT: E{$this->bob->id}\nPAARTYP: Frage→Antwort");
 
         $contribution = $this->speak($this->payload())->contribution();

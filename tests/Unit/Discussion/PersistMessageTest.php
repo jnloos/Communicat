@@ -41,7 +41,7 @@ class PersistMessageTest extends TestCase
         $this->assertSame('Bob, wie meinst du das?', $message->content);
         $this->assertSame($alice->id, $message->expert_id);
         $this->assertSame($log->id, $message->job_log_id);
-        $this->assertTrue($message->adjacencyPartner->is($bob));
+        $this->assertTrue($message->addressee->is($bob));
     }
 
     public function test_a_plenum_contribution_gets_no_addressee(): void
@@ -56,6 +56,6 @@ class PersistMessageTest extends TestCase
 
         (new PersistMessage)->handle($payload, fn (TurnPayload $p) => $p);
 
-        $this->assertNull($payload->message()->fresh()->adjacency_partner_id);
+        $this->assertNull($payload->message()->fresh()->addressee_expert_id);
     }
 }

@@ -9,15 +9,11 @@
     $sender = $msg->sender();
     $isOwn  = $msg->isCurrUser();
 
-    // Resolve the "speaks to" target from the polymorphic adjacency_partner:
-    // an expert or a user (no global name lookup). No self-reference.
-    $partner = $msg->adjacencyPartner;
-    $addressedIsExpert = $partner instanceof \App\Models\Expert;
-    $addressed = null;
-    if ($addressedIsExpert && $partner->id !== $msg->expert_id) {
-        $addressed = $partner;
-    } elseif ($partner instanceof \App\Models\User && !($msg->isUser() && $partner->id === $msg->user_id)) {
-        $addressed = $partner;
+    // Whom this message speaks to. Always a contributing expert; a message that
+    // addresses its own sender shows no chip.
+    $addressed = $msg->addressee;
+    if ($addressed !== null && $addressed->id === $msg->expert_id) {
+        $addressed = null;
     }
 
     $renderedContent = Markdown::parse($msg->content);
@@ -47,7 +43,7 @@
                 <span class="font-semibold text-zinc-800 dark:text-zinc-100">{{ $sender->name }}</span>
 
                 @if ($addressed)
-                    <x-projects.addressed-chip :addressed="$addressed" :is-expert="$addressedIsExpert" />
+                    <x-projects.addressed-chip :addressed="$addressed" />
                 @endif
             </div>
 

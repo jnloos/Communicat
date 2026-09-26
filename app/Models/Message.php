@@ -4,19 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Message extends Model
 {
-    /** adjacency_pair_type values. */
-    public const PAIR_FRAGE_ANTWORT = 'Frage→Antwort';
-
-    public const PAIR_ANSPRACHE_REAKTION = 'Ansprache→Reaktion';
-
-    public const PAIR_BEITRAG_DISKUSSION = 'Beitrag→Diskussion';
-
-    public const PAIR_SYNTHESE_DISKUSSION = 'Synthese→Diskussion';
-
     public function expert(): BelongsTo
     {
         return $this->belongsTo(Expert::class);
@@ -33,14 +23,13 @@ class Message extends Model
     }
 
     /**
-     * The contributor this message addresses (expert or user), if any. The
-     * partner's type encodes the simplified adjacency-pair direction: a User
-     * partner is a hand-back to the human, an Expert partner an expert→expert
-     * turn. Set from the SPEAK output (expert) or the moderator's hand-off (user).
+     * The contributing expert this message addresses, if any. Set from the SPEAK
+     * output; null means the turn spoke to the group. Only an expert can be
+     * addressed — users cannot contribute to a run.
      */
-    public function adjacencyPartner(): MorphTo
+    public function addressee(): BelongsTo
     {
-        return $this->morphTo();
+        return $this->belongsTo(Expert::class, 'addressee_expert_id');
     }
 
     public function isAssistant(): bool

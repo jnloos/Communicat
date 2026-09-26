@@ -19,7 +19,7 @@ class PersistMessage
         $addressee = $payload->project->contributorByPromptId($contribution->addresseeToken);
 
         if ($addressee instanceof Expert) {
-            $message->adjacencyPartner()->associate($addressee);
+            $message->addressee()->associate($addressee);
         }
 
         $message->save();

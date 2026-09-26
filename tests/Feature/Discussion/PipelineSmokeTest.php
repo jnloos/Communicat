@@ -58,8 +58,7 @@ class PipelineSmokeTest extends TestCase
         ]));
         FakeAgents::always(SpeakAgent::class, 'Ein kurzer Beitrag.
 ---STEUERUNG---
-ADRESSAT: none
-PAARTYP: Beitrag→Diskussion');
+ADRESSAT: none');
         FakeAgents::always(SummarizeAgent::class, 'Zusammenfassung.');
         // A token that need not exist: the selector then falls back to the tie
         // breaker and records it, which is a pass for a smoke test either way.

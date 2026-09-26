@@ -25,7 +25,7 @@ class MessageGeneratedPayloadTest extends TestCase
         $project->addContributingExpert($bob);
 
         $message = $project->addMessage('Hallo Bob.', $alice);
-        $message->adjacencyPartner()->associate($bob);
+        $message->addressee()->associate($bob);
         $message->save();
 
         $payload = (new MessageGenerated($project->id, $message->id, 5))->broadcastWith();
@@ -34,27 +34,8 @@ class MessageGeneratedPayloadTest extends TestCase
         $this->assertSame($message->id, $payload['message_id']);
         $this->assertSame($alice->id, $payload['expert_id']);
         $this->assertSame($bob->id, $payload['addressed_expert_id']);
-        $this->assertNull($payload['addressed_user_id']);
+        $this->assertArrayNotHasKey('addressed_user_id', $payload);
         $this->assertSame(5, $payload['next_turn_delay_seconds']);
-    }
-
-    public function test_payload_carries_user_addressee(): void
-    {
-        $owner = User::factory()->create();
-        $project = Project::withoutEvents(fn () => Project::create([
-            'title' => 't', 'description' => 'd', 'user_id' => $owner->id,
-        ]));
-        $alice = Expert::factory()->create(['name' => 'Alice']);
-        $project->addContributingExpert($alice);
-
-        $message = $project->addMessage('Was meinst du?', $alice);
-        $message->adjacencyPartner()->associate($owner);
-        $message->save();
-
-        $payload = (new MessageGenerated($project->id, $message->id))->broadcastWith();
-
-        $this->assertNull($payload['addressed_expert_id']);
-        $this->assertSame($owner->id, $payload['addressed_user_id']);
     }
 
     public function test_payload_handles_missing_message(): void
@@ -69,7 +50,7 @@ class MessageGeneratedPayloadTest extends TestCase
         $this->assertNull($payload['message_id']);
         $this->assertNull($payload['expert_id']);
         $this->assertNull($payload['addressed_expert_id']);
-        $this->assertNull($payload['addressed_user_id']);
+        $this->assertArrayNotHasKey('addressed_user_id', $payload);
         $this->assertSame(0, $payload['next_turn_delay_seconds']);
     }
 }

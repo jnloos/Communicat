@@ -69,16 +69,12 @@ class ProjectImporter
                 }
                 // otherwise a system message: both ids stay null
 
-                // Re-link the polymorphic addressee: an expert only if it survived
-                // re-linking; a user hand-off is reassigned to the importing owner
-                // (the export carries no stable user id), mirroring user messages.
-                $apExpert = isset($m['adjacency_partner_expert_id']) ? (int) $m['adjacency_partner_expert_id'] : null;
-                if ($apExpert !== null && in_array($apExpert, $existingIds, true)) {
-                    $msg->adjacency_partner_type = Expert::class;
-                    $msg->adjacency_partner_id = $apExpert;
-                } elseif (! empty($m['adjacency_partner_is_user'])) {
-                    $msg->adjacency_partner_type = User::class;
-                    $msg->adjacency_partner_id = $owner->id;
+                // Re-link the addressee, but only to an expert that survived
+                // re-linking. No support for the old export format: a file from
+                // before this change imports without addressees.
+                $addresseeId = isset($m['addressee_expert_id']) ? (int) $m['addressee_expert_id'] : null;
+                if ($addresseeId !== null && in_array($addresseeId, $existingIds, true)) {
+                    $msg->addressee_expert_id = $addresseeId;
                 }
                 if (! empty($m['created_at'])) {
                     $msg->created_at = Carbon::parse($m['created_at']);

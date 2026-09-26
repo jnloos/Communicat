@@ -19,11 +19,10 @@ return new class extends Migration
 
             $table->text('content');
 
-            // Adjacency metadata: the typed pair label plus the polymorphic
-            // addressee (expert or user). A User partner is a hand-back; the
-            // partner is set from the SPEAK output or the moderator hand-off.
-            $table->string('adjacency_pair_type', 50)->nullable();
-            $table->nullableMorphs('adjacency_partner');
+            // Whom this contribution addresses. Only a contributing expert can be:
+            // the chat has no composer, and Speak drops a U token. Null means the
+            // turn spoke to the group.
+            $table->foreignId('addressee_expert_id')->nullable()->constrained('experts')->nullOnDelete();
 
             $table->timestamps();
         });

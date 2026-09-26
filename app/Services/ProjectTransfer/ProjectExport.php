@@ -2,9 +2,7 @@
 
 namespace App\Services\ProjectTransfer;
 
-use App\Models\Expert;
 use App\Models\Project;
-use App\Models\User;
 
 class ProjectExport
 {
@@ -54,10 +52,7 @@ class ProjectExport
                     'expert_id' => $m->expert_id,
                     'is_user' => $m->user_id !== null,
                     'sender_name' => $m->expert?->name ?? $m->user?->name,
-                    // Polymorphic addressee, flattened: the expert id (re-linkable)
-                    // or a user flag (reassigned to the importing owner).
-                    'adjacency_partner_expert_id' => $m->adjacency_partner_type === Expert::class ? $m->adjacency_partner_id : null,
-                    'adjacency_partner_is_user' => $m->adjacency_partner_type === User::class,
+                    'addressee_expert_id' => $m->addressee_expert_id,
                     'created_at' => optional($m->created_at)->toIso8601String(),
                 ])
                 ->values()
