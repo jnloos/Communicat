@@ -43,6 +43,13 @@ class ProjectImporter
             $project->summarize_threshold = $this->positiveOrNull($projectData['summarize_threshold'] ?? null);
             $project->summarize_oldest = $this->positiveOrNull($projectData['summarize_oldest'] ?? null);
             $project->long_term_memory = $projectData['long_term_memory'] ?? null;
+
+            // Absent in schema < 8. Null lets the model hand out a fresh seed,
+            // which is right for a copy of a project that never ran.
+            $project->seed = $this->positiveOrNull($projectData['seed'] ?? null);
+            $project->turn_budget = $this->positiveOrNull($projectData['turn_budget'] ?? null);
+            $project->run_config = $this->restorableRunConfig($projectData, $project);
+
             $project->save();
             $project->addContributingUser($owner);
 
@@ -124,6 +131,32 @@ class ProjectImporter
     }
 
     /** Keeps only a usable per-project override; anything else falls back to the config. */
+    /**
+     * The frozen run snapshot, but only when it can still be true.
+     *
+     * TurnRunner freezes run_config once and never again, so a copy that
+     * carries one would keep logging under it -- including after an import
+     * fell back to a default pipeline or model because the original's was
+     * unknown here. The snapshot would then describe a run that is not the one
+     * being made. In that case it is dropped and the copy behaves like a fresh
+     * project: the next turn writes an honest snapshot of its own.
+     *
+     * @param  array<string, mixed>  $projectData
+     */
+    private function restorableRunConfig(array $projectData, Project $project): ?array
+    {
+        $runConfig = $projectData['run_config'] ?? null;
+
+        if (! is_array($runConfig) || $runConfig === []) {
+            return null;
+        }
+
+        $survived = $project->pipeline === ($projectData['pipeline'] ?? null)
+            && $project->model === ($projectData['model'] ?? null);
+
+        return $survived ? $runConfig : null;
+    }
+
     private function positiveOrNull(mixed $value): ?int
     {
         return is_numeric($value) && (int) $value > 0 ? (int) $value : null;

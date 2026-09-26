@@ -33,7 +33,7 @@ class ProjectTransferTest extends TestCase
 
         $data = (new ProjectExport)->toArray($source->fresh());
 
-        $this->assertSame(7, $data['schema_version']);
+        $this->assertSame(8, $data['schema_version']);
         $this->assertArrayNotHasKey('settings', $data['project']);
 
         $copy = app(ProjectImporter::class)->import($data, $owner)['project']->fresh();
@@ -49,6 +49,73 @@ class ProjectTransferTest extends TestCase
         $this->assertSame('Alices Gedanke.', Summary::where('project_id', $copy->id)->value('content'));
         $this->assertNull($copy->run_config);
         $this->assertTrue($copy->users()->whereKey($owner->id)->exists());
+    }
+
+    /**
+     * What makes a run a run: the seed the tie-breaker draws from, the budget
+     * that stops it, and the frozen record of what it meant. Without these an
+     * archived run is indistinguishable from a fresh project carrying the same
+     * messages.
+     */
+    public function test_a_round_trip_keeps_the_run_settings(): void
+    {
+        $owner = User::factory()->create();
+
+        $source = Project::factory()->create([
+            'user_id' => $owner->id,
+            'pipeline' => 'RoundRobinPipeline',
+            'model' => 'gemini-2.5-pro',
+            'seed' => 777,
+            'turn_budget' => 12,
+            'run_config' => ['pipeline' => 'RoundRobinPipeline', 'system_prompt' => 'frozen'],
+        ]);
+
+        $copy = app(ProjectImporter::class)->import((new ProjectExport)->toArray($source->fresh()), $owner)['project']->fresh();
+
+        $this->assertSame(777, $copy->seed);
+        $this->assertSame(12, $copy->turn_budget);
+        $this->assertSame(['pipeline' => 'RoundRobinPipeline', 'system_prompt' => 'frozen'], $copy->run_config);
+    }
+
+    /**
+     * TurnRunner freezes run_config once and never again. A copy that kept the
+     * original's snapshot after falling back to a default pipeline would keep
+     * logging under a configuration it is not running, so the snapshot is
+     * dropped and the next turn writes an honest one.
+     */
+    public function test_an_unknown_pipeline_drops_the_frozen_snapshot(): void
+    {
+        $owner = User::factory()->create();
+
+        $copy = app(ProjectImporter::class)->import([
+            'schema_version' => ProjectExport::SCHEMA_VERSION,
+            'project' => [
+                'title' => 'Archived run',
+                'pipeline' => 'APipelineThisInstallDoesNotHave',
+                'model' => 'gemini-2.5-pro',
+                'seed' => 555,
+                'run_config' => ['pipeline' => 'APipelineThisInstallDoesNotHave', 'system_prompt' => 'frozen'],
+            ],
+        ], $owner)['project']->fresh();
+
+        $this->assertNotSame('APipelineThisInstallDoesNotHave', $copy->pipeline, 'the pipeline fell back');
+        $this->assertNull($copy->run_config, 'so the snapshot must not survive');
+        $this->assertSame(555, $copy->seed, 'the seed is a parameter, not a snapshot, and still applies');
+    }
+
+    /** An export written before schema 8 carries none of this; the copy gets a fresh seed. */
+    public function test_an_older_export_still_imports_and_gets_its_own_seed(): void
+    {
+        $owner = User::factory()->create();
+
+        $copy = app(ProjectImporter::class)->import([
+            'schema_version' => 7,
+            'project' => ['title' => 'Older export', 'pipeline' => 'RoundRobinPipeline'],
+        ], $owner)['project']->fresh();
+
+        $this->assertNotNull($copy->seed);
+        $this->assertNull($copy->turn_budget);
+        $this->assertNull($copy->run_config);
     }
 
     public function test_a_round_trip_keeps_a_valid_addressee_drops_a_stray_one_and_leaves_none_alone(): void

@@ -7,7 +7,7 @@ use App\Models\Project;
 class ProjectExport
 {
     /** Current export schema version (consumed by ProjectImporter). */
-    public const SCHEMA_VERSION = 7;
+    public const SCHEMA_VERSION = 8;
 
     /**
      * Build the full clone payload for a project: pipeline/model config,
@@ -24,6 +24,16 @@ class ProjectExport
                 'description' => $project->description,
                 'pipeline' => $project->pipeline,
                 'model' => $project->model,
+                // What makes a run a run, and reproducible: the tie-breaker draws
+                // from the seed, and the budget is its stop condition. Without
+                // them an archived run cannot be told apart from a fresh project
+                // that happens to carry the same messages.
+                'seed' => $project->seed,
+                'turn_budget' => $project->turn_budget,
+                // The frozen record of what the run meant -- pipeline, stages,
+                // resolved model config, summarization settings, system prompt,
+                // plus any mid-run changes. Null until the first turn has run.
+                'run_config' => $project->run_config,
                 // The raw columns, not the effective values: a project that
                 // follows the configured defaults must keep following them.
                 'summarize_threshold' => $project->summarize_threshold,
