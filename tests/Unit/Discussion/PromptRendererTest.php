@@ -11,7 +11,7 @@ class PromptRendererTest extends TestCase
 {
     public function test_decodes_html_entities_blade_escaped(): void
     {
-        $expert = new Expert(['name' => "Devil's Advocate", 'job' => 'Kritiker & Prüfer', 'description' => 'Hinterfragt alles.']);
+        $expert = new Expert(['name' => "Devil's Advocate", 'role' => 'Kritiker & Prüfer', 'description' => 'Hinterfragt alles.']);
         $expert->id = 5;
 
         $prompt = (new PromptRenderer)->render('prompts.partials.persona', ['expert' => $expert]);

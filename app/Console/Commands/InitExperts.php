@@ -51,7 +51,7 @@ class InitExperts extends Command
 
             $attributes = [
                 'description' => $expert['description'],
-                'job'         => $expert['job'],
+                'role'        => $expert['role'],
                 'avatar_url'  => $avatarUrl,
             ];
 

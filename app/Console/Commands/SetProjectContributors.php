@@ -68,9 +68,9 @@ class SetProjectContributors extends Command
 
         $this->newLine();
         $this->table(
-            ['Seat', 'Id', 'Name', 'Job'],
+            ['Seat', 'Id', 'Name', 'Role'],
             $project->fresh()->contributingExperts()
-                ->map(fn (Expert $e) => [$e->pivot?->seat, $e->id, $e->name, $e->job])
+                ->map(fn (Expert $e) => [$e->pivot?->seat, $e->id, $e->name, $e->role])
                 ->all(),
         );
 

@@ -33,7 +33,7 @@ class ProjectTransferTest extends TestCase
 
         $data = (new ProjectExport)->toArray($source->fresh());
 
-        $this->assertSame(6, $data['schema_version']);
+        $this->assertSame(7, $data['schema_version']);
         $this->assertArrayNotHasKey('settings', $data['project']);
 
         $copy = app(ProjectImporter::class)->import($data, $owner)['project']->fresh();

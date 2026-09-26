@@ -29,7 +29,7 @@ class ExpertEditor extends Component
     public ?string $avatarUrl = null;
 
     #[Validate('required|string|max:255')]
-    public string $job = '';
+    public string $role = '';
 
     #[Validate('nullable|string')]
     public string $description = '';
@@ -47,7 +47,7 @@ class ExpertEditor extends Component
 
         $this->name = $expert->name ?? '';
         $this->avatarUrl = $expert->avatar_url ?? null;
-        $this->job = $expert->job ?? '';
+        $this->role = $expert->role ?? '';
         $this->description = $expert->description ?? '';
 
         Flux::modal('edit-expert')->show();
@@ -60,7 +60,7 @@ class ExpertEditor extends Component
         $expert = $this->expertId ? Expert::findOrFail($this->expertId) : new Expert;
 
         $expert->name = $this->name;
-        $expert->job = $this->job;
+        $expert->role = $this->role;
         $expert->description = $this->description;
         $expert->save();
 
@@ -123,7 +123,7 @@ class ExpertEditor extends Component
 
     protected function resetForm(): void
     {
-        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'job', 'description']);
+        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'role', 'description']);
     }
 
     public function render(): mixed

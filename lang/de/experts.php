@@ -10,7 +10,7 @@ return [
     'page_title' => 'Experten',
 
     'filter' => [
-        'search_placeholder' => 'Experten nach Name, Beruf oder Beschreibung suchen…',
+        'search_placeholder' => 'Experten nach Name, Rolle oder Beschreibung suchen…',
     ],
 
     'list' => [
@@ -27,7 +27,7 @@ return [
         'subheading' => 'Legen Sie die Identität dieses Experten fest.',
         'change_avatar' => 'Klicken, um den Avatar zu ändern',
         'uploading' => 'Wird hochgeladen…',
-        'job' => 'Beruf',
+        'role' => 'Rolle',
         'description_help' => 'Wird in der UI angezeigt und ist der Persona-Kern im Prompt.',
         'delete' => 'Experte löschen',
     ],

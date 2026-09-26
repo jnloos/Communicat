@@ -27,7 +27,7 @@ class ExpertList extends Component
                 $like = '%'.$search.'%';
                 $q->where(function ($w) use ($like) {
                     $w->where('name', 'like', $like)
-                        ->orWhere('job', 'like', $like)
+                        ->orWhere('role', 'like', $like)
                         ->orWhere('description', 'like', $like);
                 });
             })

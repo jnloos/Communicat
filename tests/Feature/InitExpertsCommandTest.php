@@ -16,7 +16,7 @@ class InitExpertsCommandTest extends TestCase
     {
         Expert::factory()->create([
             'name' => 'Existing Expert',
-            'job' => 'Old job',
+            'role' => 'Old role',
             'description' => 'Old description.',
         ]);
 
@@ -26,13 +26,13 @@ class InitExpertsCommandTest extends TestCase
             [
                 'name' => 'Existing Expert',
                 'avatar_url' => '',
-                'job' => 'New job',
+                'role' => 'New role',
                 'description' => 'New description.',
             ],
             [
                 'name' => 'New Expert',
                 'avatar_url' => '',
-                'job' => 'QA',
+                'role' => 'QA',
                 'description' => 'Short description.',
             ],
         ], JSON_THROW_ON_ERROR));
@@ -41,7 +41,7 @@ class InitExpertsCommandTest extends TestCase
             $code = Artisan::call('init:experts', ['--file' => $path]);
 
             $this->assertSame(0, $code);
-            $this->assertSame('New job', Expert::where('name', 'Existing Expert')->firstOrFail()->job);
+            $this->assertSame('New role', Expert::where('name', 'Existing Expert')->firstOrFail()->role);
             $this->assertSame('Short description.', Expert::where('name', 'New Expert')->firstOrFail()->description);
         } finally {
             File::delete($path);

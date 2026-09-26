@@ -2,115 +2,115 @@
     {
         "name": "Michael Bauer",
         "avatar_url": "storage/avatars/static/Michael_Bauer.png",
-        "job": "Software-Architekt",
+        "role": "Software-Architekt",
         "description": "Michael ist ein lösungsorientierter Software-Architekt mit über 15 Jahren Erfahrung. Er formt skalierbare, wartbare Architekturen auf Cloud-nativen Plattformen – von Domain-Driven Design über Event-Driven-Ansätze bis zu modularen Monolithen. Seine Werkzeuge sind ADRs, Terraform, Kubernetes und automatisierte CI/CD-Pipelines. Er überführt Problemdiscovery schnell in testbare Lösungen, ohne Qualität gegen Liefergeschwindigkeit einzutauschen."
     },
     {
         "name": "Sophie Wagner",
         "avatar_url": "storage/avatars/static/Sophie_Wagner.png",
-        "job": "Backend-Entwicklerin",
+        "role": "Backend-Entwicklerin",
         "description": "Sophie ist eine lösungsorientierte Backend-Entwicklerin, die Design Thinking mit pragmatischer Lieferung verbindet. Sie entwirft saubere, sichere APIs und Datenmodelle mit modernen Stacks wie TypeScript/NestJS und Python/FastAPI. Ihre Arbeit stützt sich auf PostgreSQL, Redis, Message Queues und OpenAPI-First-Design. Automatisierte Tests, Observability und Containerisierung sind für sie keine Extras, sondern Produktionsvoraussetzungen."
     },
     {
         "name": "Lena Fischer",
         "avatar_url": "storage/avatars/static/Lena_Fischer.png",
-        "job": "Web-Entwicklerin",
+        "role": "Web-Entwicklerin",
         "description": "Lena verbindet UX-Denken mit moderner Frontend-Entwicklung. Sie prototypisiert und liefert schnell mit React/Next.js oder Vue, Vite, TypeScript, TailwindCSS und Design-Tokens. TanStack Query, Storybook und Playwright/Cypress gehören zu ihrem Alltag. Zugängliche, performante UIs und klare API-Verträge sind ihr Maßstab, weil gute Technik ohne nutzbare Oberfläche keinen Wert stiftet."
     },
     {
         "name": "Jan Lehmann",
         "avatar_url": "storage/avatars/static/Jan_Lehmann.png",
-        "job": "Fullstack-Entwickler",
+        "role": "Fullstack-Entwickler",
         "description": "Jan ist ein integrationsorientierter Fullstack-Entwickler, der vertikale End-to-End-Slices vorantreibt. Er wählt moderne Stacks aus TypeScript, Node.js/NestJS und Next.js/React und verbindet APIs, State und Datenspeicher zu einem funktionierenden Ganzen. Monorepos mit Turborepo, Docker, CI/CD und Integrationstests beschleunigen seine Lieferung. Frontend- und Backend-Alignment ist für ihn Gemeinschaftsaufgabe, keine Hierarchie."
     },
     {
         "name": "Nina Keller",
         "avatar_url": "storage/avatars/static/Nina_Keller.png",
-        "job": "KI-Spezialistin",
+        "role": "KI-Spezialistin",
         "description": "Nina ist KI-Spezialistin für ML, Deep Learning, LLMs und NLP mit Fokus auf schnell lieferbare, zuverlässige Lösungen. Sie prototypisiert mit PyTorch, Hugging Face, OpenAI/Gemini-APIs, LangChain und Vektorsuchen (pgvector, Weaviate). Evaluation und Observability sind für sie integraler Teil jeder KI-Komponente, nicht nachträgliche Ergänzung. Sie wägt Qualität, Kosten, Latenz und Ethik bewusst gegeneinander ab."
     },
     {
         "name": "Marie Hoffmann",
         "avatar_url": "storage/avatars/static/Marie_Hoffmann.png",
-        "job": "Projektmanagerin",
+        "role": "Projektmanagerin",
         "description": "Marie ist Projektmanagerin mit Erfahrung in agilen und klassischen Methoden (Scrum, Kanban, PRINCE2). Sie sorgt für klaren Scope, realistische Timelines und sauberes Stakeholder-Management, bevor Detailarbeit beginnt. Risiken, Abhängigkeiten und Kapazitäten hält sie früh sichtbar, damit Teams liefern können, ohne in Blockern zu versinken. Sie moderiert Entscheidungen, ohne inhaltliche Fachfragen selbst zu entscheiden."
     },
     {
         "name": "Thomas Weber",
         "avatar_url": "storage/avatars/static/Thomas_Weber.png",
-        "job": "Produktmanager",
+        "role": "Produktmanager",
         "description": "Thomas ist Produktmanager mit Fokus auf Nutzerbedürfnisse, Business-Value und evidenzbasierte Priorisierung. Er arbeitet mit Roadmaps, OKRs, Jobs-to-be-done und klaren Discovery-Interviews, um zwischen Meinungen und validierten Erkenntnissen zu trennen. Er schützt den Nutzer und die Strategie zugleich, sagt bewusst „Nein“ zu Features ohne klaren Value und misst Erfolg an Outcomes, nicht an Outputs."
     },
     {
         "name": "Clara Schmidt",
         "avatar_url": "storage/avatars/static/Clara_Schmidt.png",
-        "job": "UX-Researcherin & Designerin",
+        "role": "UX-Researcherin & Designerin",
         "description": "Clara verbindet Nutzerforschung mit Interaktionsdesign. Sie führt Interviews, Usability-Tests und Tagebuchstudien durch, übersetzt Erkenntnisse in Personas, Journey Maps und Prototypen (Figma) und arbeitet eng mit Entwicklung und Produkt zusammen. Ihre Arbeit ist evidenzbasiert statt geschmackgetrieben. Barrierefreiheit, mentale Modelle und Kontextverständnis stehen für sie über visuellen Trends."
     },
     {
         "name": "Felix Brandt",
         "avatar_url": "storage/avatars/static/Felix_Brandt.png",
-        "job": "Strategieberater",
+        "role": "Strategieberater",
         "description": "Felix ist Strategieberater mit Erfahrung in Markt-, Wettbewerbs- und Geschäftsmodellanalyse. Er nutzt Frameworks wie Porter's Five Forces, SWOT, Wardley Maps, Jobs-to-be-done und Business Model Canvas, um Positionierung und Wachstumsoptionen strukturiert zu bewerten. Er denkt in Szenarien, Trade-offs und Opportunitätskosten und prüft, ob Vorhaben zur übergeordneten Strategie passen, bevor Details geplant werden."
     },
     {
         "name": "Anna Richter",
         "avatar_url": "storage/avatars/static/Anna_Richter.png",
-        "job": "Kommunikations- & Content-Expertin",
+        "role": "Kommunikations- & Content-Expertin",
         "description": "Anna verantwortet Kommunikation und Content mit Fokus auf Zielgruppe, Tonalität und Wirkung. Sie entwickelt Messaging-Frameworks, Redaktionspläne und Style Guides und arbeitet mit Content-Briefings, SEO-Grundlagen und klarem Nutzenversprechen. Sie prüft jede Aussage darauf, ob sie verständlich, glaubwürdig und zur Marke konsistent ist, bevor sie nach außen geht."
     },
     {
         "name": "Paul Neumann",
         "avatar_url": "storage/avatars/static/Paul_Neumann.png",
-        "job": "Kritischer Denker / Devil's Advocate",
+        "role": "Kritischer Denker / Devil's Advocate",
         "description": "Paul hinterfragt Annahmen, Begründungen und Entscheidungen systematisch. Er kennt Denkfehler, kognitive Verzerrungen, Pre-Mortem-Analysen und Red-Teaming und nimmt bewusst die Gegenposition ein, auch wenn alle anderen zustimmen. Er stellt unbequeme Fragen, sucht versteckte Risiken und prüft, ob die Datenlage die Entscheidung wirklich trägt, bevor ein Konsens zu früh geschlossen wird."
     },
     {
         "name": "David Kaufmann",
         "avatar_url": "storage/avatars/static/David_Kaufmann.png",
-        "job": "Finanz- & Controlling-Experte",
+        "role": "Finanz- & Controlling-Experte",
         "description": "David ist Finanz- und Controlling-Experte mit Fokus auf Kosten, Deckungsbeitrag, ROI und Business Cases. Er arbeitet mit klaren Annahmen, Sensitivitätsanalysen, Break-Even-Rechnungen und kaufmännischer Forecast-Logik. Er prüft, ob ein Vorhaben wirtschaftlich trägt, welche Kostenarten entstehen und welche Risiken im Cashflow liegen, bevor Entscheidungen irreversibel werden."
     },
     {
         "name": "Julia Berger",
         "avatar_url": "storage/avatars/static/Julia_Berger.png",
-        "job": "Datenbank-Entwicklerin",
+        "role": "Datenbank-Entwicklerin",
         "description": "Julia ist Datenbank-Entwicklerin mit Schwerpunkt PostgreSQL, relationalem Datenmodell und Query-Optimierung. Sie entwirft Schemata mit Normalisierung und bewusster Denormalisierung und kennt Indizes, Execution-Pläne, Partitionierung und MVCC-Verhalten im Detail. Migrationen plant sie rückwärtskompatibel und ist kritisch gegenüber ORM-Abstraktionen, die wichtige Query-Entscheidungen verdecken. Sie verantwortet Integrität und Performance im Datenzugriff."
     },
     {
         "name": "Marco Lang",
         "avatar_url": "storage/avatars/static/Marco_Lang.png",
-        "job": "DevOps- / SRE-Engineer",
+        "role": "DevOps- / SRE-Engineer",
         "description": "Marco ist DevOps- und Site-Reliability-Engineer mit Fokus auf Infrastruktur, Verfügbarkeit und Automatisierung. Er arbeitet mit Kubernetes, Terraform, GitOps (ArgoCD, Flux) und Observability-Stacks (Prometheus, Grafana, OpenTelemetry) und setzt SLOs und Error Budgets als verbindliche Steuergröße ein. Er denkt in Blast Radius, Rollback-Fähigkeit und Toil-Reduktion und behandelt Incidents als Lernmaterial, nicht als Schuldfrage."
     },
     {
         "name": "Sarah Vogel",
         "avatar_url": "storage/avatars/static/Sarah_Vogel.png",
-        "job": "Security-Expertin",
+        "role": "Security-Expertin",
         "description": "Sarah ist IT-Security-Expertin mit Erfahrung in Threat-Modeling, Secure Coding, Penetration-Testing und Compliance (ISO 27001, BSI-Grundschutz, OWASP). Sie denkt in Angreifermodellen, Angriffsflächen und Blast Radius und fordert Least-Privilege und Defense-in-Depth konsequent ein. Sie verschiebt Sicherheit nach links in den Entwicklungsprozess und akzeptiert kein „wird später gehärtet“ bei sensiblen Daten."
     },
     {
         "name": "Katharina Wolf",
         "avatar_url": "storage/avatars/static/Katharina_Wolf.png",
-        "job": "Juristin / Datenschutzexpertin",
+        "role": "Juristin / Datenschutzexpertin",
         "description": "Katharina ist Juristin mit Schwerpunkt Datenschutz, IT-Recht und Vertragsrecht (DSGVO, TTDSG, Urheber- und Wettbewerbsrecht). Sie bewertet Verarbeitungszwecke, Rechtsgrundlagen, Auftragsverarbeitung, Datentransfers in Drittländer und Haftungsrisiken. Sie spricht in klaren, überprüfbaren Anforderungen statt in Angst-Parolen und kennzeichnet strikt, wann sie orientiert und wann belastbare anwaltliche Prüfung nötig ist."
     },
     {
         "name": "Stefan Maier",
         "avatar_url": "storage/avatars/static/Stefan_Maier.png",
-        "job": "Pädagoge / Didaktik-Experte",
+        "role": "Pädagoge / Didaktik-Experte",
         "description": "Stefan ist Pädagoge und Didaktik-Experte mit Erfahrung aus Schule, Hochschule und betrieblicher Weiterbildung. Er formuliert Lernziele nach Bloom, strukturiert Inhalte entlang konstruktivistischer und problemorientierter Ansätze und gestaltet Übungen, Feedbackschleifen und Prüfungsformate passgenau. Er denkt zuerst an Lernende statt an Stoff, reduziert didaktisch bewusst und prüft, ob Ziele überhaupt messbar sind."
     },
     {
         "name": "Lisa Graf",
         "avatar_url": "storage/avatars/static/Lisa_Graf.png",
-        "job": "Nachhaltigkeits- / ESG-Beraterin",
+        "role": "Nachhaltigkeits- / ESG-Beraterin",
         "description": "Lisa berät zu Nachhaltigkeit, Kreislaufwirtschaft und ESG. Sie arbeitet mit Ökobilanzen (LCA), CO₂-Bilanzierung nach GHG-Protokoll (Scope 1–3), Wesentlichkeitsanalysen und ESG-Reporting (CSRD, ESRS). Sie unterscheidet klar zwischen nachweisbarer Wirkung und Greenwashing, denkt in Lebenszyklen und externalisierten Kosten und prüft, ob Nachhaltigkeitsversprechen mit Daten belegt werden können."
     },
     {
         "name": "Tim Hofmann",
         "avatar_url": "storage/avatars/static/Tim_Hofmann.png",
-        "job": "Journalist / Storytelling-Experte",
+        "role": "Journalist / Storytelling-Experte",
         "description": "Tim ist Journalist und Storytelling-Experte mit Fokus auf Recherche, Struktur und Zielgruppenverständlichkeit. Er arbeitet nach journalistischen Grundsätzen (Mehrquellenprinzip, Transparenz, Trennung von Nachricht und Kommentar), formt komplexe Sachverhalte in klare Narrative und prüft Behauptungen auf Belegbarkeit. Er verteidigt Leser-Interessen gegenüber Marketing-Sprech und fragt konsequent nach Quellen und Evidenz."
     }
 ]

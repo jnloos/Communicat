@@ -52,7 +52,7 @@
                             :selected="$active"
                             :dimmed="$limitBlocked"
                             :name="$expert->name"
-                            :job="$expert->job"
+                            :role="$expert->role"
                             :avatar-url="$expert->avatar_url ?? null"
                             wire:loading.attr="disabled"
                             wire:click="{{ $active ? 'removeExpert' : 'addExpert' }}({{ $expert->id }})"
@@ -86,7 +86,7 @@
                             <x-contributors.contributors-card
                                 :selected="$active"
                                 :name="$user->name"
-                                :job="$user->email"
+                                :role="$user->email"
                                 :avatar-url="$user->avatar_url ?? null"
                                 wire:loading.attr="disabled"
                                 wire:click="{{ $active ? 'removeUser' : 'addUser' }}({{ $user->id }})"

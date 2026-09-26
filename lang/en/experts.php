@@ -10,7 +10,7 @@ return [
     'page_title' => 'Experts',
 
     'filter' => [
-        'search_placeholder' => 'Search experts by name, job, or description...',
+        'search_placeholder' => 'Search experts by name, role, or description...',
     ],
 
     'list' => [
@@ -27,7 +27,7 @@ return [
         'subheading' => 'Define this expert\'s identity.',
         'change_avatar' => 'Click to change avatar',
         'uploading' => 'Uploading…',
-        'job' => 'Job',
+        'role' => 'Role',
         'description_help' => 'Shown in the UI and used as the persona core in the prompt.',
         'delete' => 'Delete Expert',
     ],

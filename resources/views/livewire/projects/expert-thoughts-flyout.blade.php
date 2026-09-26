@@ -10,7 +10,7 @@
                     />
                     <div>
                         <flux:heading size="lg">{{ $expert->name }}</flux:heading>
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ $expert->job }}</p>
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400">{{ $expert->role }}</p>
                     </div>
                 </div>
 

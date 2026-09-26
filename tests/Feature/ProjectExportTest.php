@@ -18,7 +18,7 @@ class ProjectExportTest extends TestCase
         $project = Project::withoutEvents(fn () => Project::create([
             'title' => 'Test', 'description' => 'desc', 'user_id' => $owner->id,
         ]));
-        $expert = Expert::factory()->create(['name' => 'Alice', 'job' => 'Architektin']);
+        $expert = Expert::factory()->create(['name' => 'Alice', 'role' => 'Architektin']);
         $project->addContributingExpert($expert);
         $project->addMessage('Hallo Alice', $owner);
         $project->addMessage('Hallo zurück', $expert);

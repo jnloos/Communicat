@@ -51,7 +51,7 @@
             {{-- Identity --}}
             <div class="min-w-0 flex-1 space-y-4">
                 <flux:input :label="__('common.fields.name')" wire:model.defer="name" />
-                <flux:input :label="__('experts.editor.job')" wire:model.defer="job" />
+                <flux:input :label="__('experts.editor.role')" wire:model.defer="role" />
             </div>
         </div>
 

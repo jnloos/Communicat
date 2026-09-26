@@ -7,7 +7,7 @@ use App\Models\Project;
 class ProjectExport
 {
     /** Current export schema version (consumed by ProjectImporter). */
-    public const SCHEMA_VERSION = 6;
+    public const SCHEMA_VERSION = 7;
 
     /**
      * Build the full clone payload for a project: pipeline/model config,
@@ -36,7 +36,7 @@ class ProjectExport
                 ->map(fn ($e) => [
                     'id' => $e->id,
                     'name' => $e->name,
-                    'job' => $e->job,
+                    'role' => $e->role,
                     'description' => $e->description,
                     'avatar_url' => $e->avatar_url,
                 ])

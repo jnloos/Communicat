@@ -34,7 +34,7 @@
                         wire:key="expert-{{ $expert->id }}"
                         @click="$wire.dispatch('edit_expert', { id: {{ $expert->id }} })"
                         :name="$expert->name"
-                        :job="$expert->job"
+                        :role="$expert->role"
                         :avatar-url="$expert->avatar_url ?? null"
                         :description="Str::limit($expert->description, 140)"
                     />

@@ -1,6 +1,6 @@
 @props([
     'name' => 'John Doe',
-    'job' => 'Mannequin',
+    'role' => 'Mannequin',
     'description' => null,
     'avatarUrl' => null,
     'selected' => null, {{-- null: plain card; bool: selectable card with state indicator --}}
@@ -23,7 +23,7 @@
 
             <div class="min-w-0 flex-1">
                 <div class="truncate text-sm font-medium text-zinc-900 dark:text-white">{{ $name }}</div>
-                <div class="line-clamp-2 text-sm text-zinc-500 dark:text-zinc-400">{{ $job }}</div>
+                <div class="line-clamp-2 text-sm text-zinc-500 dark:text-zinc-400">{{ $role }}</div>
             </div>
 
             @if ($selectable)

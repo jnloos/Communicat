@@ -13,7 +13,7 @@ class ExpertFactory extends Factory
     {
         return [
             'name'        => fake()->name(),
-            'job'         => fake()->jobTitle(),
+            'role'        => fake()->jobTitle(),
             'description' => fake()->sentence(),
             'avatar_url'  => null,
         ];

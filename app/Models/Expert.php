@@ -25,7 +25,7 @@ class Expert extends Model
     protected $fillable = [
         'name',
         'avatar_url',
-        'job',
+        'role',
         'description',
     ];
 
