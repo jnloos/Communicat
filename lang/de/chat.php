@@ -26,7 +26,7 @@ return [
         'pause_label' => 'Pause',
         'sound_off' => 'Nachrichtenton ausschalten',
         'sound_on' => 'Nachrichtenton einschalten',
-        'debug' => 'Debug-Ansicht (kommt später)',
+        'debug' => 'Debug-Report dieses Gesprächs',
         'stats' => 'Statistik (kommt später)',
         'aria_label' => 'Steuerung der Diskussion',
         'busy_hint' => 'Ein anderer Vorgang läuft gerade. Bitte versuchen Sie es gleich noch einmal.',

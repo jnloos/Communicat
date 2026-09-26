@@ -47,17 +47,6 @@
                     {{ __('navigation.repository') }}
                 </flux:sidebar.item>
 
-                @if (config('app.debug'))
-                    <flux:sidebar.item
-                        icon="bug-ant"
-                        :href="route('debug.jobs', array_filter(['project' => request()->route('project')?->id]))"
-                        :current="request()->routeIs('debug.jobs')"
-                        wire:navigate
-                    >
-                        {{ __('navigation.job_debug') }}
-                    </flux:sidebar.item>
-                @endif
-
                 <flux:sidebar.item icon="cog" :href="route('settings.profile')" :current="request()->routeIs('settings.*')" wire:navigate>
                     {{ __('navigation.settings') }}
                 </flux:sidebar.item>

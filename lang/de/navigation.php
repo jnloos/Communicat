@@ -12,7 +12,6 @@ return [
     'projects' => 'Projekte',
     'repository' => 'Repository',
     'documentation' => 'Dokumentation',
-    'job_debug' => 'Job-Debug',
     'settings' => 'Einstellungen',
     'log_out' => 'Abmelden',
     'dashboard' => 'Dashboard',

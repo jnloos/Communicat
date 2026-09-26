@@ -12,7 +12,6 @@ return [
     'projects' => 'Projects',
     'repository' => 'Repository',
     'documentation' => 'Documentation',
-    'job_debug' => 'Job Debug',
     'settings' => 'Settings',
     'log_out' => 'Log Out',
     'dashboard' => 'Dashboard',

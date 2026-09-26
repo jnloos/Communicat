@@ -144,16 +144,19 @@
 
                 {{-- Right: the panels still to come, disabled until they are wired up. --}}
                 <div class="flex items-center justify-end gap-2">
-                    <flux:tooltip :content="__('chat.controls.debug')" position="top">
-                        <flux:button
-                            type="button"
-                            size="sm"
-                            variant="subtle"
-                            icon="bug-ant"
-                            disabled
-                            :aria-label="__('chat.controls.debug')"
-                        />
-                    </flux:tooltip>
+                    @if (config('app.debug'))
+                        <flux:tooltip :content="__('chat.controls.debug')" position="top">
+                            <flux:button
+                                type="button"
+                                size="sm"
+                                variant="subtle"
+                                icon="bug-ant"
+                                x-on:click="$dispatch('open-job-debug')"
+                                :aria-label="__('chat.controls.debug')"
+                                class="cursor-pointer"
+                            />
+                        </flux:tooltip>
+                    @endif
                     <flux:tooltip :content="__('chat.controls.stats')" position="top">
                         <flux:button
                             type="button"

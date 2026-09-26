@@ -26,7 +26,7 @@ return [
         'pause_label' => 'Pause',
         'sound_off' => 'Mute message sound',
         'sound_on' => 'Unmute message sound',
-        'debug' => 'Debug view (coming soon)',
+        'debug' => "This discussion's job report",
         'stats' => 'Statistics (coming soon)',
         'aria_label' => 'Discussion controls',
         'busy_hint' => 'Another operation is in progress. Try again in a moment.',
