@@ -102,13 +102,13 @@ class ProjectFormsTest extends TestCase
         Livewire::test(EditProject::class, ['project' => $project])
             ->assertSet('runStarted', true)
             ->set('provider', 'gemini')
-            ->set('model', 'gemini-2.5-pro')
+            ->set('model', 'gemini-3.8-flash')
             ->call('save')
             ->assertHasNoErrors();
 
         $project->refresh();
 
-        $this->assertSame('gemini-2.5-pro', $project->model);
+        $this->assertSame('gemini-3.8-flash', $project->model);
         // The original snapshot keys stay put beside the trail.
         $this->assertSame('RoundRobinPipeline', $project->run_config['pipeline']);
         $this->assertSame(['key' => 'openai'], $project->run_config['model']);
@@ -116,7 +116,7 @@ class ProjectFormsTest extends TestCase
             'after_turn' => 7,
             'field' => 'model',
             'from' => 'openai-gpt-5',
-            'to' => 'gemini-2.5-pro',
+            'to' => 'gemini-3.8-flash',
         ]], $project->run_config['changes']);
     }
 
@@ -155,7 +155,7 @@ class ProjectFormsTest extends TestCase
         Livewire::test(EditProject::class, ['project' => $project])
             ->set('pipeline', 'RoundRobinPipeline')
             ->set('provider', 'gemini')
-            ->set('model', 'gemini-2.5-pro')
+            ->set('model', 'gemini-3.8-flash')
             ->call('save')
             ->assertHasNoErrors();
 
@@ -163,7 +163,7 @@ class ProjectFormsTest extends TestCase
 
         $this->assertSame(['pipeline', 'model'], array_column($changes, 'field'));
         $this->assertSame(['GonePipeline', 'openai-gpt-5'], array_column($changes, 'from'));
-        $this->assertSame(['RoundRobinPipeline', 'gemini-2.5-pro'], array_column($changes, 'to'));
+        $this->assertSame(['RoundRobinPipeline', 'gemini-3.8-flash'], array_column($changes, 'to'));
         // No turn has run yet, so the switch lands after turn 0.
         $this->assertSame([0, 0], array_column($changes, 'after_turn'));
     }
@@ -181,7 +181,7 @@ class ProjectFormsTest extends TestCase
 
         Livewire::test(EditProject::class, ['project' => $project])
             ->set('provider', 'gemini')
-            ->set('model', 'gemini-2.5-pro')
+            ->set('model', 'gemini-3.8-flash')
             ->call('save');
 
         Livewire::test(EditProject::class, ['project' => $project->fresh()])
@@ -191,8 +191,8 @@ class ProjectFormsTest extends TestCase
 
         $changes = $project->fresh()->run_config['changes'];
 
-        $this->assertSame(['openai-gpt-5', 'gemini-2.5-pro'], array_column($changes, 'from'));
-        $this->assertSame(['gemini-2.5-pro', 'anthropic-opus-5'], array_column($changes, 'to'));
+        $this->assertSame(['openai-gpt-5', 'gemini-3.8-flash'], array_column($changes, 'from'));
+        $this->assertSame(['gemini-3.8-flash', 'anthropic-opus-5'], array_column($changes, 'to'));
     }
 
     public function test_the_summarize_settings_must_leave_a_history_behind(): void
@@ -254,13 +254,13 @@ class ProjectFormsTest extends TestCase
         Livewire::test(EditProject::class, ['project' => $project])
             ->assertSet('runStarted', false)
             ->set('provider', 'gemini')
-            ->set('model', 'gemini-2.5-pro')
+            ->set('model', 'gemini-3.8-flash')
             ->call('save')
             ->assertHasNoErrors();
 
         $project->refresh();
 
-        $this->assertSame('gemini-2.5-pro', $project->model);
+        $this->assertSame('gemini-3.8-flash', $project->model);
         // Nothing to contradict yet: no snapshot exists, so no change is recorded and
         // the first turn is still free to freeze the run as it actually starts.
         $this->assertNull($project->run_config);
@@ -334,7 +334,7 @@ class ProjectFormsTest extends TestCase
             ->assertSet('provider', 'openai')
             ->assertSet('model', 'openai-gpt-5')
             ->set('provider', 'gemini')
-            ->assertSet('model', 'gemini-2.5-pro');
+            ->assertSet('model', 'gemini-3.8-flash');
     }
 
     public function test_a_model_that_does_not_belong_to_the_chosen_provider_is_rejected(): void
@@ -349,7 +349,7 @@ class ProjectFormsTest extends TestCase
             ->set('title', 'Titel')
             ->set('description', 'Beschreibung')
             ->set('provider', 'openai')
-            ->set('model', 'gemini-2.5-pro')
+            ->set('model', 'gemini-3.8-flash')
             ->call('save')
             ->assertHasErrors('model');
     }

@@ -20,7 +20,7 @@ final readonly class ModelConfig
     public static function fromConfig(string $key): self
     {
         // Array index, not dot notation: a model key may contain dots
-        // (gemini-2.5-pro), and config() would read those as nesting.
+        // (gemini-3.8-flash), and config() would read those as nesting.
         $entry = config('ai.models')[$key] ?? null;
 
         if (! is_array($entry)) {

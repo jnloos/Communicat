@@ -21,7 +21,7 @@ class ProjectTransferTest extends TestCase
         [$alice, $bob] = Expert::factory()->count(2)->create()->all();
 
         $source = Project::factory()->create([
-            'user_id' => $owner->id, 'pipeline' => 'RoundRobinPipeline', 'model' => 'gemini-2.5-pro',
+            'user_id' => $owner->id, 'pipeline' => 'RoundRobinPipeline', 'model' => 'gemini-3.8-flash',
             'summarize_threshold' => 30, 'summarize_oldest' => 10,
         ]);
         $source->addContributingExpert($bob);
@@ -39,7 +39,7 @@ class ProjectTransferTest extends TestCase
         $copy = app(ProjectImporter::class)->import($data, $owner)['project']->fresh();
 
         $this->assertSame('RoundRobinPipeline', $copy->pipeline);
-        $this->assertSame('gemini-2.5-pro', $copy->model);
+        $this->assertSame('gemini-3.8-flash', $copy->model);
         $this->assertSame(30, $copy->summarize_threshold);
         $this->assertSame(10, $copy->summarize_oldest);
         $this->assertSame('Bisher: X.', $copy->long_term_memory);
@@ -64,7 +64,7 @@ class ProjectTransferTest extends TestCase
         $source = Project::factory()->create([
             'user_id' => $owner->id,
             'pipeline' => 'RoundRobinPipeline',
-            'model' => 'gemini-2.5-pro',
+            'model' => 'gemini-3.8-flash',
             'seed' => 777,
             'turn_budget' => 12,
             'run_config' => ['pipeline' => 'RoundRobinPipeline', 'system_prompt' => 'frozen'],
@@ -92,7 +92,7 @@ class ProjectTransferTest extends TestCase
             'project' => [
                 'title' => 'Archived run',
                 'pipeline' => 'APipelineThisInstallDoesNotHave',
-                'model' => 'gemini-2.5-pro',
+                'model' => 'gemini-3.8-flash',
                 'seed' => 555,
                 'run_config' => ['pipeline' => 'APipelineThisInstallDoesNotHave', 'system_prompt' => 'frozen'],
             ],
@@ -179,7 +179,7 @@ class ProjectTransferTest extends TestCase
         // Shape of a schema-4 export: the two keys did not exist yet.
         $copy = app(ProjectImporter::class)->import([
             'schema_version' => 4,
-            'project' => ['title' => 'Alt', 'description' => 'd', 'pipeline' => 'RoundRobinPipeline', 'model' => 'gemini-2.5-pro'],
+            'project' => ['title' => 'Alt', 'description' => 'd', 'pipeline' => 'RoundRobinPipeline', 'model' => 'gemini-3.8-flash'],
         ], $owner)['project'];
 
         $this->assertNull($copy->summarize_threshold);

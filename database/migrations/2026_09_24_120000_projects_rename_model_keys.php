@@ -18,7 +18,7 @@ return new class extends Migration
     private const MAP = [
         'openai' => 'openai-gpt-5',
         'anthropic' => 'anthropic-opus-5',
-        'gemini' => 'gemini-2.5-pro',
+        'gemini' => 'gemini-3.8-flash',
     ];
 
     public function up(): void

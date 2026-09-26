@@ -62,21 +62,35 @@ class StudyAgentTest extends TestCase
         $this->assertSame(['reasoning' => ['effort' => 'low', 'summary' => 'auto']], $options);
     }
 
-    public function test_anthropic_gets_adaptive_thinking_and_an_output_effort(): void
+    /**
+     * Verified against the live API: `output_config.effort` makes Anthropic
+     * answer with stop_reason "refusal" and a contribution cut off mid-sentence.
+     * Only `thinking` goes out, and it does produce reasoning tokens.
+     */
+    public function test_anthropic_gets_adaptive_thinking_and_nothing_else(): void
     {
-        $options = (new SpeakAgent($this->model('anthropic')))->providerOptions(Lab::Anthropic);
+        $options = (new SpeakAgent($this->model('anthropic', effort: null)))->providerOptions(Lab::Anthropic);
 
-        $this->assertSame([
-            'thinking' => ['type' => 'adaptive', 'display' => 'summarized'],
-            'output_config' => ['effort' => 'low'],
-        ], $options);
+        $this->assertSame(['thinking' => ['type' => 'adaptive', 'display' => 'summarized']], $options);
+        $this->assertArrayNotHasKey('output_config', $options);
     }
 
-    public function test_gemini_asks_for_thoughts_but_never_for_an_effort_level(): void
+    /** Anthropic has no effort knob, so configuring one is an error, not a no-op. */
+    public function test_an_effort_on_anthropic_is_rejected_instead_of_silently_dropped(): void
     {
-        $options = (new SpeakAgent($this->model('gemini', effort: null)))->providerOptions(Lab::Gemini);
+        $this->expectException(InvalidArgumentException::class);
 
-        $this->assertSame(['thinkingConfig' => ['includeThoughts' => true]], $options);
+        (new SpeakAgent($this->model('anthropic', effort: 'low')))->providerOptions(Lab::Anthropic);
+    }
+
+    /**
+     * Gemini rejects `thinkingConfig` outright ("Unknown parameter"), in either
+     * spelling. Thinking runs by default and the usage block reports its tokens,
+     * which is the only part of it the study records -- so nothing is sent.
+     */
+    public function test_gemini_gets_no_options_at_all(): void
+    {
+        $this->assertSame([], (new SpeakAgent($this->model('gemini', effort: null)))->providerOptions(Lab::Gemini));
     }
 
     public function test_an_effort_on_gemini_is_rejected_instead_of_silently_dropped(): void

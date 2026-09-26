@@ -120,12 +120,14 @@ return [
             'model' => 'claude-opus-5',
             'max_output_tokens' => 8000,
             'temperature' => null,
-            'reasoning_effort' => env('ANTHROPIC_REASONING_EFFORT', 'low'),
+            // Anthropic exposes no effort parameter this SDK can set; see
+            // StudyAgent::providerOptions(). Configuring one throws.
+            'reasoning_effort' => null,
         ],
-        'gemini-2.5-pro' => [
-            'label' => 'Gemini 2.5 Pro',
+        'gemini-3.8-flash' => [
+            'label' => 'Gemini 3.8 Flash',
             'provider' => 'gemini',
-            'model' => 'gemini-2.5-pro',
+            'model' => 'gemini-3.8-flash',
             'max_output_tokens' => 8000,
             'temperature' => null,
             // Must stay null: Gemini has no effort levels (only a thinkingBudget token

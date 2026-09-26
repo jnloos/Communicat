@@ -37,7 +37,7 @@ class ModelConfigTest extends TestCase
 
         $this->assertSame('GPT-5', $options['openai-gpt-5']);
         $this->assertArrayHasKey('anthropic-opus-5', $options);
-        $this->assertArrayHasKey('gemini-2.5-pro', $options);
+        $this->assertArrayHasKey('gemini-3.8-flash', $options);
     }
 
     public function test_lists_each_provider_once_in_registry_order(): void
