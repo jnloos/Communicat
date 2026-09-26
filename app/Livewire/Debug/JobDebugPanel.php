@@ -2,23 +2,26 @@
 
 namespace App\Livewire\Debug;
 
-use App\Models\JobLog;
+use App\Livewire\Debug\Concerns\ShowsJobReport;
 use App\Models\Project;
 use Illuminate\Support\Collection;
-use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
+/**
+ * The job report as a page of its own, for any project the user can reach.
+ *
+ * The same report also opens as a flyout inside a discussion (JobDebugFlyout).
+ * What this one adds is the project picker and a deep link; everything about
+ * rendering a report lives in ShowsJobReport.
+ */
 class JobDebugPanel extends Component
 {
+    use ShowsJobReport;
+
     /** The project whose jobs are listed; kept in the URL so links can deep-link. */
     #[Url(as: 'project')]
     public ?int $projectId = null;
-
-    /** When false, incoming job updates are ignored so the view stays frozen for reading. */
-    public bool $live = true;
-
-    public ?int $selectedJobId = null;
 
     public function mount(): void
     {
@@ -34,25 +37,6 @@ class JobDebugPanel extends Component
         $this->selectedJobId = null;
     }
 
-    public function togglePause(): void
-    {
-        $this->live = ! $this->live;
-    }
-
-    public function selectJob(int $jobId): void
-    {
-        $this->selectedJobId = $this->selectedJobId === $jobId ? null : $jobId;
-    }
-
-    #[On('echo-private:debug,.JobLogUpdated')]
-    public function onJobLogUpdated(): void
-    {
-        // Paused → don't re-render, so an open job stays put while reading.
-        if (! $this->live) {
-            $this->skipRender();
-        }
-    }
-
     /** @return Collection<int, Project> */
     protected function accessibleProjects(): Collection
     {
@@ -63,28 +47,9 @@ class JobDebugPanel extends Component
 
     public function render(): mixed
     {
-        $selected = $this->selectedJobId && $this->projectId
-            ? JobLog::with([
-                'project',
-                'promptLogs:id,job_log_id,label,model,prompt,response,latency_ms,created_at,status,error,provider,checkpoint,purpose,reasoning,tokens_in,tokens_out,tokens_reasoning',
-                'messages.expert',
-            ])
-                ->where('project_id', $this->projectId)
-                ->find($this->selectedJobId)
-            : null;
-
-        $logs = $this->projectId
-            ? JobLog::with('project')
-                ->where('project_id', $this->projectId)
-                ->latest()
-                ->take(50)
-                ->get()
-            : collect();
-
         return view('livewire.debug.job-debug-panel', [
             'projects' => $this->accessibleProjects(),
-            'logs' => $logs,
-            'selected' => $selected,
+            ...$this->jobReportFor($this->projectId),
         ])->title(__('debug.title'));
     }
 }

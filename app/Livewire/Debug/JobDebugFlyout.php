@@ -2,7 +2,7 @@
 
 namespace App\Livewire\Debug;
 
-use App\Models\JobLog;
+use App\Livewire\Debug\Concerns\ShowsJobReport;
 use App\Models\Project;
 use Flux\Flux;
 use Livewire\Attributes\Locked;
@@ -19,21 +19,23 @@ use Livewire\Component;
  */
 class JobDebugFlyout extends Component
 {
+    use ShowsJobReport;
+
     public const MODAL = 'job-debug-flyout';
 
     #[Locked]
     public int $projectId;
-
-    /** When false, incoming job updates are ignored so the view stays put while reading. */
-    public bool $live = true;
-
-    public ?int $selectedJobId = null;
 
     /** Loaded on first open, not on mount: an unopened flyout should cost no queries. */
     public bool $opened = false;
 
     public function mount(Project $project): void
     {
+        // The two views that render this component check the same flag, but the
+        // guard belongs here as well: a third view that forgets it would expose
+        // the report in production without anything failing.
+        abort_unless(config('app.debug'), 404);
+
         $this->projectId = $project->id;
     }
 
@@ -44,46 +46,17 @@ class JobDebugFlyout extends Component
         Flux::modal(self::MODAL)->show();
     }
 
-    public function togglePause(): void
+    /** A closed flyout has nothing to show, so a live update need not reach it. */
+    protected function jobReportIsFrozen(): bool
     {
-        $this->live = ! $this->live;
-    }
-
-    public function selectJob(int $jobId): void
-    {
-        $this->selectedJobId = $this->selectedJobId === $jobId ? null : $jobId;
-    }
-
-    #[On('echo-private:debug,.JobLogUpdated')]
-    public function onJobLogUpdated(): void
-    {
-        // Closed or paused → don't re-render: a closed flyout has nothing to show,
-        // and a paused one is being read.
-        if (! $this->opened || ! $this->live) {
-            $this->skipRender();
-        }
+        return ! $this->opened || ! $this->live;
     }
 
     public function render(): mixed
     {
-        if (! $this->opened) {
-            return view('livewire.debug.job-debug-flyout', ['logs' => collect(), 'selected' => null]);
-        }
-
-        $selected = $this->selectedJobId
-            ? JobLog::with([
-                'project',
-                'promptLogs:id,job_log_id,label,model,prompt,response,latency_ms,created_at,status,error,provider,checkpoint,purpose,reasoning,tokens_in,tokens_out,tokens_reasoning',
-                'messages.expert',
-                'messages.addressee',
-            ])
-                ->where('project_id', $this->projectId)
-                ->find($this->selectedJobId)
-            : null;
-
-        return view('livewire.debug.job-debug-flyout', [
-            'logs' => JobLog::where('project_id', $this->projectId)->latest()->take(50)->get(),
-            'selected' => $selected,
-        ]);
+        return view(
+            'livewire.debug.job-debug-flyout',
+            $this->jobReportFor($this->opened ? $this->projectId : null),
+        );
     }
 }
