@@ -8,7 +8,7 @@
 
 return [
     'title' => 'Speaking shares',
-    'subheading' => 'Who held the floor how often — and how much text that produced.',
+    'subheading' => 'Who held the floor how often, and how much text that produced.',
     'empty' => 'No contribution spoken yet. Start the run and the shares will fill in.',
 
     'turn_share' => 'Turn share',
@@ -26,6 +26,4 @@ return [
         'word_share' => 'Share',
         'words_per_turn' => 'Avg words',
     ],
-
-    'footnote' => 'Only public contributions are counted — no thoughts, no selector or judge messages. Length in words, not in model tokens.',
 ];

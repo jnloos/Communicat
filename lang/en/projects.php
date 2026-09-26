@@ -22,11 +22,9 @@ return [
 
     'fields' => [
         'title_help' => 'Enter a concise and recognizable project title.',
-        'description_help' => 'Describe the project in a clear and concise way. This description will be used by AI systems, so make sure it\'s easy to understand and captures the core idea precisely.',
+        'description_help' => 'The topic the experts discuss. Keep it short and concrete, they read it verbatim.',
         'provider' => 'Provider',
-        'provider_help' => 'Narrows the model choice below to this provider; only the model is stored.',
-        'provider' => 'Provider',
-        'provider_help' => 'Determines which models you can choose from.',
+        'provider_help' => 'Determines which models you can choose from. Only the model is stored.',
         'pipeline' => 'Pipeline',
         'pipeline_help' => 'Determines how the next speaker is chosen.',
         'model' => 'Model',
@@ -35,7 +33,7 @@ return [
         'summarize_threshold_help' => 'Once this many messages are still unsummarized, the summarization runs.',
         'summarize_oldest' => 'Messages to summarize',
         'summarize_oldest_help' => 'That many of the oldest messages then move into the long-term memory; it must be smaller than the threshold.',
-        'run_started_help' => 'The discussion has already started — a change is recorded in the run_config snapshot together with the turn number.',
+        'run_started_help' => 'The discussion has already started. A change is recorded in the run_config snapshot with the turn number.',
     ],
 
     'create' => [

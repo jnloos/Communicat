@@ -8,7 +8,7 @@
 
 return [
     'title' => 'Redeanteile',
-    'subheading' => 'Wer wie oft das Wort hatte — und wie viel Text dabei entstand.',
+    'subheading' => 'Wer wie oft das Wort hatte und wie viel Text dabei entstand.',
     'empty' => 'Noch kein Beitrag gesprochen. Starten Sie den Lauf, dann füllen sich die Anteile.',
 
     'turn_share' => 'Turn-Anteil',
@@ -26,6 +26,4 @@ return [
         'word_share' => 'Anteil',
         'words_per_turn' => 'Ø Wörter',
     ],
-
-    'footnote' => 'Gezählt werden nur öffentliche Beiträge — keine Gedanken, keine Selektor- oder Richternachrichten. Länge in Wörtern, nicht in Modell-Tokens.',
 ];

@@ -180,7 +180,7 @@ return [
 
     'custom' => [
         'summarizeOldest' => [
-            'lt' => 'Not every pending message may be summarized — the number must be smaller than the summarization threshold (:value).',
+            'lt' => 'Not every pending message may be summarized. The number must be smaller than the summarization threshold (:value).',
         ],
         'attribute-name' => [
             'rule-name' => 'custom-message',

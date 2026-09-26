@@ -22,11 +22,9 @@ return [
 
     'fields' => [
         'title_help' => 'Geben Sie einen kurzen, gut wiedererkennbaren Projekttitel ein.',
-        'description_help' => 'Beschreiben Sie das Projekt klar und knapp. Diese Beschreibung wird von KI-Systemen genutzt – sie sollte daher leicht verständlich sein und die Kernidee präzise erfassen.',
+        'description_help' => 'Das Thema, über das die Experten diskutieren. Kurz und konkret, sie lesen es wörtlich.',
         'provider' => 'Anbieter',
-        'provider_help' => 'Schränkt die Modellauswahl darunter auf diesen Anbieter ein; gespeichert wird nur das Modell.',
-        'provider' => 'Anbieter',
-        'provider_help' => 'Bestimmt, welche Modelle zur Auswahl stehen.',
+        'provider_help' => 'Bestimmt, welche Modelle zur Auswahl stehen. Gespeichert wird nur das Modell.',
         'pipeline' => 'Pipeline',
         'pipeline_help' => 'Legt fest, nach welchem Verfahren der nächste Sprecher bestimmt wird.',
         'model' => 'Modell',
@@ -35,7 +33,7 @@ return [
         'summarize_threshold_help' => 'Sobald so viele Nachrichten noch nicht verdichtet sind, läuft die Zusammenfassung.',
         'summarize_oldest' => 'Zu verdichtende Nachrichten',
         'summarize_oldest_help' => 'So viele der ältesten Nachrichten wandern dann in das Langzeitgedächtnis; sie muss kleiner als die Schwelle sein.',
-        'run_started_help' => 'Die Diskussion läuft bereits – eine Änderung wird im run_config-Snapshot mit der Turn-Nummer protokolliert.',
+        'run_started_help' => 'Die Diskussion läuft bereits. Eine Änderung wird im run_config-Snapshot mit der Turn-Nummer festgehalten.',
     ],
 
     'create' => [

@@ -87,8 +87,6 @@
                         </tbody>
                     </table>
                 </div>
-
-                <flux:text size="sm" class="mt-3">{{ __('statistics.footnote') }}</flux:text>
             @endif
         </div>
     </flux:modal>

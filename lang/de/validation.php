@@ -174,7 +174,7 @@ return [
 
     'custom' => [
         'summarizeOldest' => [
-            'lt' => 'Es dürfen nicht alle wartenden Nachrichten verdichtet werden – die Zahl muss kleiner als die Verdichtungsschwelle (:value) sein.',
+            'lt' => 'Es dürfen nicht alle wartenden Nachrichten verdichtet werden. Die Zahl muss kleiner als die Verdichtungsschwelle (:value) sein.',
         ],
         'attribute-name' => [
             'rule-name' => 'custom-message',
