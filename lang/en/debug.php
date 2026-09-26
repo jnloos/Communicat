@@ -8,7 +8,7 @@
 
 return [
     'title' => 'Job Debug',
-    'subheading' => 'Last 50 jobs · Click a row for details.',
+    'subheading' => 'Report from the last 50 jobs.',
     'select_project' => 'Select project',
 
     'live' => [
