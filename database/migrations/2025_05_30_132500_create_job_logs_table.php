@@ -11,7 +11,11 @@ return new class extends Migration
         Schema::create('job_logs', function (Blueprint $table) {
             $table->id();
             $table->string('job_class');
-            $table->foreignId('project_id')->nullable()->constrained('projects')->nullOnDelete();
+            // Cascade, not nullOnDelete: a turn measurement without its run is
+            // unattributable -- words, seat and selection with nothing to relate
+            // them to. prompt_logs already cascade from job_logs, so deleting a
+            // project takes its whole measurement trail with it.
+            $table->foreignId('project_id')->nullable()->constrained('projects')->cascadeOnDelete();
             $table->enum('status', ['running', 'success', 'failed'])->default('running');
             $table->json('payload')->nullable();
             $table->unsignedInteger('turn_index')->nullable();
