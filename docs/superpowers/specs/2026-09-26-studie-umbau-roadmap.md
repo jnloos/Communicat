@@ -65,6 +65,33 @@ echten Call pro Provider** überprüft werden; die Testsuite kann es per Konstru
 `phpunit.xml` die API-Keys leert. Damit erledigt sich zugleich die bislang offene Frage, ob der
 Anthropic-Effort-Schlüssel überhaupt ankommt.
 
+**Formatzwang bei `speak`.**
+Alle fünf Purposes bekommen ein Schema, `speak` eingeschlossen. Bei den anderen vier ist das
+folgenlos — sie liefern Werte, die der Code ohnehin nur als Feld weiterverarbeitet. Bei `speak`
+entsteht dagegen die abhängige Variable der Studie, und es gibt Befunde, dass Formatzwang die
+Generierung verändert (Tam et al. 2024, „Let Me Speak Freely?"). Verschiebt der JSON-Wrapper die
+Beitragslänge, verschiebt er den Gesprächsanteil.
+
+Das ist **kein Konfund zwischen den Bedingungen**: der Zwang ist in allen 24 Zellen identisch,
+also konstant. Er verschiebt das absolute Niveau, nicht die Differenz, an der H1 bis H3 hängen.
+Zwei verbindliche Maßnahmen:
+
+1. Das Speak-Schema hat genau zwei Felder, `contribution` und `addressee`. Keine Selbstauskunft
+   über Länge, Reaktionstyp oder sonstige Metadaten. Je weniger das Modell nebenher ausfüllt,
+   desto weniger Aufmerksamkeit geht vom Beitrag ab.
+2. **Pilotvergleich, Pflichtbestandteil von Stück 3.** Er klammert das Stück ein, weil die
+   Referenz nur vorher existiert:
+   - **Vor der ersten Änderung an Stück 3**: ein Lauf auf dem jetzigen Code mit Markern.
+     Festes Thema, festes Modell, Round Robin, festes Turn-Budget, fester Seed. Über die UI
+     gefahren — die CLI gibt es dann noch nicht.
+   - **Nach Stück 3**: derselbe Lauf mit Schema, gleiche Parameter, gleicher Seed.
+   - Verglichen wird die mittlere Wortzahl pro Turn aus `job_logs.words`.
+
+   Danach ist die Vergleichsgrundlage endgültig weg: Stück 4 übersetzt die Prompts, und die
+   Marker-Fassung lebt nur noch in der Git-Historie. Das Ergebnis geht in den Methodenteil der
+   Arbeit („der Formatzwang verschiebt die mittlere Beitragslänge um x %, in allen Bedingungen
+   gleichermaßen").
+
 **Vergleichbarkeit — geklärt, kein Risiko mehr.** Die Stücke 2 bis 4 ändern Datenmodell,
 Antwortformat und Promptsprache, alte Läufe werden dadurch unvergleichbar. Der Nutzer hat am
 26. September bestätigt, dass nichts davon produktiv läuft und keine Daten erhalten bleiben
