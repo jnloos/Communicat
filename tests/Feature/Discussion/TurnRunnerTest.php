@@ -46,6 +46,29 @@ class TurnRunnerTest extends TestCase
         }
     }
 
+    /**
+     * The role each seat carried is the study's manipulation, so it is frozen
+     * with the run rather than reconstructed afterwards from the personas --
+     * a persona can be renamed or re-described later, this snapshot cannot.
+     */
+    public function test_the_snapshot_records_who_sat_where_under_which_role(): void
+    {
+        app(TurnRunner::class)->run($this->project);
+
+        $cast = $this->project->fresh()->run_config['cast'];
+
+        $this->assertCount(2, $cast);
+        $this->assertSame([1, 2], array_column($cast, 'seat'), 'ordered by seat');
+        $this->assertSame(
+            $this->project->contributingExperts()->pluck('role')->all(),
+            array_column($cast, 'role'),
+        );
+        $this->assertSame(
+            $this->project->contributingExperts()->pluck('name')->all(),
+            array_column($cast, 'name'),
+        );
+    }
+
     public function test_a_turn_produces_a_message_and_its_measurement(): void
     {
         $result = app(TurnRunner::class)->run($this->project);

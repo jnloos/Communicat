@@ -9,6 +9,7 @@ use App\Discussion\Support\TextLength;
 use App\Discussion\Values\ModelConfig;
 use App\Discussion\Values\TurnResult;
 use App\Events\JobLogged;
+use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
 use Illuminate\Pipeline\Pipeline;
@@ -96,6 +97,23 @@ class TurnRunner
             'summarize_threshold' => $project->summarizeThreshold(),
             'summarize_oldest' => $project->summarizeOldest(),
             'system_prompt' => $this->prompts->system(),
+
+            // Who sat where, under which role. The role is the study's
+            // manipulation -- a run where one seat reads "Teacher" among
+            // "Student" is the status condition, one where all four read
+            // "Student" is its control. Recording it here rather than
+            // reconstructing it later from the personas matters because a
+            // persona can be renamed or re-described after the run; this cannot.
+            'cast' => $project->contributingExperts()
+                ->map(fn (Expert $expert) => [
+                    'seat' => $expert->pivot?->seat,
+                    'expert_id' => $expert->id,
+                    'name' => $expert->name,
+                    'role' => $expert->role,
+                ])
+                ->sortBy('seat')
+                ->values()
+                ->all(),
         ];
         $project->save();
     }
