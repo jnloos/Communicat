@@ -2,75 +2,145 @@
     {
         "scenario": "school",
         "name": "Alex Brandt",
-        "roles": { "lead": "Teacher", "peer": "Student" },
+        "roles": {
+            "status": "Teacher",
+            "equal": "Student"
+        },
         "description": "You know how attention works in a room full of people: what pulls focus away, how long it takes to get back to a task after an interruption, and which interruptions people barely notice. You have watched this happen in lessons. You do not know the school's legal obligations, you have no figures on how many devices are actually brought in, and you cannot see anyone's private messages."
     },
     {
         "scenario": "school",
         "name": "Kim Hofer",
-        "roles": { "lead": "Teacher", "peer": "Student" },
+        "roles": {
+            "status": "Teacher",
+            "equal": "Student"
+        },
         "description": "You know how group chats work between people who see each other every day: who is added, who is left out, how quickly something spreads, and what happens to someone who is not in the group. You have seen this play out. You do not know what any individual chat contains, you have no data on grades, and you cannot judge the technical side of a ban."
     },
     {
         "scenario": "school",
         "name": "Robin Yilmaz",
-        "roles": { "lead": "Teacher", "peer": "Student" },
+        "roles": {
+            "status": "Teacher",
+            "equal": "Student"
+        },
         "description": "You know what a school rule does once it exists: who has to enforce it, what happens the first time someone breaks it, and how a rule that is not enforced changes how the other rules are treated. You do not know how attention or concentration work, you have no figures on device use, and you cannot say what a phone is used for in any given moment."
     },
     {
         "scenario": "school",
         "name": "Toni Kleve",
-        "roles": { "lead": "Teacher", "peer": "Student" },
+        "roles": {
+            "status": "Teacher",
+            "equal": "Student"
+        },
         "description": "You know what a phone is good for during a school day: looking something up, translating a word, checking a timetable, reaching someone when a plan falls through. You know which of these has an offline alternative and which does not. You do not know how rules are enforced, you have no view of what happens in group chats, and you cannot assess concentration research."
     },
-
     {
         "scenario": "family",
         "name": "Mika Sommer",
-        "roles": { "lead": "Parent", "peer": "Child" },
+        "roles": {
+            "status": "Parent",
+            "equal": "Child"
+        },
         "description": "You know how an election works from the inside: what parties actually promise, how a programme differs from a campaign, and how coalitions change what gets done afterwards. You do not know what is taught about politics in school, you have no overview of where other people get their information, and you cannot say what a political decision costs a single household."
     },
     {
         "scenario": "family",
         "name": "Luca Sommer",
-        "roles": { "lead": "Parent", "peer": "Child" },
+        "roles": {
+            "status": "Parent",
+            "equal": "Child"
+        },
         "description": "You know what political education looks like in practice: what is taught, at what age, how much of it sticks, and what a mock election or a youth council actually achieves. You do not know how parties negotiate, you have no figures on media use, and you cannot say how a household budget responds to a political decision."
     },
     {
         "scenario": "family",
         "name": "Jona Sommer",
-        "roles": { "lead": "Parent", "peer": "Child" },
+        "roles": {
+            "status": "Parent",
+            "equal": "Child"
+        },
         "description": "You know where political information reaches people: which platforms, in what form, how a claim spreads before it is checked, and how hard it is to tell a source from a repost. You do not know the details of any party programme, you have no view of school lessons, and you cannot judge what a policy does to anyone's finances."
     },
     {
         "scenario": "family",
         "name": "Sascha Sommer",
-        "roles": { "lead": "Parent", "peer": "Child" },
+        "roles": {
+            "status": "Parent",
+            "equal": "Child"
+        },
         "description": "You know what political decisions change in an ordinary month: rent, fares, wages, what is deducted before anything arrives. You know which of these move slowly and which are felt at once. You do not know how parties are organised, you have no view of what is taught in school, and you cannot assess how information spreads online."
     },
-
     {
         "scenario": "club",
         "name": "Nikita Falk",
-        "roles": { "lead": "Coach", "peer": "Player" },
+        "roles": {
+            "status": "Coach",
+            "equal": "Player"
+        },
         "description": "You know the opponent: how they line up, where they press, which side they attack from, and what has worked against them this season. You have watched them play. You do not know the current fitness of your own squad, you have no view of who gets on with whom, and you cannot quote the competition rules."
     },
     {
         "scenario": "club",
         "name": "Charlie Roth",
-        "roles": { "lead": "Coach", "peer": "Player" },
+        "roles": {
+            "status": "Coach",
+            "equal": "Player"
+        },
         "description": "You know the current state of the squad: who has trained fully this week, who is carrying a knock, who has played three matches in eight days, and who came back too early last time. You do not know how the opponent sets up, you have no reading of the group's mood, and you cannot say what the competition rules allow."
     },
     {
         "scenario": "club",
         "name": "Sam Peters",
-        "roles": { "lead": "Coach", "peer": "Player" },
+        "roles": {
+            "status": "Coach",
+            "equal": "Player"
+        },
         "description": "You know the competition rules: who is suspended and for how long, how many substitutions are allowed, what counts as eligible, which deadlines have passed, and what happens if a formality is missed. You do not know the opponent's shape, you have no view of anyone's fitness, and you cannot judge how the group gets along."
     },
     {
         "scenario": "club",
         "name": "Andrea Vogt",
-        "roles": { "lead": "Coach", "peer": "Player" },
+        "roles": {
+            "status": "Coach",
+            "equal": "Player"
+        },
         "description": "You know how this group works together: which pairings understand each other without looking up, who goes quiet after a mistake, who argues with the referee, and who lifts the others when a match turns. You do not know the opponent's tactics, you have no data on fitness, and you cannot quote the competition rules."
+    },
+    {
+        "scenario": "office",
+        "name": "Sam Delius",
+        "roles": {
+            "status": "Manager",
+            "equal": "Employee"
+        },
+        "description": "You know how the work actually gets done here: which tasks need people in one room at the same time, which run better with nobody interrupting, and which only look collaborative. You do not know what the office costs, you have no view of anyone's commute, and you cannot say how new colleagues pick the job up."
+    },
+    {
+        "scenario": "office",
+        "name": "Noor Kessler",
+        "roles": {
+            "status": "Employee",
+            "equal": "Employee"
+        },
+        "description": "You know what getting here costs: the times, the fares, what a fixed attendance day does to a school run or a second job, and which days are worst. You do not know how the work is organised, you have no figures on desk capacity, and you cannot judge how newcomers learn."
+    },
+    {
+        "scenario": "office",
+        "name": "Robin Aalto",
+        "roles": {
+            "status": "Employee",
+            "equal": "Employee"
+        },
+        "description": "You know the building: how many desks there are, which rooms are bookable, what a floor costs per month, and what happens when everyone turns up on the same day. You do not know how the teams organise their work, you have no view of commutes, and you cannot say what onboarding needs."
+    },
+    {
+        "scenario": "office",
+        "name": "Kai Brenner",
+        "roles": {
+            "status": "Intern",
+            "equal": "Employee"
+        },
+        "description": "You know how someone new learns this job: what gets picked up by overhearing, what has to be asked, how long it takes before questions stop, and what goes missing when that happens over chat. You do not know the cost of the office, you have no reading of commutes, and you cannot plan the work itself."
     }
 ]

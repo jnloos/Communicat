@@ -49,12 +49,15 @@ class InitExperts extends Command
         foreach ($experts as $expert) {
             $avatarUrl = ! empty($expert['avatar_url']) ? asset($expert['avatar_url']) : null;
 
-            // One entry, two personas: the same knowledge profile once under the
-            // scenario's high-status label and once under its peer label. They are
-            // written from a single source on purpose -- kept as two entries they
-            // could drift, and a run would then differ in more than the title,
-            // which is the one thing the study manipulates.
-            foreach ($expert['roles'] as $role) {
+            // One entry, one persona per role label it carries: the same knowledge
+            // profile under the label it wears in the status condition and under the
+            // one it wears in the equal condition. They are written from a single
+            // source on purpose -- kept as two entries they could drift, and a run
+            // would then differ in more than the title, which is the one thing the
+            // study manipulates. A profile that wears the same label in both
+            // conditions -- a rank-and-file seat in a graded scenario -- is one
+            // persona, not two, which is why the labels are deduplicated.
+            foreach (array_unique($expert['roles']) as $role) {
                 $model = Expert::updateOrCreate(
                     ['name' => $expert['name'], 'role' => $role],
                     [

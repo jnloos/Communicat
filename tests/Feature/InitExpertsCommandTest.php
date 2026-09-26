@@ -27,10 +27,10 @@ class InitExpertsCommandTest extends TestCase
     }
 
     /**
-     * One entry is one knowledge profile and becomes two personas: the same
-     * description under the scenario's high-status label and under its peer
-     * label. That is what lets a run swap the title without changing anything
-     * else about the agent.
+     * One entry is one knowledge profile and becomes one persona per role label:
+     * the same description under the label it wears in the status condition and
+     * under the one it wears in the equal condition. That is what lets a run swap
+     * the title without changing anything else about the agent.
      */
     public function test_one_entry_becomes_one_persona_per_role(): void
     {
@@ -38,7 +38,7 @@ class InitExpertsCommandTest extends TestCase
             'scenario' => 'school',
             'name' => 'Alex Brandt',
             'avatar_url' => '',
-            'roles' => ['lead' => 'Teacher', 'peer' => 'Student'],
+            'roles' => ['status' => 'Teacher', 'equal' => 'Student'],
             'description' => 'Knows how attention works.',
         ]]));
 
@@ -58,7 +58,7 @@ class InitExpertsCommandTest extends TestCase
             'scenario' => 'school',
             'name' => 'Alex Brandt',
             'avatar_url' => '',
-            'roles' => ['lead' => 'Teacher', 'peer' => 'Student'],
+            'roles' => ['status' => 'Teacher', 'equal' => 'Student'],
             'description' => 'First description.',
         ];
 
@@ -80,7 +80,7 @@ class InitExpertsCommandTest extends TestCase
             'scenario' => 'school',
             'name' => 'Alex Brandt',
             'avatar_url' => '',
-            'roles' => ['lead' => 'Teacher', 'peer' => 'Student'],
+            'roles' => ['status' => 'Teacher', 'equal' => 'Student'],
             'description' => 'Fresh.',
         ]]);
 
@@ -88,17 +88,45 @@ class InitExpertsCommandTest extends TestCase
         $this->assertSame('Fresh.', Expert::where(['name' => 'Alex Brandt', 'role' => 'Student'])->sole()->description);
     }
 
-    /** The shipped catalogue must stay importable, and paired throughout. */
-    public function test_the_shipped_catalogue_imports_in_pairs(): void
+    /**
+     * A profile that wears the same label in both conditions -- a rank-and-file
+     * seat in a graded scenario such as the office -- is one persona, not two.
+     */
+    public function test_a_profile_with_one_label_for_both_conditions_becomes_one_persona(): void
+    {
+        $this->assertSame(0, $this->runOn([[
+            'scenario' => 'office',
+            'name' => 'Noor Kessler',
+            'avatar_url' => '',
+            'roles' => ['status' => 'Employee', 'equal' => 'Employee'],
+            'description' => 'Knows what getting here costs.',
+        ]]));
+
+        $this->assertSame(['Employee'], Expert::where('name', 'Noor Kessler')->pluck('role')->all());
+    }
+
+    /**
+     * The shipped catalogue must stay importable, and every profile must carry
+     * exactly the labels it is configured with -- no stale persona left behind
+     * when a scenario's roles change.
+     */
+    public function test_the_shipped_catalogue_imports_every_configured_label(): void
     {
         $this->assertSame(0, Artisan::call('init:experts'));
 
-        $byName = Expert::all()->groupBy('name');
+        $configured = [];
 
-        $this->assertNotEmpty($byName);
+        foreach (json_decode(File::get(base_path('database/experts.json')), true) as $entry) {
+            $configured[$entry['name']] = array_values(array_unique($entry['roles']));
+            sort($configured[$entry['name']]);
+        }
 
-        foreach ($byName as $name => $personas) {
-            $this->assertCount(2, $personas, "{$name} must exist under exactly two roles");
+        $this->assertNotEmpty($configured);
+
+        foreach (Expert::all()->groupBy('name') as $name => $personas) {
+            $roles = $personas->pluck('role')->sort()->values()->all();
+
+            $this->assertSame($configured[$name] ?? [], $roles, "{$name} must carry exactly its configured labels");
             $this->assertCount(1, $personas->pluck('description')->unique(), "{$name}'s descriptions must be identical");
         }
     }
