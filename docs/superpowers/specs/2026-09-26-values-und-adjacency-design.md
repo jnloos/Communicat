@@ -30,7 +30,8 @@ mehr erhoben, nicht mehr gespeichert und nicht mehr angezeigt.
 | Exceptions | bleiben, wo sie sind |
 | Benennung | `addressee`, nicht `talks_to` und nicht `opens_pair_with` |
 | Relation | `belongsTo(Expert::class)` statt `morphTo()` |
-| Altdaten | bestehende Expert-Partner werden übernommen, User-Partner verfallen |
+| Migrationsform | die Ursprungsmigration wird direkt geändert; keine Folgemigration |
+| Altdaten | verfallen. Kein Produktivsystem, keine Datenübernahme — die Datenbank wird neu aufgebaut |
 | Paartyp-Historie | wird nicht aufgehoben; die Spalte fällt ersatzlos |
 
 ## 3. Stück 1: Values-Konsolidierung
@@ -103,22 +104,29 @@ möglichen Zieltyp sind Aufwand ohne Gegenwert.
 
 ### 4.3 Schema
 
-Neue Migration `2026_09_26_000000_messages_replace_adjacency_with_addressee.php`:
+Das System läuft nirgends produktiv, es gibt keine Daten, die erhalten bleiben müssen. Deshalb
+keine Folgemigration, sondern eine Änderung an `2025_05_30_152442_create_messages_table.php`
+selbst: aus
 
-```
-up:
-  1. addressee_expert_id hinzufügen, nullable, constrained('experts')->nullOnDelete()
-  2. Altdaten übernehmen: UPDATE messages SET addressee_expert_id = adjacency_partner_id
-     WHERE adjacency_partner_type = 'App\Models\Expert'
-  3. dropMorphs('adjacency_partner')   -- nimmt den Index mit
-  4. dropColumn('adjacency_pair_type')
-
-down:
-  spiegelbildlich; die Paartypen sind dann verloren, der Adressat kommt als Expert-Morph zurück
+```php
+$table->string('adjacency_pair_type', 50)->nullable();
+$table->nullableMorphs('adjacency_partner');
 ```
 
-Die Reihenfolge ist bindend: erst anlegen, dann kopieren, dann löschen. Ein `down`, das die
-Paartypen nicht wiederherstellen kann, ist hier hinnehmbar — sie werden nirgends ausgewertet.
+wird
+
+```php
+// Wen dieser Beitrag anspricht. Nur ein beitragender Experte kommt in Frage:
+// der Chat hat keinen Composer mehr, Speak verwirft ein U-Token.
+$table->foreignId('addressee_expert_id')->nullable()->constrained('experts')->nullOnDelete();
+```
+
+Danach `php artisan migrate:fresh` und `php artisan dev:build-suite`. Der Entwicklungsdatenbestand
+entsteht ohnehin aus dem Seeder; er ist kein Gut, das eine Migration schützen müsste.
+
+Das ist bewusst anders als bei `2026_09_24_120000_projects_rename_model_keys.php`, das damals
+additiv gebaut wurde. Solange kein Studienlauf existiert, ist die Ursprungsmigration die ehrlichere
+Darstellung: das Schema wird gelesen wie ein Entwurf, nicht wie eine Historie von Reparaturen.
 
 ### 4.4 Code
 
@@ -143,11 +151,10 @@ und `addressed_user_id` auffächert, wird zu einer Zeile. `addressed_user_id` en
 Nutzlast.
 
 **`app/Services/ProjectTransfer/ProjectExport.php:57-61`** und **`ProjectImporter.php:72-83`** —
-drei Exportfelder werden zu einem (`addressee_expert_id`). Der Importer liest die alten Felder
-weiterhin, damit vorhandene Exportdateien nicht wertlos werden: `adjacency_partner_expert_id`
-wird auf `addressee_expert_id` abgebildet, `adjacency_pair_type` und
-`adjacency_partner_is_user` werden gelesen und verworfen. Das ist der einzige Ort, an dem der alte
-Name weiterlebt, und er ist als Abwärtskompatibilität kommentiert.
+drei Exportfelder werden zu einem (`addressee_expert_id`). Keine Abwärtskompatibilität für alte
+Exportdateien: der Importer liest die alten Schlüssel schlicht nicht mehr. Eine Datei aus dem alten
+Format importiert dadurch weiterhin ohne Fehler, nur ohne Adressaten — hinnehmbar, weil die Daten,
+auf die es ankommt, erst mit der Studie entstehen.
 
 **`resources/views/components/projects/chat-message.blade.php:12-20`** — der `instanceof`-Zweig für
 `User` entfällt; übrig bleibt die Prüfung, dass der Adressat nicht der Sprecher selbst ist.
@@ -170,24 +177,18 @@ Adressatenanzeige (`chat.message.addressed`) bleibt unverändert.
   Test darauf, dass ein Plenumsbeitrag ohne Adressat gespeichert wird.
 - `tests/Unit/MessageGeneratedPayloadTest.php` — der Fall „Partner ist ein Nutzer" entfällt, weil
   er nicht mehr eintreten kann.
-- Neu: ein Importtest auf einer Exportdatei im alten Format (Paartyp und
-  `adjacency_partner_is_user` werden gelesen und verworfen, `adjacency_partner_expert_id` landet
-  als Adressat).
+- Die bestehenden Export-/Importtests werden auf das neue Feld gezogen. Kein Test auf das alte
+  Exportformat: es wird nicht mehr unterstützt.
 
-Die Datenübernahme der Migration wird **nicht** automatisiert getestet. Die Testsuite fährt gegen
-eine frisch migrierte In-Memory-Datenbank, in der der alte Morph nie existiert; ein Test müsste
-den Migrationsstand künstlich zurückdrehen und würde damit mehr über den Testaufbau aussagen als
-über die Migration. Stattdessen eine einmalige Prüfung von Hand: Kopie von
-`database/database.sqlite` anlegen, `php artisan migrate` darauf laufen lassen, und für eine
-Nachricht mit bekanntem Expert-Adressaten sowie eine mit User-Adressaten das Ergebnis ansehen.
-Das Ergebnis gehört in den Implementierungsplan, nicht in die Suite.
+Kein Migrationstest. Es gibt keine Datenübernahme, die schiefgehen könnte — das Schema entsteht
+frisch, und dass es entsteht, prüft jeder Test der Suite ohnehin bei jedem Lauf.
 
 ### 4.7 Abnahme
 
-`php artisan test` grün, `vendor/bin/pint` sauber, `php artisan migrate:fresh` und
-`php artisan migrate` auf einer Datenbank mit Altdaten laufen beide durch, und
-`grep -rn 'adjacency\|PAIR_' app resources tests` findet nur noch die kommentierte
-Abwärtskompatibilität im Importer.
+`php artisan test` grün, `vendor/bin/pint` sauber, `php artisan migrate:fresh` gefolgt von
+`php artisan dev:build-suite` läuft durch, und weder `adjacency` noch `PAIR_` kommt in `app`,
+`resources` oder `tests` noch vor. Dazu eine Sichtprüfung im Chat: eine Nachricht mit Adressat
+zeigt weiterhin „Angesprochen: …", eine ohne zeigt nichts.
 
 ## 5. Nicht Teil dieser Spec
 

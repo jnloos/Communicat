@@ -65,10 +65,12 @@ echten Call pro Provider** überprüft werden; die Testsuite kann es per Konstru
 `phpunit.xml` die API-Keys leert. Damit erledigt sich zugleich die bislang offene Frage, ob der
 Anthropic-Effort-Schlüssel überhaupt ankommt.
 
-**Vergleichbarkeit.** Die Stücke 2 bis 4 ändern Datenmodell, Antwortformat und Promptsprache. Alte
-Läufe werden dadurch unvergleichbar. Grundlage dieser Roadmap ist, dass noch keine Studiendaten
-existieren, die erhalten bleiben müssen. Trifft das nicht zu, wird Stück 2 als additive Migration
-statt als Rückbau gebaut.
+**Vergleichbarkeit — geklärt, kein Risiko mehr.** Die Stücke 2 bis 4 ändern Datenmodell,
+Antwortformat und Promptsprache, alte Läufe werden dadurch unvergleichbar. Der Nutzer hat am
+26. September bestätigt, dass nichts davon produktiv läuft und keine Daten erhalten bleiben
+müssen. Migrationen dürfen daher an Ort und Stelle geändert werden, statt als Folgemigration
+hinterhergeschoben zu werden; die Datenbank wird neu aufgebaut und aus `dev:build-suite` gefüllt.
+Das gilt für die gesamte Roadmap, nicht nur für Stück 2.
 
 ## 5. Was ausdrücklich nicht dazugehört
 
