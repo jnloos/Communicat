@@ -2,7 +2,7 @@
 
 namespace App\Discussion\Agents;
 
-use App\Discussion\Purpose;
+use App\Discussion\Values\Purpose;
 
 /** Picks the next speaker from the visible history. Sees no private thoughts. */
 class SelectorAgent extends StudyAgent

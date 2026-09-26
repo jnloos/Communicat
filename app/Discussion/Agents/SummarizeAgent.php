@@ -2,7 +2,7 @@
 
 namespace App\Discussion\Agents;
 
-use App\Discussion\Purpose;
+use App\Discussion\Values\Purpose;
 
 class SummarizeAgent extends StudyAgent
 {

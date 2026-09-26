@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Discussion\Memory;
+namespace App\Discussion\Values;
 
 /**
  * What one agent gets to see, after Nonomura et al. (2025): shared History,

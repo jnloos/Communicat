@@ -2,7 +2,7 @@
 
 namespace App\Discussion\Agents;
 
-use App\Discussion\Purpose;
+use App\Discussion\Values\Purpose;
 
 /** Scores the agents' drafts. Its own purpose so judge calls are filterable in prompt_logs. */
 class JudgeAgent extends StudyAgent

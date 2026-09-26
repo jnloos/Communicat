@@ -2,10 +2,10 @@
 
 namespace App\Discussion\Agents;
 
-use App\Discussion\Purpose;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\Values\Completion;
 use App\Discussion\Values\ModelConfig;
+use App\Discussion\Values\Purpose;
 use InvalidArgumentException;
 use Laravel\Ai\Approvals\Decisions;
 use Laravel\Ai\Contracts\Agent;

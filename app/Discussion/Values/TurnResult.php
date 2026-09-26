@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Discussion;
+namespace App\Discussion\Values;
 
 final readonly class TurnResult
 {

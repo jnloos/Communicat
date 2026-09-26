@@ -2,6 +2,7 @@
 
 namespace App\Discussion\Memory;
 
+use App\Discussion\Values\MemoryView;
 use App\Models\Expert;
 use App\Models\Message;
 use App\Models\Project;

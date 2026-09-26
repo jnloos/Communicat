@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Discussion;
+namespace App\Discussion\Values;
 
 /** The kinds of model call. Values are stored in prompt_logs.purpose. */
 enum Purpose: string

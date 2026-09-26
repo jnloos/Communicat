@@ -7,6 +7,7 @@ use App\Discussion\Pipelines\TurnPipeline;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\Support\TextLength;
 use App\Discussion\Values\ModelConfig;
+use App\Discussion\Values\TurnResult;
 use App\Events\JobLogged;
 use App\Models\JobLog;
 use App\Models\Project;

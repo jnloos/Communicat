@@ -2,8 +2,8 @@
 
 namespace Tests\Unit\Discussion;
 
-use App\Discussion\Memory\MemoryView;
 use App\Discussion\Support\PromptRenderer;
+use App\Discussion\Values\MemoryView;
 use App\Models\Expert;
 use Tests\TestCase;
 
