@@ -71,9 +71,18 @@ class CreateProject extends Command
             'seed' => $this->option('seed') === null ? null : (int) $this->option('seed'),
         ], fn ($value) => $value !== null));
 
+        // Owning a project is not the same as being in it: the sidebar lists
+        // projects through the contributor pivot, so without this the project
+        // exists, is reachable by URL, and appears nowhere.
+        $project->addContributingUser($owner);
+
         foreach ($experts as $expert) {
             $project->addContributingExpert($expert);
         }
+
+        // The same opening notice the UI writes. It carries no sender, so
+        // participantMessages() leaves it out of every prompt and every count.
+        $project->addMessage(view('components.projects.welcome-message', ['project' => $project])->render());
 
         $this->info("Project {$project->id} created.");
         $this->table(['', ''], [

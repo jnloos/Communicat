@@ -71,6 +71,32 @@ class ProjectCommandsTest extends TestCase
         $this->assertNotNull(Project::where('title', 'Ohne Seed')->sole()->seed);
     }
 
+    /**
+     * Owning a project is not the same as being in it. The sidebar lists
+     * projects through the contributor pivot, so a project created without the
+     * owner attached exists, is reachable by URL, and appears nowhere.
+     */
+    public function test_create_puts_the_owner_in_the_project(): void
+    {
+        $this->artisan('project:create', ['title' => 'Visible'])->assertSuccessful();
+
+        $project = Project::where('title', 'Visible')->sole();
+
+        $this->assertTrue($project->users()->whereKey($this->admin->id)->exists());
+        $this->assertTrue($project->hasContributor($this->admin));
+    }
+
+    /** The opening notice has no sender, so it never reaches a prompt or a count. */
+    public function test_the_welcome_message_stays_out_of_the_measurement(): void
+    {
+        $this->artisan('project:create', ['title' => 'With notice'])->assertSuccessful();
+
+        $project = Project::where('title', 'With notice')->sole();
+
+        $this->assertSame(1, $project->messages()->count());
+        $this->assertSame(0, $project->participantMessages()->count());
+    }
+
     public function test_create_rejects_an_unknown_pipeline(): void
     {
         $this->artisan('project:create', ['title' => 'x', '--pipeline' => 'NoSuchPipeline'])
