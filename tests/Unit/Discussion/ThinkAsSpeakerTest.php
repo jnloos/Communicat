@@ -33,7 +33,10 @@ class ThinkAsSpeakerTest extends TestCase
 
         FakeAgents::always(ThinkAgent::class, ['thought' => 'Ich will etwas beitragen.']);
 
-        $this->project = Project::factory()->create(['title' => 'KI an Schulen']);
+        $this->project = Project::factory()->create([
+            'title' => 'Cell 3, high status',
+            'description' => 'Should schools use AI for marking?',
+        ]);
         $this->speaker = Expert::factory()->create(['name' => 'Alice']);
         $this->project->addContributingExpert($this->speaker);
         $this->project->addContributingExpert(Expert::factory()->create(['name' => 'Bob']));
@@ -74,7 +77,10 @@ class ThinkAsSpeakerTest extends TestCase
         app(ThinkAsSpeaker::class)->handle($this->payload(), fn (TurnPayload $p) => $p);
 
         ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'You are Alice'));
-        ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'KI an Schulen'));
+        ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'Should schools use AI for marking?'));
+        // The title names the experimental cell; handing it to the agent would
+        // tell it which condition it is in.
+        ThinkAgent::assertPrompted(fn ($prompt) => ! str_contains($prompt->prompt, 'Cell 3, high status'));
         ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'Mein alter Gedanke.'));
         // The format is no longer asked for in prose; the agent declares it.
         ThinkAgent::assertPrompted(fn ($prompt) => $prompt->agent->schema === ThoughtSchema::class);

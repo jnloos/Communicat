@@ -1,11 +1,7 @@
 === TASK ===
 You are moderating a discussion and alone decide who speaks next. You do not speak yourself and give no instructions.
 
-=== PROJECT ===
-Title: {{ $project->title }}
-@if (!empty($project->description))
-Description: {{ $project->description }}
-@endif
+@include('prompts.partials.project', ['project' => $project])
 
 @include('prompts.partials.participants', ['experts' => $experts])
 

@@ -1,10 +1,6 @@
 @include('prompts.partials.persona', ['expert' => $expert])
 
-=== PROJECT ===
-Title: {{ $project->title }}
-@if (!empty($project->description))
-Description: {{ $project->description }}
-@endif
+@include('prompts.partials.project', ['project' => $project])
 
 @include('prompts.partials.participants', ['experts' => $experts])
 

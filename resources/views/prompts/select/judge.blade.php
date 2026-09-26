@@ -1,11 +1,7 @@
 === TASK ===
 You evaluate drafts for the next discussion contribution. You do not write a contribution yourself and do not choose a winner; you only award points.
 
-=== PROJECT ===
-Title: {{ $project->title }}
-@if (!empty($project->description))
-Description: {{ $project->description }}
-@endif
+@include('prompts.partials.project', ['project' => $project])
 
 @include('prompts.partials.memory', ['memory' => $memory])
 
