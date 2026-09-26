@@ -125,6 +125,15 @@ return [
             'temperature' => null,
             'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
         ],
+        'openai-gpt-5-mini' => [
+            'label' => 'GPT-5 mini',
+            'provider' => 'openai',
+            'model' => 'gpt-5-mini',
+            'price' => ['input' => 0.25, 'output' => 2.00],
+            'max_output_tokens' => 8000,
+            'temperature' => null,
+            'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
+        ],
         'anthropic-opus-5' => [
             'label' => 'Claude Opus 5',
             'provider' => 'anthropic',
