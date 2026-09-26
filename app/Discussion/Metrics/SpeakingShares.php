@@ -46,6 +46,10 @@ class SpeakingShares
             ->keyBy('expert_id');
 
         $spokenTurns = (int) $counted->sum('turns');
+        $failedTurns = JobLog::where('project_id', $project->id)
+            ->where('status', 'failed')
+            ->whereNull('words')
+            ->count();
         $totalWords = (int) $counted->sum('words');
 
         $speakers = $experts
@@ -70,6 +74,7 @@ class SpeakingShares
         return new ShareReport(
             speakers: $speakers,
             spokenTurns: $spokenTurns,
+            failedTurns: $failedTurns,
             totalWords: $totalWords,
             turnGini: Gini::of(array_map(fn (SpeakerShare $s) => $s->turns, $speakers)),
             wordGini: Gini::of(array_map(fn (SpeakerShare $s) => $s->words, $speakers)),

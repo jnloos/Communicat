@@ -187,6 +187,24 @@ class SpeakingSharesTest extends TestCase
         $this->assertSame(45.0, $bob->wordsPerTurn());
     }
 
+    /**
+     * The research plan asks for failure rates to be reported rather than
+     * quietly filtered. A turn that failed before speaking leaves no trace in
+     * the shares, so the report has to carry it separately.
+     */
+    public function test_turns_that_failed_before_speaking_are_reported(): void
+    {
+        $this->turn('Alice', 10);
+        $this->turn('Bob', null, status: 'failed');
+        $this->turn('Bob', null, status: 'failed');
+        $this->turn('Carol', 12, status: 'failed');
+
+        $report = $this->report();
+
+        $this->assertSame(2, $report->spokenTurns, 'the one that spoke before failing counts as spoken');
+        $this->assertSame(2, $report->failedTurns);
+    }
+
     public function test_speakers_come_back_in_seat_order(): void
     {
         $names = array_map(fn (SpeakerShare $s) => $s->name, $this->report()->speakers);

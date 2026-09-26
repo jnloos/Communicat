@@ -67,8 +67,13 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-3 py-8 text-center text-zinc-400 font-mono text-xs">
-                            {{ __('debug.empty') }}
+                        <td colspan="5" class="p-3">
+                            {{-- The shared empty state, like every other list and panel.
+                                 The monospace elsewhere in this report is for data;
+                                 this line is prose. --}}
+                            <x-empty-state icon="inbox" class="border-0">
+                                {{ __('debug.empty') }}
+                            </x-empty-state>
                         </td>
                     </tr>
                 @endforelse
@@ -154,7 +159,7 @@
                             </div>
                         </div>
                     @empty
-                        <p class="text-xs text-zinc-400 py-4 text-center font-mono">{{ __('debug.detail.no_prompts') }}</p>
+                        <x-empty-state icon="chat-bubble-left-right">{{ __('debug.detail.no_prompts') }}</x-empty-state>
                     @endforelse
                 </flux:tab.panel>
 
@@ -176,7 +181,7 @@
                             </div>
                         </div>
                     @empty
-                        <p class="text-xs text-zinc-400 py-4 text-center font-mono">{{ __('debug.detail.no_messages') }}</p>
+                        <x-empty-state icon="chat-bubble-left-ellipsis">{{ __('debug.detail.no_messages') }}</x-empty-state>
                     @endforelse
                 </flux:tab.panel>
             </flux:tab.group>

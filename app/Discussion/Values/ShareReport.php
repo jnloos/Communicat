@@ -23,6 +23,12 @@ final readonly class ShareReport
     public function __construct(
         public array $speakers,
         public int $spokenTurns,
+        /**
+         * Turns that failed before producing a contribution. They are invisible
+         * in the shares by construction, and the research plan asks for failure
+         * rates to be reported rather than quietly filtered (Campedelli2024).
+         */
+        public int $failedTurns,
         public int $totalWords,
         public float $turnGini,
         public float $wordGini,
@@ -32,7 +38,7 @@ final readonly class ShareReport
     /** A report for a run that has not started; keeps six zeroes out of the caller. */
     public static function empty(): self
     {
-        return new self(speakers: [], spokenTurns: 0, totalWords: 0, turnGini: 0.0, wordGini: 0.0, giniCeiling: 0.0);
+        return new self(speakers: [], spokenTurns: 0, failedTurns: 0, totalWords: 0, turnGini: 0.0, wordGini: 0.0, giniCeiling: 0.0);
     }
 
     public function isEmpty(): bool
