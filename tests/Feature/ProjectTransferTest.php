@@ -33,7 +33,7 @@ class ProjectTransferTest extends TestCase
 
         $data = (new ProjectExport)->toArray($source->fresh());
 
-        $this->assertSame(5, $data['schema_version']);
+        $this->assertSame(6, $data['schema_version']);
         $this->assertArrayNotHasKey('settings', $data['project']);
 
         $copy = app(ProjectImporter::class)->import($data, $owner)['project']->fresh();
@@ -49,6 +49,48 @@ class ProjectTransferTest extends TestCase
         $this->assertSame('Alices Gedanke.', Summary::where('project_id', $copy->id)->value('content'));
         $this->assertNull($copy->run_config);
         $this->assertTrue($copy->users()->whereKey($owner->id)->exists());
+    }
+
+    public function test_a_round_trip_keeps_a_valid_addressee_drops_a_stray_one_and_leaves_none_alone(): void
+    {
+        $owner = User::factory()->create();
+        [$alice, $bob, $carol] = Expert::factory()->count(3)->create()->all();
+
+        $source = Project::factory()->create(['user_id' => $owner->id]);
+        $source->addContributingExpert($alice);
+        $source->addContributingExpert($bob);
+        $source->addContributingExpert($carol);
+
+        // Addressed to a contributing expert: must survive the round trip.
+        $toAlice = $source->addMessage('An Alice.', $bob);
+        $toAlice->addressee_expert_id = $alice->id;
+        $toAlice->save();
+
+        // No addressee at all: must still have none.
+        $toNobody = $source->addMessage('An die Gruppe.', $alice);
+
+        // Addressed to Carol while she was still a contributor, but she leaves
+        // the project before export: the export's expert list no longer
+        // carries her, so her id cannot be re-linked on import.
+        $toCarol = $source->addMessage('An Carol.', $bob);
+        $toCarol->addressee_expert_id = $carol->id;
+        $toCarol->save();
+        $source->removeContributingExpert($carol);
+
+        $data = (new ProjectExport)->toArray($source->fresh());
+
+        $copy = app(ProjectImporter::class)->import($data, $owner)['project']->fresh();
+
+        $copiedToAlice = $copy->messages()->where('content', 'An Alice.')->sole();
+        $copiedToNobody = $copy->messages()->where('content', 'An die Gruppe.')->sole();
+        $copiedToCarol = $copy->messages()->where('content', 'An Carol.')->sole();
+
+        // Experts are shared rows, not recreated per project, so the id stays
+        // the same on a valid re-link — assert on the resolved relation, not
+        // just the raw column, so a blindly-copied id could not pass this.
+        $this->assertTrue($alice->is($copiedToAlice->addressee));
+        $this->assertNull($copiedToNobody->addressee_expert_id);
+        $this->assertNull($copiedToCarol->addressee_expert_id);
     }
 
     public function test_unknown_pipeline_and_model_fall_back_to_the_defaults(): void

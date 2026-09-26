@@ -191,9 +191,9 @@
                                     <span class="font-semibold text-zinc-700 dark:text-zinc-300">
                                         {{ $msg->expert?->name ?? __('debug.detail.system_sender') }}
                                     </span>
-                                    @if ($msg->addressee_expert_id)
+                                    @if ($msg->addressee)
                                         <span class="text-zinc-400">→</span>
-                                        <span class="text-zinc-500">{{ $msg->addressee?->name }}</span>
+                                        <span class="text-zinc-500">{{ $msg->addressee->name }}</span>
                                     @endif
                                     <span class="ml-auto font-mono text-zinc-400">{{ $msg->created_at?->format('H:i:s') }}</span>
                                 </div>

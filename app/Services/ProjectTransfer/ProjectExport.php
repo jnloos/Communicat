@@ -7,7 +7,7 @@ use App\Models\Project;
 class ProjectExport
 {
     /** Current export schema version (consumed by ProjectImporter). */
-    public const SCHEMA_VERSION = 5;
+    public const SCHEMA_VERSION = 6;
 
     /**
      * Build the full clone payload for a project: pipeline/model config,
