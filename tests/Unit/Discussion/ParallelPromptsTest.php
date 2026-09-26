@@ -4,7 +4,11 @@ namespace Tests\Unit\Discussion;
 
 use App\Discussion\Support\ParallelPrompts;
 use App\Discussion\Values\Completion;
+use Illuminate\Support\Facades\Concurrency;
+use Illuminate\Support\Facades\Log;
 use Laravel\SerializableClosure\SerializableClosure;
+use Symfony\Component\Process\Exception\ProcessStartFailedException;
+use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
 class ParallelPromptsTest extends TestCase
@@ -36,6 +40,29 @@ class ParallelPromptsTest extends TestCase
     public function test_an_empty_list_is_no_work(): void
     {
         $this->assertSame([], app(ParallelPrompts::class)->run([]));
+    }
+
+    /**
+     * A run must not die because the kernel refuses another process. That is
+     * what ended one pilot cell at turn 39: the serialised closure carries the
+     * rendered prompt, and once it grew past what posix_spawn() accepts, all
+     * 32 remaining turns failed.
+     */
+    public function test_it_runs_the_prompts_itself_when_no_child_process_starts(): void
+    {
+        Log::spy();
+        Concurrency::shouldReceive('run')->once()->andThrow(
+            new ProcessStartFailedException(new Process(['true']), 'Argument list too long')
+        );
+
+        $result = app(ParallelPrompts::class)->run([
+            7 => static fn () => self::completion('sieben'),
+            9 => static fn () => self::completion('neun'),
+        ]);
+
+        $this->assertSame([7, 9], array_keys($result));
+        $this->assertSame(['sieben', 'neun'], [$result[7]->text, $result[9]->text]);
+        Log::shouldHaveReceived('warning')->once();
     }
 
     /**
