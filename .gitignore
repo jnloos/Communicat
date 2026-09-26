@@ -30,3 +30,6 @@ Homestead.json
 auth.json
 node_modules
 CLAUDE.md
+
+# Scratch space for planning workspaces and agent reports
+.superpowers/
