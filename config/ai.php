@@ -104,12 +104,23 @@ return [
     |
     | temperature = null means: do not send the parameter. Current Anthropic models and
     | OpenAI reasoning models reject it. reasoning_effort = null means: provider default.
+    |
+    | "price" is US dollars per million tokens, list price, and it is bookkeeping
+    | only -- nothing in the discussion reads it. Two things to know before you
+    | trust a figure derived from it: reasoning tokens are already part of
+    | "tokens_out" in prompt_logs and are billed at the output rate, so they are
+    | never added a second time; and a cached input token is cheaper than the rate
+    | below, which the logs do not distinguish, so an estimate is an upper bound on
+    | input. price = null means the model is unpriced and a run with it reports no
+    | cost rather than a wrong one. Checked against the providers' public price
+    | lists on 2026-09-27 -- reconcile against the invoice before quoting a figure.
     */
     'models' => [
         'openai-gpt-5' => [
             'label' => 'GPT-5',
             'provider' => 'openai',
             'model' => 'gpt-5',
+            'price' => ['input' => 1.25, 'output' => 10.00],
             'max_output_tokens' => 8000,
             'temperature' => null,
             'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
@@ -118,6 +129,7 @@ return [
             'label' => 'Claude Opus 5',
             'provider' => 'anthropic',
             'model' => 'claude-opus-5',
+            'price' => ['input' => 5.00, 'output' => 25.00],
             'max_output_tokens' => 8000,
             'temperature' => null,
             // Anthropic exposes no effort parameter this SDK can set; see
@@ -128,6 +140,7 @@ return [
             'label' => 'Gemini 3.8 Flash',
             'provider' => 'gemini',
             'model' => 'gemini-3.8-flash',
+            'price' => ['input' => 0.30, 'output' => 2.50],
             'max_output_tokens' => 8000,
             'temperature' => null,
             // Must stay null: Gemini has no effort levels (only a thinkingBudget token
