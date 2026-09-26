@@ -728,11 +728,7 @@ ersetzen durch
                 }
 ```
 
-In beiden Dateien prüfen, ob `use App\Models\Expert;` und `use App\Models\User;` danach noch anderswo gebraucht werden; wenn nicht, entfernen. Pint meldet unbenutzte Importe nicht, also von Hand nachsehen:
-
-```bash
-grep -n 'Expert::\|User::\|Expert \$\|User \$' app/Services/ProjectTransfer/ProjectExport.php app/Services/ProjectTransfer/ProjectImporter.php
-```
+Werden `use App\Models\Expert;` oder `use App\Models\User;` danach nirgends mehr gebraucht, entfernt Pint sie in Step 9 selbst — der `no_unused_imports`-Fixer gehört zum Laravel-Preset und ist empirisch geprüft. Also nicht von Hand nachräumen, sondern `vendor/bin/pint` laufen lassen und das Ergebnis mitcommitten.
 
 - [ ] **Step 8: Die Ansichten umstellen**
 
