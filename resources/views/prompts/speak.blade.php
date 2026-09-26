@@ -6,7 +6,7 @@ Title: {{ $project->title }}
 Description: {{ $project->description }}
 @endif
 
-@include('prompts.partials.participants', ['experts' => $experts, 'users' => $users])
+@include('prompts.partials.participants', ['experts' => $experts])
 You only need the tokens to enter the addressee of your contribution.
 
 @include('prompts.partials.memory', ['memory' => $memory])

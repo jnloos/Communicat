@@ -5,10 +5,15 @@ namespace Tests\Unit\Discussion;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\Values\MemoryView;
 use App\Models\Expert;
+use App\Models\Project;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class PromptRendererTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_decodes_html_entities_blade_escaped(): void
     {
         $expert = new Expert(['name' => "Devil's Advocate", 'role' => 'Kritiker & Prüfer', 'description' => 'Hinterfragt alles.']);
@@ -48,5 +53,34 @@ class PromptRendererTest extends TestCase
     public function test_system_prompt_is_rendered_from_its_view(): void
     {
         $this->assertStringContainsString('academic discussion simulation', (new PromptRenderer)->system());
+    }
+
+    /**
+     * The humans on a project own it and read along; the chat has no composer,
+     * so they can never take a turn. Listing them put a fifth person in a group
+     * of four and agents addressed them, which is a nuisance variable in a study
+     * that measures who gets the floor.
+     */
+    public function test_the_roster_holds_the_experts_and_nobody_else(): void
+    {
+        $owner = User::factory()->create(['name' => 'Ada Owner']);
+        $reader = User::factory()->create(['name' => 'Bo Reader']);
+
+        $project = Project::factory()->create(['user_id' => $owner->id]);
+        $project->addContributingUser($owner);
+        $project->addContributingUser($reader);
+        $project->addContributingExpert(Expert::factory()->create(['name' => 'Cleo Expert', 'role' => 'Teacher']));
+
+        $roster = (new PromptRenderer)->participants($project);
+
+        $this->assertSame(['experts'], array_keys($roster));
+
+        $rendered = (new PromptRenderer)->render('prompts.partials.participants', $roster);
+
+        $this->assertStringContainsString('Cleo Expert', $rendered);
+        $this->assertStringNotContainsString('Ada Owner', $rendered);
+        $this->assertStringNotContainsString('Bo Reader', $rendered);
+        $this->assertStringNotContainsString($owner->promptId, $rendered);
+        $this->assertStringNotContainsString($reader->promptId, $rendered);
     }
 }
