@@ -4,8 +4,8 @@ namespace App\Discussion\Selectors;
 
 use App\Discussion\Agents\JudgeAgent;
 use App\Discussion\Memory\Memory;
+use App\Discussion\Schemas\DraftScoresSchema;
 use App\Discussion\Support\PromptRenderer;
-use App\Discussion\Support\Thinking;
 use App\Discussion\Support\TieBreaker;
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\ModelConfig;
@@ -22,10 +22,6 @@ use App\Models\Expert;
  */
 class JudgeSelector implements SpeakerSelector
 {
-    public const MARKER_SCORE = 'BEWERTUNG:';
-
-    public const MARKER_REASONING = 'BEGRÜNDUNG:';
-
     public function __construct(
         private readonly PromptRenderer $prompts,
         private readonly Memory $memory,
@@ -49,16 +45,17 @@ class JudgeSelector implements SpeakerSelector
         $completion = (new JudgeAgent(
             ModelConfig::fromConfig($project->model),
             $payload->jobLogId,
+            schema: DraftScoresSchema::class,
         ))->ask($this->prompts->render('prompts.select.judge', [
             'project' => $project,
             'memory' => $this->memory->viewFor($project),
             'drafts' => $drafts,
-            'marker_score' => self::MARKER_SCORE,
-            'marker_reasoning' => self::MARKER_REASONING,
+            'lowest' => DraftScoresSchema::LOWEST,
+            'highest' => DraftScoresSchema::HIGHEST,
         ] + $this->prompts->participants($project)));
 
-        $reasoning = Thinking::section($completion->text, self::MARKER_REASONING);
-        $scores = $this->scores($completion->text, $experts->all());
+        $reasoning = trim($completion->structured['reasoning'] ?? '');
+        $scores = $this->scores($completion->structured['scores'] ?? [], $experts->all());
 
         $fallbacks = [];
         foreach ($experts as $expert) {
@@ -91,25 +88,36 @@ class JudgeSelector implements SpeakerSelector
     }
 
     /**
-     * Every "BEWERTUNG: E7 8" line whose token is a contributing expert.
+     * The scored entries whose token is a contributing expert. A token the
+     * judge invented, or an entry without a usable number, is dropped rather
+     * than guessed at -- the expert then shows up in the fallbacks.
      *
+     * @param  mixed  $rows  the schema's `scores` array, as the provider sent it
      * @param  list<Expert>  $experts
      * @return array<string, int>
      */
-    private function scores(string $text, array $experts): array
+    private function scores(mixed $rows, array $experts): array
     {
         $known = [];
         foreach ($experts as $expert) {
             $known[$expert->promptId] = true;
         }
 
-        preg_match_all('/'.preg_quote(self::MARKER_SCORE, '/').'\s*(\S+)\s+(\d+)/u', $text, $matches, PREG_SET_ORDER);
-
         $scores = [];
-        foreach ($matches as [, $token, $score]) {
-            if (isset($known[$token])) {
-                $scores[$token] = (int) $score;
+
+        foreach (is_array($rows) ? $rows : [] as $row) {
+            $token = is_array($row) ? ($row['expert'] ?? null) : null;
+            $score = is_array($row) ? ($row['score'] ?? null) : null;
+
+            if (! is_string($token) || ! isset($known[$token])) {
+                continue;
             }
+
+            if (! is_int($score) && ! (is_string($score) && ctype_digit($score))) {
+                continue;
+            }
+
+            $scores[$token] = (int) $score;
         }
 
         return $scores;

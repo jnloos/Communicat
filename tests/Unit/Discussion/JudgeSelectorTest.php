@@ -47,12 +47,14 @@ class JudgeSelectorTest extends TestCase
 
     public function test_the_highest_score_gets_the_floor(): void
     {
-        FakeAgents::always(JudgeAgent::class, implode("\n", [
-            "BEWERTUNG: {$this->experts[0]->promptId} 4",
-            "BEWERTUNG: {$this->experts[1]->promptId} 9",
-            "BEWERTUNG: {$this->experts[2]->promptId} 6",
-            'BEGRÜNDUNG: Der zweite Entwurf ist am konkretesten.',
-        ]));
+        FakeAgents::always(JudgeAgent::class, [
+            'scores' => [
+                ['expert' => $this->experts[0]->promptId, 'score' => 4],
+                ['expert' => $this->experts[1]->promptId, 'score' => 9],
+                ['expert' => $this->experts[2]->promptId, 'score' => 6],
+            ],
+            'reasoning' => 'Der zweite Entwurf ist am konkretesten.',
+        ]);
 
         $selection = $this->judge();
 
@@ -63,11 +65,14 @@ class JudgeSelectorTest extends TestCase
 
     public function test_all_scores_are_recorded_in_the_signals(): void
     {
-        FakeAgents::always(JudgeAgent::class, implode("\n", [
-            "BEWERTUNG: {$this->experts[0]->promptId} 4",
-            "BEWERTUNG: {$this->experts[1]->promptId} 9",
-            "BEWERTUNG: {$this->experts[2]->promptId} 6",
-        ]));
+        FakeAgents::always(JudgeAgent::class, [
+            'scores' => [
+                ['expert' => $this->experts[0]->promptId, 'score' => 4],
+                ['expert' => $this->experts[1]->promptId, 'score' => 9],
+                ['expert' => $this->experts[2]->promptId, 'score' => 6],
+            ],
+            'reasoning' => 'Der zweite Entwurf ist am konkretesten.',
+        ]);
 
         $this->assertSame([
             $this->experts[0]->promptId => 4,
@@ -80,18 +85,23 @@ class JudgeSelectorTest extends TestCase
     {
         // The judge names no winner, so prose and numbers cannot contradict each
         // other — the rule is the same one the bids follow.
-        FakeAgents::always(JudgeAgent::class, implode("\n", [
-            "BEWERTUNG: {$this->experts[0]->promptId} 2",
-            "BEWERTUNG: {$this->experts[1]->promptId} 8",
-            'BEGRÜNDUNG: Eigentlich finde ich den ersten Entwurf besser.',
-        ]));
+        FakeAgents::always(JudgeAgent::class, [
+            'scores' => [
+                ['expert' => $this->experts[0]->promptId, 'score' => 2],
+                ['expert' => $this->experts[1]->promptId, 'score' => 8],
+            ],
+            'reasoning' => 'Eigentlich finde ich den ersten Entwurf besser.',
+        ]);
 
         $this->assertSame($this->experts[1]->id, $this->judge()->speaker->id);
     }
 
     public function test_an_unscored_expert_is_recorded_as_a_fallback(): void
     {
-        FakeAgents::always(JudgeAgent::class, "BEWERTUNG: {$this->experts[0]->promptId} 5");
+        FakeAgents::always(JudgeAgent::class, [
+            'scores' => [['expert' => $this->experts[0]->promptId, 'score' => 5]],
+            'reasoning' => 'Nur einer hat etwas geliefert.',
+        ]);
 
         $selection = $this->judge();
 
@@ -100,9 +110,9 @@ class JudgeSelectorTest extends TestCase
         $this->assertContains($this->experts[2]->promptId, $selection->signals['fallbacks']);
     }
 
-    public function test_no_readable_score_falls_back_to_the_tie_breaker(): void
+    public function test_no_usable_score_falls_back_to_the_tie_breaker(): void
     {
-        FakeAgents::always(JudgeAgent::class, 'Ich kann mich nicht entscheiden.');
+        FakeAgents::always(JudgeAgent::class, ['scores' => [], 'reasoning' => 'Ich kann mich nicht entscheiden.']);
 
         $selection = $this->judge();
 
@@ -112,10 +122,13 @@ class JudgeSelectorTest extends TestCase
 
     public function test_a_tie_between_two_scores_goes_to_the_tie_breaker(): void
     {
-        FakeAgents::always(JudgeAgent::class, implode("\n", [
-            "BEWERTUNG: {$this->experts[0]->promptId} 7",
-            "BEWERTUNG: {$this->experts[1]->promptId} 7",
-        ]));
+        FakeAgents::always(JudgeAgent::class, [
+            'scores' => [
+                ['expert' => $this->experts[0]->promptId, 'score' => 7],
+                ['expert' => $this->experts[1]->promptId, 'score' => 7],
+            ],
+            'reasoning' => 'Beide gleich stark.',
+        ]);
 
         $selection = $this->judge();
 
@@ -125,7 +138,10 @@ class JudgeSelectorTest extends TestCase
 
     public function test_the_prompt_shows_the_drafts_with_their_author(): void
     {
-        FakeAgents::always(JudgeAgent::class, "BEWERTUNG: {$this->experts[0]->promptId} 5");
+        FakeAgents::always(JudgeAgent::class, [
+            'scores' => [['expert' => $this->experts[0]->promptId, 'score' => 5]],
+            'reasoning' => 'Nur einer hat etwas geliefert.',
+        ]);
 
         $this->judge();
 

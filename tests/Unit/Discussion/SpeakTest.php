@@ -4,6 +4,7 @@ namespace Tests\Unit\Discussion;
 
 use App\Discussion\Agents\SpeakAgent;
 use App\Discussion\ParseFailure;
+use App\Discussion\Schemas\ContributionSchema;
 use App\Discussion\Stages\Speak;
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\Selection;
@@ -56,9 +57,9 @@ class SpeakTest extends TestCase
         return app(Speak::class)->handle($payload, fn (TurnPayload $p) => $p);
     }
 
-    public function test_splits_the_visible_text_from_the_control_trailer(): void
+    public function test_it_takes_the_contribution_and_the_addressee_from_the_answer(): void
     {
-        FakeAgents::always(SpeakAgent::class, "Bob, woher nimmst du diese Zahl?\n---STEUERUNG---\nADRESSAT: E{$this->bob->id}");
+        FakeAgents::always(SpeakAgent::class, ['contribution' => 'Bob, woher nimmst du diese Zahl?', 'addressee' => "E{$this->bob->id}"]);
 
         $contribution = $this->speak($this->payload())->contribution();
 
@@ -66,21 +67,24 @@ class SpeakTest extends TestCase
         $this->assertSame("E{$this->bob->id}", $contribution->addresseeToken);
     }
 
-    public function test_a_leftover_pair_type_line_is_ignored(): void
+    public function test_the_contribution_is_taken_verbatim(): void
     {
-        // A model still answering in the old format must not cause an error:
-        // the trailer is only searched for ADRESSAT, and everything else is dropped.
-        FakeAgents::always(SpeakAgent::class, "Text.\n---STEUERUNG---\nADRESSAT: E{$this->bob->id}\nPAARTYP: Frage→Antwort");
+        // It is what the study counts, in words and characters, so nothing may be
+        // trimmed out of it -- not even something that looks like an old marker.
+        FakeAgents::always(SpeakAgent::class, [
+            'contribution' => "Erstens: die Zahl.\nZweitens: die Quelle.",
+            'addressee' => null,
+        ]);
 
-        $contribution = $this->speak($this->payload())->contribution();
-
-        $this->assertSame('Text.', $contribution->text);
-        $this->assertSame("E{$this->bob->id}", $contribution->addresseeToken);
+        $this->assertSame(
+            "Erstens: die Zahl.\nZweitens: die Quelle.",
+            $this->speak($this->payload())->contribution()->text,
+        );
     }
 
-    public function test_a_missing_trailer_degrades_to_a_plenum_contribution(): void
+    public function test_a_null_addressee_is_a_contribution_to_the_group(): void
     {
-        FakeAgents::always(SpeakAgent::class, 'Ich sehe das anders.');
+        FakeAgents::always(SpeakAgent::class, ['contribution' => 'Ich sehe das anders.', 'addressee' => null]);
 
         $contribution = $this->speak($this->payload())->contribution();
 
@@ -90,16 +94,16 @@ class SpeakTest extends TestCase
 
     public function test_an_unknown_addressee_is_dropped(): void
     {
-        FakeAgents::always(SpeakAgent::class, "Text.\n---STEUERUNG---\nADRESSAT: E999");
+        FakeAgents::always(SpeakAgent::class, ['contribution' => 'Text.', 'addressee' => 'E999']);
 
         $contribution = $this->speak($this->payload())->contribution();
 
         $this->assertNull($contribution->addresseeToken);
     }
 
-    public function test_an_empty_visible_text_is_a_parse_failure(): void
+    public function test_an_empty_contribution_is_a_parse_failure(): void
     {
-        FakeAgents::always(SpeakAgent::class, "---STEUERUNG---\nADRESSAT: none");
+        FakeAgents::always(SpeakAgent::class, ['contribution' => '   ', 'addressee' => null]);
 
         $this->expectException(ParseFailure::class);
 
@@ -108,12 +112,12 @@ class SpeakTest extends TestCase
 
     public function test_the_prompt_carries_a_proposal_when_the_speaker_made_one(): void
     {
-        FakeAgents::always(SpeakAgent::class, 'Text.');
+        FakeAgents::always(SpeakAgent::class, ['contribution' => 'Text.', 'addressee' => null]);
 
         $this->speak($this->payload(new Thought($this->alice->id, 'Gedanke', proposal: 'Mein Entwurf lautet so.')));
 
         SpeakAgent::assertPrompted(fn ($prompt) => $prompt->agent->expertId === $this->alice->id
             && str_contains($prompt->prompt, 'Mein Entwurf lautet so.')
-            && str_contains($prompt->prompt, Speak::MARKER_CONTROL));
+            && $prompt->agent->schema === ContributionSchema::class);
     }
 }

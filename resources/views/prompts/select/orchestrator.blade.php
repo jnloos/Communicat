@@ -13,7 +13,3 @@ Beschreibung: {{ $project->description }}
 
 === ENTSCHEIDUNG ===
 Wähle genau eine Person aus der Teilnehmerliste, die jetzt am meisten zum Gespräch beiträgt. Achte darauf, wer direkt angesprochen wurde, wo eine Frage offen ist und wessen Fachgebiet gerade gebraucht wird. Du darfst dieselbe Person auch mehrmals hintereinander wählen, wenn das sachlich richtig ist.
-
-Pflichtformat, sonst nichts:
-{{ $marker_speaker }} <Kennung aus der Teilnehmerliste, etwa E7>
-{{ $marker_reasoning }} <ein Satz, warum>

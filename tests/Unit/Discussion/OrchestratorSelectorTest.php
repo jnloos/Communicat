@@ -42,7 +42,7 @@ class OrchestratorSelectorTest extends TestCase
     public function test_the_named_expert_gets_the_floor(): void
     {
         $token = $this->experts[1]->promptId;
-        FakeAgents::always(SelectorAgent::class, "SPRECHER: {$token}\nBEGRÜNDUNG: Weil die Frage an sie ging.");
+        FakeAgents::always(SelectorAgent::class, ['speaker' => $token, 'reasoning' => 'Weil die Frage an sie ging.']);
 
         $selection = $this->orchestrate();
 
@@ -54,7 +54,7 @@ class OrchestratorSelectorTest extends TestCase
 
     public function test_an_unknown_token_falls_back_to_the_tie_breaker(): void
     {
-        FakeAgents::always(SelectorAgent::class, "SPRECHER: E999\nBEGRÜNDUNG: Irgendwer.");
+        FakeAgents::always(SelectorAgent::class, ['speaker' => 'E999', 'reasoning' => 'Irgendwer.']);
 
         $selection = $this->orchestrate();
 
@@ -63,9 +63,9 @@ class OrchestratorSelectorTest extends TestCase
         $this->assertContains($selection->speaker->id, array_map(fn (Expert $e) => $e->id, $this->experts));
     }
 
-    public function test_a_missing_marker_falls_back_to_the_tie_breaker(): void
+    public function test_a_missing_speaker_falls_back_to_the_tie_breaker(): void
     {
-        FakeAgents::always(SelectorAgent::class, 'Ich denke, Alice sollte sprechen.');
+        FakeAgents::always(SelectorAgent::class, ['reasoning' => 'Ich denke, Alice sollte sprechen.']);
 
         $this->assertTrue($this->orchestrate()->signals['fallback']);
     }
@@ -73,7 +73,7 @@ class OrchestratorSelectorTest extends TestCase
     public function test_a_user_token_is_not_a_speaker(): void
     {
         // Only contributing experts speak; a user token must not be accepted.
-        FakeAgents::always(SelectorAgent::class, 'SPRECHER: U1');
+        FakeAgents::always(SelectorAgent::class, ['speaker' => 'U1', 'reasoning' => 'Der Nutzer.']);
 
         $this->assertTrue($this->orchestrate()->signals['fallback']);
     }
@@ -82,7 +82,7 @@ class OrchestratorSelectorTest extends TestCase
     {
         // No balancing: repetition is the measurement, not an error.
         $token = $this->experts[0]->promptId;
-        FakeAgents::always(SelectorAgent::class, "SPRECHER: {$token}");
+        FakeAgents::always(SelectorAgent::class, ['speaker' => $token, 'reasoning' => 'Weiter so.']);
 
         $this->assertSame($this->experts[0]->id, $this->orchestrate()->speaker->id);
         $this->assertSame($this->experts[0]->id, $this->orchestrate()->speaker->id);
@@ -98,7 +98,7 @@ class OrchestratorSelectorTest extends TestCase
         ]);
 
         $token = $this->experts[0]->promptId;
-        FakeAgents::always(SelectorAgent::class, "SPRECHER: {$token}");
+        FakeAgents::always(SelectorAgent::class, ['speaker' => $token, 'reasoning' => 'Weiter so.']);
 
         $this->orchestrate();
 

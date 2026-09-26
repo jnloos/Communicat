@@ -20,7 +20,3 @@ Halte im Gedanken fest:
 Übernimm aus deinem bisherigen Kurzzeitgedächtnis, was noch gilt, und streiche, was erledigt ist. Höchstens sechs Sätze.
 
 Der Entwurf ist dein Diskussionsbeitrag, wie du ihn sagen würdest: als {{ $expert->name }}, in ganzen Sätzen, ohne Anrede an die Bewertung und ohne Begründung, warum er gut sei.
-
-Pflichtformat, sonst nichts:
-{{ $marker_thought }} <dein fortgeschriebener Gedanke>
-{{ $marker_draft }} <dein Entwurf>

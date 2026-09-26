@@ -4,8 +4,8 @@ namespace App\Discussion\Selectors;
 
 use App\Discussion\Agents\SelectorAgent;
 use App\Discussion\Memory\Memory;
+use App\Discussion\Schemas\SpeakerChoiceSchema;
 use App\Discussion\Support\PromptRenderer;
-use App\Discussion\Support\Thinking;
 use App\Discussion\Support\TieBreaker;
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\ModelConfig;
@@ -23,10 +23,6 @@ use App\Models\Project;
  */
 class OrchestratorSelector implements SpeakerSelector
 {
-    public const MARKER_SPEAKER = 'SPRECHER:';
-
-    public const MARKER_REASONING = 'BEGRÜNDUNG:';
-
     public function __construct(
         private readonly PromptRenderer $prompts,
         private readonly Memory $memory,
@@ -40,15 +36,14 @@ class OrchestratorSelector implements SpeakerSelector
         $completion = (new SelectorAgent(
             ModelConfig::fromConfig($project->model),
             $payload->jobLogId,
+            schema: SpeakerChoiceSchema::class,
         ))->ask($this->prompts->render('prompts.select.orchestrator', [
             'project' => $project,
             'memory' => $this->memory->viewFor($project),
-            'marker_speaker' => self::MARKER_SPEAKER,
-            'marker_reasoning' => self::MARKER_REASONING,
         ] + $this->prompts->participants($project)));
 
-        $reasoning = Thinking::section($completion->text, self::MARKER_REASONING);
-        $token = trim(Thinking::section($completion->text, self::MARKER_SPEAKER, self::MARKER_REASONING));
+        $reasoning = trim($completion->structured['reasoning'] ?? '');
+        $token = trim($completion->structured['speaker'] ?? '');
         $speaker = $this->resolve($project, $token);
 
         if ($speaker !== null) {

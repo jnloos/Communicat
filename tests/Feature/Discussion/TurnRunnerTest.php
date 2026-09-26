@@ -34,9 +34,9 @@ class TurnRunnerTest extends TestCase
 
         Event::fake([PipelineStageChanged::class, JobLogged::class]);
 
-        FakeAgents::always(ThinkAgent::class, 'GEDANKE: Ich will widersprechen.');
-        FakeAgents::always(SpeakAgent::class, "Alice antwortet kurz.\n---STEUERUNG---\nADRESSAT: none");
-        FakeAgents::always(SummarizeAgent::class, 'Zusammenfassung.');
+        FakeAgents::always(ThinkAgent::class, ['thought' => 'Ich will widersprechen.']);
+        FakeAgents::always(SpeakAgent::class, ['contribution' => 'Alice antwortet kurz.', 'addressee' => null]);
+        FakeAgents::always(SummarizeAgent::class, ['summary' => 'Zusammenfassung.']);
 
         $this->project = Project::factory()->create(['pipeline' => 'RoundRobinPipeline']);
         $this->experts = Expert::factory()->count(2)->create()->all();

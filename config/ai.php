@@ -57,6 +57,19 @@ return [
             'driver' => 'anthropic',
             'key' => env('ANTHROPIC_API_KEY'),
             'url' => env('ANTHROPIC_URL', 'https://api.anthropic.com/v1'),
+
+            // Anthropic's native structured output is sent as `output_config`,
+            // which is the same key StudyAgent uses for the reasoning effort --
+            // and provider options are merged last, so ours would silently
+            // delete the schema. Turning it off makes the SDK request structure
+            // through a synthetic tool instead, leaving output_config free.
+            //
+            // The cost: with `thinking` on, the gateway must use
+            // tool_choice: auto (Anthropic forbids forcing a tool alongside
+            // extended thinking), so structure is requested, not guaranteed. A
+            // turn that comes back unstructured fails and is counted in the
+            // failure rate the study reports anyway.
+            'use_native_structured_output' => false,
         ],
 
         'gemini' => [

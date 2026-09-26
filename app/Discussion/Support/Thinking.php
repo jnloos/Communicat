@@ -4,6 +4,7 @@ namespace App\Discussion\Support;
 
 use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\Memory\Memory;
+use App\Discussion\Schemas\ResponseSchema;
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\Completion;
 use App\Discussion\Values\ModelConfig;
@@ -14,9 +15,6 @@ use App\Models\Summary;
 /** What every Think stage shares: render per expert, ask in parallel, keep the thought. */
 class Thinking
 {
-    /** Every Think variant asks for the rolling thought under this marker. */
-    public const MARKER_THOUGHT = 'GEDANKE:';
-
     public function __construct(
         private readonly PromptRenderer $prompts,
         private readonly Memory $memory,
@@ -24,10 +22,13 @@ class Thinking
     ) {}
 
     /**
+     * Prompt every expert in one parallel round.
+     *
      * @param  iterable<Expert>  $experts
-     * @return array<int, string> expert id → raw answer
+     * @param  class-string<ResponseSchema>  $schema  the shape the answer must have
+     * @return array<int, array<string, mixed>> expert id → the structured answer
      */
-    public function ask(TurnPayload $payload, iterable $experts, string $view, array $data = []): array
+    public function ask(TurnPayload $payload, iterable $experts, string $view, string $schema, array $data = []): array
     {
         $modelKey = $payload->project->model;
         $jobLogId = $payload->jobLogId;
@@ -44,11 +45,11 @@ class Thinking
             $expertId = $expert->id;
 
             // Only scalars are captured: the agent is built inside the child process.
-            $tasks[$expertId] = static fn () => (new ThinkAgent(ModelConfig::fromConfig($modelKey), $jobLogId, $expertId))
+            $tasks[$expertId] = static fn () => (new ThinkAgent(ModelConfig::fromConfig($modelKey), $jobLogId, $expertId, $schema))
                 ->ask($prompt);
         }
 
-        return array_map(fn (Completion $completion) => $completion->text, $this->parallel->run($tasks));
+        return array_map(fn (Completion $completion) => $completion->structured, $this->parallel->run($tasks));
     }
 
     /** Short-Term memory is one rolling thought per expert and project. */
@@ -58,23 +59,5 @@ class Thinking
             ['project_id' => $project->id, 'expert_id' => $expert->id],
             ['content' => $thought],
         );
-    }
-
-    /** The text after $marker, up to $until if given. '' when the marker is missing. */
-    public static function section(string $text, string $marker, ?string $until = null): string
-    {
-        $start = mb_strpos($text, $marker);
-
-        if ($start === false) {
-            return '';
-        }
-
-        $content = mb_substr($text, $start + mb_strlen($marker));
-
-        if ($until !== null && ($end = mb_strpos($content, $until)) !== false) {
-            $content = mb_substr($content, 0, $end);
-        }
-
-        return trim($content);
     }
 }

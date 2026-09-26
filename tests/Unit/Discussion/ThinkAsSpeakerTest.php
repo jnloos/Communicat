@@ -4,8 +4,8 @@ namespace Tests\Unit\Discussion;
 
 use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\ParseFailure;
+use App\Discussion\Schemas\ThoughtSchema;
 use App\Discussion\Stages\ThinkAsSpeaker;
-use App\Discussion\Support\Thinking;
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\Selection;
 use App\Events\PipelineStageChanged;
@@ -31,7 +31,7 @@ class ThinkAsSpeakerTest extends TestCase
 
         Event::fake([PipelineStageChanged::class]);
 
-        FakeAgents::always(ThinkAgent::class, 'GEDANKE: Ich will etwas beitragen.');
+        FakeAgents::always(ThinkAgent::class, ['thought' => 'Ich will etwas beitragen.']);
 
         $this->project = Project::factory()->create(['title' => 'KI an Schulen']);
         $this->speaker = Expert::factory()->create(['name' => 'Alice']);
@@ -49,7 +49,7 @@ class ThinkAsSpeakerTest extends TestCase
 
     public function test_only_the_selected_speaker_thinks_and_the_thought_is_kept(): void
     {
-        FakeAgents::always(ThinkAgent::class, 'GEDANKE: Bob übersieht die Kosten. Ich will ein Zahlenbeispiel bringen.');
+        FakeAgents::always(ThinkAgent::class, ['thought' => 'Bob übersieht die Kosten. Ich will ein Zahlenbeispiel bringen.']);
 
         $payload = $this->payload();
         app(ThinkAsSpeaker::class)->handle($payload, fn (TurnPayload $p) => $p);
@@ -66,22 +66,23 @@ class ThinkAsSpeakerTest extends TestCase
         );
     }
 
-    public function test_the_prompt_carries_persona_memory_and_the_marker(): void
+    public function test_the_prompt_carries_persona_project_and_memory(): void
     {
         Summary::create(['project_id' => $this->project->id, 'expert_id' => $this->speaker->id, 'content' => 'Mein alter Gedanke.']);
-        FakeAgents::always(ThinkAgent::class, 'GEDANKE: neu');
+        FakeAgents::always(ThinkAgent::class, ['thought' => 'neu']);
 
         app(ThinkAsSpeaker::class)->handle($this->payload(), fn (TurnPayload $p) => $p);
 
         ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'Du bist Alice'));
         ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'KI an Schulen'));
         ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, 'Mein alter Gedanke.'));
-        ThinkAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, Thinking::MARKER_THOUGHT));
+        // The format is no longer asked for in prose; the agent declares it.
+        ThinkAgent::assertPrompted(fn ($prompt) => $prompt->agent->schema === ThoughtSchema::class);
     }
 
     public function test_a_second_think_overwrites_the_thought(): void
     {
-        FakeAgents::inOrder(ThinkAgent::class, ['GEDANKE: erster', 'GEDANKE: zweiter']);
+        FakeAgents::inOrder(ThinkAgent::class, [['thought' => 'erster'], ['thought' => 'zweiter']]);
 
         app(ThinkAsSpeaker::class)->handle($this->payload(), fn (TurnPayload $p) => $p);
         app(ThinkAsSpeaker::class)->handle($this->payload(), fn (TurnPayload $p) => $p);
@@ -90,27 +91,18 @@ class ThinkAsSpeakerTest extends TestCase
         $this->assertSame('zweiter', Summary::sole()->content);
     }
 
-    public function test_a_missing_marker_is_a_parse_failure_and_keeps_the_old_thought(): void
+    public function test_an_empty_thought_is_a_parse_failure_and_keeps_the_old_one(): void
     {
         Summary::create(['project_id' => $this->project->id, 'expert_id' => $this->speaker->id, 'content' => 'bleibt']);
-        FakeAgents::always(ThinkAgent::class, 'Ich halte mich nicht an das Format.');
+        FakeAgents::always(ThinkAgent::class, ['thought' => '   ']);
 
         try {
             app(ThinkAsSpeaker::class)->handle($this->payload(), fn (TurnPayload $p) => $p);
             $this->fail('expected a ParseFailure');
         } catch (ParseFailure $e) {
-            $this->assertStringContainsString(Thinking::MARKER_THOUGHT, $e->getMessage());
+            $this->assertStringContainsString('thought', $e->getMessage());
         }
 
         $this->assertSame('bleibt', Summary::sole()->content);
-    }
-
-    public function test_section_reads_between_two_markers(): void
-    {
-        $text = "Vorrede\nGEDANKE: mein Gedanke\nPRIORITÄT: 4";
-
-        $this->assertSame('mein Gedanke', Thinking::section($text, 'GEDANKE:', 'PRIORITÄT:'));
-        $this->assertSame('4', Thinking::section($text, 'PRIORITÄT:'));
-        $this->assertSame('', Thinking::section($text, 'FEHLT:'));
     }
 }

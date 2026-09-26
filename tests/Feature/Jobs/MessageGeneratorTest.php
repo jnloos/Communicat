@@ -37,9 +37,9 @@ class MessageGeneratorTest extends TestCase
         Queue::fake();
         Event::fake([PipelineStageChanged::class, JobLogged::class, MessageGenerated::class, GenerationStopped::class]);
 
-        FakeAgents::always(ThinkAgent::class, 'GEDANKE: Ich will antworten.');
-        FakeAgents::always(SpeakAgent::class, "Alice antwortet kurz.\n---STEUERUNG---\nADRESSAT: none");
-        FakeAgents::always(SummarizeAgent::class, 'Zusammenfassung.');
+        FakeAgents::always(ThinkAgent::class, ['thought' => 'Ich will antworten.']);
+        FakeAgents::always(SpeakAgent::class, ['contribution' => 'Alice antwortet kurz.', 'addressee' => null]);
+        FakeAgents::always(SummarizeAgent::class, ['summary' => 'Zusammenfassung.']);
 
         $this->project = Project::factory()->create();
         $this->project->addContributingExpert(Expert::factory()->create(['name' => 'Alice']));

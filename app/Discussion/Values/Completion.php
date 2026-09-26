@@ -16,5 +16,12 @@ final readonly class Completion
         public int $inputTokens,
         public int $outputTokens,
         public ?int $reasoningTokens,
+        /**
+         * The decoded answer when the agent declared a schema, empty otherwise.
+         * An array survives the process boundary; a response object would not.
+         *
+         * @var array<string, mixed>
+         */
+        public array $structured = [],
     ) {}
 }

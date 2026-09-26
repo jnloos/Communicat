@@ -73,7 +73,7 @@ partition "RoundRobinPipeline::stages()" {
   :**2. ThinkAsSpeaker** (**ThinkAgent**, purpose=think)
   In: Persona + Memory (History/Short-/Long-Term)
   des gewählten Sprechers
-  Out: Marker "GEDANKE:" extrahiert;<<#E8F0FE>>
+  Out: Feld "thought" aus dem Schema;<<#E8F0FE>>
   note right #FFF4E5
     schreibt: **thoughts[speaker.id]**
     persistiert nach **summaries** (Short-Term)
@@ -82,8 +82,8 @@ partition "RoundRobinPipeline::stages()" {
 
   :**3. Speak** (**SpeakAgent**, purpose=speak)
   In: Persona + Memory + eigener Gedanke (proposal)
-  Out: sichtbarer Text + Trennmarker Speak::MARKER_CONTROL
-  + Trailer (ADRESSAT);<<#E8F0FE>>
+  Out: Felder "contribution" und "addressee"
+  aus ContributionSchema;<<#E8F0FE>>
   note right #FFF4E5
     schreibt: **contribution** (Text,
     Adressaten-Token, Completion)
@@ -91,7 +91,7 @@ partition "RoundRobinPipeline::stages()" {
   end note
 
   :**4. PersistMessage**
-  speichert Message, löst ADRESSAT über
+  speichert Message, löst addressee über
   contributorByPromptId() auf;
   note right #FFF4E5
     schreibt: **message**

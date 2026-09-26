@@ -19,6 +19,3 @@ Halte darin fest:
 - was du dir für spätere Runden vornimmst, falls du jetzt nicht alles unterbringst.
 
 Übernimm aus deinem bisherigen Kurzzeitgedächtnis, was noch gilt, und streiche, was erledigt ist. Schreibe knapp, in ganzen Sätzen, höchstens sechs Sätze. Kein Gesprächsbeitrag, keine Anrede, keine Aufzählungszeichen.
-
-Pflichtformat, sonst nichts:
-{{ $marker_thought }} <dein fortgeschriebener Gedanke>

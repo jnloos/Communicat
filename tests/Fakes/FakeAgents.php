@@ -4,28 +4,30 @@ namespace Tests\Fakes;
 
 /**
  * The SDK's Agent::fake() takes a list indexed by call order and falls back to a
- * generated placeholder once the list runs dry. Our stages parse markers out of
- * the answer, so a placeholder means a parse failure on the second turn. These
- * helpers hand back a closure instead: the same answer for every call, however
- * many turns a test runs.
+ * generated answer once the list runs dry, so a test that runs more turns than
+ * it listed gets something it never wrote. These helpers hand back a closure
+ * instead: the same answer for every call, however many turns a test runs.
+ *
+ * An array answer becomes a structured response (FakeTextGateway marshals it
+ * into a StructuredTextResponse); a string stays plain text.
  */
 class FakeAgents
 {
-    public static function always(string $agentClass, string $text): void
+    public static function always(string $agentClass, array|string $answer): void
     {
-        $agentClass::fake(fn () => $text);
+        $agentClass::fake(fn () => $answer);
     }
 
-    /** @param  string[]  $texts  answer n for call n; the last one repeats. */
-    public static function inOrder(string $agentClass, array $texts): void
+    /** @param  list<array<string, mixed>|string>  $answers  answer n for call n; the last one repeats. */
+    public static function inOrder(string $agentClass, array $answers): void
     {
         $call = 0;
 
-        $agentClass::fake(function () use ($texts, &$call) {
-            $text = $texts[$call] ?? end($texts);
+        $agentClass::fake(function () use ($answers, &$call) {
+            $answer = $answers[$call] ?? end($answers);
             $call++;
 
-            return $text;
+            return $answer;
         });
     }
 

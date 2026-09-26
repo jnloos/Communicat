@@ -43,7 +43,7 @@ class ThinkAndProposeTest extends TestCase
 
     public function test_every_expert_delivers_a_thought_and_a_draft(): void
     {
-        FakeAgents::always(ThinkAgent::class, "GEDANKE: Mein Gedanke.\nENTWURF: Mein Entwurf lautet so.");
+        FakeAgents::always(ThinkAgent::class, ['thought' => 'Mein Gedanke.', 'draft' => 'Mein Entwurf lautet so.']);
 
         $payload = $this->propose();
 
@@ -58,7 +58,7 @@ class ThinkAndProposeTest extends TestCase
 
     public function test_the_short_term_memory_of_every_agent_is_written(): void
     {
-        FakeAgents::always(ThinkAgent::class, "GEDANKE: Mein Gedanke.\nENTWURF: Entwurf.");
+        FakeAgents::always(ThinkAgent::class, ['thought' => 'Mein Gedanke.', 'draft' => 'Entwurf.']);
 
         $this->propose();
 
@@ -67,16 +67,16 @@ class ThinkAndProposeTest extends TestCase
 
     public function test_a_missing_draft_leaves_the_proposal_null(): void
     {
-        FakeAgents::always(ThinkAgent::class, 'GEDANKE: Mein Gedanke.');
+        FakeAgents::always(ThinkAgent::class, ['thought' => 'Mein Gedanke.']);
 
         $payload = $this->propose();
 
         $this->assertNull($payload->thoughtOf($this->project->contributingExperts()->first())->proposal);
     }
 
-    public function test_a_missing_thought_marker_is_a_parse_failure(): void
+    public function test_a_missing_thought_is_a_parse_failure(): void
     {
-        FakeAgents::always(ThinkAgent::class, 'ENTWURF: Nur ein Entwurf.');
+        FakeAgents::always(ThinkAgent::class, ['draft' => 'Nur ein Entwurf.']);
 
         $this->expectException(ParseFailure::class);
 

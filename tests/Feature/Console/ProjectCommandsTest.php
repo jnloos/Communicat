@@ -6,7 +6,6 @@ use App\Discussion\Agents\SpeakAgent;
 use App\Discussion\Agents\SummarizeAgent;
 use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\Metrics\SpeakingShares;
-use App\Discussion\Support\Thinking;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
@@ -39,9 +38,9 @@ class ProjectCommandsTest extends TestCase
     /** Model answers for a Round Robin turn: think, then speak. */
     private function fakeAnswers(): void
     {
-        FakeAgents::always(ThinkAgent::class, Thinking::MARKER_THOUGHT.' Ich halte das für zentral.');
-        FakeAgents::always(SpeakAgent::class, 'Ein kurzer Beitrag zur Sache.');
-        FakeAgents::always(SummarizeAgent::class, 'Bisher ging es um das Thema.');
+        FakeAgents::always(ThinkAgent::class, ['thought' => 'Ich halte das für zentral.']);
+        FakeAgents::always(SpeakAgent::class, ['contribution' => 'Ein kurzer Beitrag zur Sache.', 'addressee' => null]);
+        FakeAgents::always(SummarizeAgent::class, ['summary' => 'Bisher ging es um das Thema.']);
     }
 
     // --- project:create -------------------------------------------------

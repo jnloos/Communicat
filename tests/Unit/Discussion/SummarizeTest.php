@@ -26,7 +26,7 @@ class SummarizeTest extends TestCase
         // x = 4: fold once four messages are unsummarized; y = 2: fold the two oldest.
         config(['discussion.summarize_threshold' => 4, 'discussion.summarize_oldest' => 2]);
 
-        FakeAgents::always(SummarizeAgent::class, 'Zusammenfassung.');
+        FakeAgents::always(SummarizeAgent::class, ['summary' => 'Zusammenfassung.']);
 
         $this->project = Project::factory()->create();
         $this->expert = Expert::factory()->create(['name' => 'Alice']);
@@ -57,7 +57,7 @@ class SummarizeTest extends TestCase
     public function test_folds_the_y_oldest_messages_once_the_threshold_is_reached(): void
     {
         $messages = $this->addMessages(['eins', 'zwei', 'drei', 'vier']);
-        FakeAgents::always(SummarizeAgent::class, 'Zusammenfassung A.');
+        FakeAgents::always(SummarizeAgent::class, ['summary' => 'Zusammenfassung A.']);
 
         $this->summarize();
 
@@ -76,7 +76,7 @@ class SummarizeTest extends TestCase
     public function test_a_later_run_carries_the_previous_summary_forward(): void
     {
         $this->addMessages(['eins', 'zwei', 'drei', 'vier']);
-        FakeAgents::inOrder(SummarizeAgent::class, ['Zusammenfassung A.', 'Zusammenfassung B.']);
+        FakeAgents::inOrder(SummarizeAgent::class, [['summary' => 'Zusammenfassung A.'], ['summary' => 'Zusammenfassung B.']]);
         $this->summarize();
 
         // 'drei' and 'vier' are still pending; two more messages reach the threshold again.

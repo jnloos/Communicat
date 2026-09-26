@@ -21,7 +21,3 @@ Halte im Gedanken fest:
 Übernimm aus deinem bisherigen Kurzzeitgedächtnis, was noch gilt, und streiche, was erledigt ist. Höchstens sechs Sätze, kein Gesprächsbeitrag, keine Anrede.
 
 Die Dringlichkeit ist eine Zahl von {{ $lowest }} bis {{ $highest }}: {{ $lowest }}, wenn du nichts beizutragen hast, {{ $highest }}, wenn dein Beitrag jetzt unbedingt nötig ist. Begründe sie nicht, gib nur die Zahl.
-
-Pflichtformat, sonst nichts:
-{{ $marker_thought }} <dein fortgeschriebener Gedanke>
-{{ $marker_priority }} <Zahl von {{ $lowest }} bis {{ $highest }}>

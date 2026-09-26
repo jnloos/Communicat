@@ -3,6 +3,7 @@
 namespace App\Discussion\Stages;
 
 use App\Discussion\ParseFailure;
+use App\Discussion\Schemas\ThoughtSchema;
 use App\Discussion\Support\Thinking;
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\Thought;
@@ -20,15 +21,16 @@ class ThinkAsSpeaker
 
         PipelineStageChanged::announce($payload->project->id, 'thinking', [$speaker]);
 
-        $answers = $this->thinking->ask($payload, [$speaker], 'prompts.think.speaker', [
-            'marker_thought' => Thinking::MARKER_THOUGHT,
-        ]);
+        $answers = $this->thinking->ask($payload, [$speaker], 'prompts.think.speaker', ThoughtSchema::class);
 
-        $thought = Thinking::section($answers[$speaker->id], Thinking::MARKER_THOUGHT);
+        $thought = trim($answers[$speaker->id]['thought'] ?? '');
 
+        // The schema declares the field required, so an empty one means the
+        // provider did not honour the contract -- not that the model had nothing
+        // to say. Either way the turn has no short-term memory to write.
         if ($thought === '') {
             throw new ParseFailure(
-                "ThinkAsSpeaker: marker '".Thinking::MARKER_THOUGHT."' missing in the answer of expert {$speaker->id}."
+                "ThinkAsSpeaker: no 'thought' in the answer of expert {$speaker->id}."
             );
         }
 

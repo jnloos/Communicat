@@ -27,4 +27,4 @@ Anforderungen:
 - Nichts aus der bisherigen Zusammenfassung verlieren, was für den weiteren Verlauf noch zählt
 - Alle wesentlichen Entscheidungen, offenen Fragen, Standpunkte und Fakten müssen erhalten bleiben
 - Teilnehmer nur mit ihrem Namen nennen, ohne Funktions- oder Rangbezeichnung
-- Kein JSON, keine Labels, keine Überschriften, nur einfacher Fließtext
+- Keine Labels, keine Überschriften, nur einfacher Fließtext

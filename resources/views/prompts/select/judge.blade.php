@@ -17,8 +17,4 @@ Beschreibung: {{ $project->description }}
 @endforeach
 
 === BEWERTUNG ===
-Gib jedem Entwurf eine Zahl von 1 bis 10. Hoch bewertest du, was die Diskussion jetzt voranbringt: ein neues Argument, eine belastbare Zahl, eine offene Frage beantwortet. Niedrig bewertest du Wiederholung, Füllsätze und Beiträge, die am Thema vorbeigehen. Bewerte die Sache, nicht die Person.
-
-Pflichtformat, eine Zeile je Entwurf, sonst nichts:
-{{ $marker_score }} <Kennung> <Zahl von 1 bis 10>
-{{ $marker_reasoning }} <ein Satz zur Begründung>
+Gib jedem Entwurf eine Zahl von {{ $lowest }} bis {{ $highest }}. Hoch bewertest du, was die Diskussion jetzt voranbringt: ein neues Argument, eine belastbare Zahl, eine offene Frage beantwortet. Nenne keinen Gewinner — die Zahlen entscheiden. Niedrig bewertest du Wiederholung, Füllsätze und Beiträge, die am Thema vorbeigehen. Bewerte die Sache, nicht die Person.

@@ -47,25 +47,31 @@ class PipelineSmokeTest extends TestCase
 
     private function fakeAnswers(): void
     {
-        // One answer per agent class, carrying every marker any stage parses: each
-        // think variant reads its own section out of it, so this covers the speaker,
-        // the bidding and the proposing stage alike.
-        FakeAgents::always(ThinkAgent::class, implode('
-', [
-            'GEDANKE: Ich will etwas beitragen.',
-            'PRIORITÄT: 3',
-            'ENTWURF: Ein kurzer Entwurf.',
-        ]));
-        FakeAgents::always(SpeakAgent::class, 'Ein kurzer Beitrag.
----STEUERUNG---
-ADRESSAT: none');
-        FakeAgents::always(SummarizeAgent::class, 'Zusammenfassung.');
+        // One answer per agent class, carrying every field any stage reads: each
+        // think variant takes its own fields out of it, so this covers the
+        // speaker, the bidding and the proposing stage alike. A field a stage
+        // does not read is simply ignored.
+        FakeAgents::always(ThinkAgent::class, [
+            'thought' => 'Ich will etwas beitragen.',
+            'priority' => 3,
+            'draft' => 'Ein kurzer Entwurf.',
+        ]);
+        FakeAgents::always(SpeakAgent::class, [
+            'contribution' => 'Ein kurzer Beitrag.',
+            'addressee' => null,
+        ]);
+        FakeAgents::always(SummarizeAgent::class, ['summary' => 'Zusammenfassung.']);
+
         // A token that need not exist: the selector then falls back to the tie
         // breaker and records it, which is a pass for a smoke test either way.
-        FakeAgents::always(SelectorAgent::class, 'SPRECHER: E1
-BEGRÜNDUNG: Weil E1 noch nicht dran war.');
-        FakeAgents::always(JudgeAgent::class, 'BEWERTUNG: E1 7
-BEGRÜNDUNG: Der Entwurf ist konkret.');
+        FakeAgents::always(SelectorAgent::class, [
+            'speaker' => 'E1',
+            'reasoning' => 'Weil E1 noch nicht dran war.',
+        ]);
+        FakeAgents::always(JudgeAgent::class, [
+            'scores' => [['expert' => 'E1', 'score' => 7]],
+            'reasoning' => 'Der Entwurf ist konkret.',
+        ]);
     }
 
     #[DataProvider('pipelineNames')]
