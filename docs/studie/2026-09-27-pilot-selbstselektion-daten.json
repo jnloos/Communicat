@@ -1,0 +1,426 @@
+[
+    {
+        "id": 16,
+        "title": "School self-selection with status",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "seed": 42,
+        "topic": "Should phones be banned in school from year 5 onwards? Work towards one shared recommendation.",
+        "spoken": 60,
+        "failed": 0,
+        "words": 20259,
+        "gini_turns": 0.408,
+        "gini_words": 0.508,
+        "gini_ceiling": 0.75,
+        "usd": 1.18,
+        "speakers": [
+            {
+                "name": "Alex Brandt",
+                "role": "Teacher",
+                "seat": 1,
+                "turns": 38,
+                "turn_share": 63.3,
+                "words": 14633,
+                "word_share": 72.2
+            },
+            {
+                "name": "Kim Hofer",
+                "role": "Student",
+                "seat": 2,
+                "turns": 9,
+                "turn_share": 15,
+                "words": 2769,
+                "word_share": 13.7
+            },
+            {
+                "name": "Robin Yilmaz",
+                "role": "Student",
+                "seat": 3,
+                "turns": 6,
+                "turn_share": 10,
+                "words": 1529,
+                "word_share": 7.5
+            },
+            {
+                "name": "Toni Kleve",
+                "role": "Student",
+                "seat": 4,
+                "turns": 7,
+                "turn_share": 11.7,
+                "words": 1328,
+                "word_share": 6.6
+            }
+        ]
+    },
+    {
+        "id": 17,
+        "title": "School self-selection without status",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "seed": 42,
+        "topic": "Should phones be banned in school from year 5 onwards? Work towards one shared recommendation.",
+        "spoken": 60,
+        "failed": 0,
+        "words": 13504,
+        "gini_turns": 0.175,
+        "gini_words": 0.19,
+        "gini_ceiling": 0.75,
+        "usd": 0.91,
+        "speakers": [
+            {
+                "name": "Alex Brandt",
+                "role": "Student",
+                "seat": 1,
+                "turns": 10,
+                "turn_share": 16.7,
+                "words": 1945,
+                "word_share": 14.4
+            },
+            {
+                "name": "Kim Hofer",
+                "role": "Student",
+                "seat": 2,
+                "turns": 19,
+                "turn_share": 31.7,
+                "words": 4771,
+                "word_share": 35.3
+            },
+            {
+                "name": "Robin Yilmaz",
+                "role": "Student",
+                "seat": 3,
+                "turns": 21,
+                "turn_share": 35,
+                "words": 4300,
+                "word_share": 31.8
+            },
+            {
+                "name": "Toni Kleve",
+                "role": "Student",
+                "seat": 4,
+                "turns": 10,
+                "turn_share": 16.7,
+                "words": 2488,
+                "word_share": 18.4
+            }
+        ]
+    },
+    {
+        "id": 18,
+        "title": "Office self-selection with status",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "seed": 42,
+        "topic": "Should the company require fixed days in the office, and how many? Work towards one shared recommendation.",
+        "spoken": 60,
+        "failed": 0,
+        "words": 16422,
+        "gini_turns": 0.4,
+        "gini_words": 0.424,
+        "gini_ceiling": 0.75,
+        "usd": 1.03,
+        "speakers": [
+            {
+                "name": "Sam Delius",
+                "role": "Manager",
+                "seat": 1,
+                "turns": 28,
+                "turn_share": 46.7,
+                "words": 8360,
+                "word_share": 50.9
+            },
+            {
+                "name": "Noor Kessler",
+                "role": "Employee",
+                "seat": 2,
+                "turns": 2,
+                "turn_share": 3.3,
+                "words": 586,
+                "word_share": 3.6
+            },
+            {
+                "name": "Robin Aalto",
+                "role": "Employee",
+                "seat": 3,
+                "turns": 24,
+                "turn_share": 40,
+                "words": 6012,
+                "word_share": 36.6
+            },
+            {
+                "name": "Kai Brenner",
+                "role": "Intern",
+                "seat": 4,
+                "turns": 6,
+                "turn_share": 10,
+                "words": 1464,
+                "word_share": 8.9
+            }
+        ]
+    },
+    {
+        "id": 19,
+        "title": "Office self-selection without status",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "seed": 42,
+        "topic": "Should the company require fixed days in the office, and how many? Work towards one shared recommendation.",
+        "spoken": 60,
+        "failed": 0,
+        "words": 14166,
+        "gini_turns": 0.092,
+        "gini_words": 0.057,
+        "gini_ceiling": 0.75,
+        "usd": 0.93,
+        "speakers": [
+            {
+                "name": "Sam Delius",
+                "role": "Employee",
+                "seat": 1,
+                "turns": 18,
+                "turn_share": 30,
+                "words": 3826,
+                "word_share": 27
+            },
+            {
+                "name": "Noor Kessler",
+                "role": "Employee",
+                "seat": 2,
+                "turns": 16,
+                "turn_share": 26.7,
+                "words": 3636,
+                "word_share": 25.7
+            },
+            {
+                "name": "Robin Aalto",
+                "role": "Employee",
+                "seat": 3,
+                "turns": 11,
+                "turn_share": 18.3,
+                "words": 2841,
+                "word_share": 20.1
+            },
+            {
+                "name": "Kai Brenner",
+                "role": "Employee",
+                "seat": 4,
+                "turns": 15,
+                "turn_share": 25,
+                "words": 3863,
+                "word_share": 27.3
+            }
+        ]
+    },
+    {
+        "id": 20,
+        "title": "Family self-selection with status",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "seed": 42,
+        "topic": "Should the voting age be lowered to 16? Work towards one shared recommendation.",
+        "spoken": 60,
+        "failed": 0,
+        "words": 16931,
+        "gini_turns": 0.5,
+        "gini_words": 0.506,
+        "gini_ceiling": 0.75,
+        "usd": 1.04,
+        "speakers": [
+            {
+                "name": "Mika Sommer",
+                "role": "Parent",
+                "seat": 1,
+                "turns": 37,
+                "turn_share": 61.7,
+                "words": 10445,
+                "word_share": 61.7
+            },
+            {
+                "name": "Luca Sommer",
+                "role": "Child",
+                "seat": 2,
+                "turns": 2,
+                "turn_share": 3.3,
+                "words": 503,
+                "word_share": 3
+            },
+            {
+                "name": "Jona Sommer",
+                "role": "Child",
+                "seat": 3,
+                "turns": 3,
+                "turn_share": 5,
+                "words": 782,
+                "word_share": 4.6
+            },
+            {
+                "name": "Sascha Sommer",
+                "role": "Child",
+                "seat": 4,
+                "turns": 18,
+                "turn_share": 30,
+                "words": 5201,
+                "word_share": 30.7
+            }
+        ]
+    },
+    {
+        "id": 21,
+        "title": "Family self-selection without status",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "seed": 42,
+        "topic": "Should the voting age be lowered to 16? Work towards one shared recommendation.",
+        "spoken": 60,
+        "failed": 0,
+        "words": 14899,
+        "gini_turns": 0.308,
+        "gini_words": 0.289,
+        "gini_ceiling": 0.75,
+        "usd": 1.02,
+        "speakers": [
+            {
+                "name": "Mika Sommer",
+                "role": "Child",
+                "seat": 1,
+                "turns": 15,
+                "turn_share": 25,
+                "words": 4122,
+                "word_share": 27.7
+            },
+            {
+                "name": "Luca Sommer",
+                "role": "Child",
+                "seat": 2,
+                "turns": 2,
+                "turn_share": 3.3,
+                "words": 338,
+                "word_share": 2.3
+            },
+            {
+                "name": "Jona Sommer",
+                "role": "Child",
+                "seat": 3,
+                "turns": 17,
+                "turn_share": 28.3,
+                "words": 4489,
+                "word_share": 30.1
+            },
+            {
+                "name": "Sascha Sommer",
+                "role": "Child",
+                "seat": 4,
+                "turns": 26,
+                "turn_share": 43.3,
+                "words": 5950,
+                "word_share": 39.9
+            }
+        ]
+    },
+    {
+        "id": 22,
+        "title": "Club self-selection with status",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "seed": 42,
+        "topic": "Should we rest our key players in the next match? Work towards one shared recommendation.",
+        "spoken": 60,
+        "failed": 0,
+        "words": 12567,
+        "gini_turns": 0.35,
+        "gini_words": 0.442,
+        "gini_ceiling": 0.75,
+        "usd": 0.91,
+        "speakers": [
+            {
+                "name": "Nikita Falk",
+                "role": "Coach",
+                "seat": 1,
+                "turns": 33,
+                "turn_share": 55,
+                "words": 8151,
+                "word_share": 64.9
+            },
+            {
+                "name": "Charlie Roth",
+                "role": "Player",
+                "seat": 2,
+                "turns": 12,
+                "turn_share": 20,
+                "words": 1678,
+                "word_share": 13.4
+            },
+            {
+                "name": "Sam Peters",
+                "role": "Player",
+                "seat": 3,
+                "turns": 6,
+                "turn_share": 10,
+                "words": 820,
+                "word_share": 6.5
+            },
+            {
+                "name": "Andrea Vogt",
+                "role": "Player",
+                "seat": 4,
+                "turns": 9,
+                "turn_share": 15,
+                "words": 1918,
+                "word_share": 15.3
+            }
+        ]
+    },
+    {
+        "id": 23,
+        "title": "Club self-selection without status",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "seed": 42,
+        "topic": "Should we rest our key players in the next match? Work towards one shared recommendation.",
+        "spoken": 60,
+        "failed": 0,
+        "words": 12979,
+        "gini_turns": 0.392,
+        "gini_words": 0.413,
+        "gini_ceiling": 0.75,
+        "usd": 0.92,
+        "speakers": [
+            {
+                "name": "Nikita Falk",
+                "role": "Player",
+                "seat": 1,
+                "turns": 17,
+                "turn_share": 28.3,
+                "words": 3421,
+                "word_share": 26.4
+            },
+            {
+                "name": "Charlie Roth",
+                "role": "Player",
+                "seat": 2,
+                "turns": 7,
+                "turn_share": 11.7,
+                "words": 1456,
+                "word_share": 11.2
+            },
+            {
+                "name": "Sam Peters",
+                "role": "Player",
+                "seat": 3,
+                "turns": 32,
+                "turn_share": 53.3,
+                "words": 7296,
+                "word_share": 56.2
+            },
+            {
+                "name": "Andrea Vogt",
+                "role": "Player",
+                "seat": 4,
+                "turns": 4,
+                "turn_share": 6.7,
+                "words": 806,
+                "word_share": 6.2
+            }
+        ]
+    }
+]
