@@ -20,7 +20,11 @@ trait ShowsJobReport
     /** How many jobs the report lists. Mirrored in the `debug.subheading` string. */
     public const JOB_LIMIT = 50;
 
-    /** When false, incoming job updates are ignored so the view stays put while reading. */
+    /**
+     * When false, incoming job updates are ignored so the view stays put while
+     * reading. Only JobDebugPanel offers that switch: the flyout is pinned to
+     * the run you are watching, where a detached report reads as a live one.
+     */
     public bool $live = true;
 
     public ?int $selectedJobId = null;
@@ -46,8 +50,8 @@ trait ShowsJobReport
 
     /**
      * Why a host would ignore a live update. Paused means someone is reading;
-     * the flyout widens this to "closed", because a panel nobody looks at
-     * should not re-query on every turn.
+     * the flyout replaces this condition with "closed", because a panel nobody
+     * looks at should not re-query on every turn.
      */
     protected function jobReportIsFrozen(): bool
     {

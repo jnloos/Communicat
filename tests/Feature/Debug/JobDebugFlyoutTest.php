@@ -107,26 +107,32 @@ class JobDebugFlyoutTest extends TestCase
             ->assertViewHas('selected', null);
     }
 
-    public function test_pausing_holds_the_view_and_resuming_lets_the_new_job_through(): void
+    /**
+     * The flyout carries no pause control. Reading a report in peace is what the
+     * standalone debug page is for; here the report belongs to the run in front
+     * of you, and a control that silently detaches it from that run is a way to
+     * read stale numbers without noticing.
+     */
+    public function test_the_flyout_offers_no_pause_control(): void
+    {
+        Livewire::test(JobDebugFlyout::class, ['project' => $this->project()])
+            ->call('open')
+            ->assertDontSee('togglePause');
+    }
+
+    /**
+     * What replaced pausing: a flyout nobody has open ignores the broadcast, so a
+     * running discussion does not re-query the report on every single turn.
+     */
+    public function test_a_closed_flyout_ignores_a_live_update(): void
     {
         $project = $this->project();
-
-        $component = Livewire::test(JobDebugFlyout::class, ['project' => $project])
-            ->call('open')
-            ->assertViewHas('logs', fn ($logs) => $logs->isEmpty())
-            ->call('togglePause')
-            ->assertSet('live', false);
+        $component = Livewire::test(JobDebugFlyout::class, ['project' => $project]);
 
         $this->jobFor($project);
+        $component->dispatch('echo-private:debug,.JobLogUpdated');
 
-        // Paused: the update is swallowed, so nothing re-renders underneath the
-        // reader. Only the state survives the round trip -- there is no view to
-        // assert on, and that absence is the behaviour.
-        $component->call('onJobLogUpdated')->assertSet('live', false);
-
-        $component->call('togglePause')
-            ->assertSet('live', true)
-            ->assertViewHas('logs', fn ($logs) => $logs->count() === 1);
+        $this->assertTrue($component->viewData('logs')->isEmpty());
     }
 
     /**

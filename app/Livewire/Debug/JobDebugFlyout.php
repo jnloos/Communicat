@@ -46,10 +46,16 @@ class JobDebugFlyout extends Component
         Flux::modal(self::MODAL)->show();
     }
 
-    /** A closed flyout has nothing to show, so a live update need not reach it. */
+    /**
+     * A closed flyout has nothing to show, so a live update need not reach it.
+     *
+     * Being open is the whole condition here: unlike the standalone page, this
+     * flyout has no pause control, so there is no second way for it to fall
+     * behind the run it is pinned to.
+     */
     protected function jobReportIsFrozen(): bool
     {
-        return ! $this->opened || ! $this->live;
+        return ! $this->opened;
     }
 
     public function render(): mixed
