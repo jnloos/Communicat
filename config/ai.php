@@ -93,7 +93,7 @@ return [
     |
     */
 
-    'default_model' => env('LLM_DEFAULT_MODEL', 'openai-gpt-5'),
+    'default_model' => env('LLM_DEFAULT_MODEL', 'openai-gpt-5-nano'),
 
     /*
     | Selectable models: one entry per model, never per provider. The key names the
@@ -125,11 +125,24 @@ return [
             'temperature' => null,
             'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
         ],
+        // Not reachable with the key in .env as of 2026-09-29: the OpenAI project
+        // it belongs to has no access to this model, and a run picked here fails
+        // on its first turn rather than when the project is saved. The entry stays
+        // because the first pilot ran on it and its run_config has to stay readable.
         'openai-gpt-5-mini' => [
             'label' => 'GPT-5 mini',
             'provider' => 'openai',
             'model' => 'gpt-5-mini',
             'price' => ['input' => 0.25, 'output' => 2.00],
+            'max_output_tokens' => 8000,
+            'temperature' => null,
+            'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
+        ],
+        'openai-gpt-5-nano' => [
+            'label' => 'GPT-5 nano',
+            'provider' => 'openai',
+            'model' => 'gpt-5-nano',
+            'price' => ['input' => 0.05, 'output' => 0.40],
             'max_output_tokens' => 8000,
             'temperature' => null,
             'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),

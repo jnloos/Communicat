@@ -330,9 +330,11 @@ class ProjectFormsTest extends TestCase
         $this->actingAs($owner);
 
         // Without this the form would keep a model belonging to the old provider.
+        // The form opens on the configured default, whichever that currently is --
+        // naming it here would tie this test to an unrelated config change.
         Livewire::test(CreateProject::class)
             ->assertSet('provider', 'openai')
-            ->assertSet('model', 'openai-gpt-5')
+            ->assertSet('model', config('ai.default_model'))
             ->set('provider', 'gemini')
             ->assertSet('model', 'gemini-3.8-flash');
     }
