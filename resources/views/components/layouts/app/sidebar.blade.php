@@ -2,8 +2,6 @@
     'title' => 'Laravel'
 ])
 
-@use(App\Models\Project)
-
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>
@@ -23,24 +21,12 @@
                 <flux:sidebar.item icon="user-circle" :href="route('experts')" :current="request()->routeIs('experts')" wire:navigate>{{ __('navigation.edit_experts') }}</flux:sidebar.item>
             </flux:sidebar.nav>
 
-            @php
-                $projects = Project::whereHas('users', function ($q) {
-                    $q->where('users.id', auth()->id());
-                })->orderBy('updated_at', 'desc')->get()
-            @endphp
+            {{-- Which project the page shows is read here and handed over: inside
+                 the component a Livewire update request no longer matches the
+                 project route, so the current item would lose its mark. --}}
+            @php($currentProjectId = request()->routeIs('project.show') ? request()->route('project')?->id : null)
 
-            @if ($projects->isNotEmpty())
-                <div class="-mx-2 min-h-0 flex-1 overflow-y-auto px-2">
-                    <flux:sidebar.group :heading="__('navigation.projects')">
-                        @foreach ($projects as $project)
-                            @php($isCurr = request()->routeIs('project.show') && request()->route('project')->id == $project->id)
-                            <flux:sidebar.item :href="route('project.show', $project)" :current="$isCurr" :title="$project->title" wire:navigate>{{ $project->title }}</flux:sidebar.item>
-                        @endforeach
-                    </flux:sidebar.group>
-                </div>
-            @else
-                <flux:sidebar.spacer />
-            @endif
+            <livewire:projects.project-navigation :current-project-id="$currentProjectId" />
 
             <flux:sidebar.nav>
                 <flux:sidebar.item icon="folder-git-2" href="https://github.com/jnloos/Communicat" target="_blank">

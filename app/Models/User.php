@@ -47,7 +47,18 @@ class User extends Authenticatable
     }
 
     public function projects(): MorphToMany {
-        return $this->morphToMany(Project::class, 'contributor', 'project_contributors');
+        return $this->morphToMany(Project::class, 'contributor', 'project_contributors')
+            ->withPivot('project_group_id');
+    }
+
+    /**
+     * This user's sidebar drawers. Ordered by position first so a future
+     * reordering UI has something to write to; the name only breaks ties.
+     */
+    public function projectGroups(): HasMany {
+        return $this->hasMany(ProjectGroup::class)
+            ->orderBy('position')
+            ->orderBy('name');
     }
 
     public function ownedProjects(): HasMany {

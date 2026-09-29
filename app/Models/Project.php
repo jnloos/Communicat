@@ -52,7 +52,26 @@ class Project extends Model
 
     public function users(): MorphToMany
     {
-        return $this->morphedByMany(User::class, 'contributor', 'project_contributors');
+        return $this->morphedByMany(User::class, 'contributor', 'project_contributors')
+            ->withPivot('project_group_id');
+    }
+
+    /**
+     * Into which of this user's sidebar groups they filed this project, or null
+     * for the ungrouped list. Read from that user's own pivot row, so the same
+     * project answers differently for everyone who reads it.
+     */
+    public function groupIdFor(User $user): ?int
+    {
+        $groupId = $this->users()->whereKey($user->id)->first()?->pivot->project_group_id;
+
+        return $groupId === null ? null : (int) $groupId;
+    }
+
+    /** Writes the filing on this user's own pivot row; null empties the drawer. */
+    public function fileInGroupFor(User $user, ?int $groupId): void
+    {
+        $this->users()->updateExistingPivot($user->id, ['project_group_id' => $groupId]);
     }
 
     public function isOwner(User $user): bool
