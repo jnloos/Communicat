@@ -9,6 +9,8 @@
 return [
     'empty' => 'No projects',
 
+    'ungrouped' => 'Unsorted chats',
+
     'menus' => [
         'project' => 'Project menu',
         'group' => 'Group menu',
@@ -16,7 +18,7 @@ return [
     ],
 
     'actions' => [
-        'new_group' => 'New group …',
+        'create_group' => 'Create group',
         'rename' => 'Rename',
         'delete_project' => 'Delete project',
         'delete_group' => 'Delete group',

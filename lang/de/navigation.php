@@ -9,7 +9,6 @@
 return [
     'new_project' => 'Neues Projekt',
     'edit_experts' => 'Experten bearbeiten',
-    'projects' => 'Projekte',
     'repository' => 'Repository',
     'documentation' => 'Dokumentation',
     'settings' => 'Einstellungen',

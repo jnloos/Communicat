@@ -191,11 +191,27 @@ select:focus[data-flux-control] {
     to { opacity: 1; }
 }
 
-/* Flux leaves several of its interactive elements on the default cursor. For
-   the modal's close button the rule has to reach the button inside, because the
-   element carrying the attribute is a zero-sized custom element. Menu items
-   carry the attribute themselves; disabled ones keep the default. */
+/* Flux leaves its interactive elements on the default cursor. This is the one
+   place that fixes it -- a `cursor-pointer` class in a view says the same thing
+   again in a spot where the next button will forget it.
+
+   Every kind has to be named: a menu's checkbox and radio entries are NOT
+   data-flux-menu-item, they carry their own attribute, which is why they were
+   the ones still missing it. Two more need a descendant selector, because the
+   element carrying the attribute is not the clickable one -- the modal's close
+   is a zero-sized custom element, and an expandable sidebar group puts its
+   attribute on the disclosure around the header button.
+
+   Disabled entries keep the default: a pointer on something that does not
+   react is a lie. */
 [data-flux-modal-close] button,
-[data-flux-menu-item]:not([disabled]):not([data-disabled]) {
+[data-flux-sidebar-group] > button,
+:is(
+    [data-flux-button],
+    [data-flux-menu-item],
+    [data-flux-menu-checkbox],
+    [data-flux-menu-radio],
+    [data-flux-sidebar-toggle]
+):not([disabled]):not([data-disabled]) {
     cursor: pointer;
 }

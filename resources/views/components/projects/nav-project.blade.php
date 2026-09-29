@@ -26,7 +26,7 @@
         wire:navigate
     >{{ $project->title }}</flux:sidebar.item>
 
-    <div class="absolute end-1 top-0 flex h-8 items-center opacity-0 transition-opacity focus-within:opacity-100 group-hover/navitem:opacity-100">
+    <div class="absolute end-1 top-0 flex h-8 items-center opacity-0 transition-opacity has-[:focus-visible]:opacity-100 group-hover/navitem:opacity-100 has-[[data-open]]:opacity-100">
         <flux:dropdown position="bottom" align="start">
             <flux:button
                 variant="ghost"
@@ -39,7 +39,12 @@
             <flux:menu>
                 {{-- Zone 1: everyone who reads the project files it for themselves.
                      Ticking the group it already sits in takes it back out. --}}
-                <flux:menu.heading>{{ __('groups.menus.file_in') }}</flux:menu.heading>
+                {{-- The heading labels the list below it. Without a single group
+                     there is no list, and it would stand alone over the entry that
+                     creates the first one. --}}
+                @if ($groups->isNotEmpty())
+                    <flux:menu.heading>{{ __('groups.menus.file_in') }}</flux:menu.heading>
+                @endif
 
                 @foreach ($groups as $group)
                     {{-- The tick lives in a data attribute the custom element writes
@@ -53,7 +58,7 @@
                 @endforeach
 
                 <flux:menu.item icon="folder-plus" wire:click="startNewGroup({{ $project->id }})">
-                    {{ __('groups.actions.new_group') }}
+                    {{ __('groups.actions.create_group') }}
                 </flux:menu.item>
 
                 {{-- Zone 2: the owner's alone. Someone who only reads the project

@@ -179,6 +179,27 @@ class ProjectNavigationTest extends TestCase
         $this->assertSame([], $this->projectsInGroup($component, $group)->all());
     }
 
+    /**
+     * The menu's "Group" heading labels the list of groups to file into. With
+     * no group there is no list, and the heading would sit alone above the
+     * entry that creates the first one.
+     */
+    public function test_the_menus_group_heading_appears_only_once_a_group_exists(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $this->projectOwnedBy($user);
+
+        Livewire::test(ProjectNavigation::class)
+            ->assertDontSeeHtml('data-flux-menu-heading');
+
+        $this->groupFor($user, 'Pilot');
+
+        Livewire::test(ProjectNavigation::class)
+            ->assertSeeHtml('data-flux-menu-heading');
+    }
+
     public function test_a_new_group_is_created_and_the_project_moved_in_one_go(): void
     {
         $user = User::factory()->create();
@@ -323,6 +344,49 @@ class ProjectNavigationTest extends TestCase
             ->assertRedirect(route('dashboard'));
 
         $this->assertDatabaseMissing('projects', ['id' => $project->id]);
+    }
+
+    /**
+     * Both deletions go through the shared confirm dialog (NeedsConfirmation ->
+     * open-confirm -> x-confirm-modal), the same one the rest of the app uses.
+     * Deleting a run takes its measurements with it, so the menu entry must ask
+     * rather than act -- and asking has to be wired up, not merely intended.
+     */
+    public function test_deleting_a_project_asks_through_the_shared_confirm_dialog(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $project = $this->projectOwnedBy($user);
+
+        $component = Livewire::test(ProjectNavigation::class, ['currentProjectId' => $project->id])
+            ->call('confirmDeleteProject', $project->id)
+            ->assertDispatched('open-confirm');
+
+        // Nothing is gone until the dialog answers back.
+        $this->assertDatabaseHas('projects', ['id' => $project->id]);
+
+        $component->call('executeConfirmed');
+
+        $this->assertDatabaseMissing('projects', ['id' => $project->id]);
+    }
+
+    public function test_deleting_a_group_asks_through_the_shared_confirm_dialog(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $group = $this->groupFor($user, 'Pilot');
+
+        $component = Livewire::test(ProjectNavigation::class)
+            ->call('confirmDeleteGroup', $group->id)
+            ->assertDispatched('open-confirm');
+
+        $this->assertDatabaseHas('project_groups', ['id' => $group->id]);
+
+        $component->call('executeConfirmed');
+
+        $this->assertDatabaseMissing('project_groups', ['id' => $group->id]);
     }
 
     /** Deleting a project one is not looking at must not throw the user out of the one they are. */
