@@ -4,10 +4,13 @@
     are none — which is why no flux:sidebar.spacer is needed here.
 --}}
 <div class="-mx-2 flex min-h-0 flex-1 flex-col overflow-y-auto px-2">
-    {{-- The list is its own flex column so the gap falls between the groups and
-         before the ungrouped block, and not between the modals below, which are
-         children of the component's root as well. --}}
-    <div class="flex flex-col gap-2">
+    {{-- The list is its own flex column so its spacing stays clear of the modals
+         below, which are children of the component's root as well.
+
+         The groups stack without a gap: folded, they are a run of headers, and
+         Flux's my-px on each header already gives them the rhythm of the nav
+         items above. Only the ungrouped block is set apart, as its own section. --}}
+    <div class="flex flex-col">
         @foreach ($groups as $group)
             {{-- Flux's expandable sidebar.group brings the chevron and the
                  disclosure, but has no slot beside its heading, so the group's menu
@@ -16,9 +19,17 @@
                  The padding that keeps the heading clear of that menu goes on the
                  header button alone: Flux puts the component's attributes on the
                  whole ui-disclosure, so a plain pe-8 would shorten every project
-                 row inside the group as well. --}}
+                 row inside the group as well.
+
+                 Groups start folded; only the one holding the open project
+                 unfolds, so the row marking where the user is stays in sight. --}}
             <div class="group/navgroup relative" wire:key="nav-group-{{ $group->id }}">
-                <flux:sidebar.group expandable :heading="$group->name" class="[&>button]:pe-8 [&>button]:text-zinc-400!">
+                <flux:sidebar.group
+                    expandable
+                    :expanded="$grouped[$group->id]->contains('id', $currentProjectId)"
+                    :heading="$group->name"
+                    class="[&>button]:pe-8 [&>button]:text-zinc-400!"
+                >
                     @forelse ($grouped[$group->id] as $project)
                         <x-projects.nav-project
                             :project="$project"
@@ -60,7 +71,7 @@
         @endforeach
 
         @if ($ungrouped->isNotEmpty())
-            <flux:sidebar.group :heading="__('groups.ungrouped')">
+            <flux:sidebar.group :heading="__('groups.ungrouped')" @class(['mt-4' => $groups->isNotEmpty()])>
                 @foreach ($ungrouped as $project)
                     <x-projects.nav-project
                         :project="$project"

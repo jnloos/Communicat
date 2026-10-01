@@ -434,6 +434,43 @@ class ProjectNavigationTest extends TestCase
             ->assertSee('Sichtbares Projekt');
     }
 
+    /**
+     * A group starts folded, so a sidebar full of pilot cells stays a list of
+     * drawers. The one exception is the group holding the open project: folding
+     * that would hide the very row that says where the user is.
+     */
+    public function test_groups_start_folded_except_the_one_holding_the_open_project(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $open = $this->projectOwnedBy($user, 'Offen');
+        $other = $this->projectOwnedBy($user, 'Anderes');
+        $current = $this->groupFor($user, 'Aktuell');
+        $folded = $this->groupFor($user, 'Zugeklappt');
+        $open->fileInGroupFor($user, $current->id);
+        $other->fileInGroupFor($user, $folded->id);
+
+        $html = Livewire::test(ProjectNavigation::class, ['currentProjectId' => $open->id])->html();
+
+        $this->assertSame([true, false], [
+            $this->groupIsExpanded($html, $current),
+            $this->groupIsExpanded($html, $folded),
+        ]);
+    }
+
+    /**
+     * Flux marks an expanded group with a bare `open` on its ui-disclosure. The
+     * tag is cut at Flux's own data attribute, not at the first ">": the class
+     * list carries "[&>button]".
+     */
+    private function groupIsExpanded(string $html, ProjectGroup $group): bool
+    {
+        preg_match('/wire:key="nav-group-'.$group->id.'".*?(<ui-disclosure.*?data-flux-sidebar-group>)/s', $html, $match);
+
+        return preg_match('/\sopen\s/', $match[1]) === 1;
+    }
+
     /** The component replaced a block in the layout, so the real page has to render it. */
     public function test_the_project_page_renders_the_grouped_sidebar(): void
     {
