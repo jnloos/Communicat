@@ -33,10 +33,15 @@ class OrchestratorSelector implements SpeakerSelector
     {
         $project = $payload->project;
 
+        // The schema is handed the tokens of everyone at the table, so the model
+        // can only answer with one of them instead of being asked politely to.
+        $tokens = $project->contributingExperts()->map(fn (Expert $expert) => $expert->promptId)->values()->all();
+
         $completion = (new SelectorAgent(
             ModelConfig::fromConfig($project->model),
             $payload->jobLogId,
             schema: SpeakerChoiceSchema::class,
+            schemaArgs: [$tokens],
         ))->ask($this->prompts->render('prompts.select.orchestrator', [
             'project' => $project,
             'memory' => $this->memory->viewFor($project),

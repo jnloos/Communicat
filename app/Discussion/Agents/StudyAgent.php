@@ -42,16 +42,23 @@ abstract class StudyAgent implements Agent, HasProviderOptions, HasStructuredOut
 
     /**
      * @param  class-string<ResponseSchema>|null  $schema  the shape the answer must have
+     * @param  array<int, mixed>  $schemaArgs  constructor arguments for that schema
      *
      * The schema arrives as a class name, not an object: agents are rebuilt
      * inside a child process when ParallelPrompts runs a round, and only
-     * scalars survive that boundary.
+     * serialisable values survive that boundary.
+     *
+     * Some shapes depend on the run rather than on the code -- the orchestrator
+     * may only name a speaker who is actually at the table, and who that is
+     * changes per project. Those values ride along as constructor arguments,
+     * which are plain strings and cross the same boundary unharmed.
      */
     public function __construct(
         public readonly ModelConfig $model,
         public readonly ?int $jobLogId = null,
         public readonly ?int $expertId = null,
         public readonly ?string $schema = null,
+        public readonly array $schemaArgs = [],
     ) {}
 
     /**
@@ -61,7 +68,7 @@ abstract class StudyAgent implements Agent, HasProviderOptions, HasStructuredOut
      */
     public function schema(JsonSchema $json): array
     {
-        return $this->schema === null ? [] : (new $this->schema)->fields($json);
+        return $this->schema === null ? [] : (new ($this->schema)(...$this->schemaArgs))->fields($json);
     }
 
     abstract public function purpose(): Purpose;

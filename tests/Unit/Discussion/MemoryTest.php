@@ -81,9 +81,12 @@ class MemoryTest extends TestCase
 
         $view = (new Memory)->viewFor($project, $expert);
 
+        // The positions count participant messages only, so the system notice
+        // is not one of them: "Alte Nachricht" was the first, and it has been
+        // folded away -- the window therefore opens at two.
         $this->assertSame([
-            ['token' => "U{$user->id}", 'name' => 'Jana', 'content' => 'Frage', 'addressee' => null],
-            ['token' => "E{$expert->id}", 'name' => 'Alice', 'content' => 'Antwort', 'addressee' => null],
+            ['position' => 2, 'token' => "U{$user->id}", 'name' => 'Jana', 'content' => 'Frage', 'addressee' => null],
+            ['position' => 3, 'token' => "E{$expert->id}", 'name' => 'Alice', 'content' => 'Antwort', 'addressee' => null],
         ], $view->history);
         $this->assertSame('Bisher ging es um X.', $view->longTerm);
     }
@@ -114,5 +117,53 @@ class MemoryTest extends TestCase
         $project = Project::factory()->create();
 
         $this->assertSame('', (new Memory)->viewFor($project)->shortTerm);
+    }
+
+    /**
+     * Each turn carries its position in the whole discussion, so an agent can
+     * see the order rather than infer it. The count runs over the discussion,
+     * not over the visible window: once older turns have been folded into
+     * Long-Term, the history starts somewhere in the middle, and a window-local
+     * number would tell an agent "(1)" for the forty-first contribution.
+     */
+    public function test_the_history_numbers_turns_by_their_place_in_the_whole_discussion(): void
+    {
+        $project = Project::factory()->create();
+        [$alice, $bob] = Expert::factory()->count(2)->create()->all();
+        $project->addContributingExpert($alice);
+        $project->addContributingExpert($bob);
+
+        $first = $project->addMessage('Eins.', $alice);
+        $project->addMessage('Zwei.', $bob);
+        $project->addMessage('Drei.', $alice);
+
+        $history = app(Memory::class)->viewFor($project->fresh(), $alice)->history;
+        $this->assertSame([1, 2, 3], array_column($history, 'position'));
+
+        // Fold the first turn away: the window now starts at the second one,
+        // and its number stays 2.
+        $project->summarized_until_message_id = $first->id;
+        $project->save();
+
+        $history = app(Memory::class)->viewFor($project->fresh(), $alice)->history;
+        $this->assertSame([2, 3], array_column($history, 'position'));
+    }
+
+    /** The number is rendered in front of the speaker, in brackets. */
+    public function test_the_rendered_history_carries_the_position(): void
+    {
+        $project = Project::factory()->create();
+        $alice = Expert::factory()->create(['name' => 'Alice']);
+        $project->addContributingExpert($alice);
+
+        $project->addMessage('Erster Beitrag.', $alice);
+        $project->addMessage('Zweiter Beitrag.', $alice);
+
+        $rendered = app(PromptRenderer::class)->render('prompts.partials.memory', [
+            'memory' => app(Memory::class)->viewFor($project->fresh(), $alice),
+        ]);
+
+        $this->assertStringContainsString('(1) Alice', $rendered);
+        $this->assertStringContainsString('(2) Alice', $rendered);
     }
 }

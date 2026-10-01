@@ -7,9 +7,11 @@ use App\Discussion\Agents\SelectorAgent;
 use App\Discussion\Agents\SpeakAgent;
 use App\Discussion\Agents\SummarizeAgent;
 use App\Discussion\Agents\ThinkAgent;
+use App\Discussion\Schemas\SpeakerChoiceSchema;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\Values\ModelConfig;
 use App\Discussion\Values\Purpose;
+use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 use InvalidArgumentException;
 use Laravel\Ai\Approvals\Decisions;
 use Laravel\Ai\Contracts\AgentInput;
@@ -221,5 +223,37 @@ class StudyAgentTest extends TestCase
                 return $this->canned;
             }
         };
+    }
+
+    /**
+     * A schema whose shape depends on the run -- the orchestrator's list of
+     * valid speaker tokens -- needs values the class name alone cannot carry.
+     * They travel as constructor arguments, which stay serialisable and so
+     * survive the child process ParallelPrompts rebuilds an agent in.
+     */
+    public function test_constructor_arguments_reach_the_schema(): void
+    {
+        $agent = new SelectorAgent(
+            $this->model('openai'),
+            schema: SpeakerChoiceSchema::class,
+            schemaArgs: [['E1', 'E4']],
+        );
+
+        $fields = $agent->schema(new JsonSchemaTypeFactory);
+
+        $this->assertSame(['E1', 'E4'], $fields['speaker']->toArray()['enum'] ?? null);
+    }
+
+    /** Without them the field stays a plain string, as every other schema is. */
+    public function test_a_schema_without_arguments_still_builds(): void
+    {
+        $agent = new SelectorAgent(
+            $this->model('openai'),
+            schema: SpeakerChoiceSchema::class,
+        );
+
+        $fields = $agent->schema(new JsonSchemaTypeFactory);
+
+        $this->assertArrayNotHasKey('enum', $fields['speaker']->toArray());
     }
 }
