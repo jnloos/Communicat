@@ -115,6 +115,22 @@ class JudgeSelectorTest extends TestCase
         $this->assertTrue($selection->tieBroken);
     }
 
+    /**
+     * The judge sees who holds which role, as the orchestrator does. Status is the
+     * study's manipulation, and a judge that only met it through the drafts could
+     * not show whether it favours a title itself.
+     */
+    public function test_the_prompt_lists_the_participants_with_their_roles(): void
+    {
+        $this->experts[0]->update(['role' => 'Teacher']);
+        FakeAgents::always(JudgeAgent::class, ['speaker' => $this->experts[0]->promptId, 'reasoning' => '-']);
+
+        $this->judge();
+
+        JudgeAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, '=== PARTICIPANTS')
+            && str_contains($prompt->prompt, "{$this->experts[0]->name} [{$this->experts[0]->promptId}] (Teacher)"));
+    }
+
     public function test_the_prompt_shows_the_drafts_with_their_author(): void
     {
         FakeAgents::always(JudgeAgent::class, ['speaker' => $this->experts[0]->promptId, 'reasoning' => '-']);

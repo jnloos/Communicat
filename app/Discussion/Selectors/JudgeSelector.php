@@ -21,6 +21,10 @@ use App\Models\Expert;
  * did so in up to half the turns of a cell, and each of those went to a random
  * draw -- the study's null hypothesis standing in for a decision. A single choice
  * from a closed list of the drafters' tokens cannot tie.
+ *
+ * Like the orchestrator, the judge sees the participant list with every role.
+ * Status is the study's manipulation; a judge that met it only through what the
+ * drafts happen to say could not show whether it favours a title itself.
  */
 class JudgeSelector implements SpeakerSelector
 {
@@ -53,7 +57,7 @@ class JudgeSelector implements SpeakerSelector
                 'name' => $expert->name,
                 'draft' => $payload->thoughtOf($expert)->proposal,
             ])->all(),
-        ]));
+        ] + $this->prompts->participants($project)));
 
         $reasoning = trim($completion->structured['reasoning'] ?? '');
         $token = trim($completion->structured['speaker'] ?? '');

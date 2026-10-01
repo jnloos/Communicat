@@ -3,6 +3,8 @@ You read drafts for the next discussion contribution and decide which one gets s
 
 @include('prompts.partials.project', ['project' => $project])
 
+@include('prompts.partials.participants', ['experts' => $experts])
+
 @include('prompts.partials.memory', ['memory' => $memory])
 
 === DRAFTS ===
@@ -12,4 +14,4 @@ You read drafts for the next discussion contribution and decide which one gets s
 
 @endforeach
 === DECISION ===
-Choose exactly one draft: the one that advances the discussion most right now — a new argument, a solid number, an open question answered. Repetition, filler sentences and contributions that miss the topic advance it least. Evaluate the substance, not the person.
+Choose exactly one draft that contributes the most to the conversation right now.
