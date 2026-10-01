@@ -69,7 +69,7 @@ class PipelineSmokeTest extends TestCase
             'reasoning' => 'Weil E1 noch nicht dran war.',
         ]);
         FakeAgents::always(JudgeAgent::class, [
-            'scores' => [['expert' => 'E1', 'score' => 7]],
+            'speaker' => 'E1',
             'reasoning' => 'Der Entwurf ist konkret.',
         ]);
     }

@@ -34,25 +34,23 @@ class JudgeSelectorTest extends TestCase
         }
     }
 
-    private function judge(): Selection
+    /** @param  list<int>|null  $drafting  indexes of the experts who handed in a draft; null means all */
+    private function judge(?array $drafting = null): Selection
     {
         $payload = new TurnPayload($this->project, 1);
 
         foreach ($this->experts as $index => $expert) {
-            $payload->addThought(new Thought($expert->id, 'Gedanke', proposal: "Entwurf {$index}"));
+            $drafted = $drafting === null || in_array($index, $drafting, true);
+            $payload->addThought(new Thought($expert->id, 'Gedanke', proposal: $drafted ? "Entwurf {$index}" : null));
         }
 
         return app(JudgeSelector::class)->select($payload);
     }
 
-    public function test_the_highest_score_gets_the_floor(): void
+    public function test_the_chosen_draft_gets_the_floor(): void
     {
         FakeAgents::always(JudgeAgent::class, [
-            'scores' => [
-                ['expert' => $this->experts[0]->promptId, 'score' => 4],
-                ['expert' => $this->experts[1]->promptId, 'score' => 9],
-                ['expert' => $this->experts[2]->promptId, 'score' => 6],
-            ],
+            'speaker' => $this->experts[1]->promptId,
             'reasoning' => 'Der zweite Entwurf ist am konkretesten.',
         ]);
 
@@ -61,87 +59,65 @@ class JudgeSelectorTest extends TestCase
         $this->assertSame($this->experts[1]->id, $selection->speaker->id);
         $this->assertSame('Der zweite Entwurf ist am konkretesten.', $selection->reasoning);
         $this->assertSame('JudgeSelector', $selection->selector);
+        $this->assertSame(['token' => $this->experts[1]->promptId, 'fallback' => false], $selection->signals);
+        $this->assertFalse($selection->tieBroken);
     }
 
-    public function test_all_scores_are_recorded_in_the_signals(): void
+    /**
+     * The judge picks one draft, so there is nothing to tie: a scale let two
+     * drafts share the top mark, and the floor then went to a random draw in up
+     * to half the turns of a cell -- the study's null hypothesis standing in for
+     * a decision.
+     */
+    public function test_only_the_drafts_on_the_table_can_be_chosen(): void
     {
-        FakeAgents::always(JudgeAgent::class, [
-            'scores' => [
-                ['expert' => $this->experts[0]->promptId, 'score' => 4],
-                ['expert' => $this->experts[1]->promptId, 'score' => 9],
-                ['expert' => $this->experts[2]->promptId, 'score' => 6],
-            ],
-            'reasoning' => 'Der zweite Entwurf ist am konkretesten.',
-        ]);
+        FakeAgents::always(JudgeAgent::class, ['speaker' => $this->experts[0]->promptId, 'reasoning' => 'Nur zwei Entwürfe.']);
 
-        $this->assertSame([
-            $this->experts[0]->promptId => 4,
-            $this->experts[1]->promptId => 9,
-            $this->experts[2]->promptId => 6,
-        ], $this->judge()->signals['scores']);
+        $this->judge(drafting: [0, 2]);
+
+        JudgeAgent::assertPrompted(fn ($prompt) => $prompt->agent->schemaArgs === [[
+            $this->experts[0]->promptId,
+            $this->experts[2]->promptId,
+        ]]);
     }
 
-    public function test_the_scores_decide_even_if_the_text_suggests_otherwise(): void
+    public function test_an_unknown_token_falls_back_to_the_tie_breaker_among_the_drafters(): void
     {
-        // The judge names no winner, so prose and numbers cannot contradict each
-        // other — the rule is the same one the bids follow.
-        FakeAgents::always(JudgeAgent::class, [
-            'scores' => [
-                ['expert' => $this->experts[0]->promptId, 'score' => 2],
-                ['expert' => $this->experts[1]->promptId, 'score' => 8],
-            ],
-            'reasoning' => 'Eigentlich finde ich den ersten Entwurf besser.',
-        ]);
+        FakeAgents::always(JudgeAgent::class, ['speaker' => 'E999', 'reasoning' => 'Unlesbar.']);
 
-        $this->assertSame($this->experts[1]->id, $this->judge()->speaker->id);
-    }
+        $selection = $this->judge(drafting: [0, 1]);
 
-    public function test_an_unscored_expert_is_recorded_as_a_fallback(): void
-    {
-        FakeAgents::always(JudgeAgent::class, [
-            'scores' => [['expert' => $this->experts[0]->promptId, 'score' => 5]],
-            'reasoning' => 'Nur einer hat etwas geliefert.',
-        ]);
-
-        $selection = $this->judge();
-
-        $this->assertSame($this->experts[0]->id, $selection->speaker->id);
-        $this->assertContains($this->experts[1]->promptId, $selection->signals['fallbacks']);
-        $this->assertContains($this->experts[2]->promptId, $selection->signals['fallbacks']);
-    }
-
-    public function test_no_usable_score_falls_back_to_the_tie_breaker(): void
-    {
-        FakeAgents::always(JudgeAgent::class, ['scores' => [], 'reasoning' => 'Ich kann mich nicht entscheiden.']);
-
-        $selection = $this->judge();
-
-        $this->assertTrue($selection->signals['fallback']);
-        $this->assertTrue($selection->tieBroken);
-    }
-
-    public function test_a_tie_between_two_scores_goes_to_the_tie_breaker(): void
-    {
-        FakeAgents::always(JudgeAgent::class, [
-            'scores' => [
-                ['expert' => $this->experts[0]->promptId, 'score' => 7],
-                ['expert' => $this->experts[1]->promptId, 'score' => 7],
-            ],
-            'reasoning' => 'Beide gleich stark.',
-        ]);
-
-        $selection = $this->judge();
-
+        $this->assertSame(['token' => 'E999', 'fallback' => true], $selection->signals);
         $this->assertTrue($selection->tieBroken);
         $this->assertContains($selection->speaker->id, [$this->experts[0]->id, $this->experts[1]->id]);
     }
 
+    /** A token for someone who handed in no draft cannot win either: there is nothing of theirs to judge. */
+    public function test_a_token_without_a_draft_is_a_fallback(): void
+    {
+        FakeAgents::always(JudgeAgent::class, ['speaker' => $this->experts[2]->promptId, 'reasoning' => 'Daneben.']);
+
+        $selection = $this->judge(drafting: [0, 1]);
+
+        $this->assertTrue($selection->signals['fallback']);
+        $this->assertNotSame($this->experts[2]->id, $selection->speaker->id);
+    }
+
+    /** Without a single draft there is nothing to judge, so no call is made at all. */
+    public function test_no_draft_at_all_skips_the_judge(): void
+    {
+        FakeAgents::always(JudgeAgent::class, ['speaker' => $this->experts[0]->promptId, 'reasoning' => '-']);
+
+        $selection = $this->judge(drafting: []);
+
+        JudgeAgent::assertNeverPrompted();
+        $this->assertSame(['token' => null, 'fallback' => true], $selection->signals);
+        $this->assertTrue($selection->tieBroken);
+    }
+
     public function test_the_prompt_shows_the_drafts_with_their_author(): void
     {
-        FakeAgents::always(JudgeAgent::class, [
-            'scores' => [['expert' => $this->experts[0]->promptId, 'score' => 5]],
-            'reasoning' => 'Nur einer hat etwas geliefert.',
-        ]);
+        FakeAgents::always(JudgeAgent::class, ['speaker' => $this->experts[0]->promptId, 'reasoning' => '-']);
 
         $this->judge();
 

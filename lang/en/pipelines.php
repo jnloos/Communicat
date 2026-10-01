@@ -5,5 +5,5 @@ return [
     'RoundRobinPipeline' => 'Round robin (fixed order)',
     'ScorePipeline' => 'Bidding (each agent bids 1–5)',
     'OrchestratorPipeline' => 'Orchestrator (a model picks)',
-    'QualityPipeline' => 'Proposal quality (a judge scores)',
+    'QualityPipeline' => 'Proposal quality (a judge picks)',
 ];

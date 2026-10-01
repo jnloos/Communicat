@@ -1,5 +1,5 @@
 === TASK ===
-You evaluate drafts for the next discussion contribution. You do not write a contribution yourself and do not choose a winner; you only award points.
+You read drafts for the next discussion contribution and decide which one gets spoken. You do not write a contribution yourself.
 
 @include('prompts.partials.project', ['project' => $project])
 
@@ -11,6 +11,5 @@ You evaluate drafts for the next discussion contribution. You do not write a con
 {{ $draft['draft'] }}
 
 @endforeach
-
-=== EVALUATION ===
-Give each draft a number from {{ $lowest }} to {{ $highest }}. Rate highly what advances the discussion right now: a new argument, a solid number, an open question answered. Do not name a winner — the numbers decide. Rate low repetition, filler sentences and contributions that miss the topic. Evaluate the substance, not the person.
+=== DECISION ===
+Choose exactly one draft: the one that advances the discussion most right now — a new argument, a solid number, an open question answered. Repetition, filler sentences and contributions that miss the topic advance it least. Evaluate the substance, not the person.

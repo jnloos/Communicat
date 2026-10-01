@@ -4,7 +4,7 @@ namespace App\Discussion\Selectors;
 
 use App\Discussion\Agents\JudgeAgent;
 use App\Discussion\Memory\Memory;
-use App\Discussion\Schemas\DraftScoresSchema;
+use App\Discussion\Schemas\SpeakerChoiceSchema;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\Support\TieBreaker;
 use App\Discussion\TurnPayload;
@@ -13,12 +13,14 @@ use App\Discussion\Values\Selection;
 use App\Models\Expert;
 
 /**
- * One model call scores the drafts the agents wrote in ThinkAndPropose; the
- * highest score gets the floor.
+ * One model call reads the drafts the agents wrote in ThinkAndPropose and picks
+ * the one that gets the floor.
  *
- * The judge scores but never names a winner: the selector derives it from the
- * numbers, so the answer cannot contradict itself, and the rule is the same one
- * HighestBidSelector applies to the bids.
+ * It picks, it does not score. The judge only has to grant the floor once, and a
+ * scale let it hand two drafts the same top mark: in the first Quality series it
+ * did so in up to half the turns of a cell, and each of those went to a random
+ * draw -- the study's null hypothesis standing in for a decision. A single choice
+ * from a closed list of the drafters' tokens cannot tie.
  */
 class JudgeSelector implements SpeakerSelector
 {
@@ -31,95 +33,58 @@ class JudgeSelector implements SpeakerSelector
     public function select(TurnPayload $payload): Selection
     {
         $project = $payload->project;
-        $experts = $project->contributingExperts();
+        $drafters = $project->contributingExperts()
+            ->filter(fn (Expert $expert) => $payload->thoughtOf($expert)?->proposal !== null)
+            ->keyBy(fn (Expert $expert) => $expert->promptId);
 
-        $drafts = [];
-        foreach ($experts as $expert) {
-            $proposal = $payload->thoughtOf($expert)?->proposal;
-
-            if ($proposal !== null) {
-                $drafts[$expert->promptId] = ['name' => $expert->name, 'draft' => $proposal];
-            }
+        if ($drafters->isEmpty()) {
+            return $this->fallback($payload, $project->contributingExperts()->values()->all(), token: null, reasoning: '');
         }
 
         $completion = (new JudgeAgent(
             ModelConfig::fromConfig($project->model),
             $payload->jobLogId,
-            schema: DraftScoresSchema::class,
+            schema: SpeakerChoiceSchema::class,
+            schemaArgs: [$drafters->keys()->all()],
         ))->ask($this->prompts->render('prompts.select.judge', [
             'project' => $project,
             'memory' => $this->memory->viewFor($project),
-            'drafts' => $drafts,
-            'lowest' => DraftScoresSchema::LOWEST,
-            'highest' => DraftScoresSchema::HIGHEST,
-        ] + $this->prompts->participants($project)));
+            'drafts' => $drafters->map(fn (Expert $expert) => [
+                'name' => $expert->name,
+                'draft' => $payload->thoughtOf($expert)->proposal,
+            ])->all(),
+        ]));
 
         $reasoning = trim($completion->structured['reasoning'] ?? '');
-        $scores = $this->scores($completion->structured['scores'] ?? [], $experts->all());
+        $token = trim($completion->structured['speaker'] ?? '');
+        $speaker = $drafters->get($token);
 
-        $fallbacks = [];
-        foreach ($experts as $expert) {
-            if (! isset($scores[$expert->promptId])) {
-                $fallbacks[] = $expert->promptId;
-            }
+        if ($speaker === null) {
+            return $this->fallback($payload, $drafters->values()->all(), $token, $reasoning);
         }
-
-        if ($scores === []) {
-            return new Selection(
-                speaker: $this->tieBreaker->pick($experts->values()->all(), $project, $payload->turnIndex),
-                selector: class_basename(static::class),
-                signals: ['scores' => [], 'fallbacks' => $fallbacks, 'fallback' => true],
-                reasoning: $reasoning,
-                tieBroken: true,
-            );
-        }
-
-        $top = max($scores);
-        $leaders = $experts->filter(fn (Expert $expert) => ($scores[$expert->promptId] ?? null) === $top)->values()->all();
-        $tie = count($leaders) > 1;
 
         return new Selection(
-            speaker: $tie ? $this->tieBreaker->pick($leaders, $project, $payload->turnIndex) : $leaders[0],
+            speaker: $speaker,
             selector: class_basename(static::class),
-            signals: ['scores' => $scores, 'fallbacks' => $fallbacks, 'fallback' => false],
+            signals: ['token' => $token, 'fallback' => false],
             reasoning: $reasoning,
-            tieBroken: $tie,
         );
     }
 
     /**
-     * The scored entries whose token is a contributing expert. A token the
-     * judge invented, or an entry without a usable number, is dropped rather
-     * than guessed at -- the expert then shows up in the fallbacks.
+     * The floor goes to a reproducible random draw when the judge named nobody
+     * it could have named, or when there was no draft to judge.
      *
-     * @param  mixed  $rows  the schema's `scores` array, as the provider sent it
-     * @param  list<Expert>  $experts
-     * @return array<string, int>
+     * @param  list<Expert>  $candidates
      */
-    private function scores(mixed $rows, array $experts): array
+    private function fallback(TurnPayload $payload, array $candidates, ?string $token, string $reasoning): Selection
     {
-        $known = [];
-        foreach ($experts as $expert) {
-            $known[$expert->promptId] = true;
-        }
-
-        $scores = [];
-
-        foreach (is_array($rows) ? $rows : [] as $row) {
-            $token = is_array($row) ? ($row['expert'] ?? null) : null;
-            $score = is_array($row) ? ($row['score'] ?? null) : null;
-
-            if (! is_string($token) || ! isset($known[$token])) {
-                continue;
-            }
-
-            if (! is_int($score) && ! (is_string($score) && ctype_digit($score))) {
-                continue;
-            }
-
-            $scores[$token] = (int) $score;
-        }
-
-        return $scores;
+        return new Selection(
+            speaker: $this->tieBreaker->pick($candidates, $payload->project, $payload->turnIndex),
+            selector: class_basename(static::class),
+            signals: ['token' => $token, 'fallback' => true],
+            reasoning: $reasoning,
+            tieBroken: true,
+        );
     }
 }

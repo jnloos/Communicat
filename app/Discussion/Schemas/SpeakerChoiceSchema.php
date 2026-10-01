@@ -5,7 +5,8 @@ namespace App\Discussion\Schemas;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 
 /**
- * The orchestrator's pick of the next speaker.
+ * A pick of the next speaker -- the orchestrator's from the history, the judge's
+ * from the drafts.
  *
  * It names a speaker and says why, and nothing else: an instruction to the
  * speaker would steer how much that speaker writes, which is the study's second
@@ -14,7 +15,7 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
 class SpeakerChoiceSchema implements ResponseSchema
 {
     /**
-     * @param  array<int, string>  $tokens  the participants' tokens, e.g. ['E1', 'E4']
+     * @param  array<int, string>  $tokens  the tokens that may be picked, e.g. ['E1', 'E4']
      *
      * Passing them turns the field into a closed list, which the provider
      * enforces. A free string is only asked to hold a token, and a smaller
@@ -28,7 +29,7 @@ class SpeakerChoiceSchema implements ResponseSchema
     public function fields(JsonSchema $schema): array
     {
         $speaker = $schema->string()
-            ->description('The token of the expert who speaks next, for example E7. A token from the participant list, never a name.')
+            ->description('The token of the expert who speaks next, for example E7. A token, never a name.')
             ->required();
 
         return [
