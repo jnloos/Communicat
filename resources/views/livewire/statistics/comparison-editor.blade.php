@@ -1,12 +1,27 @@
 <div class="space-y-6">
-    @if ($droppedTagValues > 0)
-        <flux:callout variant="warning" icon="exclamation-triangle"
-            :heading="trans_choice('comparisons.dropped_tags', $droppedTagValues, ['count' => $droppedTagValues])" />
+    @if ($droppedTagValues > 0 || $emptiedSeries !== [])
+        <flux:callout variant="warning" icon="exclamation-triangle">
+            @if ($droppedTagValues > 0)
+                <flux:callout.heading>{{ trans_choice('comparisons.dropped_tags', $droppedTagValues, ['count' => $droppedTagValues]) }}</flux:callout.heading>
+            @endif
+            @if ($emptiedSeries !== [])
+                <flux:callout.text>
+                    {{ trans_choice('comparisons.emptied_series', count($emptiedSeries), [
+                        'labels' => collect($emptiedSeries)->map(fn ($label) => __('comparisons.quoted', ['label' => $label]))->implode(', '),
+                    ]) }}
+                </flux:callout.text>
+            @endif
+        </flux:callout>
     @endif
 
     <section class="space-y-4">
         <div class="flex items-center justify-between gap-3">
-            <flux:heading size="lg">{{ __('comparisons.series.heading') }}</flux:heading>
+            <div class="flex items-baseline gap-3">
+                <flux:heading size="lg">{{ __('comparisons.series.heading') }}</flux:heading>
+                {{-- Every edit is saved at once; this says so, since there is no save button. --}}
+                <flux:text size="sm" wire:loading.remove>{{ __('comparisons.autosave.saved') }}</flux:text>
+                <flux:text size="sm" wire:loading>{{ __('comparisons.autosave.saving') }}</flux:text>
+            </div>
             <flux:button size="sm" icon="plus" wire:click="addSeries" class="cursor-pointer">{{ __('comparisons.series.add') }}</flux:button>
         </div>
 
@@ -21,7 +36,7 @@
                 <div class="flex items-end gap-3">
                     <span class="mb-3 size-3 shrink-0 rounded-full" style="background-color: var(--color-{{ $seriesColors[$index] }}-500)"></span>
                     <flux:input wire:model.blur="series.{{ $index }}.label" :label="__('comparisons.series.label')" class="flex-1" />
-                    <flux:button variant="ghost" size="sm" icon="trash" wire:click="removeSeries({{ $index }})"
+                    <flux:button variant="ghost" size="sm" icon="trash" wire:click="confirmRemoveSeries({{ $index }})"
                         class="cursor-pointer" :aria-label="__('comparisons.series.remove')" />
                 </div>
 
@@ -71,7 +86,9 @@
                     <div class="space-y-3">
                         <flux:heading size="sm">{{ __('comparisons.reference.heading') }}</flux:heading>
 
-                        <flux:select wire:model.live="series.{{ $index }}.reference.type" :label="__('comparisons.reference.type')">
+                        @php($runLevel = $comparisonView->metric->isRunLevel())
+
+                        <flux:select wire:model.live="series.{{ $index }}.reference.type" :label="__('comparisons.reference.type')" :disabled="$runLevel">
                             @foreach ($referenceTypes as $type)
                                 <option value="{{ $type }}">{{ __("comparisons.reference.types.{$type}") }}</option>
                             @endforeach
@@ -83,7 +100,7 @@
                                     <flux:select variant="listbox" multiple
                                         wire:key="series-{{ $index }}-persona-tags-{{ $category->id }}"
                                         wire:model.live="series.{{ $index }}.reference.tags.{{ $category->id }}"
-                                        :label="$category->name" :placeholder="__('comparisons.series.any')">
+                                        :label="$category->name" :placeholder="__('comparisons.series.any')" :disabled="$runLevel">
                                         @foreach ($category->values as $value)
                                             <flux:select.option :value="$value->id">{{ $value->name }}</flux:select.option>
                                         @endforeach
@@ -92,12 +109,12 @@
                                 @break
 
                             @case('seat')
-                                <flux:input type="number" min="1" wire:model.live.debounce.500ms="series.{{ $index }}.reference.seat" :label="__('comparisons.reference.seat')" />
+                                <flux:input type="number" min="1" wire:model.live.debounce.500ms="series.{{ $index }}.reference.seat" :label="__('comparisons.reference.seat')" :disabled="$runLevel" />
                                 @break
 
                             @case('expert_name')
-                                <flux:select wire:model.live="series.{{ $index }}.reference.name" :label="__('comparisons.reference.expert_name')">
-                                    <option value="">—</option>
+                                <flux:select wire:model.live="series.{{ $index }}.reference.name" :label="__('comparisons.reference.expert_name')" :disabled="$runLevel">
+                                    <option value="">{{ __('comparisons.reference.choose_expert') }}</option>
                                     @foreach ($expertNames as $expertName)
                                         <option value="{{ $expertName }}">{{ $expertName }}</option>
                                     @endforeach
@@ -105,7 +122,7 @@
                                 @break
                         @endswitch
 
-                        <flux:text size="sm">{{ __('comparisons.reference.shared_hint') }}</flux:text>
+                        <flux:text size="sm">{{ $runLevel ? __('comparisons.reference.run_level_hint') : __('comparisons.reference.shared_hint') }}</flux:text>
                     </div>
                 </div>
             </flux:card>
@@ -124,7 +141,11 @@
 
             <flux:radio.group wire:model.live="viewSettings.display" :label="__('comparisons.view.display')" variant="segmented" size="sm">
                 @foreach ($displays as $display)
-                    <flux:radio :value="$display->value" :label="$display->label()" />
+                    @if ($display === \App\Discussion\Values\ComparisonDisplay::Trajectory && ! $comparisonView->metric->hasTrajectory())
+                        <flux:radio :value="$display->value" :label="$display->label()" disabled :title="__('comparisons.results.no_trajectory')" />
+                    @else
+                        <flux:radio :value="$display->value" :label="$display->label()" />
+                    @endif
                 @endforeach
             </flux:radio.group>
 
@@ -133,15 +154,20 @@
                 :label="__('comparisons.view.turn_limit')" :placeholder="__('comparisons.view.all_turns')" />
 
             @if ($comparisonView->display === \App\Discussion\Values\ComparisonDisplay::Trajectory && $comparisonView->metric->hasTrajectory())
-                <flux:radio.group wire:model.live="viewSettings.trajectory_mode" :label="__('comparisons.view.mode')" variant="segmented" size="sm">
-                    <flux:radio value="cumulative" :label="__('comparisons.modes.cumulative')" />
-                    <flux:radio value="rolling" :label="__('comparisons.modes.rolling')" />
-                </flux:radio.group>
+                <div>
+                    <flux:radio.group wire:model.live="viewSettings.trajectory_mode" :label="__('comparisons.view.mode')" variant="segmented" size="sm">
+                        <flux:radio value="cumulative" :label="__('comparisons.modes.cumulative')" />
+                        <flux:radio value="rolling" :label="__('comparisons.modes.rolling')" />
+                    </flux:radio.group>
+                    @if ($comparisonView->trajectoryMode === 'rolling')
+                        <flux:text size="sm" class="mt-1">{{ trans_choice('statistics.trajectory.rolling_hint', $rollingWindow, ['count' => $rollingWindow]) }}</flux:text>
+                    @endif
+                </div>
             @endif
         </div>
 
-        @if ($comparisonView->metric->isRunLevel())
-            <flux:text size="sm">{{ __('comparisons.reference.run_level_hint') }}</flux:text>
+        @if ($paletteRepeats)
+            <flux:text size="sm" class="text-amber-600 dark:text-amber-400">{{ __('comparisons.results.palette_repeats') }}</flux:text>
         @endif
 
         @foreach ($results as $result)
@@ -197,8 +223,6 @@
             </div>
         @elseif ($comparisonView->display === \App\Discussion\Values\ComparisonDisplay::Bars)
             <x-statistics.range-bars :bars="$bars" :scale="$barScale" />
-        @elseif (! $comparisonView->metric->hasTrajectory())
-            <x-empty-state icon="presentation-chart-line">{{ __('comparisons.results.no_trajectory') }}</x-empty-state>
         @elseif (count($trajectoryRows) < 2)
             <x-empty-state icon="presentation-chart-line">{{ __('comparisons.results.too_short') }}</x-empty-state>
         @else
@@ -225,8 +249,8 @@
                 <flux:chart.tooltip>
                     <flux:chart.tooltip.heading field="label" />
                     @foreach ($lines as $index => $entry)
-                        <flux:chart.tooltip.value :field="'l'.$index" :label="$entry['label']" suffix=" %" />
-                        <flux:chart.tooltip.value :field="'n'.$index" :label="__('comparisons.results.n')" />
+                        <flux:chart.tooltip.value :field="'t'.$index" :label="$entry['label']" />
+                        <flux:chart.tooltip.value :field="'n'.$index" :label="__('comparisons.results.n_of', ['label' => $entry['label']])" />
                     @endforeach
                 </flux:chart.tooltip>
             </flux:chart>

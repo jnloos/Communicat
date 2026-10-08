@@ -13,6 +13,7 @@ use App\Discussion\Values\ModelConfig;
 use App\Discussion\Values\SeriesDefinition;
 use App\Discussion\Values\SeriesLine;
 use App\Discussion\Values\SeriesResult;
+use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Comparison;
 use App\Models\Expert;
 use App\Models\TagCategory;
@@ -29,6 +30,8 @@ use Livewire\Component;
  */
 class ComparisonEditor extends Component
 {
+    use NeedsConfirmation;
+
     /**
      * Series colours, handed out in line order. Deliberately not the seat
      * colours of the statistics flyout (blue, violet, emerald, …): a series is
@@ -73,9 +76,21 @@ class ComparisonEditor extends Component
 
     public function addSeries(): void
     {
-        $label = __('comparisons.series.default_label', ['n' => count($this->series) + 1]);
-        $this->series[] = (new SeriesDefinition($label))->toArray();
+        $this->series[] = (new SeriesDefinition($this->defaultLabel($this->definitions())))->toArray();
         $this->persist();
+    }
+
+    public function confirmRemoveSeries(int $index): void
+    {
+        $definition = $this->withDefaultLabels($this->definitions())[$index] ?? null;
+
+        if ($definition === null) {
+            return;
+        }
+
+        $this->confirmTitle = __('comparisons.confirm.remove_series.title');
+        $this->confirmMessage = __('comparisons.confirm.remove_series.message', ['label' => $definition->label]);
+        $this->needsConfirmation('removeSeries', $index);
     }
 
     public function removeSeries(int $index): void
@@ -96,10 +111,7 @@ class ComparisonEditor extends Component
     /** @return list<SeriesDefinition> */
     private function definitions(): array
     {
-        return array_values(array_map(
-            fn (mixed $series) => SeriesDefinition::fromArray(is_array($series) ? $series : []),
-            $this->series,
-        ));
+        return SeriesDefinition::listFrom($this->series);
     }
 
     /** Through the user's own comparisons: someone else's does not exist here. */
@@ -123,13 +135,16 @@ class ComparisonEditor extends Component
 
         return view('livewire.statistics.comparison-editor', [
             'definitions' => $definitions,
+            'emptiedSeries' => $this->emptiedSeries($this->withDefaultLabels($definitions)),
             'matches' => $matches,
             'results' => $results,
             'lines' => $lines,
             'seriesColors' => $this->seriesColors($lines, count($definitions)),
             'bars' => $bars,
             'barScale' => $barScale,
-            'trajectoryRows' => $this->trajectoryRows($lines),
+            'trajectoryRows' => $this->trajectoryRows($lines, $view->metric),
+            'paletteRepeats' => count($lines) > count(self::PALETTE),
+            'rollingWindow' => (int) config('discussion.share_window'),
             'comparisonView' => $view,
             'metrics' => Metric::cases(),
             'displays' => ComparisonDisplay::cases(),
@@ -143,21 +158,63 @@ class ComparisonEditor extends Component
     }
 
     /**
-     * A label may be stored empty; the result then shows the default name, so
-     * no legend, row or tooltip renders blank.
+     * Series whose project filter names a category none of whose chosen values
+     * exists any more. They match no run (never all of them), and the notice
+     * says which ones.
+     *
+     * @param  list<SeriesDefinition>  $definitions  already carrying their display labels
+     * @return list<string>
+     */
+    private function emptiedSeries(array $definitions): array
+    {
+        $named = array_merge([], ...array_map(fn (SeriesDefinition $d) => $d->projectTags->valueIds(), $definitions));
+        $existing = TagValue::whereKey($named)->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        return array_values(array_map(
+            fn (SeriesDefinition $d) => $d->label,
+            array_filter($definitions, fn (SeriesDefinition $d) => $d->projectTags->isUnsatisfiable($existing)),
+        ));
+    }
+
+    /**
+     * A label may be stored empty; the result then shows the next free default
+     * name, so no legend, row or tooltip renders blank.
      *
      * @param  list<SeriesDefinition>  $definitions
      * @return list<SeriesDefinition>
      */
     private function withDefaultLabels(array $definitions): array
     {
-        return array_map(
-            fn (SeriesDefinition $d, int $index) => $d->label === ''
-                ? $d->withLabel(__('comparisons.series.default_label', ['n' => $index + 1]))
-                : $d,
-            $definitions,
-            array_keys($definitions),
-        );
+        $labelled = [];
+
+        foreach ($definitions as $definition) {
+            $labelled[] = $definition->label === ''
+                ? $definition->withLabel($this->defaultLabel([...$definitions, ...$labelled]))
+                : $definition;
+        }
+
+        return $labelled;
+    }
+
+    /**
+     * "Series N" with N one above the highest default number in use, so a
+     * removal never leads to two series of the same name.
+     *
+     * @param  list<SeriesDefinition>  $definitions
+     */
+    private function defaultLabel(array $definitions): string
+    {
+        $placeholder = '__N__';
+        $pattern = '/^'.str_replace(preg_quote($placeholder, '/'), '(\d+)', preg_quote(__('comparisons.series.default_label', ['n' => $placeholder]), '/')).'$/u';
+        $highest = 0;
+
+        foreach ($definitions as $definition) {
+            if (preg_match($pattern, $definition->label, $match) === 1) {
+                $highest = max($highest, (int) $match[1]);
+            }
+        }
+
+        return __('comparisons.series.default_label', ['n' => $highest + 1]);
     }
 
     /**
@@ -237,12 +294,14 @@ class ComparisonEditor extends Component
 
     /**
      * One row per spoken turn for flux:chart: `l{i}` is line i's mean share in
-     * percent, `n{i}` how many runs reached that turn. A line that ends early
-     * simply has no field in later rows, which the chart draws as its end.
+     * percent, `t{i}` the same value written as the table writes it (the
+     * tooltip shows it verbatim, independent of the browser's locale), `n{i}`
+     * how many runs reached that turn. A line that ends early has no `l{i}` in
+     * later rows, which the chart draws as its end; its tooltip shows a dash.
      *
      * @return list<array<string, int|float|string>>
      */
-    private function trajectoryRows(array $lines): array
+    private function trajectoryRows(array $lines, Metric $metric): array
     {
         $rows = [];
 
@@ -251,12 +310,19 @@ class ComparisonEditor extends Component
                 $rows[$point->turn]['turn'] = $point->turn;
                 $rows[$point->turn]['label'] = __('statistics.trajectory.turn', ['turn' => $point->turn]);
                 $rows[$point->turn]["l{$index}"] = round($point->mean * 100, 1);
+                $rows[$point->turn]["t{$index}"] = $metric->format($point->mean);
                 $rows[$point->turn]["n{$index}"] = $point->n;
             }
         }
 
         ksort($rows);
 
-        return array_values($rows);
+        $blank = [];
+        foreach (array_keys($lines) as $index) {
+            $blank["t{$index}"] = '—';
+            $blank["n{$index}"] = 0;
+        }
+
+        return array_values(array_map(fn (array $row) => $row + $blank, $rows));
     }
 }

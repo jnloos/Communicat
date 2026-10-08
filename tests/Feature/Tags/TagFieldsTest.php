@@ -134,7 +134,7 @@ class TagFieldsTest extends TestCase
         $this->actingAs(User::factory()->create());
         Expert::factory()->create(['name' => 'Ada'])->setTag($this->gender, $this->female);
 
-        Livewire::test(ExpertList::class)->assertSee('weiblich');
+        Livewire::test(ExpertList::class)->assertSee('weiblich')->assertSee('Geschlecht:');
     }
 
     public function test_a_forged_tag_value_leaves_no_half_created_project_behind(): void
@@ -152,5 +152,47 @@ class TagFieldsTest extends TestCase
         } finally {
             $this->assertSame(0, Project::count());
         }
+    }
+
+    public function test_a_forged_tag_value_in_the_expert_editor_creates_or_changes_nothing(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $expert = Expert::factory()->create(['name' => 'Ada']);
+        $forged = [$this->gender->id => (string) $this->status->id];
+
+        foreach ([null, $expert->id] as $id) {
+            try {
+                Livewire::test(ExpertEditor::class)
+                    ->call('edit', $id)
+                    ->set('name', 'Gefälscht')
+                    ->set('role', 'Rolle')
+                    ->set('tagSelection', $forged)
+                    ->call('save');
+                $this->fail('A forged value must be refused.');
+            } catch (InvalidArgumentException) {
+                // expected
+            }
+        }
+
+        $this->assertSame(['Ada'], Expert::pluck('name')->all());
+    }
+
+    public function test_a_forged_tag_value_leaves_an_edited_project_unchanged(): void
+    {
+        $owner = User::factory()->create();
+        $project = Project::factory()->create(['user_id' => $owner->id, 'title' => 'Alt']);
+        $this->actingAs($owner);
+
+        try {
+            Livewire::test(EditProject::class, ['project' => $project])
+                ->set('title', 'Neu')
+                ->set('tagSelection', [$this->condition->id => (string) $this->female->id])
+                ->call('save');
+            $this->fail('A forged value must be refused.');
+        } catch (InvalidArgumentException) {
+            // expected
+        }
+
+        $this->assertSame('Alt', $project->fresh()->title);
     }
 }

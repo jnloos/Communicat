@@ -27,13 +27,15 @@
                             <form wire:submit="saveCategoryName" class="flex flex-1 items-start gap-2">
                                 <flux:input wire:model="renameTo" size="sm" autofocus wire:keydown.escape="cancelRenaming" class="flex-1" />
                                 <flux:button type="submit" size="sm" variant="primary" class="cursor-pointer">{{ __('common.actions.save') }}</flux:button>
+                                <flux:button size="sm" variant="ghost" wire:click="cancelRenaming" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
                             </form>
                         @else
-                            <button type="button" class="flex-1 cursor-text text-start font-medium text-zinc-800 dark:text-white"
+                            <button type="button" class="group/rename flex flex-1 cursor-text items-center gap-1.5 text-start font-medium text-zinc-800 dark:text-white"
                                 wire:click="startRenamingCategory({{ $category->id }})" title="{{ __('tags.actions.rename') }}">
                                 {{ $category->name }}
+                                <flux:icon.pencil variant="micro" class="text-zinc-400 opacity-0 transition-opacity group-hover/rename:opacity-100" />
                             </button>
-                            <flux:button variant="ghost" size="sm" icon="trash" class="cursor-pointer text-red-600! dark:text-red-400!"
+                            <flux:button variant="ghost" size="xs" icon="trash" class="cursor-pointer text-red-600! dark:text-red-400!"
                                 wire:click="confirmDeleteCategory({{ $category->id }})" :aria-label="__('tags.actions.delete_category')" />
                         @endif
                     </div>
@@ -49,14 +51,16 @@
                                     <form wire:submit="saveValueName" class="flex flex-1 items-start gap-2">
                                         <flux:input wire:model="renameTo" size="sm" autofocus wire:keydown.escape="cancelRenaming" class="flex-1" />
                                         <flux:button type="submit" size="sm" variant="primary" class="cursor-pointer">{{ __('common.actions.save') }}</flux:button>
+                                        <flux:button size="sm" variant="ghost" wire:click="cancelRenaming" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
                                     </form>
                                 @else
-                                    <button type="button" class="flex-1 cursor-text text-start text-sm"
+                                    <button type="button" class="group/rename flex flex-1 cursor-text items-center gap-1.5 text-start text-sm"
                                         wire:click="startRenamingValue({{ $value->id }})" title="{{ __('tags.actions.rename') }}">
                                         {{ $value->name }}
+                                        <flux:icon.pencil variant="micro" class="text-zinc-400 opacity-0 transition-opacity group-hover/rename:opacity-100" />
                                     </button>
                                     <flux:badge size="sm" color="zinc">{{ trans_choice('tags.assignments', $value->assignments_count, ['count' => $value->assignments_count]) }}</flux:badge>
-                                    <flux:button variant="ghost" size="xs" icon="x-mark" class="cursor-pointer"
+                                    <flux:button variant="ghost" size="xs" icon="trash" class="cursor-pointer text-red-600! dark:text-red-400!"
                                         wire:click="confirmDeleteValue({{ $value->id }})" :aria-label="__('tags.actions.delete_value')" />
                                 @endif
                             </li>
@@ -64,7 +68,7 @@
                     </ul>
 
                     <form wire:submit="createValue({{ $category->id }})" class="mt-3 flex items-start gap-2 ps-6">
-                        <flux:input wire:model="newValueNames.{{ $category->id }}" size="sm" :placeholder="__('tags.placeholders.new_value')" class="flex-1" />
+                        <flux:input wire:model="newValueNames.{{ $category->id }}" size="sm" :placeholder="__('tags.placeholders.new_value')" :aria-label="__('tags.placeholders.new_value')" class="flex-1" />
                         <flux:button type="submit" size="sm" icon="plus" class="cursor-pointer">{{ __('tags.actions.add_value') }}</flux:button>
                     </form>
                 </flux:card>
@@ -72,7 +76,7 @@
         </div>
 
         <form wire:submit="createCategory" class="mt-6 flex items-start gap-2">
-            <flux:input wire:model="newCategoryName" :placeholder="__('tags.placeholders.new_category')" class="flex-1" />
+            <flux:input wire:model="newCategoryName" :placeholder="__('tags.placeholders.new_category')" :aria-label="__('tags.placeholders.new_category')" class="flex-1" />
             <flux:button type="submit" variant="primary" icon="plus" class="cursor-pointer">{{ __('tags.actions.add_category') }}</flux:button>
         </form>
     </x-settings.layout>

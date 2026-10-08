@@ -85,12 +85,23 @@ class ComparisonResultsTest extends TestCase
         $this->assertSame(1, $rows[3]['n0']);
     }
 
-    public function test_gini_has_no_curve_and_says_so(): void
+    public function test_gini_has_no_curve_and_falls_back_to_the_table(): void
     {
         $this->editor()
             ->set('viewSettings.metric', 'turn_gini')
             ->set('viewSettings.display', 'trajectory')
+            ->assertSet('viewSettings.display', 'table')
             ->assertSee(__('comparisons.results.no_trajectory'));
+
+        $this->assertSame('table', $this->comparison->fresh()->view['display']);
+    }
+
+    public function test_switching_to_gini_from_the_curve_falls_back_to_the_table(): void
+    {
+        $this->editor()
+            ->set('viewSettings.display', 'trajectory')
+            ->set('viewSettings.metric', 'word_gini')
+            ->assertSet('viewSettings.display', 'table');
     }
 
     public function test_the_turn_limit_reaches_the_result(): void
@@ -109,5 +120,82 @@ class ComparisonResultsTest extends TestCase
 
         $component->set('viewSettings.display', 'bars');
         $this->assertSame(__('comparisons.series.default_label', ['n' => 1]), $component->viewData('bars')[0]['label']);
+    }
+
+    public function test_an_empty_label_never_repeats_a_default_name_in_use(): void
+    {
+        $series = $this->comparison->series[0];
+        $this->comparison->update(['series' => [
+            ['label' => __('comparisons.series.default_label', ['n' => 1])] + $series,
+            ['label' => ''] + $series,
+        ]]);
+
+        $this->assertSame(
+            [__('comparisons.series.default_label', ['n' => 1]), __('comparisons.series.default_label', ['n' => 2])],
+            array_column($this->editor()->viewData('lines'), 'label'),
+        );
+    }
+
+    public function test_the_tooltip_carries_formatted_values_and_names_each_n(): void
+    {
+        $component = $this->editor()->set('viewSettings.display', 'trajectory');
+        $rows = $component->viewData('trajectoryRows');
+
+        $this->assertSame('75,0 %', $rows[3]['t0']);
+        $component->assertSee(__('comparisons.results.n_of', ['label' => 'Sitz eins']));
+    }
+
+    public function test_a_line_that_ends_early_shows_a_dash_and_zero_runs(): void
+    {
+        $short = Project::factory()->create(['user_id' => $this->user->id, 'pipeline' => 'RoundRobinPipeline']);
+        $speaker = Expert::factory()->create();
+        $short->addContributingExpert($speaker);
+        foreach ([1, 2] as $turn) {
+            JobLog::create([
+                'job_class' => 'App\Discussion\TurnRunner', 'project_id' => $short->id, 'status' => 'success',
+                'started_at' => now(), 'turn_index' => $turn, 'expert_id' => $speaker->id, 'words' => 10,
+            ]);
+        }
+        $this->comparison->update(['series' => [
+            ...$this->comparison->series,
+            ['label' => 'Kurz', 'projects' => ['pipeline' => 'RoundRobinPipeline'], 'reference' => ['type' => 'seat', 'seat' => 1]],
+        ]]);
+
+        $rows = $this->editor()->set('viewSettings.display', 'trajectory')->viewData('trajectoryRows');
+
+        $this->assertArrayNotHasKey('l1', $rows[3]);
+        $this->assertSame('—', $rows[3]['t1']);
+        $this->assertSame(0, $rows[3]['n1']);
+    }
+
+    public function test_rolling_shows_its_window(): void
+    {
+        $window = (int) config('discussion.share_window');
+
+        $this->editor()
+            ->set('viewSettings.display', 'trajectory')
+            ->assertDontSee(trans_choice('statistics.trajectory.rolling_hint', $window, ['count' => $window]))
+            ->set('viewSettings.trajectory_mode', 'rolling')
+            ->assertSee(trans_choice('statistics.trajectory.rolling_hint', $window, ['count' => $window]));
+    }
+
+    public function test_gini_moves_its_hint_into_the_reference_and_disables_it(): void
+    {
+        $component = $this->editor()
+            ->assertDontSee(__('comparisons.reference.run_level_hint'))
+            ->set('viewSettings.metric', 'turn_gini')
+            ->assertSee(__('comparisons.reference.run_level_hint'))
+            ->assertDontSee(__('comparisons.reference.shared_hint'));
+
+        $this->assertMatchesRegularExpression('/<select[^>]*wire:model\.live="series\.0\.reference\.type"[^>]*disabled/s', $component->html());
+    }
+
+    public function test_more_lines_than_colours_says_so(): void
+    {
+        $this->editor()->assertDontSee(__('comparisons.results.palette_repeats'));
+
+        $this->comparison->update(['series' => array_fill(0, 9, $this->comparison->series[0])]);
+
+        $this->editor()->assertSee(__('comparisons.results.palette_repeats'));
     }
 }

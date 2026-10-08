@@ -18,10 +18,18 @@ final readonly class ComparisonView
     {
         $limit = $data['turn_limit'] ?? null;
         $mode = $data['trajectory_mode'] ?? null;
+        $metric = Metric::tryFrom((string) ($data['metric'] ?? '')) ?? Metric::TurnShare;
+        $display = ComparisonDisplay::tryFrom((string) ($data['display'] ?? '')) ?? ComparisonDisplay::Table;
+
+        // A metric without a curve cannot be shown over the run; the table
+        // stands in, so a stored view never sits in an empty state.
+        if ($display === ComparisonDisplay::Trajectory && ! $metric->hasTrajectory()) {
+            $display = ComparisonDisplay::Table;
+        }
 
         return new self(
-            metric: Metric::tryFrom((string) ($data['metric'] ?? '')) ?? Metric::TurnShare,
-            display: ComparisonDisplay::tryFrom((string) ($data['display'] ?? '')) ?? ComparisonDisplay::Table,
+            metric: $metric,
+            display: $display,
             turnLimit: is_numeric($limit) && (int) $limit >= 1 ? (int) $limit : null,
             trajectoryMode: in_array($mode, ['cumulative', 'rolling'], true) ? $mode : 'cumulative',
         );

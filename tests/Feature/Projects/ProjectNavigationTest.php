@@ -568,4 +568,49 @@ class ProjectNavigationTest extends TestCase
         $this->assertSame([$project->id], $component->viewData('ungrouped')->pluck('id')->all());
         $this->assertSame(0, $component->viewData('activeFilterCount'));
     }
+
+    public function test_a_forged_nested_tag_filter_is_ignored_without_an_error(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $project = $this->projectOwnedBy($user);
+
+        $component = Livewire::test(ProjectNavigation::class)->set('tagFilter', [['1', '2'], 'x']);
+
+        $this->assertSame([$project->id], $component->viewData('ungrouped')->pluck('id')->all());
+        $this->assertSame(0, $component->viewData('activeFilterCount'));
+    }
+
+    public function test_the_open_project_stays_visible_dimmed_when_it_does_not_match_the_filter(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $tagged = $this->projectOwnedBy($user, 'Mit Status');
+        $tagged->setTag($condition, $status);
+        $open = $this->projectOwnedBy($user, 'Offen');
+        $other = $this->projectOwnedBy($user, 'Anderes');
+        $foreign = Project::factory()->create();
+
+        $component = Livewire::test(ProjectNavigation::class, ['currentProjectId' => $open->id])
+            ->set('tagFilter', [(string) $status->id]);
+
+        $this->assertEqualsCanonicalizing([$tagged->id, $open->id], $component->viewData('ungrouped')->pluck('id')->all());
+        $this->assertSame($open->id, $component->viewData('outsideFilterProjectId'));
+        $component->assertSee(__('tags.filter.outside'));
+
+        $stranger = Livewire::test(ProjectNavigation::class, ['currentProjectId' => $foreign->id])
+            ->set('tagFilter', [(string) $status->id]);
+        $this->assertSame([$tagged->id], $stranger->viewData('ungrouped')->pluck('id')->all());
+        $this->assertNull($stranger->viewData('outsideFilterProjectId'));
+    }
+
+    public function test_the_filter_menu_explains_how_values_combine(): void
+    {
+        $this->actingAs(User::factory()->create());
+        TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung'])->values()->create(['name' => 'status']);
+
+        Livewire::test(ProjectNavigation::class)->assertSee(__('tags.filter.help'));
+    }
 }

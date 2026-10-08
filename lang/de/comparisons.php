@@ -13,7 +13,7 @@ return [
 
     'list' => [
         'heading' => 'Vergleiche',
-        'create' => 'Neu',
+        'create' => 'Neuer Vergleich',
         'empty' => 'Noch kein Vergleich.',
     ],
 
@@ -36,9 +36,21 @@ return [
             'title' => 'Vergleich löschen?',
             'message' => 'Der Vergleich „:name“ und seine Reihen werden gelöscht. Projekte und Tags bleiben unberührt.',
         ],
+        'remove_series' => [
+            'title' => 'Reihe löschen?',
+            'message' => 'Die Reihe „:label“ und ihre Filter werden gelöscht.',
+        ],
     ],
 
     'dropped_tags' => '{1}Ein Tag-Wert dieses Vergleichs wurde inzwischen gelöscht und ist aus den Filtern herausgefallen.|[2,*]:count Tag-Werte dieses Vergleichs wurden inzwischen gelöscht und sind aus den Filtern herausgefallen.',
+
+    'emptied_series' => '{1}Die Reihe :labels filtert nach einer Kategorie, deren gewählte Werte alle gelöscht wurden, und trifft deshalb keinen Lauf.|[2,*]Die Reihen :labels filtern nach einer Kategorie, deren gewählte Werte alle gelöscht wurden, und treffen deshalb keinen Lauf.',
+    'quoted' => '„:label“',
+
+    'autosave' => [
+        'saved' => 'Automatisch gespeichert',
+        'saving' => 'Speichert …',
+    ],
 
     'series' => [
         'heading' => 'Reihen',
@@ -66,15 +78,16 @@ return [
         ],
         'seat' => 'Sitz',
         'expert_name' => 'Name',
+        'choose_expert' => 'Experte wählen …',
         'shared_hint' => 'Trifft der Bezug mehrere Agenten eines Laufs, zählt ihr gemeinsamer Anteil.',
-        'run_level_hint' => 'Der Gini beschreibt den ganzen Lauf; der Bezug wird dafür nicht gebraucht.',
+        'run_level_hint' => 'Gini beschreibt den ganzen Lauf, der Bezug wird hier nicht verwendet.',
     ],
 
     'view' => [
         'heading' => 'Ansicht',
         'metric' => 'Kennzahl',
         'display' => 'Darstellung',
-        'turn_limit' => 'Nur die ersten N Turns',
+        'turn_limit' => 'Turns begrenzen auf',
         'all_turns' => 'alle',
         'mode' => 'Verlauf',
     ],
@@ -111,6 +124,8 @@ return [
         'excluded' => '{1}„:label“: 1 Projekt fällt heraus (Bezug trifft niemanden oder kein gesprochener Turn).|[2,*]„:label“: :count Projekte fallen heraus (Bezug trifft niemanden oder kein gesprochener Turn).',
         'bar_text' => 'Ø :mean · :min–:max · n = :n',
         'no_trajectory' => 'Den Verlauf gibt es nur für Turn- und Wortanteil.',
+        'n_of' => ':label · n',
+        'palette_repeats' => 'Mehr als 8 Linien: Farben wiederholen sich. Wähle einen engeren Bezug.',
         'too_short' => 'Für einen Verlauf braucht es mindestens zwei gesprochene Turns.',
     ],
 ];

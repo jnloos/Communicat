@@ -268,11 +268,14 @@ class ProjectNavigation extends Component
      */
     private function activeTagFilter(): array
     {
-        if ($this->tagFilter === []) {
+        // The session property is client-writable: only plain ids go on.
+        $ids = array_values(array_map('intval', array_filter($this->tagFilter, 'is_numeric')));
+
+        if ($ids === []) {
             return [];
         }
 
-        return TagValue::whereKey($this->tagFilter)
+        return TagValue::whereKey($ids)
             ->whereHas('category', fn ($query) => $query->where('scope', TagScope::Project->value))
             ->pluck('id')
             ->map(fn ($id) => (int) $id)
@@ -288,8 +291,14 @@ class ProjectNavigation extends Component
             $this->tagFilter = array_map('strval', $filter);
         }
 
+        $outsideFilterProjectId = $this->openProjectOutside($filter);
+
+        // The open project always stays in the list, even when it does not match:
+        // the row marking where the user is must not vanish under a filter.
         [$filed, $ungrouped] = $this->user()->projects()
-            ->whereTagged($filter)
+            ->where(fn ($query) => $query
+                ->whereTagged($filter)
+                ->when($outsideFilterProjectId !== null, fn ($query) => $query->orWhere('projects.id', $outsideFilterProjectId)))
             ->orderByDesc('projects.updated_at')
             ->get()
             ->partition(fn (Project $project) => $project->pivot->project_group_id !== null);
@@ -311,6 +320,28 @@ class ProjectNavigation extends Component
             'ungrouped' => $ungrouped,
             'tagCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
             'activeFilterCount' => count($filter),
+            'outsideFilterProjectId' => $outsideFilterProjectId,
         ]);
+    }
+
+    /**
+     * The open project, if it is one of the user's own and the filter hides it;
+     * null otherwise.
+     *
+     * @param  list<int>  $filter
+     */
+    private function openProjectOutside(array $filter): ?int
+    {
+        if ($filter === [] || $this->currentProjectId === null) {
+            return null;
+        }
+
+        $own = $this->user()->projects()->whereKey($this->currentProjectId);
+
+        if (! (clone $own)->exists() || $own->whereTagged($filter)->exists()) {
+            return null;
+        }
+
+        return $this->currentProjectId;
     }
 }

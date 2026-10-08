@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Projects\CreateProject;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\Summary;
@@ -12,6 +13,8 @@ use App\Models\User;
 use App\Services\ProjectTransfer\ProjectExport;
 use App\Services\ProjectTransfer\ProjectImporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class ProjectTransferTest extends TestCase
@@ -230,5 +233,37 @@ class ProjectTransferTest extends TestCase
         $this->assertSame(1, TagCategory::count());
         $this->assertSame(1, TagValue::count());
         $this->assertSame([], $result['project']->fresh()->tagSelection());
+    }
+
+    public function test_a_tag_value_that_is_not_a_name_is_skipped_and_reported(): void
+    {
+        $owner = User::factory()->create();
+        TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung'])->values()->create(['name' => 'status']);
+
+        $result = app(ProjectImporter::class)->import([
+            'project' => ['title' => 'Alt', 'description' => 'x'],
+            'tags' => ['bedingung' => ['status']],
+        ], $owner);
+
+        $this->assertSame(['bedingung'], $result['skipped_tags']);
+        $this->assertSame([], $result['project']->fresh()->tagSelection());
+    }
+
+    public function test_the_import_notices_show_on_the_page_it_leads_to(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+        $file = UploadedFile::fake()->createWithContent('export.json', json_encode([
+            'project' => ['title' => 'Alt', 'description' => 'x'],
+            'experts' => [['id' => 999_999, 'name' => 'Weg']],
+            'tags' => ['thema' => 'Schule'],
+        ]));
+
+        Livewire::test(CreateProject::class)->set('importFile', $file)->call('createFromFile');
+        $project = Project::latest('id')->first();
+
+        $this->get(route('project.show', $project))
+            ->assertSee(__('projects.import.skipped_tags', ['tags' => 'thema: Schule']))
+            ->assertSee(__('projects.import.missing_experts'));
     }
 }

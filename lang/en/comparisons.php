@@ -13,7 +13,7 @@ return [
 
     'list' => [
         'heading' => 'Comparisons',
-        'create' => 'New',
+        'create' => 'New comparison',
         'empty' => 'No comparison yet.',
     ],
 
@@ -36,9 +36,21 @@ return [
             'title' => 'Delete comparison?',
             'message' => 'The comparison “:name” and its series will be deleted. Projects and tags stay untouched.',
         ],
+        'remove_series' => [
+            'title' => 'Delete series?',
+            'message' => 'The series “:label” and its filters will be deleted.',
+        ],
     ],
 
     'dropped_tags' => '{1}A tag value of this comparison has since been deleted and dropped out of its filters.|[2,*]:count tag values of this comparison have since been deleted and dropped out of its filters.',
+
+    'emptied_series' => '{1}The series :labels filters by a category whose chosen values have all been deleted, so it matches no run.|[2,*]The series :labels filter by a category whose chosen values have all been deleted, so they match no run.',
+    'quoted' => '“:label”',
+
+    'autosave' => [
+        'saved' => 'Saved automatically',
+        'saving' => 'Saving …',
+    ],
 
     'series' => [
         'heading' => 'Series',
@@ -66,15 +78,16 @@ return [
         ],
         'seat' => 'Seat',
         'expert_name' => 'Name',
+        'choose_expert' => 'Choose an expert …',
         'shared_hint' => 'If the reference hits several agents of a run, their combined share counts.',
-        'run_level_hint' => 'Gini describes the whole run; it needs no reference.',
+        'run_level_hint' => 'Gini describes the whole run, the reference is not used here.',
     ],
 
     'view' => [
         'heading' => 'View',
         'metric' => 'Measure',
         'display' => 'Display',
-        'turn_limit' => 'Only the first N turns',
+        'turn_limit' => 'Limit turns to',
         'all_turns' => 'all',
         'mode' => 'Curve',
     ],
@@ -111,6 +124,8 @@ return [
         'excluded' => '{1}“:label”: 1 project drops out (the reference hits nobody, or no turn was spoken).|[2,*]“:label”: :count projects drop out (the reference hits nobody, or no turn was spoken).',
         'bar_text' => 'Ø :mean · :min–:max · n = :n',
         'no_trajectory' => 'The curve exists for turn share and word share only.',
+        'n_of' => ':label · n',
+        'palette_repeats' => 'More than 8 lines: colours repeat. Choose a narrower reference.',
         'too_short' => 'A curve needs at least two spoken turns.',
     ],
 ];

@@ -26,6 +26,9 @@
                             @endforeach
                         @endforeach
                     </flux:menu.checkbox.group>
+
+                    <flux:menu.separator />
+                    <div class="max-w-56 px-2 py-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('tags.filter.help') }}</div>
                 </flux:menu>
             </flux:dropdown>
 
@@ -67,6 +70,7 @@
                             :project="$project"
                             :groups="$groups"
                             :current="$currentProjectId === $project->id"
+                            :outside-filter="$outsideFilterProjectId === $project->id"
                         />
                     @empty
                         <div class="px-3 py-1 text-sm text-zinc-400">{{ __('groups.empty') }}</div>
@@ -109,6 +113,7 @@
                         :project="$project"
                         :groups="$groups"
                         :current="$currentProjectId === $project->id"
+                        :outside-filter="$outsideFilterProjectId === $project->id"
                     />
                 @endforeach
             </flux:sidebar.group>

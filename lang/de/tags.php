@@ -9,7 +9,7 @@
 return [
     'heading' => 'Tags',
     'subheading' => 'Kategorien mit festen Werten für Personas und Projekte. Die Modelle sehen sie nie.',
-    'empty' => 'In diesem Bereich gibt es noch keine Kategorie.',
+    'empty' => 'Noch keine Kategorie. Lege unten die erste an.',
 
     'scopes' => [
         'persona' => 'Personas',
@@ -26,7 +26,7 @@ return [
     'fields' => [
         'category' => 'Kategorie',
         'value' => 'Wert',
-        'unset' => '—',
+        'unset' => 'Nicht gesetzt',
     ],
 
     'placeholders' => [
@@ -65,5 +65,7 @@ return [
         'button' => 'Filter',
         'clear' => 'Filter zurücksetzen',
         'no_matches' => 'Kein Projekt passt zum Filter.',
+        'outside' => 'Passt nicht zum aktiven Filter',
+        'help' => 'Innerhalb einer Kategorie: eines davon. Zwischen Kategorien: alle.',
     ],
 ];

@@ -13,6 +13,7 @@ return [
         'cancel' => 'Abbrechen',
         'delete' => 'Löschen',
         'confirm' => 'Bestätigen',
+        'close' => 'Schließen',
     ],
 
     'saved' => 'Gespeichert.',

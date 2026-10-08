@@ -161,4 +161,18 @@ class TagsTest extends TestCase
 
         Livewire::test(Tags::class)->assertSee(trans_choice('tags.assignments', 1, ['count' => 1]));
     }
+
+    public function test_a_rename_can_be_cancelled_and_the_new_name_fields_are_labelled(): void
+    {
+        $this->actingAs($this->admin());
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'Geschlecht']);
+
+        Livewire::test(Tags::class)
+            ->assertSeeHtml('aria-label="'.__('tags.placeholders.new_category').'"')
+            ->assertSeeHtml('aria-label="'.__('tags.placeholders.new_value').'"')
+            ->call('startRenamingCategory', $category->id)
+            ->assertSeeHtml('wire:click="cancelRenaming"')
+            ->call('cancelRenaming')
+            ->assertSet('renamingCategoryId', null);
+    }
 }

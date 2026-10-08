@@ -2,6 +2,7 @@
     'project',
     'groups',
     'current' => false,
+    'outsideFilter' => false, {{-- the open project, kept in the list although the tag filter hides it --}}
 ])
 
 @php
@@ -21,8 +22,8 @@
     <flux:sidebar.item
         :href="route('project.show', $project)"
         :current="$current"
-        :title="$project->title"
-        class="pe-9"
+        :title="$outsideFilter ? __('tags.filter.outside') : $project->title"
+        @class(['pe-9', 'opacity-60' => $outsideFilter])
         wire:navigate
     >{{ $project->title }}</flux:sidebar.item>
 

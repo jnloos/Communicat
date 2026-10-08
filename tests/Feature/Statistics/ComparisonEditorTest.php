@@ -111,4 +111,84 @@ class ComparisonEditorTest extends TestCase
             ->assertSet('series.0.projects.tags', [$condition->id => [$status->id]])
             ->assertSee(trans_choice('comparisons.dropped_tags', 1, ['count' => 1]));
     }
+
+    public function test_a_project_filter_whose_values_all_vanished_matches_nothing_and_names_the_series(): void
+    {
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $status = $condition->values()->create(['name' => 'status']);
+        Project::factory()->create(['user_id' => $this->user->id]);
+        $this->comparison->update(['series' => [[
+            'label' => 'Titelträger',
+            'projects' => ['tags' => [$condition->id => [$status->id]]],
+            'reference' => ['type' => 'each'],
+        ]]]);
+        $status->delete();
+
+        $component = $this->editor();
+
+        $this->assertCount(0, $component->viewData('matches')[0]);
+        $component->assertSee(trans_choice('comparisons.emptied_series', 1, ['labels' => __('comparisons.quoted', ['label' => 'Titelträger'])]));
+    }
+
+    public function test_a_value_deleted_after_loading_does_not_widen_the_series(): void
+    {
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $status = $condition->values()->create(['name' => 'status']);
+        Project::factory()->create(['user_id' => $this->user->id]);
+
+        $component = $this->editor()
+            ->call('addSeries')
+            ->set("series.0.projects.tags.{$condition->id}", [(string) $status->id]);
+        $status->delete();
+        $component->call('$refresh');
+
+        $this->assertCount(0, $component->viewData('matches')[0]);
+    }
+
+    public function test_a_partly_deleted_filter_keeps_filtering_by_the_remaining_value(): void
+    {
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $control = $condition->values()->create(['name' => 'kontrolle']);
+        $tagged = Project::factory()->create(['user_id' => $this->user->id]);
+        $tagged->setTag($condition, $status);
+        Project::factory()->create(['user_id' => $this->user->id]);
+
+        $component = $this->editor()
+            ->call('addSeries')
+            ->set("series.0.projects.tags.{$condition->id}", [(string) $status->id, (string) $control->id]);
+        $control->delete();
+        $component->call('$refresh');
+
+        $this->assertSame([$tagged->id], $component->viewData('matches')[0]->pluck('id')->all());
+    }
+
+    public function test_removing_a_series_asks_first(): void
+    {
+        $component = $this->editor()
+            ->call('addSeries')
+            ->call('confirmRemoveSeries', 0)
+            ->assertDispatched('open-confirm', title: __('comparisons.confirm.remove_series.title'),
+                message: __('comparisons.confirm.remove_series.message', ['label' => __('comparisons.series.default_label', ['n' => 1])]));
+
+        $this->assertCount(1, $this->comparison->fresh()->series);
+
+        $component->call('executeConfirmed');
+        $this->assertCount(0, $this->comparison->fresh()->series);
+    }
+
+    public function test_a_new_series_takes_the_next_free_number(): void
+    {
+        $this->editor()->call('addSeries')->call('addSeries')->call('removeSeries', 0)->call('addSeries');
+
+        $this->assertSame(
+            [__('comparisons.series.default_label', ['n' => 2]), __('comparisons.series.default_label', ['n' => 3])],
+            array_column($this->comparison->fresh()->series, 'label'),
+        );
+    }
+
+    public function test_the_editor_says_it_saves_by_itself(): void
+    {
+        $this->editor()->assertSee(__('comparisons.autosave.saved'))->assertSee(__('comparisons.autosave.saving'));
+    }
 }

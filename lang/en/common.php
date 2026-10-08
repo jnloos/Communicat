@@ -13,6 +13,7 @@ return [
         'cancel' => 'Cancel',
         'delete' => 'Delete',
         'confirm' => 'Confirm',
+        'close' => 'Close',
     ],
 
     'saved' => 'Saved.',

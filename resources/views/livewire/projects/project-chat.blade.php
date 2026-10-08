@@ -48,6 +48,19 @@
         />
     </header>
 
+    @if ($importNotices !== [])
+        <div class="shrink-0 space-y-2 border-b border-zinc-200 px-4 py-3 sm:px-6 dark:border-zinc-700">
+            @foreach ($importNotices as $notice)
+                <flux:callout variant="warning" icon="exclamation-triangle" :heading="$notice" wire:key="import-notice-{{ $loop->index }}">
+                    <x-slot name="controls">
+                        <flux:button icon="x-mark" variant="ghost" size="sm" class="cursor-pointer"
+                            :aria-label="__('common.actions.close')" wire:click="$set('importNotices', [])" />
+                    </x-slot>
+                </flux:callout>
+            @endforeach
+        </div>
+    @endif
+
     <!-- Chat -->
     <div id="chat" class="relative min-h-0 flex-1 overflow-y-auto overscroll-contain"
         x-data="{
