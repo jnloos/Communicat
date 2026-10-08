@@ -64,6 +64,11 @@ final readonly class SeriesDefinition
         return new self($this->label, $this->projectTags->without($ids), $this->pipeline, $this->model, $reference);
     }
 
+    public function withLabel(string $label): self
+    {
+        return new self($label, $this->projectTags, $this->pipeline, $this->model, $this->reference);
+    }
+
     private static function optional(mixed $value): ?string
     {
         return is_string($value) && trim($value) !== '' ? trim($value) : null;
