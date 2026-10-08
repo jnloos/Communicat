@@ -11,7 +11,7 @@ use App\Discussion\Values\TagFilter;
 
 /**
  * A series in one line, for the header of its folded card:
- * "Condition: status · Bidding · any model · Seat 1 · 6 projects".
+ * "Status condition: status · Bidding · any model · Seat 1 · 6 projects".
  * It names the filter as the form shows it and computes nothing.
  */
 final class SeriesSummary

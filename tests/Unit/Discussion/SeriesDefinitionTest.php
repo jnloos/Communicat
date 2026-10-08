@@ -42,13 +42,13 @@ class SeriesDefinitionTest extends TestCase
     {
         $series = SeriesDefinition::fromArray([
             'label' => 'x',
-            'unresolved_tags' => [['category' => ' condition ', 'value' => 'status'], ['category' => '', 'value' => 'x'], 'junk', ['category' => 'condition', 'value' => 'no-status']],
+            'unresolved_tags' => [['category' => ' status condition ', 'value' => 'status'], ['category' => '', 'value' => 'x'], 'junk', ['category' => 'status condition', 'value' => 'no-status']],
         ]);
 
-        $this->assertSame([['category' => 'condition', 'value' => 'status'], ['category' => 'condition', 'value' => 'no-status']], $series->unresolvedTags);
-        $this->assertSame(['Condition: status', 'Condition: no-status'], $series->unresolvedLabels());
+        $this->assertSame([['category' => 'status condition', 'value' => 'status'], ['category' => 'status condition', 'value' => 'no-status']], $series->unresolvedTags);
+        $this->assertSame(['Status condition: status', 'Status condition: no-status'], $series->unresolvedLabels());
         $this->assertSame([], $series->tagValueIds(), 'a name is no id');
-        $this->assertSame([['category' => 'condition', 'value' => 'no-status']], $series->withoutUnresolvedTag(0)->unresolvedTags);
+        $this->assertSame([['category' => 'status condition', 'value' => 'no-status']], $series->withoutUnresolvedTag(0)->unresolvedTags);
         $this->assertSame($series->unresolvedTags, $series->withLabel('y')->withoutTagValues([1])->unresolvedTags);
     }
 

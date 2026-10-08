@@ -135,13 +135,13 @@ class InitExpertsCommandTest extends TestCase
 
     public function test_tags_are_assigned_by_name_and_unknown_ones_are_skipped_and_reported(): void
     {
-        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
+        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
         $title->values()->create(['name' => 'true']);
-        TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition'])->values()->create(['name' => 'status']);
+        TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition'])->values()->create(['name' => 'status']);
         $entry = [
             'scenario' => 'school', 'name' => 'Alex Brandt', 'avatar_url' => '', 'description' => 'Wei\u00dfs.',
             'roles' => ['Lehrer'],
-            'tags' => ['title holder' => 'true', 'condition' => 'status', 'mood' => 'happy'],
+            'tags' => ['title-holder' => 'true', 'status condition' => 'status', 'mood' => 'happy'],
         ];
 
         $this->assertSame(0, $this->runOn([$entry]));
@@ -152,6 +152,6 @@ class InitExpertsCommandTest extends TestCase
         $this->assertSame(2, TagCategory::count());
         $output = Artisan::output();
         $this->assertStringContainsString('mood: happy', $output);
-        $this->assertStringContainsString('condition: status', $output);
+        $this->assertStringContainsString('status condition: status', $output);
     }
 }

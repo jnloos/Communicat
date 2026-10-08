@@ -76,7 +76,7 @@ final readonly class SeriesDefinition
         return $this->unresolvedTags !== [];
     }
 
-    /** "Condition: status" per unresolved tag, as the interface names any tag. @return list<string> */
+    /** "Status condition: status" per unresolved tag, as the interface names any tag. @return list<string> */
     public function unresolvedLabels(): array
     {
         return array_map(fn (array $tag) => TagCategory::labelFor($tag['category']).': '.$tag['value'], $this->unresolvedTags);

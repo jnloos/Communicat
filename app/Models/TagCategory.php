@@ -22,7 +22,7 @@ class TagCategory extends Model
         return $this->hasMany(TagValue::class)->orderBy('position')->orderBy('id');
     }
 
-    /** The name as the interface shows it ("Title holder"); the stored name stays as typed. */
+    /** The name as the interface shows it ("Title-holder"); the stored name stays as typed. */
     public function label(): string
     {
         return self::labelFor($this->name);

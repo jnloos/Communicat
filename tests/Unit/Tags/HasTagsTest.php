@@ -71,7 +71,7 @@ class HasTagsTest extends TestCase
 
     public function test_a_category_of_the_other_scope_is_refused(): void
     {
-        $condition = $this->category(TagScope::Project, 'condition', ['status']);
+        $condition = $this->category(TagScope::Project, 'status condition', ['status']);
 
         $this->expectException(InvalidArgumentException::class);
 
@@ -80,7 +80,7 @@ class HasTagsTest extends TestCase
 
     public function test_tag_selection_and_sync_tags_round_trip_a_form(): void
     {
-        $condition = $this->category(TagScope::Project, 'condition', ['status', 'no-status']);
+        $condition = $this->category(TagScope::Project, 'status condition', ['status', 'no-status']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
         $project = Project::factory()->create();
 
@@ -94,7 +94,7 @@ class HasTagsTest extends TestCase
 
     public function test_sync_tags_refuses_a_value_outside_its_category(): void
     {
-        $condition = $this->category(TagScope::Project, 'condition', ['status']);
+        $condition = $this->category(TagScope::Project, 'status condition', ['status']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
 
         $this->expectException(InvalidArgumentException::class);
@@ -104,7 +104,7 @@ class HasTagsTest extends TestCase
 
     public function test_where_tagged_is_and_across_categories_and_or_within_one(): void
     {
-        $condition = $this->category(TagScope::Project, 'condition', ['status', 'no-status']);
+        $condition = $this->category(TagScope::Project, 'status condition', ['status', 'no-status']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule', 'Verkehr']);
 
         $schoolStatus = Project::factory()->create();
@@ -170,7 +170,7 @@ class HasTagsTest extends TestCase
 
     public function test_deleting_a_user_removes_the_tags_of_their_projects(): void
     {
-        $condition = $this->category(TagScope::Project, 'condition', ['status']);
+        $condition = $this->category(TagScope::Project, 'status condition', ['status']);
         $user = User::factory()->create();
         Project::factory()->create(['user_id' => $user->id])->setTag($condition, $this->value($condition, 'status'));
 
@@ -189,7 +189,7 @@ class HasTagsTest extends TestCase
 
     public function test_a_tag_filter_category_without_an_existing_value_matches_nothing(): void
     {
-        $condition = $this->category(TagScope::Project, 'condition', ['status', 'no-status']);
+        $condition = $this->category(TagScope::Project, 'status condition', ['status', 'no-status']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
         $project = Project::factory()->create();
         $project->setTag($condition, $this->value($condition, 'status'));
@@ -205,7 +205,7 @@ class HasTagsTest extends TestCase
 
     public function test_where_tagged_any_matches_a_model_carrying_one_of_the_values(): void
     {
-        $condition = $this->category(TagScope::Project, 'condition', ['status', 'no-status']);
+        $condition = $this->category(TagScope::Project, 'status condition', ['status', 'no-status']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
 
         $status = Project::factory()->create();

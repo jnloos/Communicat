@@ -196,19 +196,19 @@ class ProjectTransferTest extends TestCase
 
     public function test_the_export_names_the_project_tags(): void
     {
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
         $status = $condition->values()->create(['name' => 'status']);
         $project = Project::factory()->create();
         $project->setTag($condition, $status);
 
-        $this->assertSame(['condition' => 'status'], (new ProjectExport)->toArray($project->fresh())['tags']);
+        $this->assertSame(['status condition' => 'status'], (new ProjectExport)->toArray($project->fresh())['tags']);
         $this->assertSame(10, (new ProjectExport)->toArray($project->fresh())['schema_version']);
     }
 
     public function test_a_round_trip_keeps_the_tags_by_name(): void
     {
         $owner = User::factory()->create();
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
         $status = $condition->values()->create(['name' => 'status']);
         $source = Project::factory()->create();
         $source->setTag($condition, $status);
@@ -222,14 +222,14 @@ class ProjectTransferTest extends TestCase
     public function test_unknown_tags_are_skipped_reported_and_never_created(): void
     {
         $owner = User::factory()->create();
-        TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition'])->values()->create(['name' => 'status']);
+        TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition'])->values()->create(['name' => 'status']);
 
         $result = app(ProjectImporter::class)->import([
             'project' => ['title' => 'Alt', 'description' => 'x'],
-            'tags' => ['condition' => 'unbekannt', 'thema' => 'Schule'],
+            'tags' => ['status condition' => 'unbekannt', 'thema' => 'Schule'],
         ], $owner);
 
-        $this->assertSame(['condition: unbekannt', 'thema: Schule'], $result['skipped_tags']);
+        $this->assertSame(['status condition: unbekannt', 'thema: Schule'], $result['skipped_tags']);
         $this->assertSame(1, TagCategory::count());
         $this->assertSame(1, TagValue::count());
         $this->assertSame([], $result['project']->fresh()->tagSelection());
@@ -238,20 +238,20 @@ class ProjectTransferTest extends TestCase
     public function test_a_tag_value_that_is_not_a_name_is_skipped_and_reported(): void
     {
         $owner = User::factory()->create();
-        TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition'])->values()->create(['name' => 'status']);
+        TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition'])->values()->create(['name' => 'status']);
 
         $result = app(ProjectImporter::class)->import([
             'project' => ['title' => 'Alt', 'description' => 'x'],
-            'tags' => ['condition' => ['status']],
+            'tags' => ['status condition' => ['status']],
         ], $owner);
 
-        $this->assertSame(['condition'], $result['skipped_tags']);
+        $this->assertSame(['status condition'], $result['skipped_tags']);
         $this->assertSame([], $result['project']->fresh()->tagSelection());
     }
 
     public function test_the_export_names_each_experts_tags(): void
     {
-        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
+        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
         $yes = $title->values()->create(['name' => 'true']);
         [$alice, $bob] = Expert::factory()->count(2)->create()->all();
         $alice->setTag($title, $yes);
@@ -261,14 +261,14 @@ class ProjectTransferTest extends TestCase
 
         $experts = (new ProjectExport)->toArray($project->fresh())['experts'];
 
-        $this->assertSame(['title holder' => 'true'], $experts[0]['tags']);
+        $this->assertSame(['title-holder' => 'true'], $experts[0]['tags']);
         $this->assertSame([], $experts[1]['tags']);
     }
 
     public function test_persona_tags_fill_gaps_but_never_overwrite_and_unknown_ones_are_reported(): void
     {
         $owner = User::factory()->create();
-        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
+        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
         $yes = $title->values()->create(['name' => 'true']);
         $no = $title->values()->create(['name' => 'false']);
         $seniority = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'seniority']);
@@ -279,8 +279,8 @@ class ProjectTransferTest extends TestCase
         $result = app(ProjectImporter::class)->import([
             'project' => ['title' => 'Alt', 'description' => 'x'],
             'experts' => [
-                ['id' => $fresh->id, 'tags' => ['title holder' => 'true', 'seniority' => 'senior', 'mood' => 'happy']],
-                ['id' => $held->id, 'tags' => ['title holder' => 'true', 'seniority' => 'senior']],
+                ['id' => $fresh->id, 'tags' => ['title-holder' => 'true', 'seniority' => 'senior', 'mood' => 'happy']],
+                ['id' => $held->id, 'tags' => ['title-holder' => 'true', 'seniority' => 'senior']],
             ],
         ], $owner);
 
@@ -295,7 +295,7 @@ class ProjectTransferTest extends TestCase
     public function test_a_persona_round_trip_keeps_the_tags(): void
     {
         $owner = User::factory()->create();
-        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
+        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
         $yes = $title->values()->create(['name' => 'true']);
         $expert = Expert::factory()->create();
         $expert->setTag($title, $yes);

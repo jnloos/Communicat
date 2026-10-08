@@ -42,13 +42,13 @@ class TagsTest extends TestCase
 
         $component = Livewire::test(Tags::class)
             ->set('scope', 'project')
-            ->set('newCategoryName', '  condition ')
+            ->set('newCategoryName', '  status condition ')
             ->call('createCategory')
             ->assertHasNoErrors();
 
         $category = TagCategory::sole();
         $this->assertSame(TagScope::Project, $category->scope);
-        $this->assertSame('condition', $category->name);
+        $this->assertSame('status condition', $category->name);
 
         $component->set("newValueNames.{$category->id}", 'status')
             ->call('createValue', $category->id)
@@ -160,7 +160,7 @@ class TagsTest extends TestCase
         $value = $category->values()->create(['name' => 'weiblich']);
         $category->values()->create(['name' => 'männlich']);
         Expert::factory()->create()->setTag($category, $value);
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
         $status = $condition->values()->create(['name' => 'status']);
         Project::factory()->count(2)->create()->each->setTag($condition, $status);
 

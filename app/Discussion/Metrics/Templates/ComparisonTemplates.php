@@ -31,7 +31,7 @@ final class ComparisonTemplates
     public const PIPELINES = ['ScorePipeline', 'OrchestratorPipeline', 'QualityPipeline', 'RoundRobinPipeline', 'BlindQualityPipeline'];
 
     /** The project category the conditions are tagged with, and its two values. */
-    public const CONDITION = 'condition';
+    public const CONDITION = 'status condition';
 
     public const CONDITIONS = ['status', 'no-status'];
 

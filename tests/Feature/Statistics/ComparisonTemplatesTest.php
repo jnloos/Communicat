@@ -33,7 +33,7 @@ class ComparisonTemplatesTest extends TestCase
     /** @return array{0: TagCategory, 1: int, 2: int} the condition category, status id, control id */
     private function conditions(): array
     {
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
 
         return [$condition, $condition->values()->create(['name' => 'status'])->id, $condition->values()->create(['name' => 'no-status'])->id];
     }
@@ -131,7 +131,7 @@ class ComparisonTemplatesTest extends TestCase
         $series = $comparison->seriesDefinitions()[0];
 
         $this->assertSame([], $series->projectTags->toArray(), 'no placeholder id 0');
-        $this->assertSame([['category' => 'condition', 'value' => 'status']], $series->unresolvedTags);
+        $this->assertSame([['category' => 'status condition', 'value' => 'status']], $series->unresolvedTags);
         $this->assertCount(0, app(SeriesProjects::class)->for($this->user, $series));
 
         // The editor names the series and the unknown tag, and reports no deletion.
@@ -139,26 +139,26 @@ class ComparisonTemplatesTest extends TestCase
             ->assertSet('droppedTagValues', 0)
             ->assertSee('name tags that do not exist here')
             ->assertSee(__('comparisons.quoted', ['label' => 'Score · status']), false)
-            ->assertSee('Condition: status')
+            ->assertSee('Status condition: status')
             ->assertDontSee(trans_choice('comparisons.dropped_tags', 1));
     }
 
     public function test_a_known_category_with_unknown_values_matches_nothing(): void
     {
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
         $other = $condition->values()->create(['name' => 'something else']);
         Project::factory()->create(['user_id' => $this->user->id, 'pipeline' => 'ScorePipeline'])->setTag($condition, $other);
 
         $series = $this->createFrom('turn_share_by_pipeline')->seriesDefinitions()[0];
 
         $this->assertSame([], $series->projectTags->toArray());
-        $this->assertSame([['category' => 'condition', 'value' => 'status']], $series->unresolvedTags);
+        $this->assertSame([['category' => 'status condition', 'value' => 'status']], $series->unresolvedTags);
         $this->assertCount(0, app(SeriesProjects::class)->for($this->user, $series));
     }
 
     public function test_tag_names_match_regardless_of_case(): void
     {
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'Condition']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'Status condition']);
         $status = $condition->values()->create(['name' => 'Status'])->id;
         $control = $condition->values()->create(['name' => 'NO-STATUS'])->id;
 
@@ -173,11 +173,11 @@ class ComparisonTemplatesTest extends TestCase
     {
         $page = Livewire::test(StatisticsPage::class)
             ->call('createFromTemplate', 'every_seat_by_condition')
-            ->assertSee(__('comparisons.templates.unresolved', ['tags' => 'Condition: status, Condition: no-status']));
+            ->assertSee(__('comparisons.templates.unresolved', ['tags' => 'Status condition: status, Status condition: no-status']));
 
         // One-time: opening a comparison (or dismissing it) clears it.
         $page->call('open', Comparison::latest('id')->first()->id)
-            ->assertDontSee(__('comparisons.templates.unresolved', ['tags' => 'Condition: status, Condition: no-status']));
+            ->assertDontSee(__('comparisons.templates.unresolved', ['tags' => 'Status condition: status, Status condition: no-status']));
     }
 
     public function test_no_notice_when_every_template_tag_exists(): void
