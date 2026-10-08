@@ -71,8 +71,8 @@
 
                         <div class="flex flex-wrap gap-2">
                             <flux:radio.group wire:model.live="trajectoryUnit" variant="segmented" size="sm">
-                                <flux:radio value="turns" :label="__('statistics.turn_share')" />
-                                <flux:radio value="words" :label="__('statistics.word_share')" />
+                                <flux:radio value="turns" :label="__('statistics.columns.turns')" />
+                                <flux:radio value="words" :label="__('statistics.columns.words')" />
                             </flux:radio.group>
                             <flux:radio.group wire:model.live="trajectoryMode" variant="segmented" size="sm">
                                 <flux:radio value="cumulative" :label="__('statistics.trajectory.cumulative')" />

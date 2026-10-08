@@ -22,8 +22,8 @@ return [
         'title' => 'Im Verlauf des Laufs',
         'cumulative' => 'Kumulativ',
         'rolling' => 'Gleitend',
-        'cumulative_hint' => 'Anteil an allem bis zu diesem Turn Gesagten. Glättet sich schon rechnerisch: nach n Turns verschiebt ein weiterer ihn um höchstens etwa 1/n.',
-        'rolling_hint' => '{1}Anteil nur am letzten Turn.|[2,*]Anteil an den letzten :count Turns. Erst wenn dieser stabil bleibt, verschiebt sich die Diskussion selbst nicht mehr.',
+        'cumulative_hint' => 'Anteil an allen bisherigen Turns.',
+        'rolling_hint' => '{1}Anteil am letzten Turn.|[2,*]Anteil an den letzten :count Turns.',
         'turn' => 'Turn :turn',
     ],
 
