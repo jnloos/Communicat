@@ -39,7 +39,7 @@
                                 <flux:button size="sm" variant="ghost" wire:click="cancelRenaming" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
                             </form>
                         @else
-                            <span class="flex-1 font-medium text-zinc-800 dark:text-white">{{ $category->name }}</span>
+                            <span class="flex-1 font-medium text-zinc-800 dark:text-white">{{ $category->label() }}</span>
 
                             <x-tags.row-menu
                                 :label="__('tags.actions.category_menu')"

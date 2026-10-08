@@ -18,8 +18,18 @@ class TagValueBadgeTest extends TestCase
 
     public function test_a_badge_always_names_category_and_value(): void
     {
-        $this->assertSame('condition: status', $this->value('status', 'condition')->fullLabel());
-        $this->assertSame('title holder: true', $this->value('true')->fullLabel());
-        $this->assertSame('title holder: false', $this->value('false')->fullLabel());
+        $this->assertSame('Condition: status', $this->value('status', 'condition')->fullLabel());
+        $this->assertSame('Title holder: true', $this->value('true')->fullLabel());
+        $this->assertSame('Title holder: false', $this->value('false')->fullLabel());
+    }
+
+    public function test_a_category_label_capitalises_for_display_only(): void
+    {
+        $category = new TagCategory(['name' => 'title holder']);
+
+        $this->assertSame('Title holder', $category->label());
+        $this->assertSame('title holder', $category->name);
+        $this->assertSame('Ärger', TagCategory::labelFor('ärger'));
+        $this->assertSame('Condition', TagCategory::labelFor('Condition'));
     }
 }

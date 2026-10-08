@@ -66,7 +66,7 @@
                             <flux:checkbox.group wire:model.live="tagFilter" variant="pills" class="flex-col! gap-3!">
                                 @foreach ($tagCategories as $category)
                                     <div class="flex flex-col gap-1.5" wire:key="tag-filter-category-{{ $category->id }}">
-                                        <div class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-300">{{ $category->name }}</div>
+                                        <div class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-300">{{ $category->label() }}</div>
 
                                         <div class="flex flex-wrap gap-1.5">
                                             @foreach ($category->values as $value)

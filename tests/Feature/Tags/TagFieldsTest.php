@@ -158,8 +158,8 @@ class TagFieldsTest extends TestCase
         Expert::factory()->create(['name' => 'Bo'])->setTag($titleHolder, $false);
 
         Livewire::test(ExpertList::class)
-            ->assertSee('title holder: true')
-            ->assertSee('title holder: false');
+            ->assertSee('Title holder: true')
+            ->assertSee('Title holder: false');
     }
 
     public function test_the_collapsed_tag_section_shows_the_current_values_or_none_set(): void
@@ -172,7 +172,7 @@ class TagFieldsTest extends TestCase
             ->assertSee(__('tags.form.none_set'))
             ->set('tagSelection', [$this->condition->id => (string) $this->status->id])
             ->assertDontSee(__('tags.form.none_set'))
-            ->assertSee('condition: status');
+            ->assertSee('Condition: status');
 
         Livewire::test(CreateProject::class)->assertSee(__('tags.form.none_set'));
     }

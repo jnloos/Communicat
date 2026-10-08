@@ -5,7 +5,7 @@
              Category names are stored as typed; only the label is capitalised. --}}
         <div class="grid gap-4 sm:grid-cols-2">
             @foreach ($categories as $category)
-                <flux:select wire:key="tag-field-{{ $category->id }}" wire:model="selection.{{ $category->id }}" :label="Str::ucfirst($category->name)">
+                <flux:select wire:key="tag-field-{{ $category->id }}" wire:model="selection.{{ $category->id }}" :label="$category->label()">
                     <option value="">{{ __('tags.fields.unset') }}</option>
                     @foreach ($category->values as $value)
                         <option value="{{ $value->id }}">{{ $value->name }}</option>

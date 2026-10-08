@@ -26,13 +26,13 @@ class TagValue extends Model
     }
 
     /**
-     * "category: value" — how the interface always names a tag, true/false
+     * "Category: value" — how the interface always names a tag, true/false
      * values included, so a badge never needs its tooltip to be understood.
      * Needs the category loaded.
      */
     public function fullLabel(): string
     {
-        return "{$this->category->name}: {$this->name}";
+        return "{$this->category->label()}: {$this->name}";
     }
 
     /**

@@ -72,7 +72,7 @@
                             <flux:checkbox.group variant="pills"
                                 wire:key="series-{{ $index }}-project-tags-{{ $category->id }}"
                                 wire:model.live="series.{{ $index }}.projects.tags.{{ $category->id }}"
-                                :label="\Illuminate\Support\Str::ucfirst($category->name)" class="gap-1.5!">
+                                :label="$category->label()" class="gap-1.5!">
                                 @foreach ($category->values as $value)
                                     <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" class="cursor-pointer" />
                                 @endforeach
@@ -127,7 +127,7 @@
                                     <flux:checkbox.group variant="pills"
                                         wire:key="series-{{ $index }}-persona-tags-{{ $category->id }}"
                                         wire:model.live="series.{{ $index }}.reference.tags.{{ $category->id }}"
-                                        :label="\Illuminate\Support\Str::ucfirst($category->name)" :disabled="$runLevel" class="gap-1.5!">
+                                        :label="$category->label()" :disabled="$runLevel" class="gap-1.5!">
                                         @foreach ($category->values as $value)
                                             <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" class="cursor-pointer" />
                                         @endforeach

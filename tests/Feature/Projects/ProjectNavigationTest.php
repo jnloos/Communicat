@@ -717,7 +717,7 @@ class ProjectNavigationTest extends TestCase
         $component->assertDontSee(__('tags.filter.clear_label'));
 
         $component->set('tagFilter', [(string) $status->id, (string) $control->id])
-            ->assertSee('2 of 3 · condition: status, condition: control')
+            ->assertSee('2 of 3 · Condition: status, Condition: control')
             ->assertSee(__('tags.filter.clear_label'));
     }
 
