@@ -4,7 +4,7 @@ namespace App\Discussion\Values;
 
 /**
  * Tag values chosen per category: OR within a category, AND across them —
- * the rule HasTags::whereTagged() applies. Normalises form input, where ids
+ * the rule HasTags::whereTagFilter() applies. Normalises form input, where ids
  * arrive as strings and empty choices as ''.
  */
 final readonly class TagFilter

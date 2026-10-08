@@ -116,29 +116,6 @@ trait HasTags
     }
 
     /**
-     * Only models that carry the given values: AND across categories, OR within
-     * one. An empty list filters nothing. Ids that no longer exist are ignored
-     * beside existing ones, but a list of nothing but unknown ids matches
-     * nothing — it must never widen to "all".
-     *
-     * @param  list<int|string>  $valueIds
-     */
-    public function scopeWhereTagged(Builder $query, array $valueIds): void
-    {
-        $byCategory = TagValue::whereKey($valueIds)->get(['id', 'tag_category_id'])->groupBy('tag_category_id');
-
-        if ($valueIds !== [] && $byCategory->isEmpty()) {
-            $query->whereRaw('1 = 0');
-
-            return;
-        }
-
-        foreach ($byCategory as $values) {
-            $query->whereHas('tagValues', fn (Builder $tagged) => $tagged->whereIn('tag_values.id', $values->pluck('id')));
-        }
-    }
-
-    /**
      * Only models that carry at least one of the values, whatever their
      * category. An empty list filters nothing; unknown ids match nothing.
      *
@@ -154,8 +131,9 @@ trait HasTags
     }
 
     /**
-     * Like whereTagged(), but by the filter's own categories: a category whose
-     * values have all been deleted matches nothing instead of dropping out.
+     * Only models that carry the filter's values: AND across its categories, OR
+     * within one. An empty filter filters nothing; a category whose values have
+     * all been deleted matches nothing instead of dropping out.
      */
     public function scopeWhereTagFilter(Builder $query, TagFilter $filter): void
     {

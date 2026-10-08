@@ -102,7 +102,7 @@ class HasTagsTest extends TestCase
         Project::factory()->create()->syncTags([$condition->id => $this->value($topic, 'Schule')->id]);
     }
 
-    public function test_where_tagged_is_and_across_categories_and_or_within_one(): void
+    public function test_where_tag_filter_is_and_across_categories_and_or_within_one(): void
     {
         $condition = $this->category(TagScope::Project, 'status condition', ['status', 'no-status']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule', 'Verkehr']);
@@ -117,9 +117,9 @@ class HasTagsTest extends TestCase
 
         $untagged = Project::factory()->create();
 
-        $or = Project::whereTagged([$this->value($condition, 'status')->id, $this->value($condition, 'no-status')->id])->pluck('id')->all();
-        $and = Project::whereTagged([$this->value($condition, 'status')->id, $this->value($topic, 'Verkehr')->id])->pluck('id')->all();
-        $none = Project::whereTagged([])->pluck('id')->all();
+        $or = Project::whereTagFilter(new TagFilter([$condition->id => [$this->value($condition, 'status')->id, $this->value($condition, 'no-status')->id]]))->pluck('id')->all();
+        $and = Project::whereTagFilter(new TagFilter([$condition->id => [$this->value($condition, 'status')->id], $topic->id => [$this->value($topic, 'Verkehr')->id]]))->pluck('id')->all();
+        $none = Project::whereTagFilter(new TagFilter)->pluck('id')->all();
 
         $this->assertEqualsCanonicalizing([$schoolStatus->id, $trafficControl->id], $or);
         $this->assertSame([], $and);
@@ -178,13 +178,6 @@ class HasTagsTest extends TestCase
 
         $this->assertSame(0, Project::count());
         $this->assertSame(0, Taggable::count());
-    }
-
-    public function test_where_tagged_with_only_unknown_ids_matches_nothing(): void
-    {
-        Project::factory()->create();
-
-        $this->assertSame([], Project::whereTagged([999])->pluck('id')->all());
     }
 
     public function test_a_tag_filter_category_without_an_existing_value_matches_nothing(): void

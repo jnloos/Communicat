@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Projects;
 
+use App\Discussion\Values\TagFilter;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Project;
 use App\Models\ProjectGroup;
 use App\Models\TagCategory;
 use App\Models\TagScope;
-use App\Models\TagValue;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Database\Eloquent\Builder;
@@ -287,41 +287,34 @@ class ProjectNavigation extends Component
     }
 
     /**
-     * The chosen values that still exist and describe projects. A value deleted
+     * The chosen values that still exist, by their category. A value deleted
      * since it was chosen must not leave the list filtered by nothing.
      *
-     * @return list<int>
+     * @param  Collection<int, TagCategory>  $categories  the project categories with their values
      */
-    private function activeTagFilter(): array
+    private function activeTagFilter(Collection $categories): TagFilter
     {
-        $ids = array_map('intval', $this->chosenIds());
+        $chosen = $this->chosenIds();
 
-        if ($ids === []) {
-            return [];
-        }
-
-        return TagValue::whereKey($ids)
-            ->whereHas('category', fn ($query) => $query->where('scope', TagScope::Project->value))
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
+        return TagFilter::fromArray($categories->mapWithKeys(fn (TagCategory $category) => [
+            $category->id => $category->values->pluck('id')
+                ->filter(fn ($id) => in_array((string) $id, $chosen, true))
+                ->all(),
+        ])->all());
     }
 
-    /**
-     * Narrows a project query by the chosen values in the chosen mode.
-     *
-     * @param  list<int>  $filter
-     */
-    private function applyTagFilter(Builder|Relation $query, array $filter): Builder|Relation
+    /** Narrows a project query by the chosen values in the chosen mode. */
+    private function applyTagFilter(Builder|Relation $query, TagFilter $filter): Builder|Relation
     {
         return $this->tagFilterMode === self::FILTER_MERGE
-            ? $query->whereTaggedAny($filter)
-            : $query->whereTagged($filter);
+            ? $query->whereTaggedAny($filter->valueIds())
+            : $query->whereTagFilter($filter);
     }
 
     public function render(): mixed
     {
-        $filter = $this->normaliseFilterState();
+        $tagCategories = TagCategory::ofScope(TagScope::Project)->with('values')->get();
+        $filter = $this->normaliseFilterState($tagCategories);
         $outsideFilterProjectId = $this->openProjectOutside($filter);
 
         // The open project always stays in the list, even when it does not match:
@@ -338,11 +331,9 @@ class ProjectNavigation extends Component
 
         // Unfiltered, an empty drawer stays visible so it can be filled; while a
         // filter is on, a drawer without a match is only noise.
-        if ($filter !== []) {
+        if (! $filter->isEmpty()) {
             $groups = $groups->filter(fn (ProjectGroup $group) => $byGroup->has($group->id))->values();
         }
-
-        $tagCategories = TagCategory::ofScope(TagScope::Project)->with('values')->get();
 
         // The match count only serves the no-match message, which exists once
         // there are categories to filter by; without one it would be a wasted query.
@@ -355,7 +346,7 @@ class ProjectNavigation extends Component
                 ->all(),
             'ungrouped' => $ungrouped,
             'tagCategories' => $tagCategories,
-            'activeFilterCount' => count($filter),
+            'activeFilterCount' => count($filter->valueIds()),
             'tagFilterMode' => $this->tagFilterMode,
             'matchCount' => $hasCategories ? $this->applyTagFilter($this->user()->projects(), $filter)->count() : null,
             'outsideFilterProjectId' => $outsideFilterProjectId,
@@ -368,18 +359,20 @@ class ProjectNavigation extends Component
      * default mode, and values that no longer exist are forgotten, so the
      * session does not carry them on.
      *
-     * @return list<int> the chosen values that still apply
+     * @param  Collection<int, TagCategory>  $categories  the project categories with their values
+     * @return TagFilter the chosen values that still apply
      */
-    private function normaliseFilterState(): array
+    private function normaliseFilterState(Collection $categories): TagFilter
     {
         if ($this->tagFilterMode !== self::FILTER_MERGE) {
             $this->tagFilterMode = self::FILTER_CUT;
         }
 
-        $filter = $this->activeTagFilter();
+        $filter = $this->activeTagFilter($categories);
+        $valueIds = $filter->valueIds();
 
-        if (count($filter) !== count($this->tagFilter)) {
-            $this->tagFilter = array_map('strval', $filter);
+        if (count($valueIds) !== count($this->tagFilter)) {
+            $this->tagFilter = array_map('strval', $valueIds);
         }
 
         return $filter;
@@ -388,12 +381,10 @@ class ProjectNavigation extends Component
     /**
      * The open project, if it is one of the user's own and the filter hides it;
      * null otherwise.
-     *
-     * @param  list<int>  $filter
      */
-    private function openProjectOutside(array $filter): ?int
+    private function openProjectOutside(TagFilter $filter): ?int
     {
-        if ($filter === [] || $this->currentProjectId === null) {
+        if ($filter->isEmpty() || $this->currentProjectId === null) {
             return null;
         }
 
