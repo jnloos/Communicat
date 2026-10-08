@@ -493,7 +493,7 @@ class ProjectNavigationTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
 
         $tagged = $this->projectOwnedBy($user, 'Mit Status');
@@ -518,9 +518,9 @@ class ProjectNavigationTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
-        $control = $condition->values()->create(['name' => 'kontrolle']);
+        $control = $condition->values()->create(['name' => 'control']);
         $topic = TagCategory::create(['scope' => TagScope::Project, 'name' => 'thema']);
         $school = $topic->values()->create(['name' => 'Schule']);
 
@@ -541,7 +541,7 @@ class ProjectNavigationTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
 
         Livewire::test(ProjectNavigation::class)->set('tagFilter', [(string) $status->id]);
@@ -558,7 +558,7 @@ class ProjectNavigationTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
         $project = $this->projectOwnedBy($user);
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $gone = $condition->values()->create(['name' => 'weg']);
         $goneId = $gone->id;
         $gone->delete();
@@ -585,7 +585,7 @@ class ProjectNavigationTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
         $tagged = $this->projectOwnedBy($user, 'Mit Status');
         $tagged->setTag($condition, $status);
@@ -609,7 +609,7 @@ class ProjectNavigationTest extends TestCase
     public function test_the_filter_menu_explains_how_values_combine(): void
     {
         $this->actingAs(User::factory()->create());
-        TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung'])->values()->create(['name' => 'status']);
+        TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition'])->values()->create(['name' => 'status']);
 
         Livewire::test(ProjectNavigation::class)->assertSee(__('tags.filter.help'));
     }

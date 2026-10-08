@@ -36,9 +36,9 @@ class TagFieldsTest extends TestCase
     {
         parent::setUp();
 
-        $this->condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $this->condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $this->status = $this->condition->values()->create(['name' => 'status']);
-        $this->control = $this->condition->values()->create(['name' => 'kontrolle']);
+        $this->control = $this->condition->values()->create(['name' => 'control']);
         $this->gender = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'Geschlecht']);
         $this->female = $this->gender->values()->create(['name' => 'weiblich']);
     }
@@ -47,8 +47,8 @@ class TagFieldsTest extends TestCase
     {
         $component = Livewire::test(TagFields::class, ['scope' => 'project']);
 
-        $this->assertSame(['bedingung'], $component->viewData('categories')->pluck('name')->all());
-        $component->assertSee('kontrolle')->assertDontSee('weiblich');
+        $this->assertSame(['condition'], $component->viewData('categories')->pluck('name')->all());
+        $component->assertSee('control')->assertDontSee('weiblich');
     }
 
     public function test_it_renders_nothing_without_categories(): void
@@ -85,7 +85,7 @@ class TagFieldsTest extends TestCase
             ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertSame('kontrolle', $project->fresh()->tagFor($this->condition)?->name);
+        $this->assertSame('control', $project->fresh()->tagFor($this->condition)?->name);
 
         Livewire::test(EditProject::class, ['project' => $project->fresh()])
             ->set("tagSelection.{$this->condition->id}", '')

@@ -17,15 +17,15 @@ use Illuminate\Support\Facades\DB;
  */
 class StudyTagSeeder
 {
-    public const CONDITION_CATEGORY = 'bedingung';
+    public const CONDITION_CATEGORY = 'condition';
 
     public const STATUS = 'status';
 
-    public const CONTROL = 'kontrolle';
+    public const CONTROL = 'control';
 
-    public const TITLE_CATEGORY = 'titeltraeger';
+    public const TITLE_CATEGORY = 'title holder';
 
-    public const TITLE_YES = 'ja';
+    public const TITLE_YES = 'yes';
 
     /** "without" first: "with status" is not a substring of it, but the order states the intent. */
     public function conditionFor(string $title): ?string

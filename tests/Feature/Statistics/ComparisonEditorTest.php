@@ -53,7 +53,7 @@ class ComparisonEditorTest extends TestCase
 
     public function test_every_change_is_normalised_and_saved_at_once(): void
     {
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
 
         $this->editor()
@@ -79,7 +79,7 @@ class ComparisonEditorTest extends TestCase
 
     public function test_the_live_match_list_shows_only_readable_projects(): void
     {
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
         $mine = Project::factory()->create(['user_id' => $this->user->id, 'title' => 'Meine Zelle']);
         $foreign = Project::factory()->create(['title' => 'Fremde Zelle']);
@@ -96,9 +96,9 @@ class ComparisonEditorTest extends TestCase
 
     public function test_deleted_tag_values_drop_out_on_load_with_a_notice(): void
     {
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
-        $control = $condition->values()->create(['name' => 'kontrolle']);
+        $control = $condition->values()->create(['name' => 'control']);
         $this->comparison->update(['series' => [[
             'label' => 'Reihe',
             'projects' => ['tags' => [$condition->id => [$status->id, $control->id]]],
@@ -114,7 +114,7 @@ class ComparisonEditorTest extends TestCase
 
     public function test_a_project_filter_whose_values_all_vanished_matches_nothing_and_names_the_series(): void
     {
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
         Project::factory()->create(['user_id' => $this->user->id]);
         $this->comparison->update(['series' => [[
@@ -132,7 +132,7 @@ class ComparisonEditorTest extends TestCase
 
     public function test_a_value_deleted_after_loading_does_not_widen_the_series(): void
     {
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
         Project::factory()->create(['user_id' => $this->user->id]);
 
@@ -147,9 +147,9 @@ class ComparisonEditorTest extends TestCase
 
     public function test_a_partly_deleted_filter_keeps_filtering_by_the_remaining_value(): void
     {
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
-        $control = $condition->values()->create(['name' => 'kontrolle']);
+        $control = $condition->values()->create(['name' => 'control']);
         $tagged = Project::factory()->create(['user_id' => $this->user->id]);
         $tagged->setTag($condition, $status);
         Project::factory()->create(['user_id' => $this->user->id]);

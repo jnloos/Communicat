@@ -71,7 +71,7 @@ class HasTagsTest extends TestCase
 
     public function test_a_category_of_the_other_scope_is_refused(): void
     {
-        $condition = $this->category(TagScope::Project, 'bedingung', ['status']);
+        $condition = $this->category(TagScope::Project, 'condition', ['status']);
 
         $this->expectException(InvalidArgumentException::class);
 
@@ -80,21 +80,21 @@ class HasTagsTest extends TestCase
 
     public function test_tag_selection_and_sync_tags_round_trip_a_form(): void
     {
-        $condition = $this->category(TagScope::Project, 'bedingung', ['status', 'kontrolle']);
+        $condition = $this->category(TagScope::Project, 'condition', ['status', 'control']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
         $project = Project::factory()->create();
 
         $project->syncTags([
-            $condition->id => (string) $this->value($condition, 'kontrolle')->id,
+            $condition->id => (string) $this->value($condition, 'control')->id,
             $topic->id => '',
         ]);
 
-        $this->assertSame([$condition->id => $this->value($condition, 'kontrolle')->id], $project->tagSelection());
+        $this->assertSame([$condition->id => $this->value($condition, 'control')->id], $project->tagSelection());
     }
 
     public function test_sync_tags_refuses_a_value_outside_its_category(): void
     {
-        $condition = $this->category(TagScope::Project, 'bedingung', ['status']);
+        $condition = $this->category(TagScope::Project, 'condition', ['status']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
 
         $this->expectException(InvalidArgumentException::class);
@@ -104,7 +104,7 @@ class HasTagsTest extends TestCase
 
     public function test_where_tagged_is_and_across_categories_and_or_within_one(): void
     {
-        $condition = $this->category(TagScope::Project, 'bedingung', ['status', 'kontrolle']);
+        $condition = $this->category(TagScope::Project, 'condition', ['status', 'control']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule', 'Verkehr']);
 
         $schoolStatus = Project::factory()->create();
@@ -112,12 +112,12 @@ class HasTagsTest extends TestCase
         $schoolStatus->setTag($topic, $this->value($topic, 'Schule'));
 
         $trafficControl = Project::factory()->create();
-        $trafficControl->setTag($condition, $this->value($condition, 'kontrolle'));
+        $trafficControl->setTag($condition, $this->value($condition, 'control'));
         $trafficControl->setTag($topic, $this->value($topic, 'Verkehr'));
 
         $untagged = Project::factory()->create();
 
-        $or = Project::whereTagged([$this->value($condition, 'status')->id, $this->value($condition, 'kontrolle')->id])->pluck('id')->all();
+        $or = Project::whereTagged([$this->value($condition, 'status')->id, $this->value($condition, 'control')->id])->pluck('id')->all();
         $and = Project::whereTagged([$this->value($condition, 'status')->id, $this->value($topic, 'Verkehr')->id])->pluck('id')->all();
         $none = Project::whereTagged([])->pluck('id')->all();
 
@@ -170,7 +170,7 @@ class HasTagsTest extends TestCase
 
     public function test_deleting_a_user_removes_the_tags_of_their_projects(): void
     {
-        $condition = $this->category(TagScope::Project, 'bedingung', ['status']);
+        $condition = $this->category(TagScope::Project, 'condition', ['status']);
         $user = User::factory()->create();
         Project::factory()->create(['user_id' => $user->id])->setTag($condition, $this->value($condition, 'status'));
 
@@ -189,7 +189,7 @@ class HasTagsTest extends TestCase
 
     public function test_a_tag_filter_category_without_an_existing_value_matches_nothing(): void
     {
-        $condition = $this->category(TagScope::Project, 'bedingung', ['status', 'kontrolle']);
+        $condition = $this->category(TagScope::Project, 'condition', ['status', 'control']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
         $project = Project::factory()->create();
         $project->setTag($condition, $this->value($condition, 'status'));

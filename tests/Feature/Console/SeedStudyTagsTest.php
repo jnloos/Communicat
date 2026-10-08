@@ -58,11 +58,11 @@ class SeedStudyTagsTest extends TestCase
         $this->artisan('tags:seed-study', ['--apply' => true])->assertSuccessful();
         $this->artisan('tags:seed-study', ['--apply' => true])->assertSuccessful();
 
-        $this->assertSame('status', $this->tagOf($status, TagScope::Project, 'bedingung'));
-        $this->assertSame('kontrolle', $this->tagOf($control, TagScope::Project, 'bedingung'));
-        $this->assertNull($this->tagOf($untitled, TagScope::Project, 'bedingung'));
-        $this->assertSame('ja', $this->tagOf($ceo, TagScope::Persona, 'titeltraeger'));
-        $this->assertNull($this->tagOf($neutral, TagScope::Persona, 'titeltraeger'));
+        $this->assertSame('status', $this->tagOf($status, TagScope::Project, 'condition'));
+        $this->assertSame('control', $this->tagOf($control, TagScope::Project, 'condition'));
+        $this->assertNull($this->tagOf($untitled, TagScope::Project, 'condition'));
+        $this->assertSame('yes', $this->tagOf($ceo, TagScope::Persona, 'title holder'));
+        $this->assertNull($this->tagOf($neutral, TagScope::Persona, 'title holder'));
         $this->assertSame(2, TagCategory::count());
         $this->assertSame(3, Taggable::count());
     }
@@ -77,7 +77,7 @@ class SeedStudyTagsTest extends TestCase
             ->expectsOutputToContain('Conflict')
             ->assertSuccessful();
 
-        $this->assertNull($this->tagOf($both, TagScope::Persona, 'titeltraeger'));
+        $this->assertNull($this->tagOf($both, TagScope::Persona, 'title holder'));
     }
 
     public function test_it_reads_the_condition_from_the_real_title_formats(): void
@@ -85,9 +85,9 @@ class SeedStudyTagsTest extends TestCase
         $seeder = new StudyTagSeeder;
 
         $this->assertSame('status', $seeder->conditionFor('School | with status | 60'));
-        $this->assertSame('kontrolle', $seeder->conditionFor('School | without status | 60'));
+        $this->assertSame('control', $seeder->conditionFor('School | without status | 60'));
         $this->assertSame('status', $seeder->conditionFor('Score | School | with status | 100'));
-        $this->assertSame('kontrolle', $seeder->conditionFor('Score | School | without status | 100'));
+        $this->assertSame('control', $seeder->conditionFor('Score | School | without status | 100'));
         $this->assertNull($seeder->conditionFor('Test'));
     }
 }

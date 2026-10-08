@@ -19,7 +19,7 @@ class SeriesProjectsTest extends TestCase
     {
         $user = User::factory()->create();
         $stranger = User::factory()->create();
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
 
         $own = Project::factory()->create(['user_id' => $user->id, 'pipeline' => 'ScorePipeline', 'model' => 'openai-gpt-5-mini']);

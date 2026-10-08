@@ -196,19 +196,19 @@ class ProjectTransferTest extends TestCase
 
     public function test_the_export_names_the_project_tags(): void
     {
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
         $project = Project::factory()->create();
         $project->setTag($condition, $status);
 
-        $this->assertSame(['bedingung' => 'status'], (new ProjectExport)->toArray($project->fresh())['tags']);
+        $this->assertSame(['condition' => 'status'], (new ProjectExport)->toArray($project->fresh())['tags']);
         $this->assertSame(9, (new ProjectExport)->toArray($project->fresh())['schema_version']);
     }
 
     public function test_a_round_trip_keeps_the_tags_by_name(): void
     {
         $owner = User::factory()->create();
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
         $source = Project::factory()->create();
         $source->setTag($condition, $status);
@@ -222,14 +222,14 @@ class ProjectTransferTest extends TestCase
     public function test_unknown_tags_are_skipped_reported_and_never_created(): void
     {
         $owner = User::factory()->create();
-        TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung'])->values()->create(['name' => 'status']);
+        TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition'])->values()->create(['name' => 'status']);
 
         $result = app(ProjectImporter::class)->import([
             'project' => ['title' => 'Alt', 'description' => 'x'],
-            'tags' => ['bedingung' => 'unbekannt', 'thema' => 'Schule'],
+            'tags' => ['condition' => 'unbekannt', 'thema' => 'Schule'],
         ], $owner);
 
-        $this->assertSame(['bedingung: unbekannt', 'thema: Schule'], $result['skipped_tags']);
+        $this->assertSame(['condition: unbekannt', 'thema: Schule'], $result['skipped_tags']);
         $this->assertSame(1, TagCategory::count());
         $this->assertSame(1, TagValue::count());
         $this->assertSame([], $result['project']->fresh()->tagSelection());
@@ -238,14 +238,14 @@ class ProjectTransferTest extends TestCase
     public function test_a_tag_value_that_is_not_a_name_is_skipped_and_reported(): void
     {
         $owner = User::factory()->create();
-        TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung'])->values()->create(['name' => 'status']);
+        TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition'])->values()->create(['name' => 'status']);
 
         $result = app(ProjectImporter::class)->import([
             'project' => ['title' => 'Alt', 'description' => 'x'],
-            'tags' => ['bedingung' => ['status']],
+            'tags' => ['condition' => ['status']],
         ], $owner);
 
-        $this->assertSame(['bedingung'], $result['skipped_tags']);
+        $this->assertSame(['condition'], $result['skipped_tags']);
         $this->assertSame([], $result['project']->fresh()->tagSelection());
     }
 

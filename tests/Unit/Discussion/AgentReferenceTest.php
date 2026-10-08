@@ -75,8 +75,8 @@ class AgentReferenceTest extends TestCase
 
     public function test_persona_tags_pick_the_seated_agents_that_carry_them(): void
     {
-        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'titeltraeger']);
-        $yes = $title->values()->create(['name' => 'ja']);
+        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
+        $yes = $title->values()->create(['name' => 'yes']);
         [$ceo, $peer] = Expert::factory()->count(2)->create();
         $ceo->setTag($title, $yes);
 

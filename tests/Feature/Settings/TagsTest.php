@@ -41,13 +41,13 @@ class TagsTest extends TestCase
 
         $component = Livewire::test(Tags::class)
             ->set('scope', 'project')
-            ->set('newCategoryName', '  bedingung ')
+            ->set('newCategoryName', '  condition ')
             ->call('createCategory')
             ->assertHasNoErrors();
 
         $category = TagCategory::sole();
         $this->assertSame(TagScope::Project, $category->scope);
-        $this->assertSame('bedingung', $category->name);
+        $this->assertSame('condition', $category->name);
 
         $component->set("newValueNames.{$category->id}", 'status')
             ->call('createValue', $category->id)
