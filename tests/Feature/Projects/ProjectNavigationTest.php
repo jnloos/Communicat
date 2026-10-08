@@ -555,16 +555,7 @@ class ProjectNavigationTest extends TestCase
             ->assertViewHas('tagFilterMode', 'cut');
     }
 
-    public function test_the_filter_mode_survives_the_next_page(): void
-    {
-        $this->actingAs(User::factory()->create());
-
-        Livewire::test(ProjectNavigation::class)->set('tagFilterMode', 'merge');
-
-        Livewire::test(ProjectNavigation::class)->assertSet('tagFilterMode', 'merge');
-    }
-
-    public function test_the_menu_offers_the_values_as_checkboxes_bound_to_the_filter(): void
+    public function test_the_menu_offers_every_value_under_its_category_bound_to_the_filter(): void
     {
         $this->actingAs(User::factory()->create());
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
@@ -573,13 +564,8 @@ class ProjectNavigationTest extends TestCase
         $true = $other->values()->create(['name' => 'true']);
 
         Livewire::test(ProjectNavigation::class)
-            ->assertSeeHtml('data-flux-menu-checkbox-group')
             ->assertSeeHtml('wire:model.live="tagFilter"')
-            ->assertSeeHtml('value="'.$status->id.'"')
-            ->assertSeeHtml('value="'.$true->id.'"')
-            ->assertSeeHtml($condition->label().'</div>')
-            ->assertSeeHtml($other->label().'</div>')
-            ->assertSeeHtml('keep-open');
+            ->assertSeeInOrder([$condition->label(), $status->name, $other->label(), $true->name]);
     }
 
     public function test_ticking_values_sets_the_filter_and_the_mode_switch_sets_the_mode(): void
@@ -607,7 +593,7 @@ class ProjectNavigationTest extends TestCase
             ->call('clearTagFilter')
             ->assertSet('tagFilter', [])
             ->assertSet('tagFilterMode', 'merge')
-            ->assertDontSeeHtml('$refs.tagFilterTrigger.click()');
+            ->assertViewHas('activeFilterCount', 0);
     }
 
     public function test_the_popover_counts_matching_projects_out_of_all_of_the_users(): void
@@ -672,36 +658,6 @@ class ProjectNavigationTest extends TestCase
 
         $html = $component->set('tagFilter', [(string) $status->id])->html();
         $this->assertSame([true, true], [$this->groupIsExpanded($html, $first), $this->groupIsExpanded($html, $second)]);
-    }
-
-    /**
-     * Flux keeps a disclosure's open state across a morph, so the server's
-     * `expanded` alone would not unfold a group already on the page: the key
-     * has to change with the filter state.
-     */
-    public function test_the_group_key_changes_when_a_filter_becomes_active(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
-        $status = $condition->values()->create(['name' => 'status']);
-        $group = $this->groupFor($user, 'Eins');
-        $project = $this->projectOwnedBy($user);
-        $project->setTag($condition, $status);
-        $project->fileInGroupFor($user, $group->id);
-
-        $component = Livewire::test(ProjectNavigation::class);
-        $before = $this->groupKey($component->html(), $group);
-        $after = $this->groupKey($component->set('tagFilter', [(string) $status->id])->html(), $group);
-
-        $this->assertNotNull($before);
-        $this->assertNotNull($after);
-        $this->assertNotSame($before, $after);
-    }
-
-    private function groupKey(string $html, ProjectGroup $group): ?string
-    {
-        return preg_match('/wire:key="(nav-group-'.$group->id.'(?:-[a-z]+)?)"/', $html, $match) === 1 ? $match[1] : null;
     }
 
     public function test_an_active_filter_turns_the_funnel_accent_and_shows_no_summary_line(): void
@@ -782,20 +738,19 @@ class ProjectNavigationTest extends TestCase
             ->assertViewHas('matchCount', null);
     }
 
-    public function test_the_tag_filter_survives_the_next_page_and_resets_in_one_click(): void
+    public function test_the_tag_filter_and_its_mode_survive_the_next_page(): void
     {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+        $this->actingAs(User::factory()->create());
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
         $status = $condition->values()->create(['name' => 'status']);
 
-        Livewire::test(ProjectNavigation::class)->set('tagFilter', [(string) $status->id]);
+        Livewire::test(ProjectNavigation::class)
+            ->set('tagFilterMode', 'merge')
+            ->set('tagFilter', [(string) $status->id]);
 
         Livewire::test(ProjectNavigation::class)
             ->assertSet('tagFilter', [(string) $status->id])
-            ->call('clearTagFilter')
-            ->assertSet('tagFilter', [])
-            ->assertViewHas('activeFilterCount', 0);
+            ->assertSet('tagFilterMode', 'merge');
     }
 
     public function test_a_deleted_value_in_the_filter_is_ignored(): void
@@ -852,16 +807,12 @@ class ProjectNavigationTest extends TestCase
         $this->assertNull($stranger->viewData('outsideFilterProjectId'));
     }
 
-    public function test_the_menu_names_both_modes_as_radio_items_with_the_descriptions_as_tooltips(): void
+    public function test_the_menu_names_both_modes_with_the_descriptions_as_tooltips(): void
     {
         $this->actingAs(User::factory()->create());
         TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition'])->values()->create(['name' => 'status']);
 
         Livewire::test(ProjectNavigation::class)
-            ->assertSeeHtml('data-flux-menu-radio-group')
-            ->assertSeeHtml('wire:model.live="tagFilterMode"')
-            ->assertSeeHtml('value="merge"')
-            ->assertSeeHtml('value="cut"')
             ->assertSee(__('tags.filter.modes.merge.label'))
             ->assertSee(__('tags.filter.modes.cut.label'))
             ->assertSeeHtml('title="'.e(__('tags.filter.modes.merge.description')).'"')

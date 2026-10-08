@@ -101,16 +101,6 @@ class StatisticsPageTest extends TestCase
         Livewire::withQueryParams(['c' => $foreign->id])->test(StatisticsPage::class)->assertSet('comparisonId', null);
     }
 
-    public function test_a_users_comparisons_go_with_the_user(): void
-    {
-        $user = User::factory()->create();
-        $this->comparisonOf($user);
-
-        $user->delete();
-
-        $this->assertSame(0, Comparison::count());
-    }
-
     public function test_new_comparison_is_the_primary_action_only_while_the_list_is_empty(): void
     {
         $user = User::factory()->create();

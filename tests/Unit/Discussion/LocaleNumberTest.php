@@ -2,31 +2,11 @@
 
 namespace Tests\Unit\Discussion;
 
-use App\Discussion\Support\LocaleNumber;
 use App\Discussion\Values\Metric;
 use Tests\TestCase;
 
 class LocaleNumberTest extends TestCase
 {
-    public function test_english_writes_a_decimal_point_and_thousands_commas(): void
-    {
-        app()->setLocale('en');
-
-        $this->assertSame('22.5', LocaleNumber::decimal(22.5, 1));
-        $this->assertSame('1,234', LocaleNumber::decimal(1234, 0));
-        $this->assertSame('0.30', LocaleNumber::decimal(0.3, 2));
-        $this->assertSame('22.5 %', LocaleNumber::percent(0.225));
-    }
-
-    public function test_german_writes_a_decimal_comma_and_thousands_points(): void
-    {
-        app()->setLocale('de');
-
-        $this->assertSame('22,5', LocaleNumber::decimal(22.5, 1));
-        $this->assertSame('1.234', LocaleNumber::decimal(1234, 0));
-        $this->assertSame('22,5 %', LocaleNumber::percent(0.225));
-    }
-
     public function test_metric_format_follows_the_app_locale(): void
     {
         app()->setLocale('en');

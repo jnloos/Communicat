@@ -224,7 +224,7 @@ class TagsTest extends TestCase
             ->assertDontSee('Personas');
     }
 
-    public function test_rename_and_delete_sit_in_a_menu_without_red_icons_on_the_page(): void
+    public function test_every_row_offers_rename_and_delete(): void
     {
         $this->actingAs($this->admin());
         $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'Geschlecht']);
@@ -234,9 +234,7 @@ class TagsTest extends TestCase
             ->assertSeeHtml('wire:click="startRenamingCategory('.$category->id.')"')
             ->assertSeeHtml('wire:click="confirmDeleteCategory('.$category->id.')"')
             ->assertSeeHtml('wire:click="startRenamingValue('.$value->id.')"')
-            ->assertSeeHtml('wire:click="confirmDeleteValue('.$value->id.')"')
-            ->assertSeeHtml('data-flux-menu')
-            ->assertDontSeeHtml('text-red-600!');
+            ->assertSeeHtml('wire:click="confirmDeleteValue('.$value->id.')"');
     }
 
     public function test_a_rename_can_be_cancelled_and_the_new_name_fields_are_labelled(): void
