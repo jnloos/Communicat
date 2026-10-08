@@ -142,7 +142,8 @@
                     @endif
                 </div>
 
-                {{-- Right: the panels still to come, disabled until they are wired up. --}}
+                {{-- Right: the two panels beside the chat. The debug panel appears only
+                     with app.debug on; the statistics panel is always there. --}}
                 <div class="flex items-center justify-end gap-2">
                     @if (config('app.debug'))
                         <flux:tooltip :content="__('chat.controls.debug')" position="top">
