@@ -2,12 +2,14 @@
 
 namespace Tests\Unit\Tags;
 
+use App\Discussion\Values\TagFilter;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\Taggable;
 use App\Models\TagScope;
 use App\Models\TagValue;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
 use Tests\TestCase;
@@ -164,5 +166,40 @@ class HasTagsTest extends TestCase
         $c->moveTo(0);
 
         $this->assertSame(['C', 'A', 'B'], TagCategory::ofScope(TagScope::Persona)->pluck('name')->all());
+    }
+
+    public function test_deleting_a_user_removes_the_tags_of_their_projects(): void
+    {
+        $condition = $this->category(TagScope::Project, 'bedingung', ['status']);
+        $user = User::factory()->create();
+        Project::factory()->create(['user_id' => $user->id])->setTag($condition, $this->value($condition, 'status'));
+
+        $user->delete();
+
+        $this->assertSame(0, Project::count());
+        $this->assertSame(0, Taggable::count());
+    }
+
+    public function test_where_tagged_with_only_unknown_ids_matches_nothing(): void
+    {
+        Project::factory()->create();
+
+        $this->assertSame([], Project::whereTagged([999])->pluck('id')->all());
+    }
+
+    public function test_a_tag_filter_category_without_an_existing_value_matches_nothing(): void
+    {
+        $condition = $this->category(TagScope::Project, 'bedingung', ['status', 'kontrolle']);
+        $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
+        $project = Project::factory()->create();
+        $project->setTag($condition, $this->value($condition, 'status'));
+        $project->setTag($topic, $this->value($topic, 'Schule'));
+
+        $partly = new TagFilter([$condition->id => [$this->value($condition, 'status')->id, 999], $topic->id => [$this->value($topic, 'Schule')->id]]);
+        $emptied = new TagFilter([$condition->id => [999], $topic->id => [$this->value($topic, 'Schule')->id]]);
+
+        $this->assertSame([$project->id], Project::whereTagFilter($partly)->pluck('id')->all());
+        $this->assertSame([], Project::whereTagFilter($emptied)->pluck('id')->all());
+        $this->assertSame([$project->id], Project::whereTagFilter(new TagFilter)->pluck('id')->all());
     }
 }

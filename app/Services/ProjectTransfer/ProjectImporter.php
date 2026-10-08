@@ -135,6 +135,12 @@ class ProjectImporter
         $skipped = [];
 
         foreach ($tags as $categoryName => $valueName) {
+            if (! is_scalar($valueName)) {
+                $skipped[] = (string) $categoryName;
+
+                continue;
+            }
+
             $category = $categories->get((string) $categoryName);
             $value = $category?->values->firstWhere('name', (string) $valueName);
 

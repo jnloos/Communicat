@@ -9,12 +9,12 @@ use App\Discussion\Values\SpeakerShare;
 use App\Discussion\Values\TagFilter;
 use App\Models\Expert;
 use App\Models\Project;
-use App\Models\TagValue;
 
 /**
  * The seated agents whose persona carries the chosen tags (AND across
- * categories, OR within one). A filter without any existing value matches
- * nobody — it must never quietly widen to "everyone".
+ * categories, OR within one). An empty filter, or a category none of whose
+ * values exists any more, matches nobody — it must never quietly widen to
+ * "everyone".
  */
 final class PersonaTagsReference implements AgentReference, NamesTagValues
 {
@@ -44,14 +44,12 @@ final class PersonaTagsReference implements AgentReference, NamesTagValues
 
     public function pick(Project $project, ShareReport $report, Metric $metric): array
     {
-        $existing = TagValue::whereKey($this->tags->valueIds())->pluck('id')->all();
-
-        if ($existing === []) {
+        if ($this->tags->isEmpty()) {
             return [new AgentGroup('', [])];
         }
 
         $ids = Expert::whereKey(array_map(fn (SpeakerShare $s) => $s->expertId, $report->speakers))
-            ->whereTagged($existing)
+            ->whereTagFilter($this->tags)
             ->orderBy('id')
             ->pluck('id')
             ->map(fn ($id) => (int) $id)

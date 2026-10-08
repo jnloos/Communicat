@@ -7,6 +7,7 @@ use App\Models\Expert;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use Flux\Flux;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -76,8 +77,12 @@ class ExpertEditor extends Component
         $expert->name = $this->name;
         $expert->role = $this->role;
         $expert->description = $this->description;
-        $expert->save();
-        $expert->syncTags($this->tagSelection);
+
+        // One transaction, so a forged tag value leaves no new or half-edited expert behind.
+        DB::transaction(function () use ($expert) {
+            $expert->save();
+            $expert->syncTags($this->tagSelection);
+        });
 
         if (! is_null($this->avatarUpload)) {
             $this->deleteAvatar($expert->avatar_url);

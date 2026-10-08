@@ -11,6 +11,7 @@ use App\Models\TagCategory;
 use App\Models\TagScope;
 use Flux\Flux;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
@@ -103,8 +104,12 @@ class EditProject extends Component
         $project->model = $this->model;
         $project->summarize_threshold = (int) $this->summarizeThreshold;
         $project->summarize_oldest = (int) $this->summarizeOldest;
-        $project->save();
-        $project->syncTags($this->tagSelection);
+
+        // One transaction, so a forged tag value leaves the project as it was.
+        DB::transaction(function () use ($project) {
+            $project->save();
+            $project->syncTags($this->tagSelection);
+        });
 
         $this->dispatch('project_edited');
         Flux::modal('edit-project')->close();

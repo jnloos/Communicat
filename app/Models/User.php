@@ -47,6 +47,16 @@ class User extends Authenticatable
         ];
     }
 
+    protected static function booted(): void
+    {
+        // projects.user_id cascades in the database, which would skip every
+        // project's own deleting hooks (HasTags clears its taggables there).
+        // Deleting through Eloquent first leaves no orphaned tag assignment.
+        static::deleting(function (User $user): void {
+            $user->ownedProjects()->each(fn (Project $project) => $project->delete());
+        });
+    }
+
     public function projects(): MorphToMany
     {
         return $this->morphToMany(Project::class, 'contributor', 'project_contributors')

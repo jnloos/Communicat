@@ -15,7 +15,7 @@ class SeriesProjects
     {
         return Project::query()
             ->accessibleBy($user)
-            ->whereTagged($series->projectTags->valueIds())
+            ->whereTagFilter($series->projectTags)
             ->when($series->pipeline !== null, fn ($query) => $query->where('pipeline', $series->pipeline))
             ->when($series->model !== null, fn ($query) => $query->where('model', $series->model))
             ->orderBy('id')

@@ -25,10 +25,7 @@ class Comparison extends Model
     /** @return list<SeriesDefinition> */
     public function seriesDefinitions(): array
     {
-        return array_values(array_map(
-            fn (mixed $series) => SeriesDefinition::fromArray(is_array($series) ? $series : []),
-            $this->series ?? [],
-        ));
+        return SeriesDefinition::listFrom($this->series ?? []);
     }
 
     public function comparisonView(): ComparisonView

@@ -118,6 +118,7 @@ class AgentReferenceTest extends TestCase
         $filter = TagFilter::fromArray(['3' => ['5', '5', ''], '4' => [], 'x' => ['1']]);
 
         $this->assertSame([3 => [5]], $filter->toArray());
-        $this->assertSame([], $filter->without([5])->toArray());
+        // Emptied, the category would stop filtering and widen to everything; it keeps its dead id.
+        $this->assertSame([3 => [5]], $filter->without([5])->toArray());
     }
 }

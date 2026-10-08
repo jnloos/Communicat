@@ -50,9 +50,35 @@ final readonly class TagFilter
         return $this->byCategory === [];
     }
 
-    /** @param  list<int>  $ids */
+    /**
+     * Drops values that no longer exist. A category whose chosen values are
+     * all gone keeps them: emptied, it would stop filtering and silently widen
+     * the filter to everything, so it stays unsatisfiable instead.
+     *
+     * @param  list<int>  $ids
+     */
     public function without(array $ids): self
     {
-        return self::fromArray(array_map(fn (array $values) => array_values(array_diff($values, $ids)), $this->byCategory));
+        return new self(array_map(
+            fn (array $values) => array_values(array_diff($values, $ids)) ?: $values,
+            $this->byCategory,
+        ));
+    }
+
+    /**
+     * True when some category names none of the given existing values, so no
+     * model can match the filter.
+     *
+     * @param  list<int>  $existingIds
+     */
+    public function isUnsatisfiable(array $existingIds): bool
+    {
+        foreach ($this->byCategory as $values) {
+            if (array_intersect($values, $existingIds) === []) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

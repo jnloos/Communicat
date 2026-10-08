@@ -35,6 +35,17 @@ final readonly class SeriesDefinition
         );
     }
 
+    /**
+     * Stored or form rows as definitions; a row that is not an array degrades
+     * to an empty series rather than failing.
+     *
+     * @return list<self>
+     */
+    public static function listFrom(array $rows): array
+    {
+        return array_values(array_map(fn (mixed $row) => self::fromArray(is_array($row) ? $row : []), $rows));
+    }
+
     public function toArray(): array
     {
         return [

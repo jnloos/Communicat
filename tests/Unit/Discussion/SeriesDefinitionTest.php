@@ -7,6 +7,7 @@ use App\Discussion\Values\ComparisonDisplay;
 use App\Discussion\Values\ComparisonView;
 use App\Discussion\Values\Metric;
 use App\Discussion\Values\SeriesDefinition;
+use App\Discussion\Values\TagFilter;
 use PHPUnit\Framework\TestCase;
 
 class SeriesDefinitionTest extends TestCase
@@ -37,7 +38,18 @@ class SeriesDefinitionTest extends TestCase
         ])->withoutTagValues([6, 11]);
 
         $this->assertSame([2 => [5]], $series->projectTags->toArray());
-        $this->assertSame([], $series->reference->tagValueIds());
+        // Emptied, the persona category would stop filtering; it keeps its dead id instead.
+        $this->assertSame([11], $series->reference->tagValueIds());
+    }
+
+    public function test_a_category_whose_values_all_vanished_stays_unsatisfiable(): void
+    {
+        $filter = TagFilter::fromArray([2 => [5, 6], 3 => [7]])->without([7]);
+
+        $this->assertSame([2 => [5, 6], 3 => [7]], $filter->toArray());
+        $this->assertTrue($filter->isUnsatisfiable([5, 6]));
+        $this->assertFalse($filter->isUnsatisfiable([5, 7]));
+        $this->assertFalse((new TagFilter)->isUnsatisfiable([]));
     }
 
     public function test_a_broken_view_falls_back_to_the_defaults(): void
