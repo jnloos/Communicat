@@ -71,13 +71,10 @@ return [
         'label' => 'Projects',
         'button' => 'Filter projects',
         'button_active' => 'Filter projects (:count active)',
-        'title' => 'Filter projects',
-        'clear' => 'Clear',
         'clear_label' => 'Clear filter',
         'no_matches' => 'No project matches the filter.',
         'outside' => ':title – does not match the active filter',
         'summary' => ':matches of :total · :values',
-        'count' => '{1}:matches of :total project|[0,*]:matches of :total projects',
         'modes' => [
             'merge' => [
                 'label' => 'Merge',

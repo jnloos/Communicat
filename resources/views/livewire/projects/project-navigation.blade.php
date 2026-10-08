@@ -47,23 +47,32 @@
                             class="cursor-pointer"
                         />
 
-                        <flux:popover class="flex w-64 flex-col gap-3" wire:key="tag-filter-popover">
-                            <flux:heading size="sm">{{ __('tags.filter.title') }}</flux:heading>
-
-                            <div class="flex flex-col gap-1.5">
+                        <flux:popover class="flex w-56 flex-col gap-2.5" wire:key="tag-filter-popover">
+                            {{-- Each mode explains itself in its tooltip, so the
+                                 popover needs no heading and no description line. --}}
+                            <div class="flex items-center justify-between gap-2">
                                 <flux:radio.group wire:model.live="tagFilterMode" variant="segmented" size="sm" class="w-fit">
-                                    <flux:radio :value="\App\Livewire\Projects\ProjectNavigation::FILTER_MERGE" :label="__('tags.filter.modes.merge.label')" class="cursor-pointer" />
-                                    <flux:radio :value="\App\Livewire\Projects\ProjectNavigation::FILTER_CUT" :label="__('tags.filter.modes.cut.label')" class="cursor-pointer" />
+                                    <flux:radio :value="\App\Livewire\Projects\ProjectNavigation::FILTER_MERGE" :label="__('tags.filter.modes.merge.label')" :title="__('tags.filter.modes.merge.description')" class="cursor-pointer" />
+                                    <flux:radio :value="\App\Livewire\Projects\ProjectNavigation::FILTER_CUT" :label="__('tags.filter.modes.cut.label')" :title="__('tags.filter.modes.cut.description')" class="cursor-pointer" />
                                 </flux:radio.group>
 
-                                <flux:text size="sm">{{ __("tags.filter.modes.{$tagFilterMode}.description") }}</flux:text>
+                                <flux:button
+                                    size="xs"
+                                    variant="subtle"
+                                    icon="x-mark"
+                                    wire:click="clearTagFilter"
+                                    :disabled="$activeFilterCount === 0"
+                                    :aria-label="__('tags.filter.clear_label')"
+                                    :tooltip="__('tags.filter.clear_label')"
+                                    class="cursor-pointer"
+                                />
                             </div>
 
                             {{-- One group over every category: Flux's checkbox group
                                  collects every ui-checkbox below it, headings in
                                  between or not, so all pills write the one flat
                                  $tagFilter list. --}}
-                            <flux:checkbox.group wire:model.live="tagFilter" variant="pills" class="flex-col! gap-3!">
+                            <flux:checkbox.group wire:model.live="tagFilter" variant="pills" class="flex-col! gap-2.5!">
                                 @foreach ($tagCategories as $category)
                                     <div class="flex flex-col gap-1.5" wire:key="tag-filter-category-{{ $category->id }}">
                                         <div class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-300">{{ $category->label() }}</div>
@@ -82,16 +91,6 @@
                                     </div>
                                 @endforeach
                             </flux:checkbox.group>
-
-                            <flux:separator variant="subtle" />
-
-                            <div class="flex items-center justify-between gap-2">
-                                <flux:text size="sm">{{ trans_choice('tags.filter.count', $projectCount, ['matches' => $matchCount, 'total' => $projectCount]) }}</flux:text>
-
-                                <flux:button size="xs" variant="ghost" wire:click="clearTagFilter" :disabled="$activeFilterCount === 0" class="cursor-pointer">
-                                    {{ __('tags.filter.clear') }}
-                                </flux:button>
-                            </div>
                         </flux:popover>
                     </flux:dropdown>
 

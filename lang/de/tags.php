@@ -71,13 +71,10 @@ return [
         'label' => 'Projekte',
         'button' => 'Projekte filtern',
         'button_active' => 'Projekte filtern (:count aktiv)',
-        'title' => 'Projekte filtern',
-        'clear' => 'Zurücksetzen',
         'clear_label' => 'Filter zurücksetzen',
         'no_matches' => 'Kein Projekt passt zum Filter.',
         'outside' => ':title – passt nicht zum aktiven Filter',
         'summary' => ':matches von :total · :values',
-        'count' => '{1}:matches von :total Projekt|[0,*]:matches von :total Projekten',
         'modes' => [
             'merge' => [
                 'label' => 'Merge',
