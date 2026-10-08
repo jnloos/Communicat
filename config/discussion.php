@@ -34,4 +34,18 @@ return [
     'summarize_threshold' => (int) env('DISCUSSION_SUMMARIZE_THRESHOLD', 40),
     'summarize_oldest' => (int) env('DISCUSSION_SUMMARIZE_OLDEST', 20),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Verlauf der Redeanteile
+    |--------------------------------------------------------------------------
+    | share_window — über wie viele der letzten gesprochenen Turns der gleitende
+    |                Anteil gebildet wird (ShareTrajectory). Der kumulative
+    |                Anteil glättet sich rein rechnerisch (ein Turn verschiebt
+    |                ihn nach n Turns um höchstens ~1/n); erst ein stabiler
+    |                gleitender Anteil zeigt, dass der Prozess selbst stationär
+    |                ist. Kleiner = empfindlicher, aber verrauschter (ein Turn
+    |                bewegt ihn um 1/share_window).
+    */
+    'share_window' => (int) env('DISCUSSION_SHARE_WINDOW', 20),
+
 ];
