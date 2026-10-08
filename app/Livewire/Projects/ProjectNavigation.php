@@ -55,7 +55,7 @@ class ProjectNavigation extends Component
 
     /**
      * Project tag values the list is narrowed to, combined by $tagFilterMode.
-     * Bound to the popover's pills (one flux:checkbox.group over every
+     * Bound to the menu's checkboxes (one flux:menu.checkbox.group over every
      * category). Personal and kept in the session, so it survives navigating
      * from project to project.
      *
@@ -362,7 +362,7 @@ class ProjectNavigation extends Component
 
         $tagCategories = TagCategory::ofScope(TagScope::Project)->with('values')->get();
 
-        // The counts live in the popover, which exists only once there are
+        // The counts live in the menu, which exists only once there are
         // categories to filter by; without one they would be two wasted queries.
         $hasCategories = $tagCategories->isNotEmpty();
 

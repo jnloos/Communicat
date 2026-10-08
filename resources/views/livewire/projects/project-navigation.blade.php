@@ -13,17 +13,15 @@
 
          The funnel stays an outline icon without a badge; an active filter
          shows as one summary line underneath ("26 of 47 · Condition:
-         status"), whose text opens the popover and whose × clears.
+         status"), whose text opens the menu and whose × clears.
 
-         A popover, not a flux:menu: the panel holds a mode switch and pills,
-         which a menu's roving focus and item roles do not fit.
-
-         The popover stays open while its pills and switch re-render the
-         component: Flux keeps the open state on the overlay element itself (the
-         browser's top layer, plus data-open as a "durable" attribute it restores
-         whenever a morph strips it). That only holds while Livewire morphs the
-         same element instead of replacing it, hence the fixed wire:keys on the
-         dropdown and its popover, and a label row that is never conditional. --}}
+         The menu is a plain flux:menu with keep-open, so ticking a value or
+         switching the mode re-renders the component without closing it. Flux
+         keeps the open state on the overlay element itself (the browser's top
+         layer, plus data-open as a "durable" attribute it restores whenever a
+         morph strips it). That only holds while Livewire morphs the same
+         element instead of replacing it, hence the fixed wire:keys on the
+         dropdown and its menu, and a label row that is never conditional. --}}
     <div class="sticky top-0 z-10 mb-1 flex flex-col bg-zinc-50 dark:bg-zinc-900" x-data>
         <div class="flex h-8 items-center justify-between ps-3 pe-1">
             <span class="truncate text-xs font-medium uppercase leading-none tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('tags.filter.label') }}</span>
@@ -47,51 +45,32 @@
                             class="cursor-pointer"
                         />
 
-                        <flux:popover class="flex w-56 flex-col gap-2.5" wire:key="tag-filter-popover">
-                            {{-- Each mode explains itself in its tooltip, so the
-                                 popover needs no heading and no description line. --}}
-                            <div class="flex items-center justify-between gap-2">
-                                <flux:radio.group wire:model.live="tagFilterMode" variant="segmented" size="sm" class="w-fit">
-                                    <flux:radio :value="\App\Livewire\Projects\ProjectNavigation::FILTER_MERGE" :label="__('tags.filter.modes.merge.label')" :title="__('tags.filter.modes.merge.description')" class="cursor-pointer" />
-                                    <flux:radio :value="\App\Livewire\Projects\ProjectNavigation::FILTER_CUT" :label="__('tags.filter.modes.cut.label')" :title="__('tags.filter.modes.cut.description')" class="cursor-pointer" />
-                                </flux:radio.group>
-
-                                <flux:button
-                                    size="xs"
-                                    variant="subtle"
-                                    icon="x-mark"
-                                    wire:click="clearTagFilter"
-                                    :disabled="$activeFilterCount === 0"
-                                    :aria-label="__('tags.filter.clear_label')"
-                                    :tooltip="__('tags.filter.clear_label')"
-                                    class="cursor-pointer"
-                                />
-                            </div>
+                        <flux:menu keep-open wire:key="tag-filter-menu">
+                            {{-- Each mode explains itself in its tooltip. --}}
+                            <flux:menu.radio.group wire:model.live="tagFilterMode">
+                                <flux:menu.radio :value="\App\Livewire\Projects\ProjectNavigation::FILTER_MERGE" :title="__('tags.filter.modes.merge.description')">{{ __('tags.filter.modes.merge.label') }}</flux:menu.radio>
+                                <flux:menu.radio :value="\App\Livewire\Projects\ProjectNavigation::FILTER_CUT" :title="__('tags.filter.modes.cut.description')">{{ __('tags.filter.modes.cut.label') }}</flux:menu.radio>
+                            </flux:menu.radio.group>
 
                             {{-- One group over every category: Flux's checkbox group
-                                 collects every ui-checkbox below it, headings in
-                                 between or not, so all pills write the one flat
-                                 $tagFilter list. --}}
-                            <flux:checkbox.group wire:model.live="tagFilter" variant="pills" class="flex-col! gap-2.5!">
+                                 collects every menu checkbox below it, headings and
+                                 separators in between or not, so all values write
+                                 the one flat $tagFilter list. --}}
+                            <flux:menu.checkbox.group wire:model.live="tagFilter">
                                 @foreach ($tagCategories as $category)
-                                    <div class="flex flex-col gap-1.5" wire:key="tag-filter-category-{{ $category->id }}">
-                                        <div class="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-300">{{ $category->label() }}</div>
+                                    <flux:menu.separator />
+                                    <flux:menu.heading>{{ $category->label() }}</flux:menu.heading>
 
-                                        <div class="flex flex-wrap gap-1.5">
-                                            @foreach ($category->values as $value)
-                                                <flux:checkbox
-                                                    variant="pills"
-                                                    :value="(string) $value->id"
-                                                    :label="$value->name"
-                                                    wire:key="tag-filter-{{ $value->id }}"
-                                                    class="cursor-pointer"
-                                                />
-                                            @endforeach
-                                        </div>
-                                    </div>
+                                    @foreach ($category->values as $value)
+                                        <flux:menu.checkbox :value="(string) $value->id" wire:key="tag-filter-{{ $value->id }}">{{ $value->name }}</flux:menu.checkbox>
+                                    @endforeach
                                 @endforeach
-                            </flux:checkbox.group>
-                        </flux:popover>
+                            </flux:menu.checkbox.group>
+
+                            <flux:menu.separator />
+
+                            <flux:menu.item icon="x-mark" wire:click="clearTagFilter" :disabled="$activeFilterCount === 0">{{ __('tags.filter.clear_label') }}</flux:menu.item>
+                        </flux:menu>
                     </flux:dropdown>
 
                 </div>
@@ -102,7 +81,7 @@
             <div class="flex items-center gap-1 ps-3 pe-1 pb-1">
                 {{-- Tags as "category: value", like every badge; the tooltip
                      holds the full list once the line truncates. Clicking the
-                     text opens the popover through the funnel itself, so
+                     text opens the menu through the funnel itself, so
                      there is still only one dropdown to keep open. --}}
                 <button
                     type="button"

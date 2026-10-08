@@ -564,16 +564,35 @@ class ProjectNavigationTest extends TestCase
         Livewire::test(ProjectNavigation::class)->assertSet('tagFilterMode', 'merge');
     }
 
-    public function test_the_popover_offers_the_values_as_flux_pills_bound_to_the_filter(): void
+    public function test_the_menu_offers_the_values_as_checkboxes_bound_to_the_filter(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $other = TagCategory::create(['scope' => TagScope::Project, 'name' => 'title holder']);
+        $true = $other->values()->create(['name' => 'true']);
+
+        Livewire::test(ProjectNavigation::class)
+            ->assertSeeHtml('data-flux-menu-checkbox-group')
+            ->assertSeeHtml('wire:model.live="tagFilter"')
+            ->assertSeeHtml('value="'.$status->id.'"')
+            ->assertSeeHtml('value="'.$true->id.'"')
+            ->assertSeeHtml($condition->label().'</div>')
+            ->assertSeeHtml($other->label().'</div>')
+            ->assertSeeHtml('keep-open');
+    }
+
+    public function test_ticking_values_sets_the_filter_and_the_mode_switch_sets_the_mode(): void
     {
         $this->actingAs(User::factory()->create());
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
         $status = $condition->values()->create(['name' => 'status']);
 
         Livewire::test(ProjectNavigation::class)
-            ->assertSeeHtml('wire:model.live="tagFilter"')
-            ->assertSeeHtml('data-flux-checkbox-pills')
-            ->assertSeeHtml('value="'.$status->id.'"');
+            ->set('tagFilter', [(string) $status->id])
+            ->assertSet('tagFilter', [(string) $status->id])
+            ->set('tagFilterMode', 'merge')
+            ->assertSet('tagFilterMode', 'merge');
     }
 
     public function test_clearing_empties_the_values_but_keeps_the_mode(): void
@@ -833,28 +852,34 @@ class ProjectNavigationTest extends TestCase
         $this->assertNull($stranger->viewData('outsideFilterProjectId'));
     }
 
-    public function test_the_popover_names_both_modes(): void
+    public function test_the_menu_names_both_modes_as_radio_items_with_the_descriptions_as_tooltips(): void
     {
         $this->actingAs(User::factory()->create());
         TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition'])->values()->create(['name' => 'status']);
 
         Livewire::test(ProjectNavigation::class)
+            ->assertSeeHtml('data-flux-menu-radio-group')
+            ->assertSeeHtml('wire:model.live="tagFilterMode"')
+            ->assertSeeHtml('value="merge"')
+            ->assertSeeHtml('value="cut"')
             ->assertSee(__('tags.filter.modes.merge.label'))
             ->assertSee(__('tags.filter.modes.cut.label'))
-            ->assertSee('Projects that match every picked category');
-    }
-
-    public function test_the_popover_is_minimal_with_the_descriptions_as_tooltips_and_an_icon_clear_button(): void
-    {
-        $this->actingAs(User::factory()->create());
-        TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition'])->values()->create(['name' => 'status']);
-
-        Livewire::test(ProjectNavigation::class)
             ->assertSeeHtml('title="'.e(__('tags.filter.modes.merge.description')).'"')
             ->assertSeeHtml('title="'.e(__('tags.filter.modes.cut.description')).'"')
-            ->assertDontSee('>'.__('tags.filter.modes.cut.description').'<', false)
-            ->assertDontSee('>'.__('tags.filter.modes.merge.description').'<', false)
-            ->assertDontSee('>Filter projects<', false)
-            ->assertSeeHtml('aria-label="'.e(__('tags.filter.clear_label')).'"');
+            ->assertDontSee('>'.__('tags.filter.modes.cut.description').'<', false);
+    }
+
+    public function test_the_clear_item_is_disabled_without_a_selection_and_enabled_with_one(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $item = 'wire:click="clearTagFilter"';
+
+        $empty = Livewire::test(ProjectNavigation::class)->assertSeeHtml($item);
+        $this->assertMatchesRegularExpression('/<button[^>]*wire:click="clearTagFilter"[^>]*disabled="disabled"/', $empty->html());
+
+        $chosen = Livewire::test(ProjectNavigation::class)->set('tagFilter', [(string) $status->id]);
+        $this->assertDoesNotMatchRegularExpression('/<button[^>]*wire:click="clearTagFilter"[^>]*disabled="disabled"/', $chosen->html());
     }
 }
