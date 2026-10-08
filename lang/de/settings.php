@@ -15,6 +15,7 @@ return [
         'password' => 'Passwort',
         'appearance' => 'Darstellung',
         'users' => 'Nutzer',
+        'tags' => 'Tags',
     ],
 
     'profile' => [

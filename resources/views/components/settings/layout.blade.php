@@ -13,6 +13,7 @@
             <flux:navbar.item :href="route('settings.appearance')" :current="request()->routeIs('settings.appearance')" wire:navigate>{{ __('settings.nav.appearance') }}</flux:navbar.item>
             @if(auth()->user()?->is_admin)
                 <flux:navbar.item :href="route('settings.users')" :current="request()->routeIs('settings.users')" wire:navigate>{{ __('settings.nav.users') }}</flux:navbar.item>
+                <flux:navbar.item :href="route('settings.tags')" :current="request()->routeIs('settings.tags')" wire:navigate>{{ __('settings.nav.tags') }}</flux:navbar.item>
             @endif
         </flux:navbar>
     </div>
@@ -24,6 +25,7 @@
             <flux:navlist.item :href="route('settings.appearance')" :current="request()->routeIs('settings.appearance')" wire:navigate>{{ __('settings.nav.appearance') }}</flux:navlist.item>
             @if(auth()->user()?->is_admin)
                 <flux:navlist.item :href="route('settings.users')" :current="request()->routeIs('settings.users')" wire:navigate>{{ __('settings.nav.users') }}</flux:navlist.item>
+                <flux:navlist.item :href="route('settings.tags')" :current="request()->routeIs('settings.tags')" wire:navigate>{{ __('settings.nav.tags') }}</flux:navlist.item>
             @endif
         </flux:navlist>
     </div>

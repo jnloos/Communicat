@@ -1,11 +1,12 @@
 <?php
 
+use App\Http\Controllers\ProjectExportController;
 use App\Livewire\Debug\JobDebugPanel;
-use App\Livewire\Settings\Users;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
-use App\Http\Controllers\ProjectExportController;
+use App\Livewire\Settings\Tags;
+use App\Livewire\Settings\Users;
 use App\Models\Project;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Gate;
@@ -17,6 +18,7 @@ Route::get('/', function (Request $request) {
     if ($projectId && Project::find($projectId)) {
         return redirect()->route('project.show', ['project' => $projectId]);
     }
+
     // Redirect to project creation
     return redirect()->route('project.new');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -37,13 +39,13 @@ Route::middleware(['auth', 'verified'])
             }
 
             Cookie::queue('curr_project', str($project->id), minutes: 60 * 24 * 31);
+
             return view('project', compact('project'));
         })->name('show');
 
         Route::get('{project}/export/json', [ProjectExportController::class, 'json'])
             ->name('export.json');
     });
-
 
 Route::get('experts', function () {
     return view('experts');
@@ -56,6 +58,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/password', Password::class)->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
     Route::get('settings/users', Users::class)->middleware('admin')->name('settings.users');
+    Route::get('settings/tags', Tags::class)->middleware('admin')->name('settings.tags');
 
     Route::get('debug/jobs', JobDebugPanel::class)->name('debug.jobs');
 });
