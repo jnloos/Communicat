@@ -61,7 +61,7 @@
 
             <flux:card wire:key="series-{{ $index }}" class="space-y-5">
                 <div class="flex items-center gap-3">
-                    <span class="size-3 shrink-0 rounded-full" style="background-color: var(--color-{{ $seriesColors[$index] }}-500)"></span>
+                    <span class="size-3 shrink-0 rounded-full" style="background-color: var(--color-{{ $seriesColors[$index] }})"></span>
                     <flux:input size="sm" wire:model.blur="series.{{ $index }}.label" :aria-label="__('comparisons.series.label')"
                         :placeholder="__('comparisons.series.label')" class="flex-1" />
                     <flux:button variant="ghost" size="sm" icon="trash" wire:click="confirmRemoveSeries({{ $index }})"
@@ -239,7 +239,7 @@
         @if ($paletteRepeats || $excluded->isNotEmpty())
             <flux:callout variant="warning" icon="exclamation-triangle">
                 @if ($paletteRepeats)
-                    <flux:callout.text>{{ __('comparisons.results.palette_repeats', ['count' => $paletteSize]) }}</flux:callout.text>
+                    <flux:callout.text>{{ __('comparisons.results.palette_repeats') }}</flux:callout.text>
                 @endif
                 @foreach ($excluded as $result)
                     <flux:callout.text>
@@ -266,7 +266,7 @@
                         <flux:table.row wire:key="result-row-{{ $loop->index }}">
                             <flux:table.cell class="align-top">
                                 <span class="flex items-center gap-2">
-                                    <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $entry['color'] }}-500)"></span>
+                                    <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $entry['color'] }})"></span>
                                     <span class="truncate font-medium text-zinc-800 dark:text-white">{{ $entry['label'] }}</span>
                                 </span>
                                 <details class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
@@ -301,7 +301,7 @@
             <flux:chart wire:key="comparison-curve-{{ md5(json_encode($trajectoryRows)) }}" :value="$trajectoryRows" class="aspect-[2/1]">
                 <flux:chart.svg>
                     @foreach ($lines as $index => $entry)
-                        <flux:chart.line :field="'l'.$index" curve="none" style="color: var(--color-{{ $entry['lineColor'] }}-500)" />
+                        <flux:chart.line :field="'l'.$index" curve="none" style="color: var(--color-{{ $entry['lineColor'] }})" />
                     @endforeach
 
                     <flux:chart.axis axis="x" field="turn" scale="linear">
@@ -328,7 +328,7 @@
             <div class="flex flex-wrap justify-center gap-x-4 gap-y-1">
                 @foreach ($lines as $entry)
                     <flux:chart.legend :label="$entry['label']" class="p-0!">
-                        <flux:chart.legend.indicator style="background-color: var(--color-{{ $entry['lineColor'] }}-500)" />
+                        <flux:chart.legend.indicator style="background-color: var(--color-{{ $entry['lineColor'] }})" />
                     </flux:chart.legend>
                 @endforeach
             </div>

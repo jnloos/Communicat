@@ -4,6 +4,7 @@ namespace App\Livewire\Statistics;
 
 use App\Discussion\Support\LocaleNumber;
 use App\Discussion\Values\Metric;
+use App\Discussion\Values\SeriesColor;
 use App\Discussion\Values\SeriesLine;
 use App\Discussion\Values\SeriesResult;
 
@@ -13,7 +14,7 @@ use App\Discussion\Values\SeriesResult;
  * equal-share mark. It computes no statistic itself; every number is a
  * SeriesLine's mean, min or max.
  *
- * @phpstan-type Line array{label: string, short: string, color: string, lineColor: string, series: int, line: SeriesLine}
+ * @phpstan-type Line array{label: string, short: string, color: SeriesColor, lineColor: SeriesColor, series: int, line: SeriesLine}
  */
 final class ResultCharts
 {
@@ -68,7 +69,7 @@ final class ResultCharts
      * Bars grouped by series: all lines of one series share its colour and
      * are told apart by their row label ("Seat 2").
      *
-     * @return list<array{label: string, color: string, rows: list<array{label: string, mean: float, min: float, max: float, meanText: string, rangeText: string, n: int, text: string}>}>
+     * @return list<array{label: string, color: SeriesColor, rows: list<array{label: string, mean: float, min: float, max: float, meanText: string, rangeText: string, n: int, text: string}>}>
      */
     public function barGroups(): array
     {
@@ -100,10 +101,11 @@ final class ResultCharts
      * One pie per series with a line. `each` gives a slice per seat (its mean
      * share); any other reference gives the referenced agents' mean share and
      * the rest as "Others". Keys follow Flux's pie datum: `color` must be a
-     * pie palette name, `id` becomes the sector's data-key, which app.css
-     * reads to tint the slices of one series (`tint-N`, `others`).
+     * pie palette name (the hue), `id` becomes the sector's data-key, which
+     * app.css reads to tint the slices of one series (`tint-N`, `others`).
+     * The series' own shade reaches the sectors through `--pie-fill`.
      *
-     * @return list<array{label: string, color: string, n: int, slices: list<array{id: string, name: string, value: float, share: string, color: string}>}>
+     * @return list<array{label: string, color: SeriesColor, n: int, slices: list<array{id: string, name: string, value: float, share: string, color: string}>}>
      */
     public function pies(): array
     {
@@ -123,10 +125,10 @@ final class ResultCharts
             $color = $entries[0]['color'];
             $perSeat = $entries[0]['line']->key !== '';
             $slices = $perSeat
-                ? array_map(fn (array $entry, int $i) => $this->slice("tint-{$i}", $entry['short'], $entry['line']->mean(), $color), $entries, array_keys($entries))
+                ? array_map(fn (array $entry, int $i) => $this->slice("tint-{$i}", $entry['short'], $entry['line']->mean(), $color->hue), $entries, array_keys($entries))
                 : [
-                    $this->slice('tint-0', $result->label, $entries[0]['line']->mean(), $color),
-                    $this->slice('others', __('comparisons.results.others'), max(0.0, 1 - $entries[0]['line']->mean()), $color),
+                    $this->slice('tint-0', $result->label, $entries[0]['line']->mean(), $color->hue),
+                    $this->slice('others', __('comparisons.results.others'), max(0.0, 1 - $entries[0]['line']->mean()), $color->hue),
                 ];
 
             $pies[] = [

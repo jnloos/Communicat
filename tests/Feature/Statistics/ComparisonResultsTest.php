@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Statistics;
 
+use App\Discussion\Values\SeriesColor;
 use App\Livewire\Statistics\ComparisonEditor;
 use App\Models\Comparison;
 use App\Models\Expert;
@@ -71,7 +72,7 @@ class ComparisonResultsTest extends TestCase
         $this->assertSame(0.75, $bar['min']);
         $this->assertSame(0.75, $bar['max']);
         $this->assertSame(1.0, $component->viewData('barScale'));
-        $this->assertSame('indigo', $group['color']);
+        $this->assertSame('indigo-500', (string) $group['color']);
         $component->assertSee('75.0 %')
             ->assertSee('75.0–75.0 % · n = 1')
             ->assertSee(__('comparisons.results.bar_text', ['mean' => '75.0 %', 'range' => '75.0–75.0 %', 'n' => 1]));
@@ -195,11 +196,23 @@ class ComparisonResultsTest extends TestCase
 
     public function test_more_lines_than_colours_says_so(): void
     {
-        $this->editor()->assertDontSee(__('comparisons.results.palette_repeats', ['count' => count(ComparisonEditor::PALETTE)]));
+        $this->editor()->assertDontSee(__('comparisons.results.palette_repeats'));
 
-        $this->comparison->update(['series' => array_fill(0, count(ComparisonEditor::PALETTE) + 1, $this->comparison->series[0])]);
+        $this->comparison->update(['series' => array_fill(0, count(SeriesColor::HUES) + 1, $this->comparison->series[0])]);
 
-        $this->editor()->assertSee(__('comparisons.results.palette_repeats', ['count' => count(ComparisonEditor::PALETTE)]));
+        $this->editor()->assertSee(__('comparisons.results.palette_repeats'));
+    }
+
+    public function test_a_stored_colour_reaches_every_display(): void
+    {
+        $this->comparison->update(['series' => [[...$this->comparison->series[0], 'color' => 'teal-300']]]);
+
+        $component = $this->editor()->assertSee('--color-teal-300', false);
+        $this->assertSame('teal-300', (string) $component->set('viewSettings.display', 'bars')->viewData('barGroups')[0]['color']);
+        $component->assertSee('--color-teal-300', false);
+        $this->assertSame('teal', $component->set('viewSettings.display', 'pie')->viewData('pies')[0]['slices'][0]['color']);
+        $component->assertSee('--color-teal-300', false);
+        $this->assertSame('teal-300', (string) $component->viewData('lines')[0]['lineColor'], 'a one-line series draws its curve in its colour');
     }
 
     public function test_bars_mark_the_equal_share_when_every_run_has_the_same_group_size(): void
@@ -241,11 +254,11 @@ class ComparisonResultsTest extends TestCase
 
         $groups = $component->viewData('barGroups');
         $this->assertCount(1, $groups);
-        $this->assertSame('indigo', $groups[0]['color']);
+        $this->assertSame('indigo-500', (string) $groups[0]['color']);
         $this->assertSame([__('comparisons.results.seat', ['seat' => 1]), __('comparisons.results.seat', ['seat' => 2])], array_column($groups[0]['rows'], 'label'));
 
         $lines = $component->viewData('lines');
-        $this->assertSame(['indigo', 'indigo'], array_column($lines, 'color'));
+        $this->assertSame(['indigo-500', 'indigo-500'], array_map('strval', array_column($lines, 'color')));
         $this->assertNotSame($lines[0]['lineColor'], $lines[1]['lineColor']);
     }
 

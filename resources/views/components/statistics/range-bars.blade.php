@@ -22,7 +22,7 @@
         <div class="space-y-2" wire:key="bar-group-{{ $loop->index }}">
             @if (! $single)
                 <div class="flex items-center gap-2 text-sm font-medium text-zinc-800 dark:text-white">
-                    <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $group['color'] }}-500)"></span>
+                    <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $group['color'] }})"></span>
                     <span class="truncate">{{ $group['label'] }}</span>
                 </div>
             @endif
@@ -31,14 +31,14 @@
                 <div class="{{ $grid }}" wire:key="bar-{{ $loop->parent->index }}-{{ $loop->index }}">
                     <span class="flex min-w-0 items-center gap-2 text-sm text-zinc-600 dark:text-zinc-300">
                         @if ($single)
-                            <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $group['color'] }}-500)"></span>
+                            <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $group['color'] }})"></span>
                         @endif
                         <span class="truncate">{{ $row['label'] }}</span>
                     </span>
 
                     <div role="img" aria-label="{{ $row['label'] }}: {{ $row['text'] }}">
                         <div class="relative h-5 overflow-hidden rounded bg-zinc-100 dark:bg-white/10">
-                            <div class="absolute inset-y-0 left-0 rounded-e" style="width: {{ $at($row['mean']) }}%; background-color: var(--color-{{ $group['color'] }}-500)"></div>
+                            <div class="absolute inset-y-0 left-0 rounded-e" style="width: {{ $at($row['mean']) }}%; background-color: var(--color-{{ $group['color'] }})"></div>
                             @if ($equalShare !== null)
                                 <div class="absolute inset-y-0 border-s border-dashed border-zinc-500 dark:border-zinc-300" style="left: {{ $at($equalShare) }}%"></div>
                             @endif

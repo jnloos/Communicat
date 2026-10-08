@@ -17,6 +17,9 @@ use App\Models\TagCategory;
  * does not know. They have no id, so they cannot sit in a filter; instead,
  * while any is left, the series matches no run (SeriesProjects) — it never
  * widens to every run. The user removes them one by one in the editor.
+ *
+ * `color` is optional: a template gives each series one (a pipeline's pair
+ * shares a hue), anything else takes the next free palette hue.
  */
 final readonly class SeriesDefinition
 {
@@ -28,6 +31,7 @@ final readonly class SeriesDefinition
         public ?string $model = null,
         public AgentReference $reference = new EachReference,
         public array $unresolvedTags = [],
+        public ?SeriesColor $color = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -41,6 +45,7 @@ final readonly class SeriesDefinition
             model: self::optional($projects['model'] ?? null),
             reference: AgentReferences::fromArray(is_array($data['reference'] ?? null) ? $data['reference'] : []),
             unresolvedTags: self::unresolved($data['unresolved_tags'] ?? []),
+            color: SeriesColor::tryFrom($data['color'] ?? null),
         );
     }
 
@@ -62,6 +67,7 @@ final readonly class SeriesDefinition
             'projects' => ['tags' => $this->projectTags->toArray(), 'pipeline' => $this->pipeline, 'model' => $this->model],
             'reference' => $this->reference->toArray(),
             'unresolved_tags' => $this->unresolvedTags,
+            'color' => $this->color === null ? null : (string) $this->color,
         ];
     }
 
@@ -81,7 +87,7 @@ final readonly class SeriesDefinition
         $tags = $this->unresolvedTags;
         unset($tags[$index]);
 
-        return new self($this->label, $this->projectTags, $this->pipeline, $this->model, $this->reference, array_values($tags));
+        return new self($this->label, $this->projectTags, $this->pipeline, $this->model, $this->reference, array_values($tags), $this->color);
     }
 
     /** Every tag value this series names, in the project filter and the reference. @return list<int> */
@@ -101,12 +107,12 @@ final readonly class SeriesDefinition
     {
         $reference = $this->reference instanceof NamesTagValues ? $this->reference->withoutTagValues($ids) : $this->reference;
 
-        return new self($this->label, $this->projectTags->without($ids), $this->pipeline, $this->model, $reference, $this->unresolvedTags);
+        return new self($this->label, $this->projectTags->without($ids), $this->pipeline, $this->model, $reference, $this->unresolvedTags, $this->color);
     }
 
     public function withLabel(string $label): self
     {
-        return new self($label, $this->projectTags, $this->pipeline, $this->model, $this->reference, $this->unresolvedTags);
+        return new self($label, $this->projectTags, $this->pipeline, $this->model, $this->reference, $this->unresolvedTags, $this->color);
     }
 
     /** @return list<array{category: string, value: string}> */

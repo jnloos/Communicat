@@ -10,6 +10,7 @@ use App\Discussion\Values\ComparisonDisplay;
 use App\Discussion\Values\ComparisonView;
 use App\Discussion\Values\Metric;
 use App\Discussion\Values\ModelConfig;
+use App\Discussion\Values\SeriesColor;
 use App\Discussion\Values\SeriesDefinition;
 use App\Discussion\Values\SeriesLine;
 use App\Discussion\Values\SeriesResult;
@@ -32,15 +33,6 @@ use Livewire\Component;
 class ComparisonEditor extends Component
 {
     use NeedsConfirmation;
-
-    /**
-     * Series colours, handed out in line order. Deliberately not the seat
-     * colours of the statistics flyout (blue, violet, emerald, …): a series is
-     * not a participant. Ten, so the thesis templates' ten series (five
-     * pipelines × two conditions) need no repeat. All are Flux pie colours
-     * and exist as --color-*-500 in the built CSS.
-     */
-    public const PALETTE = ['indigo', 'orange', 'teal', 'pink', 'sky', 'red', 'purple', 'lime', 'amber', 'emerald'];
 
     #[Locked]
     public int $comparisonId;
@@ -155,9 +147,11 @@ class ComparisonEditor extends Component
             $this->withDefaultLabels($definitions),
             $matches,
         );
-        $lines = $this->displayLines($results);
+        $colors = SeriesColor::assign(array_map(fn (SeriesDefinition $d) => $d->color, $definitions));
+        $lines = $this->displayLines($results, $colors);
         $charts = new ResultCharts($lines, $results, $view->metric);
-        $byLine = $view->display === ComparisonDisplay::Trajectory;
+        // The curve colours each line, every other display each series.
+        $drawn = array_map('strval', $view->display === ComparisonDisplay::Trajectory ? array_column($lines, 'lineColor') : $colors);
 
         return view('livewire.statistics.comparison-editor', [
             'name' => $this->comparison($this->comparisonId)->name,
@@ -170,16 +164,14 @@ class ComparisonEditor extends Component
             'matches' => $matches,
             'results' => $results,
             'lines' => $lines,
-            'seriesColors' => array_map(fn (int $index) => $this->seriesColor($index), array_keys($definitions)),
+            'seriesColors' => $colors,
             'barGroups' => $charts->barGroups(),
             'barScale' => $charts->barScale(),
             'barTicks' => $charts->barTicks(),
             'equalShare' => $charts->equalShare(),
             'pies' => $charts->pies(),
             'trajectoryRows' => $charts->trajectoryRows(),
-            // The curve colours each line, every other display each series.
-            'paletteRepeats' => ($byLine ? count($lines) : count($definitions)) > count(self::PALETTE),
-            'paletteSize' => count(self::PALETTE),
+            'paletteRepeats' => count(array_unique($drawn)) < count($drawn),
             'rollingWindow' => (int) config('discussion.share_window'),
             'comparisonView' => $view,
             'metrics' => Metric::cases(),
@@ -256,13 +248,15 @@ class ComparisonEditor extends Component
     /**
      * Every line of every series, flat and in series order. `color` is the
      * series' colour (table, bars, pies: lines of one series are told apart by
-     * their label); `lineColor` is one colour per line, for the curve, where
-     * lines of one colour could not be told apart.
+     * their label); `lineColor` is what the curve draws: the series' colour
+     * when it has one line, otherwise one palette hue per line, since lines
+     * of one colour could not be told apart there.
      *
      * @param  list<SeriesResult>  $results
-     * @return list<array{label: string, short: string, color: string, lineColor: string, series: int, line: SeriesLine}>
+     * @param  list<SeriesColor>  $colors  one per series
+     * @return list<array{label: string, short: string, color: SeriesColor, lineColor: SeriesColor, series: int, line: SeriesLine}>
      */
-    private function displayLines(array $results): array
+    private function displayLines(array $results, array $colors): array
     {
         $lines = [];
 
@@ -272,8 +266,10 @@ class ComparisonEditor extends Component
                 $lines[] = [
                     'label' => $single ? $result->label : __('comparisons.line_with_seat', ['label' => $result->label, 'seat' => $line->seat]),
                     'short' => $single ? $result->label : __('comparisons.results.seat', ['seat' => $line->seat]),
-                    'color' => $this->seriesColor($seriesIndex),
-                    'lineColor' => self::PALETTE[count($lines) % count(self::PALETTE)],
+                    'color' => $colors[$seriesIndex],
+                    'lineColor' => count($result->lines) === 1
+                        ? $colors[$seriesIndex]
+                        : SeriesColor::of(SeriesColor::HUES[count($lines) % count(SeriesColor::HUES)]),
                     'series' => $seriesIndex,
                     'line' => $line,
                 ];
@@ -281,10 +277,5 @@ class ComparisonEditor extends Component
         }
 
         return $lines;
-    }
-
-    private function seriesColor(int $index): string
-    {
-        return self::PALETTE[$index % count(self::PALETTE)];
     }
 }

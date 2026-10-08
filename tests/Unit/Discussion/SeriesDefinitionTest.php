@@ -25,9 +25,17 @@ class SeriesDefinitionTest extends TestCase
             'projects' => ['tags' => [2 => [5, 6]], 'pipeline' => null, 'model' => 'openai-gpt-5-mini'],
             'reference' => ['type' => 'persona_tags', 'tags' => [9 => [11]]],
             'unresolved_tags' => [],
+            'color' => null,
         ], $series->toArray());
         $this->assertInstanceOf(PersonaTagsReference::class, $series->reference);
         $this->assertEqualsCanonicalizing([5, 6, 11], $series->tagValueIds());
+    }
+
+    public function test_a_colour_is_kept_only_when_it_is_a_palette_colour(): void
+    {
+        $this->assertSame('teal-300', SeriesDefinition::fromArray(['label' => 'x', 'color' => 'teal-300'])->toArray()['color']);
+        $this->assertSame('teal-300', (string) SeriesDefinition::fromArray(['label' => 'x', 'color' => 'teal-300'])->withLabel('y')->color);
+        $this->assertNull(SeriesDefinition::fromArray(['label' => 'x', 'color' => 'url(evil)'])->color);
     }
 
     public function test_unresolved_template_tags_are_kept_by_name_and_removable(): void

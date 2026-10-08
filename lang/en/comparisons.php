@@ -134,7 +134,7 @@ return [
         'no_trajectory' => 'The curve exists for turn share and word share only.',
         'no_pie' => 'A pie exists for turn share and word share only.',
         'n_of' => ':label · n',
-        'palette_repeats' => 'More than :count colours needed: colours repeat. Use fewer series or a narrower reference.',
+        'palette_repeats' => 'Some lines share a colour; tell them apart by their labels, or use fewer series or a narrower reference.',
         'too_short' => 'A curve needs at least two spoken turns.',
     ],
 

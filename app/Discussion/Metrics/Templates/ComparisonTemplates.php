@@ -9,6 +9,7 @@ use App\Discussion\Metrics\References\SeatReference;
 use App\Discussion\Values\ComparisonDisplay;
 use App\Discussion\Values\ComparisonView;
 use App\Discussion\Values\Metric;
+use App\Discussion\Values\SeriesColor;
 use App\Discussion\Values\SeriesDefinition;
 use App\Models\TagCategory;
 use App\Models\TagScope;
@@ -127,6 +128,8 @@ final class ComparisonTemplates
 
     /**
      * "<Pipeline> · status" and "<Pipeline> · control" for each pipeline, seat 1.
+     * The pair shares its pipeline's hue, so it reads as a pair: status in
+     * the full shade, control in the light one.
      *
      * @param  list<string>  $pipelines
      * @return list<array<string, mixed>>
@@ -141,6 +144,7 @@ final class ComparisonTemplates
                     'label' => __('comparisons.templates.series', ['pipeline' => __("comparisons.templates.pipelines.{$pipeline}"), 'condition' => $condition]),
                     'projects' => ['tags' => [self::CONDITION => [$condition]], 'pipeline' => $pipeline],
                     'reference' => (new SeatReference(1))->toArray(),
+                    'color' => (string) $this->colorFor($this->hueOf($pipeline), $condition),
                 ];
             }
         }
@@ -159,7 +163,20 @@ final class ComparisonTemplates
             'label' => $condition,
             'projects' => ['tags' => [self::CONDITION => [$condition]]],
             'reference' => $reference->toArray(),
+            'color' => (string) $this->colorFor(SeriesColor::HUES[0], $condition),
         ], self::CONDITIONS);
+    }
+
+    /** Status in the hue's full shade, control in its light one. */
+    private function colorFor(string $hue, string $condition): SeriesColor
+    {
+        return SeriesColor::of($hue, $condition === self::CONDITIONS[0] ? SeriesColor::FULL : SeriesColor::LIGHT);
+    }
+
+    /** One hue per pipeline, the same in every template. */
+    private function hueOf(string $pipeline): string
+    {
+        return SeriesColor::HUES[array_search($pipeline, self::PIPELINES, true)];
     }
 
     private function view(Metric $metric, ComparisonDisplay $display): ComparisonView

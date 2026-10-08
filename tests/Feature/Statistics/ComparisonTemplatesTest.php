@@ -82,7 +82,11 @@ class ComparisonTemplatesTest extends TestCase
 
         $this->assertCount(10, $series);
         $this->assertSame('Score · status', $series[0]->label);
-        $this->assertLessThanOrEqual(count(ComparisonEditor::PALETTE), count($series), 'ten series, ten colours');
+        // One hue per pipeline: status in the full shade, control in the light one.
+        $colours = array_map(fn (SeriesDefinition $s) => (string) $s->color, $series);
+        $this->assertSame(['indigo-500', 'indigo-300'], array_slice($colours, 0, 2));
+        $this->assertCount(10, array_unique($colours), 'no two series share a colour');
+        $this->assertCount(5, array_unique(array_map(fn (SeriesDefinition $s) => $s->color->hue, $series)));
         $this->assertSame('ScorePipeline', $series[0]->pipeline);
         $this->assertSame([$condition->id => [$status]], $series[0]->projectTags->toArray());
         $this->assertSame([$condition->id => [$control]], $series[1]->projectTags->toArray());

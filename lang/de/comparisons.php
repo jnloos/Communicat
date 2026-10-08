@@ -134,7 +134,7 @@ return [
         'no_trajectory' => 'Den Verlauf gibt es nur für Turn- und Wortanteil.',
         'no_pie' => 'Das Kreisdiagramm gibt es nur für Turn- und Wortanteil.',
         'n_of' => ':label · n',
-        'palette_repeats' => 'Mehr als :count Farben nötig: Farben wiederholen sich. Nimm weniger Reihen oder einen engeren Bezug.',
+        'palette_repeats' => 'Einige Linien teilen sich eine Farbe; unterscheide sie an ihren Namen oder nimm weniger Reihen oder einen engeren Bezug.',
         'too_short' => 'Für einen Verlauf braucht es mindestens zwei gesprochene Turns.',
     ],
 
