@@ -80,16 +80,16 @@ class HasTagsTest extends TestCase
 
     public function test_tag_selection_and_sync_tags_round_trip_a_form(): void
     {
-        $condition = $this->category(TagScope::Project, 'condition', ['status', 'control']);
+        $condition = $this->category(TagScope::Project, 'condition', ['status', 'no-status']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
         $project = Project::factory()->create();
 
         $project->syncTags([
-            $condition->id => (string) $this->value($condition, 'control')->id,
+            $condition->id => (string) $this->value($condition, 'no-status')->id,
             $topic->id => '',
         ]);
 
-        $this->assertSame([$condition->id => $this->value($condition, 'control')->id], $project->tagSelection());
+        $this->assertSame([$condition->id => $this->value($condition, 'no-status')->id], $project->tagSelection());
     }
 
     public function test_sync_tags_refuses_a_value_outside_its_category(): void
@@ -104,7 +104,7 @@ class HasTagsTest extends TestCase
 
     public function test_where_tagged_is_and_across_categories_and_or_within_one(): void
     {
-        $condition = $this->category(TagScope::Project, 'condition', ['status', 'control']);
+        $condition = $this->category(TagScope::Project, 'condition', ['status', 'no-status']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule', 'Verkehr']);
 
         $schoolStatus = Project::factory()->create();
@@ -112,12 +112,12 @@ class HasTagsTest extends TestCase
         $schoolStatus->setTag($topic, $this->value($topic, 'Schule'));
 
         $trafficControl = Project::factory()->create();
-        $trafficControl->setTag($condition, $this->value($condition, 'control'));
+        $trafficControl->setTag($condition, $this->value($condition, 'no-status'));
         $trafficControl->setTag($topic, $this->value($topic, 'Verkehr'));
 
         $untagged = Project::factory()->create();
 
-        $or = Project::whereTagged([$this->value($condition, 'status')->id, $this->value($condition, 'control')->id])->pluck('id')->all();
+        $or = Project::whereTagged([$this->value($condition, 'status')->id, $this->value($condition, 'no-status')->id])->pluck('id')->all();
         $and = Project::whereTagged([$this->value($condition, 'status')->id, $this->value($topic, 'Verkehr')->id])->pluck('id')->all();
         $none = Project::whereTagged([])->pluck('id')->all();
 
@@ -189,7 +189,7 @@ class HasTagsTest extends TestCase
 
     public function test_a_tag_filter_category_without_an_existing_value_matches_nothing(): void
     {
-        $condition = $this->category(TagScope::Project, 'condition', ['status', 'control']);
+        $condition = $this->category(TagScope::Project, 'condition', ['status', 'no-status']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
         $project = Project::factory()->create();
         $project->setTag($condition, $this->value($condition, 'status'));
@@ -205,7 +205,7 @@ class HasTagsTest extends TestCase
 
     public function test_where_tagged_any_matches_a_model_carrying_one_of_the_values(): void
     {
-        $condition = $this->category(TagScope::Project, 'condition', ['status', 'control']);
+        $condition = $this->category(TagScope::Project, 'condition', ['status', 'no-status']);
         $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
 
         $status = Project::factory()->create();

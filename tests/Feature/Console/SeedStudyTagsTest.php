@@ -60,7 +60,7 @@ class SeedStudyTagsTest extends TestCase
         $this->artisan('tags:seed-study', ['--apply' => true])->assertSuccessful();
 
         $this->assertSame('status', $this->tagOf($status, TagScope::Project, 'condition'));
-        $this->assertSame('control', $this->tagOf($control, TagScope::Project, 'condition'));
+        $this->assertSame('no-status', $this->tagOf($control, TagScope::Project, 'condition'));
         $this->assertNull($this->tagOf($untitled, TagScope::Project, 'condition'));
         $this->assertSame('true', $this->tagOf($ceo, TagScope::Persona, 'title holder'));
         $this->assertNull($this->tagOf($neutral, TagScope::Persona, 'title holder'));
@@ -91,9 +91,9 @@ class SeedStudyTagsTest extends TestCase
         $seeder = new StudyTagSeeder;
 
         $this->assertSame('status', $seeder->conditionFor('School | with status | 60'));
-        $this->assertSame('control', $seeder->conditionFor('School | without status | 60'));
+        $this->assertSame('no-status', $seeder->conditionFor('School | without status | 60'));
         $this->assertSame('status', $seeder->conditionFor('Score | School | with status | 100'));
-        $this->assertSame('control', $seeder->conditionFor('Score | School | without status | 100'));
+        $this->assertSame('no-status', $seeder->conditionFor('Score | School | without status | 100'));
         $this->assertNull($seeder->conditionFor('Test'));
     }
 }

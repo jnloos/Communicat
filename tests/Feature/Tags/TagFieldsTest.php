@@ -38,7 +38,7 @@ class TagFieldsTest extends TestCase
 
         $this->condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $this->status = $this->condition->values()->create(['name' => 'status']);
-        $this->control = $this->condition->values()->create(['name' => 'control']);
+        $this->control = $this->condition->values()->create(['name' => 'no-status']);
         $this->gender = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'Geschlecht']);
         $this->female = $this->gender->values()->create(['name' => 'weiblich']);
     }
@@ -48,7 +48,7 @@ class TagFieldsTest extends TestCase
         $component = Livewire::test(TagFields::class, ['scope' => 'project']);
 
         $this->assertSame(['condition'], $component->viewData('categories')->pluck('name')->all());
-        $component->assertSee('control')->assertDontSee('weiblich');
+        $component->assertSee('no-status')->assertDontSee('weiblich');
     }
 
     public function test_category_names_are_capitalised_as_labels_but_stay_as_stored(): void
@@ -94,7 +94,7 @@ class TagFieldsTest extends TestCase
             ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertSame('control', $project->fresh()->tagFor($this->condition)?->name);
+        $this->assertSame('no-status', $project->fresh()->tagFor($this->condition)?->name);
 
         Livewire::test(EditProject::class, ['project' => $project->fresh()])
             ->set("tagSelection.{$this->condition->id}", '')

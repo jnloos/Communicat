@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * Tags the study cells that ran before tags existed: the condition from the
  * title, and the persona on seat 1 of every status cell as the title holder —
- * unless that persona also sits in a control cell, where it held no title, in
+ * unless that persona also sits in a no-status cell, where it held no title, in
  * which case it is reported instead of tagged.
  */
 class StudyTagSeeder
@@ -21,7 +21,7 @@ class StudyTagSeeder
 
     public const STATUS = 'status';
 
-    public const CONTROL = 'control';
+    public const CONTROL = 'no-status';
 
     public const TITLE_CATEGORY = 'title holder';
 

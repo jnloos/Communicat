@@ -31,7 +31,7 @@ class SeedStudyTags extends Command
 
         foreach ($plan->conflicts as $conflict) {
             $this->warn(sprintf(
-                'Conflict: %s (E%d) holds seat 1 in status cells %s but also sits in control cells %s — not tagged.',
+                'Conflict: %s (E%d) holds seat 1 in status cells %s but also sits in no-status cells %s — not tagged.',
                 $conflict['expert']->name, $conflict['expert']->id, implode(', ', $conflict['status']), implode(', ', $conflict['control']),
             ));
         }

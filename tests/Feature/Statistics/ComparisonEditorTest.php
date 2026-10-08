@@ -99,7 +99,7 @@ class ComparisonEditorTest extends TestCase
     {
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
-        $control = $condition->values()->create(['name' => 'control']);
+        $control = $condition->values()->create(['name' => 'no-status']);
         $this->comparison->update(['series' => [[
             'label' => 'Reihe',
             'projects' => ['tags' => [$condition->id => [$status->id, $control->id]]],
@@ -150,7 +150,7 @@ class ComparisonEditorTest extends TestCase
     {
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
-        $control = $condition->values()->create(['name' => 'control']);
+        $control = $condition->values()->create(['name' => 'no-status']);
         $tagged = Project::factory()->create(['user_id' => $this->user->id]);
         $tagged->setTag($condition, $status);
         Project::factory()->create(['user_id' => $this->user->id]);

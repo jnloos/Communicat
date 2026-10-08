@@ -35,7 +35,7 @@ class ComparisonTemplatesTest extends TestCase
     {
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
 
-        return [$condition, $condition->values()->create(['name' => 'status'])->id, $condition->values()->create(['name' => 'control'])->id];
+        return [$condition, $condition->values()->create(['name' => 'status'])->id, $condition->values()->create(['name' => 'no-status'])->id];
     }
 
     private function createFrom(string $key): Comparison
@@ -74,7 +74,7 @@ class ComparisonTemplatesTest extends TestCase
         }
     }
 
-    public function test_the_pipeline_templates_pair_status_and_control_per_pipeline_on_seat_one(): void
+    public function test_the_pipeline_templates_pair_status_and_no_status_per_pipeline_on_seat_one(): void
     {
         [$condition, $status, $control] = $this->conditions();
 
@@ -82,7 +82,7 @@ class ComparisonTemplatesTest extends TestCase
 
         $this->assertCount(10, $series);
         $this->assertSame('Score · status', $series[0]->label);
-        // One hue per pipeline: status in the full shade, control in the light one.
+        // One hue per pipeline: status in the full shade, no-status in the light one.
         $colours = array_map(fn (SeriesDefinition $s) => (string) $s->color, $series);
         $this->assertSame(['indigo-500', 'indigo-300'], array_slice($colours, 0, 2));
         $this->assertCount(10, array_unique($colours), 'no two series share a colour');
@@ -160,7 +160,7 @@ class ComparisonTemplatesTest extends TestCase
     {
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'Condition']);
         $status = $condition->values()->create(['name' => 'Status'])->id;
-        $control = $condition->values()->create(['name' => 'CONTROL'])->id;
+        $control = $condition->values()->create(['name' => 'NO-STATUS'])->id;
 
         $series = $this->createFrom('turn_share_by_pipeline')->seriesDefinitions();
 
@@ -173,11 +173,11 @@ class ComparisonTemplatesTest extends TestCase
     {
         $page = Livewire::test(StatisticsPage::class)
             ->call('createFromTemplate', 'every_seat_by_condition')
-            ->assertSee(__('comparisons.templates.unresolved', ['tags' => 'Condition: status, Condition: control']));
+            ->assertSee(__('comparisons.templates.unresolved', ['tags' => 'Condition: status, Condition: no-status']));
 
         // One-time: opening a comparison (or dismissing it) clears it.
         $page->call('open', Comparison::latest('id')->first()->id)
-            ->assertDontSee(__('comparisons.templates.unresolved', ['tags' => 'Condition: status, Condition: control']));
+            ->assertDontSee(__('comparisons.templates.unresolved', ['tags' => 'Condition: status, Condition: no-status']));
     }
 
     public function test_no_notice_when_every_template_tag_exists(): void
@@ -196,7 +196,7 @@ class ComparisonTemplatesTest extends TestCase
 
         Livewire::test(ComparisonEditor::class, ['comparisonId' => $comparison->id])
             ->call('removeUnresolvedTag', 0, 0)
-            ->assertViewHas('unresolvedSeries', fn (array $labels) => ! in_array('Score · status', $labels, true) && in_array('Score · control', $labels, true));
+            ->assertViewHas('unresolvedSeries', fn (array $labels) => ! in_array('Score · status', $labels, true) && in_array('Score · no-status', $labels, true));
 
         $series = $comparison->fresh()->seriesDefinitions();
 

@@ -21,7 +21,7 @@ use Illuminate\Support\Collection;
  * of its holder, and does that depend on the speaker-selection mechanism?
  *
  * The focal agent is seat 1 in both conditions (status: the titled agent;
- * control: the same position), the convention of every report so far. All
+ * no-status: the same position), the convention of every report so far. All
  * templates count the first 60 turns, so the 100-turn runs stay comparable
  * with the 60-turn cells.
  */
@@ -33,7 +33,7 @@ final class ComparisonTemplates
     /** The project category the conditions are tagged with, and its two values. */
     public const CONDITION = 'condition';
 
-    public const CONDITIONS = ['status', 'control'];
+    public const CONDITIONS = ['status', 'no-status'];
 
     public const TURN_LIMIT = 60;
 
@@ -127,9 +127,9 @@ final class ComparisonTemplates
     }
 
     /**
-     * "<Pipeline> · status" and "<Pipeline> · control" for each pipeline, seat 1.
+     * "<Pipeline> · status" and "<Pipeline> · no-status" for each pipeline, seat 1.
      * The pair shares its pipeline's hue, so it reads as a pair: status in
-     * the full shade, control in the light one.
+     * the full shade, no-status in the light one.
      *
      * @param  list<string>  $pipelines
      * @return list<array<string, mixed>>
@@ -153,7 +153,7 @@ final class ComparisonTemplates
     }
 
     /**
-     * Status against control across every pipeline.
+     * Status against no-status across every pipeline.
      *
      * @return list<array<string, mixed>>
      */
@@ -167,7 +167,7 @@ final class ComparisonTemplates
         ], self::CONDITIONS);
     }
 
-    /** Status in the hue's full shade, control in its light one. */
+    /** Status in the hue's full shade, no-status in its light one. */
     private function colorFor(string $hue, string $condition): SeriesColor
     {
         return SeriesColor::of($hue, $condition === self::CONDITIONS[0] ? SeriesColor::FULL : SeriesColor::LIGHT);

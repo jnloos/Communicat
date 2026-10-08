@@ -520,7 +520,7 @@ class ProjectNavigationTest extends TestCase
         $this->actingAs($user);
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
-        $control = $condition->values()->create(['name' => 'control']);
+        $control = $condition->values()->create(['name' => 'no-status']);
         $topic = TagCategory::create(['scope' => TagScope::Project, 'name' => 'thema']);
         $school = $topic->values()->create(['name' => 'Schule']);
 
@@ -631,7 +631,7 @@ class ProjectNavigationTest extends TestCase
         $this->actingAs($user);
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
-        $control = $condition->values()->create(['name' => 'control']);
+        $control = $condition->values()->create(['name' => 'no-status']);
         $a = $this->projectOwnedBy($user, 'A');
         $a->setTag($condition, $status);
         $b = $this->projectOwnedBy($user, 'B');
@@ -708,7 +708,7 @@ class ProjectNavigationTest extends TestCase
         $this->actingAs($user);
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
-        $control = $condition->values()->create(['name' => 'control']);
+        $control = $condition->values()->create(['name' => 'no-status']);
         $this->projectOwnedBy($user, 'A')->setTag($condition, $status);
         $this->projectOwnedBy($user, 'B')->setTag($condition, $control);
         $this->projectOwnedBy($user, 'C');
@@ -717,7 +717,7 @@ class ProjectNavigationTest extends TestCase
         $component->assertDontSee(__('tags.filter.clear_label'));
 
         $component->set('tagFilter', [(string) $status->id, (string) $control->id])
-            ->assertSee('2 of 3 · Condition: status, Condition: control')
+            ->assertSee('2 of 3 · Condition: status, Condition: no-status')
             ->assertSee(__('tags.filter.clear_label'));
     }
 
@@ -727,7 +727,7 @@ class ProjectNavigationTest extends TestCase
         $this->actingAs($user);
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
-        $control = $condition->values()->create(['name' => 'control']);
+        $control = $condition->values()->create(['name' => 'no-status']);
         $tagged = $this->projectOwnedBy($user);
         $tagged->setTag($condition, $status);
 
@@ -759,7 +759,7 @@ class ProjectNavigationTest extends TestCase
         $this->actingAs(User::factory()->create());
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
         $status = $condition->values()->create(['name' => 'status']);
-        $control = $condition->values()->create(['name' => 'control']);
+        $control = $condition->values()->create(['name' => 'no-status']);
 
         Livewire::test(ProjectNavigation::class)
             ->assertDontSee('Filter projects (')

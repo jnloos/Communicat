@@ -11,7 +11,7 @@ final readonly class StudyTagPlan
     /**
      * @param  list<array{project: Project, condition: string}>  $projects  cells whose title names a condition
      * @param  list<array{expert: Expert, projects: list<int>}>  $titleHolders  seat-1 personas of status cells
-     * @param  list<array{expert: Expert, status: list<int>, control: list<int>}>  $conflicts  seat 1 in a status cell, seated in a control cell too
+     * @param  list<array{expert: Expert, status: list<int>, control: list<int>}>  $conflicts  seat 1 in a status cell, seated in a no-status cell too
      * @param  list<Project>  $withoutSeatOne  status cells with nobody on seat 1
      * @param  int  $unmatched  projects whose title names no condition
      */

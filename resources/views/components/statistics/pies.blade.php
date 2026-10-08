@@ -7,7 +7,7 @@
 
 {{--
     One pie per series, side by side, drawn like the project statistics
-    flyout. Four to a row, so a pipeline's status and control pies sit next
+    flyout. Four to a row, so a pipeline's status and no-status pies sit next
     to each other. Flux paints every sector in the -500 of the datum's
     `color`; app.css repaints it in the series' own shade (`--pie-fill`) and
     tells the slices apart by tints from each sector's data-key (`tint-N`,
