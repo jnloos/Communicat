@@ -61,124 +61,137 @@
         @foreach ($definitions as $index => $definition)
             @php($referenceType = $series[$index]['reference']['type'] ?? 'each')
 
-            <flux:card wire:key="series-{{ $index }}" class="space-y-5">
-                <div class="flex items-center gap-3">
-                    <span class="size-3 shrink-0 rounded-full" style="background-color: var(--color-{{ $seriesColors[$index] }})"></span>
-                    <flux:input size="sm" wire:model.blur="series.{{ $index }}.label" :aria-label="__('comparisons.series.label')"
-                        :placeholder="__('comparisons.series.label')" class="flex-1" />
+            {{-- Folding is Alpine state only: it saves nothing. Beyond three
+                 series the cards start folded to their summary line. --}}
+            <flux:card wire:key="series-{{ $index }}" x-data="{ open: {{ $openCards[$index] ? 'true' : 'false' }} }" class="p-4!">
+                <div class="flex items-center gap-2">
+                    <button type="button" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-controls="series-body-{{ $index }}"
+                        class="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded text-start text-sm" title="{{ __('comparisons.series.toggle') }}">
+                        <flux:icon.chevron-right variant="micro" class="shrink-0 text-zinc-400 transition-transform" x-bind:class="open && 'rotate-90'" />
+                        <span class="size-3 shrink-0 rounded-full" style="background-color: var(--color-{{ $seriesColors[$index] }})"></span>
+                        <span class="truncate">
+                            <span class="font-medium text-zinc-800 dark:text-white">{{ $results[$index]->label }}</span>
+                            <span class="text-zinc-500 dark:text-zinc-400">— {{ $summaries[$index] }}</span>
+                        </span>
+                    </button>
                     <flux:button variant="ghost" size="sm" icon="trash" wire:click="confirmRemoveSeries({{ $index }})"
                         class="cursor-pointer" :aria-label="__('comparisons.series.remove')" :tooltip="__('comparisons.series.remove')" />
                 </div>
 
-                <div class="grid gap-6 md:grid-cols-2">
-                    {{-- Which runs --}}
-                    <div class="space-y-4">
-                        <flux:subheading size="sm" class="font-medium">{{ __('comparisons.series.projects') }}</flux:subheading>
+                <div id="series-body-{{ $index }}" x-show="open" @if (! $openCards[$index]) x-cloak @endif class="mt-5 space-y-5">
+                    <flux:input size="sm" wire:model.blur="series.{{ $index }}.label" :label="__('comparisons.series.label')"
+                        :placeholder="__('comparisons.series.label')" />
 
-                        {{-- A template's tag this database does not know: the series
-                             matches no run while it is here; removing it is the
-                             user's explicit choice to widen. --}}
-                        @if ($definition->hasUnresolvedTags())
-                            <div class="flex flex-wrap gap-1.5">
-                                @foreach ($definition->unresolvedLabels() as $tagIndex => $tagLabel)
-                                    <flux:badge size="sm" color="amber" icon="exclamation-triangle" :title="__('comparisons.series.unresolved')"
-                                        wire:key="series-{{ $index }}-unresolved-{{ $tagIndex }}">
-                                        {{ $tagLabel }}
-                                        <flux:badge.close wire:click="removeUnresolvedTag({{ $index }}, {{ $tagIndex }})" :aria-label="__('comparisons.series.remove_unresolved', ['tag' => $tagLabel])" class="cursor-pointer" />
-                                    </flux:badge>
-                                @endforeach
-                            </div>
-                        @endif
+                    <div class="grid gap-6 md:grid-cols-2">
+                        {{-- Which runs --}}
+                        <div class="space-y-4">
+                            <x-statistics.section-label>{{ __('comparisons.series.projects') }}</x-statistics.section-label>
 
-                        {{-- One pill group per category: OR within it, AND across
-                             categories (TagFilter); no pill picked means any. --}}
-                        @foreach ($projectCategories as $category)
-                            <flux:checkbox.group variant="pills"
-                                wire:key="series-{{ $index }}-project-tags-{{ $category->id }}"
-                                wire:model.live="series.{{ $index }}.projects.tags.{{ $category->id }}"
-                                :label="$category->label()" class="gap-1.5!">
-                                @foreach ($category->values as $value)
-                                    <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" class="cursor-pointer" />
-                                @endforeach
-                            </flux:checkbox.group>
-                        @endforeach
-
-                        <flux:select variant="listbox" clearable wire:model.live="series.{{ $index }}.projects.pipeline"
-                            :label="__('comparisons.series.pipeline')" :placeholder="__('comparisons.series.any')">
-                            @foreach ($pipelines as $pipelineName => $label)
-                                <flux:select.option :value="$pipelineName">{{ $label }}</flux:select.option>
-                            @endforeach
-                        </flux:select>
-
-                        <flux:select variant="listbox" clearable wire:model.live="series.{{ $index }}.projects.model"
-                            :label="__('comparisons.series.model')" :placeholder="__('comparisons.series.any')">
-                            @foreach ($models as $key => $label)
-                                <flux:select.option :value="$key">{{ $label }}</flux:select.option>
-                            @endforeach
-                        </flux:select>
-
-                        {{-- Folded by default so every card keeps its height; the count stays visible. --}}
-                        <details class="group text-sm">
-                            <summary class="flex cursor-pointer list-none items-center gap-1 text-zinc-500 dark:text-zinc-400 [&::-webkit-details-marker]:hidden">
-                                @if ($matches[$index]->isNotEmpty())
-                                    <flux:icon.chevron-right variant="micro" class="transition-transform group-open:rotate-90" />
-                                @endif
-                                {{ trans_choice('comparisons.series.matches', $matches[$index]->count(), ['count' => $matches[$index]->count()]) }}
-                            </summary>
-                            @if ($matches[$index]->isNotEmpty())
-                                <ul class="mt-1 max-h-40 space-y-0.5 overflow-y-auto ps-5 text-xs text-zinc-500 dark:text-zinc-400">
-                                    @foreach ($matches[$index] as $project)
-                                        <li wire:key="series-{{ $index }}-match-{{ $project->id }}" class="truncate">{{ $project->title }}</li>
+                            {{-- A template's tag this database does not know: the series
+                                 matches no run while it is here; removing it is the
+                                 user's explicit choice to widen. --}}
+                            @if ($definition->hasUnresolvedTags())
+                                <div class="flex flex-wrap gap-1.5">
+                                    @foreach ($definition->unresolvedLabels() as $tagIndex => $tagLabel)
+                                        <flux:badge size="sm" color="amber" icon="exclamation-triangle" :title="__('comparisons.series.unresolved')"
+                                            wire:key="series-{{ $index }}-unresolved-{{ $tagIndex }}">
+                                            {{ $tagLabel }}
+                                            <flux:badge.close wire:click="removeUnresolvedTag({{ $index }}, {{ $tagIndex }})" :aria-label="__('comparisons.series.remove_unresolved', ['tag' => $tagLabel])" class="cursor-pointer" />
+                                        </flux:badge>
                                     @endforeach
-                                </ul>
+                                </div>
                             @endif
-                        </details>
-                    </div>
 
-                    {{-- Which agents --}}
-                    <div class="space-y-4">
-                        <flux:subheading size="sm" class="font-medium">{{ __('comparisons.reference.heading') }}</flux:subheading>
-
-                        <flux:select variant="listbox" wire:model.live="series.{{ $index }}.reference.type" :label="__('comparisons.reference.type')" :disabled="$runLevel">
-                            @foreach ($referenceTypes as $type)
-                                <flux:select.option :value="$type">{{ __("comparisons.reference.types.{$type}") }}</flux:select.option>
-                            @endforeach
-                        </flux:select>
-
-                        @switch($referenceType)
-                            @case('persona_tags')
-                                @foreach ($personaCategories as $category)
-                                    <flux:checkbox.group variant="pills"
-                                        wire:key="series-{{ $index }}-persona-tags-{{ $category->id }}"
-                                        wire:model.live="series.{{ $index }}.reference.tags.{{ $category->id }}"
-                                        :label="$category->label()" :disabled="$runLevel" class="gap-1.5!">
-                                        @foreach ($category->values as $value)
-                                            <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" class="cursor-pointer" />
-                                        @endforeach
-                                    </flux:checkbox.group>
-                                @endforeach
-                                @break
-
-                            @case('seat')
-                                <flux:input type="number" min="1" wire:model.live.debounce.500ms="series.{{ $index }}.reference.seat" :label="__('comparisons.reference.seat')" :disabled="$runLevel" />
-                                @break
-
-                            @case('expert_name')
-                                <flux:select variant="listbox" searchable wire:model.live="series.{{ $index }}.reference.name"
-                                    :label="__('comparisons.reference.expert_name')" :placeholder="__('comparisons.reference.choose_expert')" :disabled="$runLevel">
-                                    @foreach ($expertNames as $expertName)
-                                        <flux:select.option :value="$expertName">{{ $expertName }}</flux:select.option>
+                            {{-- One pill group per category: OR within it, AND across
+                                 categories (TagFilter); no pill picked means any. --}}
+                            @foreach ($projectCategories as $category)
+                                <flux:checkbox.group variant="pills"
+                                    wire:key="series-{{ $index }}-project-tags-{{ $category->id }}"
+                                    wire:model.live="series.{{ $index }}.projects.tags.{{ $category->id }}"
+                                    :label="$category->label()" class="gap-1.5!">
+                                    @foreach ($category->values as $value)
+                                        <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" class="cursor-pointer" />
                                     @endforeach
-                                </flux:select>
-                                @break
-                        @endswitch
+                                </flux:checkbox.group>
+                            @endforeach
 
-                        {{-- Only a tag reference can hit several agents of one run. --}}
-                        @if ($runLevel)
-                            <flux:text size="sm">{{ __('comparisons.reference.run_level_hint') }}</flux:text>
-                        @elseif ($referenceType === 'persona_tags')
-                            <flux:text size="sm">{{ __('comparisons.reference.shared_hint') }}</flux:text>
-                        @endif
+                            <flux:select variant="listbox" clearable wire:model.live="series.{{ $index }}.projects.pipeline"
+                                :label="__('comparisons.series.pipeline')" :placeholder="__('comparisons.series.any')">
+                                @foreach ($pipelines as $pipelineName => $label)
+                                    <flux:select.option :value="$pipelineName">{{ $label }}</flux:select.option>
+                                @endforeach
+                            </flux:select>
+
+                            <flux:select variant="listbox" clearable wire:model.live="series.{{ $index }}.projects.model"
+                                :label="__('comparisons.series.model')" :placeholder="__('comparisons.series.any')">
+                                @foreach ($models as $key => $label)
+                                    <flux:select.option :value="$key">{{ $label }}</flux:select.option>
+                                @endforeach
+                            </flux:select>
+
+                            {{-- Folded by default so every card keeps its height; the count stays visible. --}}
+                            <details class="group text-sm">
+                                <summary class="flex cursor-pointer list-none items-center gap-1 text-zinc-500 dark:text-zinc-400 [&::-webkit-details-marker]:hidden">
+                                    @if ($matches[$index]->isNotEmpty())
+                                        <flux:icon.chevron-right variant="micro" class="transition-transform group-open:rotate-90" />
+                                    @endif
+                                    {{ trans_choice('comparisons.series.matches', $matches[$index]->count(), ['count' => $matches[$index]->count()]) }}
+                                </summary>
+                                @if ($matches[$index]->isNotEmpty())
+                                    <ul class="mt-1 max-h-40 space-y-0.5 overflow-y-auto ps-5 text-xs text-zinc-500 dark:text-zinc-400">
+                                        @foreach ($matches[$index] as $project)
+                                            <li wire:key="series-{{ $index }}-match-{{ $project->id }}" class="truncate">{{ $project->title }}</li>
+                                        @endforeach
+                                    </ul>
+                                @endif
+                            </details>
+                        </div>
+
+                        {{-- Which agents --}}
+                        <div class="space-y-4">
+                            <x-statistics.section-label>{{ __('comparisons.reference.heading') }}</x-statistics.section-label>
+
+                            <flux:select variant="listbox" wire:model.live="series.{{ $index }}.reference.type" :label="__('comparisons.reference.type')" :disabled="$runLevel">
+                                @foreach ($referenceTypes as $type)
+                                    <flux:select.option :value="$type">{{ __("comparisons.reference.types.{$type}") }}</flux:select.option>
+                                @endforeach
+                            </flux:select>
+
+                            @switch($referenceType)
+                                @case('persona_tags')
+                                    @foreach ($personaCategories as $category)
+                                        <flux:checkbox.group variant="pills"
+                                            wire:key="series-{{ $index }}-persona-tags-{{ $category->id }}"
+                                            wire:model.live="series.{{ $index }}.reference.tags.{{ $category->id }}"
+                                            :label="$category->label()" :disabled="$runLevel" class="gap-1.5!">
+                                            @foreach ($category->values as $value)
+                                                <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" class="cursor-pointer" />
+                                            @endforeach
+                                        </flux:checkbox.group>
+                                    @endforeach
+                                    @break
+
+                                @case('seat')
+                                    <flux:input type="number" min="1" wire:model.live.debounce.500ms="series.{{ $index }}.reference.seat" :label="__('comparisons.reference.seat')" :disabled="$runLevel" />
+                                    @break
+
+                                @case('expert_name')
+                                    <flux:select variant="listbox" searchable wire:model.live="series.{{ $index }}.reference.name"
+                                        :label="__('comparisons.reference.expert_name')" :placeholder="__('comparisons.reference.choose_expert')" :disabled="$runLevel">
+                                        @foreach ($expertNames as $expertName)
+                                            <flux:select.option :value="$expertName">{{ $expertName }}</flux:select.option>
+                                        @endforeach
+                                    </flux:select>
+                                    @break
+                            @endswitch
+
+                            {{-- Only a tag reference can hit several agents of one run. --}}
+                            @if ($runLevel)
+                                <flux:text size="sm">{{ __('comparisons.reference.run_level_hint') }}</flux:text>
+                            @elseif ($referenceType === 'persona_tags')
+                                <flux:text size="sm">{{ __('comparisons.reference.shared_hint') }}</flux:text>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </flux:card>

@@ -41,15 +41,18 @@
                     </flux:chart>
                 @endif
 
-                <div class="mt-3 flex min-w-0 items-center justify-center gap-2 text-sm" title="{{ $pie['label'] }}">
-                    <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $pie['color'] }})"></span>
-                    <span class="truncate font-medium text-zinc-800 dark:text-white">{{ $pie['label'] }}</span>
-                    <span class="shrink-0 tabular-nums text-zinc-500 dark:text-zinc-400">
+                {{-- Two lines, so four to a row leave the series name readable. --}}
+                <div class="mt-3 min-w-0 text-center text-sm" title="{{ $pie['label'] }}">
+                    <div class="flex min-w-0 items-center justify-center gap-2">
+                        <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $pie['color'] }})"></span>
+                        <span class="truncate font-medium text-zinc-800 dark:text-white">{{ $pie['label'] }}</span>
+                    </div>
+                    <div class="tabular-nums text-zinc-500 dark:text-zinc-400">
                         @if ($pie['mean'] !== null)
                             <span class="font-medium text-zinc-800 dark:text-white">{{ $pie['mean'] }}</span> ·
                         @endif
                         n = {{ $pie['n'] }}
-                    </span>
+                    </div>
                 </div>
             </section>
         @endforeach

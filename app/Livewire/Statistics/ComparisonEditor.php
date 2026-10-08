@@ -20,6 +20,7 @@ use App\Models\Expert;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -44,6 +45,10 @@ class ComparisonEditor extends Component
 
     /** @var array<string, mixed> ComparisonView::toArray() */
     public array $viewSettings = [];
+
+    /** The series added last in this session: its card opens even when the others start folded. */
+    #[Locked]
+    public ?int $addedSeries = null;
 
     /** Tag values this comparison named that have since been deleted. */
     #[Locked]
@@ -79,6 +84,7 @@ class ComparisonEditor extends Component
     public function addSeries(): void
     {
         $this->series[] = (new SeriesDefinition($this->defaultLabel($this->definitions())))->toArray();
+        $this->addedSeries = array_key_last($this->series);
         $this->persist();
     }
 
@@ -98,6 +104,7 @@ class ComparisonEditor extends Component
     public function removeSeries(int $index): void
     {
         unset($this->series[$index]);
+        $this->addedSeries = null;
         $this->persist();
     }
 
@@ -138,11 +145,12 @@ class ComparisonEditor extends Component
     public function render(): mixed
     {
         $definitions = $this->definitions();
+        $labelled = $this->withDefaultLabels($definitions);
         $view = ComparisonView::fromArray($this->viewSettings);
         $matches = array_map(fn (SeriesDefinition $d) => app(SeriesProjects::class)->for(auth()->user(), $d), $definitions);
         $results = array_map(
             fn (SeriesDefinition $d, $projects) => app(SeriesStatistics::class)->compute($d, $view, $projects),
-            $this->withDefaultLabels($definitions),
+            $labelled,
             $matches,
         );
         $colors = SeriesColor::assign(array_map(fn (SeriesDefinition $d) => $d->color, $definitions));
@@ -154,15 +162,17 @@ class ComparisonEditor extends Component
         return view('livewire.statistics.comparison-editor', [
             'name' => $this->comparison($this->comparisonId)->name,
             'definitions' => $definitions,
-            'emptiedSeries' => $this->emptiedSeries($this->withDefaultLabels($definitions)),
+            'emptiedSeries' => $this->emptiedSeries($labelled),
             'unresolvedSeries' => array_values(array_map(
                 fn (SeriesDefinition $d) => $d->label,
-                array_filter($this->withDefaultLabels($definitions), fn (SeriesDefinition $d) => $d->hasUnresolvedTags()),
+                array_filter($labelled, fn (SeriesDefinition $d) => $d->hasUnresolvedTags()),
             )),
             'matches' => $matches,
             'results' => $results,
             'lines' => $lines,
             'seriesColors' => $colors,
+            'summaries' => $this->summaries($labelled, $matches),
+            'openCards' => $this->openCards(count($definitions)),
             ...$this->chartData($view->display, $charts),
             'paletteRepeats' => count(array_unique($drawn)) < count($drawn),
             'rollingWindow' => (int) config('discussion.share_window'),
@@ -176,6 +186,32 @@ class ComparisonEditor extends Component
             'expertNames' => Expert::query()->distinct()->orderBy('name')->pluck('name'),
             'referenceTypes' => array_keys(AgentReferences::TYPES),
         ]);
+    }
+
+    /**
+     * Cards start open while a comparison has up to three series; beyond
+     * that they start folded to their summary, so the result stays near the
+     * top. The one just added opens. Folding is client state, never saved.
+     *
+     * @return list<bool>
+     */
+    private function openCards(int $count): array
+    {
+        return array_map(fn (int $index) => $count <= 3 || $index === $this->addedSeries, $count === 0 ? [] : range(0, $count - 1));
+    }
+
+    /**
+     * @param  list<SeriesDefinition>  $definitions  carrying their display labels
+     * @param  list<Collection>  $matches
+     * @return list<string>
+     */
+    private function summaries(array $definitions, array $matches): array
+    {
+        $ids = array_merge([], ...array_map(fn (SeriesDefinition $d) => $d->tagValueIds(), $definitions));
+        $tagLabels = TagValue::with('category')->whereKey($ids)->get()->mapWithKeys(fn (TagValue $v) => [$v->id => $v->fullLabel()])->all();
+        $summary = new SeriesSummary($tagLabels, app(PipelineRegistry::class)->options(), ModelConfig::options());
+
+        return array_map(fn (SeriesDefinition $d, $projects) => $summary->of($d, $projects->count()), $definitions, $matches);
     }
 
     /**

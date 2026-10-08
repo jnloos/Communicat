@@ -3,17 +3,17 @@
     there are projects and the spacer that pushes the footer down when there
     are none — which is why no flux:sidebar.spacer is needed here.
 --}}
-<div class="-mx-2 flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-2 [scrollbar-gutter:stable] [scrollbar-width:thin]">
+<div data-project-list class="-mx-2 flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-2">
     {{-- The label row is the title of the list, not one of its groups: an xs
          uppercase section label, set apart from the text-sm group headers
          below. It sticks to the top with the sidebar's own background, so the
          funnel and the summary stay in reach while the list scrolls; the
-         stable, thin scrollbar keeps the row from shifting when a filter makes
-         the list long enough to scroll.
+         stable, thin scrollbar (app.css, [data-project-list]) keeps the row
+         from shifting when a filter makes the list long enough to scroll.
 
-         The funnel stays an outline icon; an active filter shows as a small
-         count badge on it and as one summary line underneath ("26 of 47 ·
-         status, control"), whose text opens the popover and whose × clears.
+         The funnel stays an outline icon without a badge; an active filter
+         shows as one summary line underneath ("26 of 47 · Condition:
+         status"), whose text opens the popover and whose × clears.
 
          A popover, not a flux:menu: the panel holds a mode switch and pills,
          which a menu's roving focus and item roles do not fit.
@@ -95,9 +95,6 @@
                         </flux:popover>
                     </flux:dropdown>
 
-                    @if ($activeFilterCount > 0)
-                        <span aria-hidden="true" class="pointer-events-none absolute -end-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-none text-accent-foreground">{{ $activeFilterCount }}</span>
-                    @endif
                 </div>
             @endif
         </div>

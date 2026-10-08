@@ -43,8 +43,10 @@
                 <flux:navlist class="mt-3">
                     @foreach ($comparisons as $comparison)
                         <div class="group/comparison relative" wire:key="comparison-item-{{ $comparison->id }}">
-                            <flux:navlist.item wire:click="open({{ $comparison->id }})" :current="$comparisonId === $comparison->id" class="cursor-pointer pe-9">
-                                {{ $comparison->name }}
+                            {{-- A long name truncates inside its row, so it never runs under the "…" menu. --}}
+                            <flux:navlist.item wire:click="open({{ $comparison->id }})" :current="$comparisonId === $comparison->id" :title="$comparison->name"
+                                class="min-w-0 cursor-pointer pe-9 [&_[data-content]]:min-w-0">
+                                <span class="block truncate">{{ $comparison->name }}</span>
                             </flux:navlist.item>
 
                             <div class="absolute end-1 top-0 flex h-10 items-center lg:h-8">

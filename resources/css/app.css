@@ -232,3 +232,20 @@ select:focus[data-flux-control] {
 [data-pie-tints] [data-sector][data-key="tint-7"] { fill-opacity: 0.12; }
 [data-pie-tints] [data-sector][data-key="others"] { fill: var(--color-zinc-300) !important; }
 .dark [data-pie-tints] [data-sector][data-key="others"] { fill: var(--color-zinc-600) !important; }
+
+/* Sidebar project list (livewire/projects/project-navigation.blade.php): a
+   thin scrollbar with a stable gutter, so the sticky label row never shifts.
+   Chrome on Linux and Windows draws arrow buttons even on a standard
+   `scrollbar-width: thin` bar, and once that property is set it ignores the
+   ::-webkit-scrollbar rules that could remove them. So Blink and WebKit get
+   the pseudo-elements, and only browsers without them (Firefox) the standard
+   property. */
+[data-project-list] { scrollbar-gutter: stable; }
+[data-project-list]::-webkit-scrollbar { width: 6px; }
+[data-project-list]::-webkit-scrollbar-button { display: none; }
+[data-project-list]::-webkit-scrollbar-track { background: transparent; }
+[data-project-list]::-webkit-scrollbar-thumb { background-color: var(--color-zinc-300); border-radius: 9999px; }
+.dark [data-project-list]::-webkit-scrollbar-thumb { background-color: var(--color-zinc-600); }
+@supports not selector(::-webkit-scrollbar) {
+    [data-project-list] { scrollbar-width: thin; }
+}

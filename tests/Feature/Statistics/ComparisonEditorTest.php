@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Statistics;
 
+use App\Discussion\Pipelines\PipelineRegistry;
 use App\Livewire\Statistics\ComparisonEditor;
 use App\Livewire\Statistics\StatisticsPage;
 use App\Models\Comparison;
@@ -208,5 +209,42 @@ class ComparisonEditorTest extends TestCase
         $html = $this->editor()->call('addSeries')->assertSee(trans_choice('comparisons.series.matches', 1, ['count' => 1]))->html();
 
         $this->assertMatchesRegularExpression('/<details class="group text-sm">\s*<summary/', $html);
+    }
+
+    public function test_each_series_card_carries_a_one_line_summary(): void
+    {
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+        Project::factory()->count(2)->create(['user_id' => $this->user->id, 'pipeline' => 'ScorePipeline'])
+            ->each(fn (Project $project) => $project->setTag($condition, $status));
+        $this->comparison->update(['series' => [[
+            'label' => 'Score · status',
+            'projects' => ['tags' => [$condition->id => [$status->id]], 'pipeline' => 'ScorePipeline'],
+            'reference' => ['type' => 'seat', 'seat' => 1],
+        ]]]);
+
+        $summary = implode(' · ', [
+            'Condition: status',
+            app(PipelineRegistry::class)->options()['ScorePipeline'],
+            __('comparisons.series.any_model'),
+            __('comparisons.results.seat', ['seat' => 1]),
+            trans_choice('comparisons.series.summary_projects', 2, ['count' => 2]),
+        ]);
+
+        $this->editor()->assertViewHas('summaries', [$summary])->assertSee($summary);
+    }
+
+    public function test_cards_start_open_up_to_three_series_and_folded_beyond(): void
+    {
+        $this->comparison->update(['series' => array_fill(0, 3, ['label' => 'A'])]);
+        $this->assertSame([true, true, true], $this->editor()->viewData('openCards'));
+
+        $this->comparison->update(['series' => array_fill(0, 4, ['label' => 'A'])]);
+        $editor = $this->editor();
+        $this->assertSame([false, false, false, false], $editor->viewData('openCards'));
+
+        // A series just added opens, so it can be filled in; folding saves nothing.
+        $this->assertSame([false, false, false, false, true], $editor->call('addSeries')->viewData('openCards'));
+        $this->assertCount(5, $this->comparison->fresh()->series);
     }
 }
