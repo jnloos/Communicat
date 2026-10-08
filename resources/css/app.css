@@ -191,28 +191,61 @@ select:focus[data-flux-control] {
     to { opacity: 1; }
 }
 
-/* Flux leaves its interactive elements on the default cursor. This is the one
-   place that fixes it -- a `cursor-pointer` class in a view says the same thing
-   again in a spot where the next button will forget it.
+/* Flux leaves its interactive elements on the default cursor (Tailwind's
+   preflight even resets `button` to it). This is the one place that fixes it --
+   a `cursor-pointer` class in a view says the same thing again in a spot where
+   the next button will forget it.
 
-   Every kind has to be named: a menu's checkbox and radio entries are NOT
-   data-flux-menu-item, they carry their own attribute, which is why they were
-   the ones still missing it. Two more need a descendant selector, because the
-   element carrying the attribute is not the clickable one -- the modal's close
-   is a zero-sized custom element, and an expandable sidebar group puts its
-   attribute on the disclosure around the header button.
+   Every kind has to be named, because Flux marks them differently:
+   - Real buttons carry data-flux-button, -tab, -navlist-item, -sidebar-item,
+     -navmenu-item, -badge-close, -accordion-heading (all <button>/<a>), and
+     plain <button>, [role=button] and <summary> are covered by tag.
+   - The form controls are custom elements, not inputs: <ui-radio> (default,
+     segmented, pills, buttons, cards), <ui-checkbox> (pills, buttons, cards),
+     <ui-switch>, and the listbox/select/combobox/command/autocomplete entries
+     <ui-option> and <ui-option-create>, plus the select/date/pillbox/colour
+     triggers. A label wrapping a native checkbox or radio counts too.
+   - A menu's checkbox and radio entries are NOT data-flux-menu-item, they carry
+     their own attribute.
+   - Two need a descendant selector, because the element carrying the attribute
+     is not the clickable one -- the modal's close is a zero-sized custom
+     element, and an expandable sidebar/nav group puts its attribute on the
+     disclosure around the header button.
 
    Disabled entries keep the default: a pointer on something that does not
-   react is a lie. */
+   react is a lie. Flux marks "disabled" as the attribute, data-disabled or
+   aria-disabled depending on the element, so all three are excluded. */
 [data-flux-modal-close] button,
 [data-flux-sidebar-group] > button,
+[data-flux-navlist-group] > button,
 :is(
+    button,
+    summary,
+    [role="button"],
+    label:has(> input[type="checkbox"], > input[type="radio"]),
+    ui-radio,
+    ui-checkbox,
+    ui-switch,
+    ui-option,
+    ui-option-create,
+    ui-pillbox-trigger,
     [data-flux-button],
+    [data-flux-tab],
+    [data-flux-navlist-item],
+    [data-flux-navmenu-item],
+    [data-flux-sidebar-item],
+    [data-flux-sidebar-toggle],
     [data-flux-menu-item],
     [data-flux-menu-checkbox],
     [data-flux-menu-radio],
-    [data-flux-sidebar-toggle]
-):not([disabled]):not([data-disabled]) {
+    [data-flux-accordion-heading],
+    [data-flux-badge-close],
+    [data-flux-select-button],
+    [data-flux-date-picker-button],
+    [data-flux-time-picker-button],
+    [data-flux-color-picker-button],
+    [data-flux-file-item-remove]
+):not(:disabled):not([disabled]):not([data-disabled]):not([aria-disabled="true"]) {
     cursor: pointer;
 }
 
