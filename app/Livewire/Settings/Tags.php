@@ -14,8 +14,8 @@ use Livewire\Component;
 
 /**
  * Settings → Tags: the global categories and their fixed values, for personas
- * and for projects. Admins only, checked on every action — the route's admin
- * middleware only guards the first request, not Livewire's updates.
+ * and for projects. Admins only, checked in boot() so it covers every request —
+ * the route's admin middleware only guards the first one, not Livewire's updates.
  */
 class Tags extends Component
 {
@@ -37,14 +37,14 @@ class Tags extends Component
 
     public string $renameTo = '';
 
-    public function mount(): void
+    /** Livewire boots the component on every request, the mount and each update alike. */
+    public function boot(): void
     {
         Gate::authorize('admin');
     }
 
     public function createCategory(): void
     {
-        Gate::authorize('admin');
         $scope = $this->currentScope();
         $this->newCategoryName = trim($this->newCategoryName);
         $this->validate(['newCategoryName' => $this->categoryNameRules($scope)], [], ['newCategoryName' => __('tags.fields.category')]);
@@ -55,7 +55,6 @@ class Tags extends Component
 
     public function createValue(int $categoryId): void
     {
-        Gate::authorize('admin');
         $category = TagCategory::findOrFail($categoryId);
         $field = "newValueNames.{$categoryId}";
         $this->newValueNames[$categoryId] = trim((string) ($this->newValueNames[$categoryId] ?? ''));
@@ -67,7 +66,6 @@ class Tags extends Component
 
     public function startRenamingCategory(int $categoryId): void
     {
-        Gate::authorize('admin');
         $category = TagCategory::findOrFail($categoryId);
         $this->cancelRenaming();
         $this->renamingCategoryId = $category->id;
@@ -76,7 +74,6 @@ class Tags extends Component
 
     public function startRenamingValue(int $valueId): void
     {
-        Gate::authorize('admin');
         $value = TagValue::findOrFail($valueId);
         $this->cancelRenaming();
         $this->renamingValueId = $value->id;
@@ -85,7 +82,6 @@ class Tags extends Component
 
     public function saveCategoryName(): void
     {
-        Gate::authorize('admin');
         $category = TagCategory::findOrFail((int) $this->renamingCategoryId);
         $this->renameTo = trim($this->renameTo);
         $this->validate(['renameTo' => $this->categoryNameRules($category->scope, $category->id)], [], ['renameTo' => __('tags.fields.category')]);
@@ -96,7 +92,6 @@ class Tags extends Component
 
     public function saveValueName(): void
     {
-        Gate::authorize('admin');
         $value = TagValue::with('category')->findOrFail((int) $this->renamingValueId);
         $this->renameTo = trim($this->renameTo);
         $this->validate(['renameTo' => $this->valueNameRules($value->category, $value->id)], [], ['renameTo' => __('tags.fields.value')]);
@@ -113,7 +108,6 @@ class Tags extends Component
 
     public function confirmDeleteCategory(int $categoryId): void
     {
-        Gate::authorize('admin');
         $category = TagCategory::withCount('values')->findOrFail($categoryId);
         $assignments = $category->assignmentCount();
 
@@ -125,13 +119,11 @@ class Tags extends Component
 
     public function deleteCategory(int $categoryId): void
     {
-        Gate::authorize('admin');
         TagCategory::findOrFail($categoryId)->delete();
     }
 
     public function confirmDeleteValue(int $valueId): void
     {
-        Gate::authorize('admin');
         $value = TagValue::with('category')->withCount('assignments')->findOrFail($valueId);
 
         $this->confirmTitle = __('tags.confirm.delete_value.title');
@@ -145,20 +137,17 @@ class Tags extends Component
 
     public function deleteValue(int $valueId): void
     {
-        Gate::authorize('admin');
         TagValue::findOrFail($valueId)->delete();
     }
 
     /** wire:sort hands over the item key and its new 0-based position. */
     public function sortCategory(int $categoryId, int $position): void
     {
-        Gate::authorize('admin');
         TagCategory::findOrFail($categoryId)->moveTo($position);
     }
 
     public function sortValue(int $valueId, int $position): void
     {
-        Gate::authorize('admin');
         TagValue::findOrFail($valueId)->moveTo($position);
     }
 

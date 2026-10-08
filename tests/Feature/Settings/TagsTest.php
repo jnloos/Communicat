@@ -12,6 +12,7 @@ use App\Models\TagValue;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class TagsTest extends TestCase
@@ -34,6 +35,48 @@ class TagsTest extends TestCase
         $this->actingAs(User::factory()->create());
 
         Livewire::test(Tags::class)->assertForbidden();
+    }
+
+    /** Every request after the mount, as an admin who loses the flag in between would send it. */
+    public static function adminActions(): array
+    {
+        return [
+            'createCategory' => ['createCategory'],
+            'createValue' => ['createValue', 'value'],
+            'startRenamingCategory' => ['startRenamingCategory', 'category'],
+            'startRenamingValue' => ['startRenamingValue', 'value'],
+            'saveCategoryName' => ['saveCategoryName'],
+            'saveValueName' => ['saveValueName'],
+            'cancelRenaming' => ['cancelRenaming'],
+            'confirmDeleteCategory' => ['confirmDeleteCategory', 'category'],
+            'deleteCategory' => ['deleteCategory', 'category'],
+            'confirmDeleteValue' => ['confirmDeleteValue', 'value'],
+            'deleteValue' => ['deleteValue', 'value'],
+            'sortCategory' => ['sortCategory', 'category', 0],
+            'sortValue' => ['sortValue', 'value', 0],
+            '\$refresh' => ['$refresh'],
+        ];
+    }
+
+    #[DataProvider('adminActions')]
+    public function test_every_action_is_rejected_once_the_user_is_no_admin(string $action, ?string $target = null, mixed ...$more): void
+    {
+        $admin = $this->admin();
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'Geschlecht']);
+        $value = $category->values()->create(['name' => 'weiblich']);
+        $this->actingAs($admin);
+        $component = Livewire::test(Tags::class);
+
+        $admin->update(['is_admin' => false]);
+        $params = match ($target) {
+            'category' => [$category->id, ...$more],
+            'value' => [$value->id, ...$more],
+            default => [],
+        };
+
+        $component->call($action, ...$params)->assertForbidden();
+        $this->assertSame(1, TagCategory::count());
+        $this->assertSame(1, TagValue::count());
     }
 
     public function test_an_admin_creates_a_category_and_a_value_in_the_chosen_scope(): void
