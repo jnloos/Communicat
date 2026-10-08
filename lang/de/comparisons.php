@@ -122,7 +122,7 @@ return [
         'max' => 'Max',
         'per_project' => 'Werte je Projekt',
         'excluded' => '{1}„:label“: 1 Projekt fällt heraus (Bezug trifft niemanden oder kein gesprochener Turn).|[2,*]„:label“: :count Projekte fallen heraus (Bezug trifft niemanden oder kein gesprochener Turn).',
-        'bar_text' => 'Ø :mean · :min–:max · n = :n',
+        'bar_text' => 'Mittel :mean · Spanne :min–:max · n = :n',
         'no_trajectory' => 'Den Verlauf gibt es nur für Turn- und Wortanteil.',
         'n_of' => ':label · n',
         'palette_repeats' => 'Mehr als 8 Linien: Farben wiederholen sich. Wähle einen engeren Bezug.',

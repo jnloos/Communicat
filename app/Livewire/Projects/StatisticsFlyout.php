@@ -4,6 +4,7 @@ namespace App\Livewire\Projects;
 
 use App\Discussion\Metrics\ShareTrajectory;
 use App\Discussion\Metrics\SpeakingShares;
+use App\Discussion\Support\LocaleNumber;
 use App\Discussion\Values\Participant;
 use App\Discussion\Values\ShareReport;
 use App\Discussion\Values\ShareSeries;
@@ -83,7 +84,7 @@ class StatisticsFlyout extends Component
      * colours in the two charts.
      *
      * `share` is pre-formatted here rather than in the chart: the tooltip prints
-     * whatever the datum holds, and the locale's decimal comma is a server-side
+     * whatever the datum holds, and the locale's separators are a server-side
      * concern.
      *
      * @param  Closure(SpeakerShare): int  $amount  the unit's absolute value
@@ -103,7 +104,7 @@ class StatisticsFlyout extends Component
                 $rows[] = [
                     'name' => $share->name,
                     'value' => $value,
-                    'share' => number_format($fraction($share) * 100, 1, ',', '.').' %',
+                    'share' => LocaleNumber::percent($fraction($share)),
                     'color' => $this->colorFor($index),
                 ];
             }

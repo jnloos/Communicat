@@ -126,8 +126,8 @@ class StatisticsFlyoutTest extends TestCase
                 ->viewData('turnSectors')
         )->keyBy('name');
 
-        $this->assertSame('66,7 %', $sectors['Alice']['share']);
-        $this->assertSame('33,3 %', $sectors['Bob']['share']);
+        $this->assertSame('66.7 %', $sectors['Alice']['share']);
+        $this->assertSame('33.3 %', $sectors['Bob']['share']);
     }
 
     /**

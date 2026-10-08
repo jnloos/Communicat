@@ -57,7 +57,7 @@ class ComparisonResultsTest extends TestCase
     {
         $this->editor()
             ->assertSee('Sitz eins')
-            ->assertSee('75,0 %')
+            ->assertSee('75.0 %')
             ->assertSee('Zelle 1');
     }
 
@@ -71,7 +71,7 @@ class ComparisonResultsTest extends TestCase
         $this->assertSame(0.75, $bar['max']);
         $this->assertSame(1.0, $component->viewData('barScale'));
         $this->assertSame('indigo', $bar['color']);
-        $component->assertSee(__('comparisons.results.bar_text', ['mean' => '75,0 %', 'min' => '75,0 %', 'max' => '75,0 %', 'n' => 1]));
+        $component->assertSee(__('comparisons.results.bar_text', ['mean' => '75.0 %', 'min' => '75.0 %', 'max' => '75.0 %', 'n' => 1]));
     }
 
     public function test_the_curve_has_one_row_per_turn_with_n(): void
@@ -106,7 +106,7 @@ class ComparisonResultsTest extends TestCase
 
     public function test_the_turn_limit_reaches_the_result(): void
     {
-        $this->editor()->set('viewSettings.turn_limit', '2')->assertSee('100,0 %');
+        $this->editor()->set('viewSettings.turn_limit', '2')->assertSee('100.0 %');
 
         $this->assertSame(2, $this->comparison->fresh()->view['turn_limit']);
     }
@@ -141,7 +141,7 @@ class ComparisonResultsTest extends TestCase
         $component = $this->editor()->set('viewSettings.display', 'trajectory');
         $rows = $component->viewData('trajectoryRows');
 
-        $this->assertSame('75,0 %', $rows[3]['t0']);
+        $this->assertSame('75.0 %', $rows[3]['t0']);
         $component->assertSee(__('comparisons.results.n_of', ['label' => 'Sitz eins']));
     }
 

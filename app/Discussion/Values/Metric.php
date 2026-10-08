@@ -2,6 +2,7 @@
 
 namespace App\Discussion\Values;
 
+use App\Discussion\Support\LocaleNumber;
 use LogicException;
 
 /**
@@ -75,13 +76,13 @@ enum Metric: string
         return __("comparisons.metrics.{$this->value}");
     }
 
-    /** German separators (`,` decimal, `.` thousands), as the existing statistics flyout writes numbers. */
+    /** Separators follow the app locale, as in the statistics flyout (LocaleNumber). */
     public function format(float $value): string
     {
         return match (true) {
-            $this->isShare() => number_format($value * 100, 1, ',', '.').' %',
-            $this === self::WordsPerTurn => number_format($value, 1, ',', '.'),
-            default => number_format($value, 2, ',', '.'),
+            $this->isShare() => LocaleNumber::percent($value),
+            $this === self::WordsPerTurn => LocaleNumber::decimal($value, 1),
+            default => LocaleNumber::decimal($value, 2),
         };
     }
 }

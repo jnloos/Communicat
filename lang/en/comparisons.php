@@ -122,7 +122,7 @@ return [
         'max' => 'Max',
         'per_project' => 'Values per project',
         'excluded' => '{1}“:label”: 1 project drops out (the reference hits nobody, or no turn was spoken).|[2,*]“:label”: :count projects drop out (the reference hits nobody, or no turn was spoken).',
-        'bar_text' => 'Ø :mean · :min–:max · n = :n',
+        'bar_text' => 'mean :mean · range :min–:max · n = :n',
         'no_trajectory' => 'The curve exists for turn share and word share only.',
         'n_of' => ':label · n',
         'palette_repeats' => 'More than 8 lines: colours repeat. Choose a narrower reference.',
