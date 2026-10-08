@@ -15,12 +15,20 @@ class Users extends Component
     use NeedsConfirmation;
 
     public ?int $editingUserId = null;
-    public string $name        = '';
-    public string $email       = '';
-    public string $password    = '';
-    public bool $is_admin      = false;
 
-    public function mount(): void
+    public string $name = '';
+
+    public string $email = '';
+
+    public string $password = '';
+
+    public bool $is_admin = false;
+
+    /**
+     * Livewire boots the component on every request, the mount and each update
+     * alike; the route's admin middleware guards only the first of them.
+     */
+    public function boot(): void
     {
         Gate::authorize('admin');
     }
@@ -33,20 +41,20 @@ class Users extends Component
 
     public function openEdit(int $userId): void
     {
-        $user                = User::findOrFail($userId);
+        $user = User::findOrFail($userId);
         $this->editingUserId = $userId;
-        $this->name          = $user->name;
-        $this->email         = $user->email;
-        $this->password      = '';
-        $this->is_admin      = $user->is_admin;
+        $this->name = $user->name;
+        $this->email = $user->email;
+        $this->password = '';
+        $this->is_admin = $user->is_admin;
         Flux::modal('user-form')->show();
     }
 
     public function save(): void
     {
         $rules = [
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->editingUserId)],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->editingUserId)],
             'is_admin' => ['boolean'],
         ];
 
@@ -66,8 +74,8 @@ class Users extends Component
             User::findOrFail($this->editingUserId)->update($data);
         } else {
             User::create([
-                'name'     => $this->name,
-                'email'    => $this->email,
+                'name' => $this->name,
+                'email' => $this->email,
                 'password' => Hash::make($this->password),
                 'is_admin' => $this->is_admin,
             ]);
