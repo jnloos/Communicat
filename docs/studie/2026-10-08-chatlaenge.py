@@ -249,6 +249,15 @@ def analyse(run: dict, rng: np.random.Generator) -> dict:
 
 # --- figures -----------------------------------------------------------------
 
+def dodge(values: np.ndarray, gap: float = 5.0) -> np.ndarray:
+    """Label heights for line ends, pushed apart so no two are closer than `gap`."""
+    order = np.argsort(values)
+    placed = values.astype(float).copy()
+    for previous, current in zip(order, order[1:]):
+        placed[current] = max(placed[current], placed[previous] + gap)
+    return placed
+
+
 def figure(run: dict, result: dict) -> None:
     import matplotlib
 
@@ -257,38 +266,40 @@ def figure(run: dict, result: dict) -> None:
 
     accent, other = "#2a6fdb", "#9aa0a6"
     turns = np.arange(1, result["turns"] + 1)
-    fig, axes = plt.subplots(1, 2, figsize=(10, 3.6), sharey=True, constrained_layout=True)
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 3.6), sharey=True, constrained_layout=True)
 
     for ax, key, heading in (
         (axes[0], "cumulative_turns", "Kumulativer Turn-Anteil"),
         (axes[1], "rolling_turns", f"Gleitender Turn-Anteil (Fenster {WINDOW})"),
     ):
         data = run["shares"][key] * 100
+        label_y = dodge(data[-1])
         for e, participant in reversed(list(enumerate(run["participants"]))):
             titled = participant["seat"] == 1
             ax.plot(turns, data[:, e], color=accent if titled else other,
-                    linewidth=2.2 if titled else 1.2, zorder=3 if titled else 2,
-                    label=participant["name"] + (" (Titel)" if titled else ""))
-            ax.annotate(participant["name"].split(" ")[0], (turns[-1], data[-1, e]),
-                        xytext=(4, 0), textcoords="offset points", va="center", fontsize=7,
-                        color="#202124" if titled else "#5f6368")
+                    linewidth=2.2 if titled else 1.2, zorder=3 if titled else 2)
+            ax.annotate(participant["name"].split(" ")[0] + (" (Titel)" if titled else ""),
+                        (turns[-1], label_y[e]), xytext=(4, 0), textcoords="offset points",
+                        va="center", fontsize=7, annotation_clip=False,
+                        color="#202124" if titled else "#5f6368",
+                        fontweight="bold" if titled else "normal")
         ax.axhline(25, color="#5f6368", linewidth=0.8, linestyle=":", zorder=1)
         t = result["T_cumulative_turns" if key == "cumulative_turns" else "T_rolling_turns"]
         if t is not None:
             ax.axvline(t, color="#202124", linewidth=1, linestyle="--")
-            ax.annotate(f"T = {t}", (t, 97), xytext=(4, 0), textcoords="offset points",
-                        fontsize=8, va="top")
+            ax.annotate(f"T = {t}", (t, 50), xytext=(-4, 0), textcoords="offset points",
+                        fontsize=8, va="top", ha="right",
+                        bbox={"boxstyle": "round,pad=0.2", "facecolor": "white", "edgecolor": "none"})
         else:
             ax.annotate("nicht stabil", (2, 97), fontsize=8, va="top", color="#5f6368")
         ax.set_title(heading, fontsize=10, loc="left")
         ax.set_xlabel("Gesprochener Turn")
-        ax.set_xlim(1, result["turns"] + 8)
+        ax.set_xlim(1, result["turns"])
         ax.set_ylim(0, 100)
         ax.grid(axis="y", color="#e8eaed", linewidth=0.8)
         for side in ("top", "right"):
             ax.spines[side].set_visible(False)
     axes[0].set_ylabel("Anteil in %")
-    axes[0].legend(fontsize=7, frameon=False, loc="upper right")
 
     label = PIPELINE_LABEL[run["pipeline"]]
     fig.suptitle(f"{label} · {run['title']} · Projekt {run['id']}", fontsize=11, x=0.01, ha="left")
