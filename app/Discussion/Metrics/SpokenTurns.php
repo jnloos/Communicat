@@ -7,6 +7,7 @@ use App\Models\JobLog;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use InvalidArgumentException;
 
 /**
  * The study's counting rules, in one place: which job_logs rows are spoken
@@ -57,6 +58,22 @@ class SpokenTurns
     public function inOrder(Project $project): Builder
     {
         return $this->of($project)->orderBy('turn_index')->orderBy('id');
+    }
+
+    /**
+     * The first $limit spoken turns in the order they were taken, or all of
+     * them for null. The one place a turn limit is applied, so the totals and
+     * the curve of a limited run stop at the same turn.
+     *
+     * @return Builder<JobLog>
+     */
+    public function firstTurns(Project $project, ?int $limit = null): Builder
+    {
+        if ($limit !== null && $limit < 1) {
+            throw new InvalidArgumentException("A turn limit must be at least 1, got {$limit}.");
+        }
+
+        return $this->inOrder($project)->when($limit !== null, fn (Builder $turns) => $turns->limit($limit));
     }
 
     /**

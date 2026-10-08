@@ -6,6 +6,7 @@ use App\Discussion\Values\ShareReport;
 use App\Discussion\Values\SpeakerShare;
 use App\Models\Expert;
 use App\Models\Project;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Turn share and conversation share for one run, read straight from job_logs.
@@ -19,9 +20,16 @@ class SpeakingShares
 {
     public function __construct(private SpokenTurns $spoken) {}
 
-    public function forProject(Project $project): ShareReport
+    /**
+     * @param  int|null  $turnLimit  count only the first N spoken turns; null counts the whole run.
+     *                               failedTurns stays the run's total either way.
+     */
+    public function forProject(Project $project, ?int $turnLimit = null): ShareReport
     {
-        $counted = $this->spoken->of($project)
+        // Aggregated over a subquery, so a limit cuts the turns before they are
+        // added up rather than the groups after.
+        $counted = DB::query()
+            ->fromSub($this->spoken->firstTurns($project, $turnLimit)->select(['expert_id', 'words']), 'spoken')
             ->selectRaw('expert_id, count(*) as turns, sum(words) as words')
             ->groupBy('expert_id')
             ->get()

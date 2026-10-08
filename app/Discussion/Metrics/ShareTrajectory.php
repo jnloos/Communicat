@@ -33,7 +33,7 @@ class ShareTrajectory
      * @param  int|null  $window  spoken turns a rolling share spans; null reads
      *                            config('discussion.share_window')
      */
-    public function forProject(Project $project, ?int $window = null): Trajectory
+    public function forProject(Project $project, ?int $window = null, ?int $turnLimit = null): Trajectory
     {
         $window ??= (int) config('discussion.share_window');
 
@@ -45,7 +45,7 @@ class ShareTrajectory
             ->map(fn (Expert $expert) => new Participant($expert->id, $expert->name, $expert->pivot?->seat))
             ->all();
 
-        $turns = $this->spoken->inOrder($project)->get(['expert_id', 'words'])->all();
+        $turns = $this->spoken->firstTurns($project, $turnLimit)->get(['expert_id', 'words'])->all();
 
         return new Trajectory(
             participants: $participants,

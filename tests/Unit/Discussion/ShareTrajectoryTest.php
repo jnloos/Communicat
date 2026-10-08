@@ -237,4 +237,19 @@ class ShareTrajectoryTest extends TestCase
 
         $this->trajectory(window: 0);
     }
+
+    public function test_a_turn_limit_cuts_the_curve_where_the_totals_stop(): void
+    {
+        $this->turn('Alice', 10);
+        $this->turn('Alice', 10);
+        $this->turn('Bob', 10);
+        $this->turn('Bob', 10);
+
+        $trajectory = app(ShareTrajectory::class)->forProject($this->project->fresh(), turnLimit: 2);
+        $report = app(SpeakingShares::class)->forProject($this->project->fresh(), turnLimit: 2);
+
+        $this->assertCount(2, $trajectory->points);
+        $this->assertSame(1.0, $trajectory->points[1]->share(ShareSeries::CumulativeTurns, $this->id('Alice')));
+        $this->assertSame($report->speakers[0]->turnShare, $trajectory->points[1]->share(ShareSeries::CumulativeTurns, $this->id('Alice')));
+    }
 }

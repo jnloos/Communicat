@@ -9,6 +9,7 @@ use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use InvalidArgumentException;
 use Tests\TestCase;
 
 class SpeakingSharesTest extends TestCase
@@ -210,5 +211,27 @@ class SpeakingSharesTest extends TestCase
         $names = array_map(fn (SpeakerShare $s) => $s->name, $this->report()->speakers);
 
         $this->assertSame(['Alice', 'Bob', 'Carol', 'Dave'], $names);
+    }
+
+    public function test_a_turn_limit_counts_only_the_first_spoken_turns(): void
+    {
+        $this->turn('Alice', 10);
+        $this->turn('Dave', null, status: 'failed');
+        $this->turn('Bob', 20);
+        $this->turn('Carol', 30);
+
+        $report = app(SpeakingShares::class)->forProject($this->project->fresh(), turnLimit: 2);
+
+        $this->assertSame(2, $report->spokenTurns);
+        $this->assertSame(30, $report->totalWords);
+        $this->assertSame(0.5, $report->speakers[0]->turnShare);
+        $this->assertSame(0, $report->speakers[2]->turns);
+    }
+
+    public function test_a_turn_limit_below_one_is_refused(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        app(SpeakingShares::class)->forProject($this->project->fresh(), turnLimit: 0);
     }
 }
