@@ -10,7 +10,7 @@
 
         <div class="flex items-center gap-2">
             <flux:dropdown position="bottom" align="end">
-                <flux:button size="sm" icon="rectangle-stack" icon:trailing="chevron-down" class="cursor-pointer">{{ __('comparisons.templates.menu') }}</flux:button>
+                <flux:button size="sm" icon="rectangle-stack" icon:trailing="chevron-down">{{ __('comparisons.templates.menu') }}</flux:button>
                 <flux:menu>
                     @foreach ($templates as $template)
                         <flux:menu.item wire:click="createFromTemplate('{{ $template->key }}')" wire:key="template-{{ $template->key }}">{{ $template->name() }}</flux:menu.item>
@@ -18,7 +18,7 @@
                 </flux:menu>
             </flux:dropdown>
 
-            <flux:button size="sm" :variant="$comparisons->isEmpty() ? 'primary' : 'outline'" icon="plus" wire:click="startCreating" class="cursor-pointer">
+            <flux:button size="sm" :variant="$comparisons->isEmpty() ? 'primary' : 'outline'" icon="plus" wire:click="startCreating">
                 {{ __('comparisons.list.create') }}
             </flux:button>
         </div>
@@ -28,7 +28,7 @@
         <flux:callout variant="warning" icon="exclamation-triangle" class="mt-6">
             <flux:callout.text>{{ $templateNotice }}</flux:callout.text>
             <x-slot name="controls">
-                <flux:button variant="ghost" size="sm" icon="x-mark" wire:click="$set('templateNotice', null)" :aria-label="__('common.actions.close')" class="cursor-pointer" />
+                <flux:button variant="ghost" size="sm" icon="x-mark" wire:click="$set('templateNotice', null)" :aria-label="__('common.actions.close')" />
             </x-slot>
         </flux:callout>
     @endif
@@ -45,14 +45,14 @@
                         <div class="group/comparison relative" wire:key="comparison-item-{{ $comparison->id }}">
                             {{-- A long name truncates inside its row, so it never runs under the "…" menu. --}}
                             <flux:navlist.item wire:click="open({{ $comparison->id }})" :current="$comparisonId === $comparison->id" :title="$comparison->name"
-                                class="min-w-0 cursor-pointer pe-9 [&_[data-content]]:min-w-0">
+                                class="min-w-0 pe-9 [&_[data-content]]:min-w-0">
                                 <span class="block truncate">{{ $comparison->name }}</span>
                             </flux:navlist.item>
 
                             <div class="absolute end-1 top-0 flex h-10 items-center lg:h-8">
                                 <flux:dropdown position="bottom" align="end">
                                     <flux:button variant="ghost" size="xs" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')"
-                                        class="cursor-pointer text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!" />
+                                        class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!" />
                                     <flux:menu>
                                         <flux:menu.item icon="pencil-square" wire:click="startRenaming({{ $comparison->id }})">{{ __('comparisons.actions.rename') }}</flux:menu.item>
                                         <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $comparison->id }})">{{ __('comparisons.actions.duplicate') }}</flux:menu.item>
@@ -84,9 +84,9 @@
 
             <x-modal-footer padding="dialog">
                 <flux:modal.close>
-                    <flux:button variant="filled" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
+                    <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
                 </flux:modal.close>
-                <flux:button type="submit" variant="primary" class="cursor-pointer">{{ __('common.actions.save') }}</flux:button>
+                <flux:button type="submit" variant="primary">{{ __('common.actions.save') }}</flux:button>
             </x-modal-footer>
         </form>
     </flux:modal>

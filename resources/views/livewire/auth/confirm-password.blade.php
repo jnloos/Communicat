@@ -18,6 +18,6 @@
             :placeholder="__('common.fields.password')"
         />
 
-        <flux:button variant="primary" type="submit" class="w-full cursor-pointer">{{ __('common.actions.confirm') }}</flux:button>
+        <flux:button variant="primary" type="submit" class="w-full">{{ __('common.actions.confirm') }}</flux:button>
     </form>
 </div>

@@ -12,7 +12,7 @@
         size="xs"
         icon="ellipsis-horizontal"
         :aria-label="$label"
-        class="cursor-pointer text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"
+        class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"
     />
 
     <flux:menu>

@@ -9,7 +9,7 @@
             <flux:heading size="xl" level="1">{{ __('experts.list.heading') }}</flux:heading>
             <flux:text class="mt-1">{{ trans_choice('experts.list.count', $experts->count()) }}</flux:text>
         </div>
-        <flux:button variant="primary" icon="plus" @click="$wire.dispatch('edit_expert')" class="cursor-pointer">
+        <flux:button variant="primary" icon="plus" @click="$wire.dispatch('edit_expert')">
             {{ __('experts.list.create') }}
         </flux:button>
     </div>

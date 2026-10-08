@@ -88,7 +88,6 @@
                             x-show="popEnabled"
                             x-on:click="togglePop()"
                             :aria-label="__('chat.controls.sound_off')"
-                            class="cursor-pointer"
                         />
                     </flux:tooltip>
                     <flux:tooltip :content="__('chat.controls.sound_on')" position="top">
@@ -101,7 +100,6 @@
                             x-cloak
                             x-on:click="togglePop()"
                             :aria-label="__('chat.controls.sound_on')"
-                            class="cursor-pointer"
                         />
                     </flux:tooltip>
                 </div>
@@ -119,7 +117,7 @@
                                 wire:click.debounce="startGenerate"
                                 :disabled="$disableGenerate"
                                 :aria-label="$aiRunTooltip"
-                                class="cursor-pointer sm:min-w-36"
+                                class="sm:min-w-36"
                             >
                                 <span class="hidden sm:inline">{{ __('chat.controls.start_label') }}</span>
                             </flux:button>
@@ -134,7 +132,7 @@
                                 wire:click="stopGenerate"
                                 :disabled="$disableStop"
                                 :aria-label="$aiPauseTooltip"
-                                class="cursor-pointer sm:min-w-36"
+                                class="sm:min-w-36"
                             >
                                 <span class="hidden sm:inline">{{ __('chat.controls.pause_label') }}</span>
                             </flux:button>
@@ -154,7 +152,6 @@
                                 icon="bug-ant"
                                 x-on:click="$dispatch('open-job-debug')"
                                 :aria-label="__('chat.controls.debug')"
-                                class="cursor-pointer"
                             />
                         </flux:tooltip>
                     @endif
@@ -166,7 +163,6 @@
                             icon="chart-bar"
                             x-on:click="$dispatch('open-statistics')"
                             :aria-label="__('chat.controls.stats')"
-                            class="cursor-pointer"
                         />
                     </flux:tooltip>
                 </div>

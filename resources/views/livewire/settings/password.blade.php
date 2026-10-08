@@ -27,7 +27,7 @@
 
             <div class="flex items-center gap-4">
                 <div class="flex items-center justify-end">
-                    <flux:button variant="primary" type="submit" class="w-full cursor-pointer">{{ __('common.actions.save') }}</flux:button>
+                    <flux:button variant="primary" type="submit" class="w-full">{{ __('common.actions.save') }}</flux:button>
                 </div>
 
                 <x-action-message class="me-3" on="password-updated">

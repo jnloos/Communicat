@@ -15,7 +15,7 @@
             :placeholder="__('login.email_placeholder')"
         />
 
-        <flux:button variant="primary" type="submit" class="w-full cursor-pointer">{{ __('login.forgot_password.submit') }}</flux:button>
+        <flux:button variant="primary" type="submit" class="w-full">{{ __('login.forgot_password.submit') }}</flux:button>
     </form>
 
     <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-400">

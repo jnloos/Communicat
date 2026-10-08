@@ -47,7 +47,7 @@
         />
 
         <div class="flex items-center justify-end">
-            <flux:button type="submit" variant="primary" class="w-full cursor-pointer">
+            <flux:button type="submit" variant="primary" class="w-full">
                 {{ __('login.register.submit') }}
             </flux:button>
         </div>

@@ -135,7 +135,7 @@
                             size="xs"
                             icon="ellipsis-horizontal"
                             :aria-label="__('groups.menus.group')"
-                            class="cursor-pointer text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"
+                            class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"
                         />
 
                         <flux:menu>
@@ -182,9 +182,9 @@
 
             <x-modal-footer padding="dialog">
                 <flux:modal.close>
-                    <flux:button variant="filled" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
+                    <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
                 </flux:modal.close>
-                <flux:button type="submit" variant="primary" class="cursor-pointer">{{ __('groups.create.submit') }}</flux:button>
+                <flux:button type="submit" variant="primary">{{ __('groups.create.submit') }}</flux:button>
             </x-modal-footer>
         </form>
     </flux:modal>
@@ -197,9 +197,9 @@
 
             <x-modal-footer padding="dialog">
                 <flux:modal.close>
-                    <flux:button variant="filled" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
+                    <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
                 </flux:modal.close>
-                <flux:button type="submit" variant="primary" class="cursor-pointer">{{ __('common.actions.save') }}</flux:button>
+                <flux:button type="submit" variant="primary">{{ __('common.actions.save') }}</flux:button>
             </x-modal-footer>
         </form>
     </flux:modal>
@@ -212,9 +212,9 @@
 
             <x-modal-footer padding="dialog">
                 <flux:modal.close>
-                    <flux:button variant="filled" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
+                    <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
                 </flux:modal.close>
-                <flux:button type="submit" variant="primary" class="cursor-pointer">{{ __('common.actions.save') }}</flux:button>
+                <flux:button type="submit" variant="primary">{{ __('common.actions.save') }}</flux:button>
             </x-modal-footer>
         </form>
     </flux:modal>

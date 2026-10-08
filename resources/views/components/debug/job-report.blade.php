@@ -93,7 +93,6 @@
                         size="sm"
                         variant="ghost"
                         icon="x-mark"
-                        class="cursor-pointer"
                         :aria-label="__('debug.detail.close')"
                         wire:click="selectJob({{ $selected->id }})"
                     />
@@ -126,7 +125,7 @@
                             <button
                                 type="button"
                                 @click="open = !open"
-                                class="w-full cursor-pointer px-3 py-2 text-xs flex items-center gap-2 flex-wrap text-left"
+                                class="w-full px-3 py-2 text-xs flex items-center gap-2 flex-wrap text-left"
                             >
                                 <svg class="h-3 w-3 shrink-0 text-zinc-400 transition-transform" :class="open && 'rotate-90'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
                                 @if ($plog->status === 'failed')

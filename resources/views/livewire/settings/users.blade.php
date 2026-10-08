@@ -33,7 +33,6 @@
                                         size="sm"
                                         variant="ghost"
                                         icon="pencil-square"
-                                        class="cursor-pointer"
                                         :aria-label="__('settings.users.edit')"
                                         wire:click="openEdit({{ $user->id }})"
                                         :disabled="$user->id === auth()->id()"
@@ -44,7 +43,7 @@
                                         size="sm"
                                         variant="ghost"
                                         icon="trash"
-                                        class="cursor-pointer text-red-600! dark:text-red-400!"
+                                        class="text-red-600! dark:text-red-400!"
                                         :aria-label="__('common.actions.delete')"
                                         wire:click="needsConfirmation('delete', {{ $user->id }})"
                                         :disabled="$user->id === auth()->id()"
@@ -60,7 +59,7 @@
 
         <!-- Create Button -->
         <div class="mt-4">
-            <flux:button variant="primary" icon="plus" wire:click="openCreate" class="cursor-pointer">
+            <flux:button variant="primary" icon="plus" wire:click="openCreate">
                 {{ __('settings.users.create') }}
             </flux:button>
         </div>
@@ -97,9 +96,9 @@
 
                     <x-modal-footer padding="dialog">
                         <flux:modal.close>
-                            <flux:button variant="filled" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
+                            <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
                         </flux:modal.close>
-                        <flux:button type="submit" class="cursor-pointer" variant="primary">{{ __('common.actions.save') }}</flux:button>
+                        <flux:button type="submit" variant="primary">{{ __('common.actions.save') }}</flux:button>
                     </x-modal-footer>
                 </form>
             </div>

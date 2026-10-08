@@ -5,7 +5,7 @@
     </div>
 
     <flux:modal.trigger name="confirm-user-deletion">
-        <flux:button variant="danger" icon="trash" class="cursor-pointer" x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')">
+        <flux:button variant="danger" icon="trash" x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')">
             {{ __('settings.delete_account.button') }}
         </flux:button>
     </flux:modal.trigger>
@@ -24,10 +24,10 @@
 
             <div class="flex justify-end space-x-2 rtl:space-x-reverse">
                 <flux:modal.close>
-                    <flux:button variant="filled" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
+                    <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
                 </flux:modal.close>
 
-                <flux:button variant="danger" type="submit" class="cursor-pointer">{{ __('settings.delete_account.button') }}</flux:button>
+                <flux:button variant="danger" type="submit">{{ __('settings.delete_account.button') }}</flux:button>
             </div>
         </form>
     </flux:modal>

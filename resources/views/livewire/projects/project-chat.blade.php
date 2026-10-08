@@ -20,7 +20,7 @@
                 <flux:button
                     variant="subtle"
                     icon="cog-6-tooth"
-                    class="shrink-0 cursor-pointer"
+                    class="shrink-0"
                     :aria-label="__('chat.header.project_settings')"
                     @click="$wire.dispatch('edit_project')"
                 />
@@ -30,7 +30,7 @@
                 <flux:button
                     variant="subtle"
                     icon="arrow-left-end-on-rectangle"
-                    class="shrink-0 cursor-pointer"
+                    class="shrink-0"
                     :aria-label="__('chat.header.leave_project')"
                     wire:click="needsConfirmation('leaveProject')"
                 />
@@ -53,7 +53,7 @@
             @foreach ($importNotices as $notice)
                 <flux:callout variant="warning" icon="exclamation-triangle" :heading="$notice" wire:key="import-notice-{{ $loop->index }}">
                     <x-slot name="controls">
-                        <flux:button icon="x-mark" variant="ghost" size="sm" class="cursor-pointer"
+                        <flux:button icon="x-mark" variant="ghost" size="sm"
                             :aria-label="__('common.actions.close')" wire:click="$set('importNotices', [])" />
                     </x-slot>
                 </flux:callout>

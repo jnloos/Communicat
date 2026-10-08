@@ -15,7 +15,7 @@
     </div>
 
     <flux:tab.group class="mt-5 w-full">
-        <flux:tabs variant="segmented" class="w-full -mb-5 cursor-pointer">
+        <flux:tabs variant="segmented" class="w-full -mb-5">
             <flux:tab name="experts" selected>{{ __('projects.contributors.tab_experts') }}</flux:tab>
             @can('manage-contributors', $project)
                 <flux:tab name="users">{{ __('projects.contributors.tab_users') }}</flux:tab>

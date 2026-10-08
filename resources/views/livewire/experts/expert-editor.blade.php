@@ -14,7 +14,7 @@
                     <flux:dropdown position="bottom" align="end">
                         <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal"
                             :aria-label="__('common.actions.more')"
-                            class="cursor-pointer text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"/>
+                            class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"/>
                         <flux:menu>
                             <flux:menu.item variant="danger" icon="trash" wire:click="needsConfirmation('delete')">
                                 {{ __('experts.editor.delete') }}
@@ -70,9 +70,9 @@
 
         <x-modal-footer>
             <flux:modal.close>
-                <flux:button variant="filled" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
+                <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
             </flux:modal.close>
-            <flux:button type="submit" variant="primary" class="cursor-pointer">
+            <flux:button type="submit" variant="primary">
                 {{ $isUpdate ? __('experts.editor.update') : __('experts.editor.create') }}
             </flux:button>
         </x-modal-footer>

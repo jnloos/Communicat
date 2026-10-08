@@ -16,7 +16,7 @@
 
                 {{-- Live / Pause toggle --}}
                 <flux:tooltip :content="$live ? __('debug.live.pause_hint') : __('debug.live.resume_hint')" position="bottom">
-                    <flux:button wire:click="togglePause" :icon="$live ? 'pause' : 'play'" class="shrink-0 cursor-pointer">
+                    <flux:button wire:click="togglePause" :icon="$live ? 'pause' : 'play'" class="shrink-0">
                         <span class="inline-flex items-center gap-2">
                             @if ($live)
                                 <span class="relative flex size-2">

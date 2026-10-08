@@ -7,7 +7,7 @@
                 <flux:dropdown position="bottom" align="end">
                     <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal"
                         :aria-label="__('common.actions.more')"
-                        class="cursor-pointer text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"/>
+                        class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"/>
                     <flux:menu>
                         <flux:menu.item icon="arrow-down-tray"
                             href="{{ route('project.export.json', $forProjectId) }}">
@@ -88,9 +88,9 @@
 
             <x-modal-footer>
                 <flux:modal.close>
-                    <flux:button variant="filled" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
+                    <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
                 </flux:modal.close>
-                <flux:button type="submit" variant="primary" class="cursor-pointer">
+                <flux:button type="submit" variant="primary">
                     {{ __('projects.edit.submit') }}
                 </flux:button>
             </x-modal-footer>

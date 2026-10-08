@@ -66,7 +66,7 @@
             </flux:accordion>
 
             <div class="flex justify-end">
-                <flux:button type="submit" variant="primary" icon="chat-bubble-left-right" class="w-full cursor-pointer sm:w-auto">
+                <flux:button type="submit" variant="primary" icon="chat-bubble-left-right" class="w-full sm:w-auto">
                     {{ __('projects.create.submit') }}
                 </flux:button>
             </div>
@@ -105,7 +105,7 @@
             <flux:error name="importFile" />
 
             <div class="flex justify-end">
-                <flux:button type="button" variant="filled" icon="arrow-up-tray" class="w-full cursor-pointer sm:w-auto"
+                <flux:button type="button" variant="filled" icon="arrow-up-tray" class="w-full sm:w-auto"
                     wire:click="createFromFile" wire:loading.attr="disabled" wire:target="importFile,createFromFile"
                     :disabled="! $importFile">
                     <span wire:loading.remove wire:target="createFromFile">{{ __('projects.import.submit') }}</span>

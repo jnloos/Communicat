@@ -8,7 +8,7 @@
         <flux:tab.group class="mb-6">
             <flux:tabs wire:model.live="scope">
                 @foreach ($scopes as $option)
-                    <flux:tab :name="$option->value" class="cursor-pointer">{{ $option->label() }}</flux:tab>
+                    <flux:tab :name="$option->value">{{ $option->label() }}</flux:tab>
                 @endforeach
             </flux:tabs>
         </flux:tab.group>
@@ -35,8 +35,8 @@
                         @if ($renamingCategoryId === $category->id)
                             <form wire:submit="saveCategoryName" class="flex flex-1 items-start gap-2">
                                 <flux:input wire:model="renameTo" size="sm" autofocus wire:keydown.escape="cancelRenaming" class="flex-1" />
-                                <flux:button type="submit" size="sm" variant="primary" class="cursor-pointer">{{ __('common.actions.save') }}</flux:button>
-                                <flux:button size="sm" variant="ghost" wire:click="cancelRenaming" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
+                                <flux:button type="submit" size="sm" variant="primary">{{ __('common.actions.save') }}</flux:button>
+                                <flux:button size="sm" variant="ghost" wire:click="cancelRenaming">{{ __('common.actions.cancel') }}</flux:button>
                             </form>
                         @else
                             <span class="flex-1 font-medium text-zinc-800 dark:text-white">{{ $category->label() }}</span>
@@ -59,8 +59,8 @@
                                 @if ($renamingValueId === $value->id)
                                     <form wire:submit="saveValueName" class="flex flex-1 items-start gap-2">
                                         <flux:input wire:model="renameTo" size="sm" autofocus wire:keydown.escape="cancelRenaming" class="flex-1" />
-                                        <flux:button type="submit" size="sm" variant="primary" class="cursor-pointer">{{ __('common.actions.save') }}</flux:button>
-                                        <flux:button size="sm" variant="ghost" wire:click="cancelRenaming" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
+                                        <flux:button type="submit" size="sm" variant="primary">{{ __('common.actions.save') }}</flux:button>
+                                        <flux:button size="sm" variant="ghost" wire:click="cancelRenaming">{{ __('common.actions.cancel') }}</flux:button>
                                     </form>
                                 @else
                                     <span class="flex-1 text-sm text-zinc-800 dark:text-white">{{ $value->name }}</span>

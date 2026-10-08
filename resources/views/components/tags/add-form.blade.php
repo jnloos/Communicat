@@ -16,12 +16,11 @@
         icon="plus"
         x-show="! adding"
         x-on:click="adding = true; $nextTick(() => $root.querySelector('input')?.focus())"
-        class="cursor-pointer"
     >{{ $button }}</flux:button>
 
     <form x-show="adding" x-cloak wire:submit="{{ $submit }}" x-on:keydown.escape="adding = false" class="flex items-start gap-2">
         <flux:input wire:model="{{ $model }}" size="sm" :placeholder="$placeholder" :aria-label="$placeholder" class="flex-1" />
-        <flux:button type="submit" size="sm" class="cursor-pointer">{{ __('tags.actions.add') }}</flux:button>
-        <flux:button size="sm" variant="ghost" x-on:click="adding = false" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
+        <flux:button type="submit" size="sm">{{ __('tags.actions.add') }}</flux:button>
+        <flux:button size="sm" variant="ghost" x-on:click="adding = false">{{ __('common.actions.cancel') }}</flux:button>
     </form>
 </div>

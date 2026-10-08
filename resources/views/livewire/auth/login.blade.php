@@ -38,7 +38,7 @@
         <flux:checkbox wire:model="remember" :label="__('login.sign_in.remember_me')" />
 
         <div class="flex items-center justify-end">
-            <flux:button variant="primary" type="submit" class="w-full cursor-pointer">{{ __('login.sign_in.submit') }}</flux:button>
+            <flux:button variant="primary" type="submit" class="w-full">{{ __('login.sign_in.submit') }}</flux:button>
         </div>
     </form>
 

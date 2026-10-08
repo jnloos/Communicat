@@ -19,7 +19,7 @@
 @endphp
 
 <button type="button" {{ $attributes->merge([
-    'class' => 'relative inline-flex shrink-0 cursor-pointer rounded-full transition-shadow hover:ring-2 hover:ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent dark:hover:ring-zinc-500',
+    'class' => 'relative inline-flex shrink-0 rounded-full transition-shadow hover:ring-2 hover:ring-zinc-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent dark:hover:ring-zinc-500',
 ]) }}>
     <x-contributors.contributors-avatar :name="$name" :avatar-url="$avatarUrl" :class="$avatarClass"/>
 

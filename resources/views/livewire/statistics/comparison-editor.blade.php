@@ -14,7 +14,7 @@
         <flux:text size="sm" class="shrink-0" wire:loading>{{ __('comparisons.autosave.saving') }}</flux:text>
 
         <flux:dropdown position="bottom" align="end" class="ms-auto">
-            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')" class="cursor-pointer" />
+            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')" />
             <flux:menu>
                 <flux:menu.item icon="pencil-square" wire:click="$parent.startRenaming({{ $comparisonId }})">{{ __('comparisons.actions.rename') }}</flux:menu.item>
                 <flux:menu.item icon="document-duplicate" wire:click="$parent.duplicate({{ $comparisonId }})">{{ __('comparisons.actions.duplicate') }}</flux:menu.item>
@@ -49,7 +49,7 @@
     <section class="space-y-3">
         <div class="flex items-center justify-between gap-3">
             <x-statistics.section-label>{{ __('comparisons.series.heading') }}</x-statistics.section-label>
-            <flux:button size="sm" variant="ghost" icon="plus" wire:click="addSeries" class="cursor-pointer">{{ __('comparisons.series.add') }}</flux:button>
+            <flux:button size="sm" variant="ghost" icon="plus" wire:click="addSeries">{{ __('comparisons.series.add') }}</flux:button>
         </div>
 
         @if ($definitions === [])
@@ -66,7 +66,7 @@
             <flux:card wire:key="series-{{ $index }}" x-data="{ open: {{ $openCards[$index] ? 'true' : 'false' }} }" class="p-4!">
                 <div class="flex items-center gap-2">
                     <button type="button" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-controls="series-body-{{ $index }}"
-                        class="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded text-start text-sm" title="{{ __('comparisons.series.toggle') }}">
+                        class="flex min-w-0 flex-1 items-center gap-2 rounded text-start text-sm" title="{{ __('comparisons.series.toggle') }}">
                         <flux:icon.chevron-right variant="micro" class="shrink-0 text-zinc-400 transition-transform" x-bind:class="open && 'rotate-90'" />
                         <span class="size-3 shrink-0 rounded-full" style="background-color: var(--color-{{ $seriesColors[$index] }})"></span>
                         <span class="truncate">
@@ -75,7 +75,7 @@
                         </span>
                     </button>
                     <flux:button variant="ghost" size="sm" icon="trash" wire:click="confirmRemoveSeries({{ $index }})"
-                        class="cursor-pointer" :aria-label="__('comparisons.series.remove')" :tooltip="__('comparisons.series.remove')" />
+                        :aria-label="__('comparisons.series.remove')" :tooltip="__('comparisons.series.remove')" />
                 </div>
 
                 <div id="series-body-{{ $index }}" x-show="open" @if (! $openCards[$index]) x-cloak @endif class="mt-5 space-y-5">
@@ -96,7 +96,7 @@
                                         <flux:badge size="sm" color="amber" icon="exclamation-triangle" :title="__('comparisons.series.unresolved')"
                                             wire:key="series-{{ $index }}-unresolved-{{ $tagIndex }}">
                                             {{ $tagLabel }}
-                                            <flux:badge.close wire:click="removeUnresolvedTag({{ $index }}, {{ $tagIndex }})" :aria-label="__('comparisons.series.remove_unresolved', ['tag' => $tagLabel])" class="cursor-pointer" />
+                                            <flux:badge.close wire:click="removeUnresolvedTag({{ $index }}, {{ $tagIndex }})" :aria-label="__('comparisons.series.remove_unresolved', ['tag' => $tagLabel])" />
                                         </flux:badge>
                                     @endforeach
                                 </div>
@@ -110,7 +110,7 @@
                                     wire:model.live="series.{{ $index }}.projects.tags.{{ $category->id }}"
                                     :label="$category->label()" class="gap-1.5!">
                                     @foreach ($category->values as $value)
-                                        <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" class="cursor-pointer" />
+                                        <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" />
                                     @endforeach
                                 </flux:checkbox.group>
                             @endforeach
@@ -131,7 +131,7 @@
 
                             {{-- Folded by default so every card keeps its height; the count stays visible. --}}
                             <details class="group text-sm">
-                                <summary class="flex cursor-pointer list-none items-center gap-1 text-zinc-500 dark:text-zinc-400 [&::-webkit-details-marker]:hidden">
+                                <summary class="flex list-none items-center gap-1 text-zinc-500 dark:text-zinc-400 [&::-webkit-details-marker]:hidden">
                                     @if ($matches[$index]->isNotEmpty())
                                         <flux:icon.chevron-right variant="micro" class="transition-transform group-open:rotate-90" />
                                     @endif
@@ -165,7 +165,7 @@
                                             wire:model.live="series.{{ $index }}.reference.tags.{{ $category->id }}"
                                             :label="$category->label()" :disabled="$runLevel" class="gap-1.5!">
                                             @foreach ($category->values as $value)
-                                                <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" class="cursor-pointer" />
+                                                <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" />
                                             @endforeach
                                         </flux:checkbox.group>
                                     @endforeach
@@ -285,7 +285,7 @@
                                     <span class="truncate font-medium text-zinc-800 dark:text-white">{{ $entry['label'] }}</span>
                                 </span>
                                 <details class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                    <summary class="cursor-pointer">{{ __('comparisons.results.per_project') }}</summary>
+                                    <summary>{{ __('comparisons.results.per_project') }}</summary>
                                     <ul class="mt-1 space-y-0.5">
                                         @foreach ($entry['line']->values as $value)
                                             <li class="flex justify-between gap-3">

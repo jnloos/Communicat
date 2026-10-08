@@ -46,7 +46,6 @@
             <!-- Desktop User Menu -->
             <flux:dropdown position="top" align="end">
                 <flux:profile
-                    class="cursor-pointer"
                     :initials="auth()->user()->initials()"
                 />
 

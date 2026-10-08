@@ -10,7 +10,7 @@
     @endif
 
     <div class="flex flex-col items-center justify-between space-y-3">
-        <flux:button wire:click="sendVerification" variant="primary" class="w-full cursor-pointer">
+        <flux:button wire:click="sendVerification" variant="primary" class="w-full">
             {{ __('login.verify_email.resend') }}
         </flux:button>
 

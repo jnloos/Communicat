@@ -26,7 +26,7 @@
         variant="primary"
         icon="user-group"
         {{ $attributes->merge(['type' => 'button']) }}
-        class="shrink-0 cursor-pointer"
+        class="shrink-0"
         :aria-label="$label"
     >
         @if (! is_null($label))
