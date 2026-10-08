@@ -702,7 +702,7 @@ class ProjectNavigationTest extends TestCase
         return preg_match('/wire:key="(nav-group-'.$group->id.'(?:-[a-z]+)?)"/', $html, $match) === 1 ? $match[1] : null;
     }
 
-    public function test_an_active_filter_shows_one_summary_line_with_count_and_values(): void
+    public function test_an_active_filter_shows_one_summary_line_with_count_and_tags(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -717,10 +717,8 @@ class ProjectNavigationTest extends TestCase
         $component->assertDontSee(__('tags.filter.clear_label'));
 
         $component->set('tagFilter', [(string) $status->id, (string) $control->id])
-            ->assertSee('2 of 3 · status, control')
-            ->assertSeeHtml('title="condition: status, condition: control"')
-            ->assertSee(__('tags.filter.clear_label'))
-            ->assertDontSee('condition: status ');
+            ->assertSee('2 of 3 · condition: status, condition: control')
+            ->assertSee(__('tags.filter.clear_label'));
     }
 
     public function test_cut_with_two_values_of_one_category_finds_projects_with_either(): void

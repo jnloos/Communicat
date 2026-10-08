@@ -11,7 +11,7 @@
             <flux:icon.tag class="size-5"/> {{ __('tags.form.heading') }}
 
             <div class="ms-auto me-2 flex min-w-0 justify-end">
-                @if ($values->contains(fn ($value) => $value->badgeLabel() !== null))
+                @if ($values->isNotEmpty())
                     <x-tags.badges :values="$values" class="justify-end" />
                 @else
                     <span class="text-sm font-normal text-zinc-500 dark:text-zinc-400">{{ __('tags.form.none_set') }}</span>

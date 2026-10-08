@@ -144,12 +144,11 @@ class TagFieldsTest extends TestCase
         Expert::factory()->create(['name' => 'Ada'])->setTag($this->gender, $this->female);
 
         Livewire::test(ExpertList::class)
-            ->assertSee('weiblich')
-            ->assertSeeHtml('title="Geschlecht: weiblich"')
+            ->assertSee('Geschlecht: weiblich')
             ->assertDontSeeHtml('text-zinc-400">Geschlecht:');
     }
 
-    public function test_a_true_false_category_shows_its_name_for_true_and_nothing_for_false(): void
+    public function test_a_true_false_category_shows_category_and_value_for_both(): void
     {
         $this->actingAs(User::factory()->create());
         $titleHolder = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
@@ -159,8 +158,8 @@ class TagFieldsTest extends TestCase
         Expert::factory()->create(['name' => 'Bo'])->setTag($titleHolder, $false);
 
         Livewire::test(ExpertList::class)
-            ->assertSeeHtml('title="title holder: true"')
-            ->assertDontSeeHtml('title="title holder: false"');
+            ->assertSee('title holder: true')
+            ->assertSee('title holder: false');
     }
 
     public function test_the_collapsed_tag_section_shows_the_current_values_or_none_set(): void
@@ -173,7 +172,7 @@ class TagFieldsTest extends TestCase
             ->assertSee(__('tags.form.none_set'))
             ->set('tagSelection', [$this->condition->id => (string) $this->status->id])
             ->assertDontSee(__('tags.form.none_set'))
-            ->assertSeeHtml('title="condition: status"');
+            ->assertSee('condition: status');
 
         Livewire::test(CreateProject::class)->assertSee(__('tags.form.none_set'));
     }

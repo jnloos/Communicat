@@ -2,19 +2,14 @@
     'values', {{-- Collection<TagValue> with category loaded --}}
 ])
 
-{{-- One badge per tag: the value, with category and value in the tooltip. A
-     yes/no category shows its own name for "true" and nothing for "false"
-     (TagValue::badgeLabel()). --}}
-@php
-    $badges = $values
-        ->sortBy(fn ($value) => [$value->category->position, $value->category->id])
-        ->filter(fn ($value) => $value->badgeLabel() !== null);
-@endphp
+{{-- One badge per tag, always as "category: value" (TagValue::fullLabel()),
+     true/false values included. --}}
+@php($badges = $values->sortBy(fn ($value) => [$value->category->position, $value->category->id]))
 
 @if ($badges->isNotEmpty())
     <div {{ $attributes->class('flex flex-wrap gap-1') }}>
         @foreach ($badges as $value)
-            <flux:badge size="sm" color="zinc" icon="tag" title="{{ $value->fullLabel() }}">{{ $value->badgeLabel() }}</flux:badge>
+            <flux:badge size="sm" color="zinc" icon="tag">{{ $value->fullLabel() }}</flux:badge>
         @endforeach
     </div>
 @endif

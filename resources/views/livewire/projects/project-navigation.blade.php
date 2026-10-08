@@ -104,15 +104,16 @@
 
         @if ($chosenValues->isNotEmpty())
             <div class="flex items-center gap-1 ps-3 pe-1 pb-1">
-                {{-- Values only; the category travels in the tooltip. Clicking
-                     the text opens the popover through the funnel itself, so
+                {{-- Tags as "category: value", like every badge; the tooltip
+                     holds the full list once the line truncates. Clicking the
+                     text opens the popover through the funnel itself, so
                      there is still only one dropdown to keep open. --}}
                 <button
                     type="button"
                     class="min-w-0 flex-1 cursor-pointer truncate text-start text-xs text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white"
-                    title="{{ $chosenValues->map(fn ($value) => "{$value->category->name}: {$value->name}")->implode(', ') }}"
+                    title="{{ $chosenValues->map->fullLabel()->implode(', ') }}"
                     x-on:click.stop="$refs.tagFilterTrigger.click()"
-                >{{ __('tags.filter.summary', ['matches' => $matchCount, 'total' => $projectCount, 'values' => $chosenValues->pluck('name')->implode(', ')]) }}</button>
+                >{{ __('tags.filter.summary', ['matches' => $matchCount, 'total' => $projectCount, 'values' => $chosenValues->map->fullLabel()->implode(', ')]) }}</button>
 
                 <flux:button
                     size="xs"

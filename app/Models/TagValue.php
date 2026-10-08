@@ -26,21 +26,10 @@ class TagValue extends Model
     }
 
     /**
-     * What a badge shows. A yes/no category says nothing through its value, so
-     * "true" shows the category's name ("title holder") and "false" shows no
-     * badge at all (null); any other value shows itself. Needs the category
-     * loaded.
+     * "category: value" — how the interface always names a tag, true/false
+     * values included, so a badge never needs its tooltip to be understood.
+     * Needs the category loaded.
      */
-    public function badgeLabel(): ?string
-    {
-        return match (strtolower(trim($this->name))) {
-            'true' => $this->category->name,
-            'false' => null,
-            default => $this->name,
-        };
-    }
-
-    /** "category: value", for tooltips where the badge alone would be ambiguous. */
     public function fullLabel(): string
     {
         return "{$this->category->name}: {$this->name}";
