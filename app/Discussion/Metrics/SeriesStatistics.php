@@ -90,7 +90,7 @@ class SeriesStatistics
 
         return array_values(array_filter(
             $series->reference->pick($project, $report, $metric),
-            fn (AgentGroup $group) => ! $group->isEmpty(),
+            fn (AgentGroup $group) => ! $group->isEmpty() && $this->isDefined($metric, $report, $group),
         ));
     }
 
@@ -100,10 +100,26 @@ class SeriesStatistics
             return $metric->ofRun($report);
         }
 
-        return $metric->ofAgents(array_values(array_filter(
+        return $metric->ofAgents($this->speakersOf($report, $group));
+    }
+
+    /**
+     * Words per turn of agents who never spoke is undefined, not 0: such a group
+     * drops out like a reference that hits nobody. A share is a real 0 and stays.
+     */
+    private function isDefined(Metric $metric, ShareReport $report, AgentGroup $group): bool
+    {
+        return $metric !== Metric::WordsPerTurn
+            || array_sum(array_map(fn (SpeakerShare $speaker) => $speaker->turns, $this->speakersOf($report, $group))) > 0;
+    }
+
+    /** @return list<SpeakerShare> */
+    private function speakersOf(ShareReport $report, AgentGroup $group): array
+    {
+        return array_values(array_filter(
             $report->speakers,
             fn (SpeakerShare $speaker) => in_array($speaker->expertId, $group->expertIds, true),
-        )));
+        ));
     }
 
     /**

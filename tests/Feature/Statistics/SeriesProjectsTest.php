@@ -22,17 +22,19 @@ class SeriesProjectsTest extends TestCase
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
         $status = $condition->values()->create(['name' => 'status']);
 
-        $own = Project::factory()->create(['user_id' => $user->id, 'pipeline' => 'ScorePipeline']);
-        $shared = Project::factory()->create(['user_id' => $stranger->id, 'pipeline' => 'ScorePipeline']);
+        $own = Project::factory()->create(['user_id' => $user->id, 'pipeline' => 'ScorePipeline', 'model' => 'openai-gpt-5-mini']);
+        $shared = Project::factory()->create(['user_id' => $stranger->id, 'pipeline' => 'ScorePipeline', 'model' => 'openai-gpt-5-mini']);
         $shared->addContributingUser($user);
-        $foreign = Project::factory()->create(['user_id' => $stranger->id, 'pipeline' => 'ScorePipeline']);
-        $otherPipeline = Project::factory()->create(['user_id' => $user->id, 'pipeline' => 'RoundRobinPipeline']);
+        $foreign = Project::factory()->create(['user_id' => $stranger->id, 'pipeline' => 'ScorePipeline', 'model' => 'openai-gpt-5-mini']);
+        $otherPipeline = Project::factory()->create(['user_id' => $user->id, 'pipeline' => 'RoundRobinPipeline', 'model' => 'openai-gpt-5-mini']);
 
-        foreach ([$own, $shared, $foreign, $otherPipeline] as $project) {
+        $otherModel = Project::factory()->create(['user_id' => $user->id, 'pipeline' => 'ScorePipeline', 'model' => 'openai-gpt-5']);
+
+        foreach ([$own, $otherModel, $shared, $foreign, $otherPipeline] as $project) {
             $project->setTag($condition, $status);
         }
 
-        $series = SeriesDefinition::fromArray(['label' => 'x', 'projects' => ['tags' => [$condition->id => [$status->id]], 'pipeline' => 'ScorePipeline']]);
+        $series = SeriesDefinition::fromArray(['label' => 'x', 'projects' => ['tags' => [$condition->id => [$status->id]], 'pipeline' => 'ScorePipeline', 'model' => 'openai-gpt-5-mini']]);
 
         $this->assertSame([$own->id, $shared->id], app(SeriesProjects::class)->for($user, $series)->pluck('id')->all());
     }

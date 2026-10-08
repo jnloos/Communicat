@@ -183,4 +183,30 @@ class SeriesStatisticsTest extends TestCase
         $this->assertSame(2, $result->lines[0]->n());
         $this->assertSame([0.5, 0.0], array_map(fn ($v) => round($v->value, 10), $result->lines[0]->values));
     }
+
+    public function test_words_per_turn_of_a_silent_reference_drops_the_run_out(): void
+    {
+        $speaks = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Bob', 30]]);
+        $silent = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Alice', 10]]);
+
+        $result = $this->compute(['type' => 'seat', 'seat' => 2], ['metric' => 'words_per_turn'], $speaks, $silent);
+
+        $this->assertSame(1, $result->excluded);
+        $this->assertSame(1, $result->lines[0]->n());
+        $this->assertSame(30.0, $result->lines[0]->mean());
+        $this->assertSame(30.0, $result->lines[0]->min());
+    }
+
+    public function test_a_silent_reference_still_counts_as_zero_share(): void
+    {
+        $speaks = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Bob', 30]]);
+        $silent = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Alice', 10]]);
+
+        $result = $this->compute(['type' => 'seat', 'seat' => 2], ['metric' => 'turn_share'], $speaks, $silent);
+
+        $this->assertSame(0, $result->excluded);
+        $this->assertSame(2, $result->lines[0]->n());
+        $this->assertSame(0.0, $result->lines[0]->min());
+        $this->assertSame(0.25, $result->lines[0]->mean());
+    }
 }
