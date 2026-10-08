@@ -12,8 +12,10 @@
          from shifting when a filter makes the list long enough to scroll.
 
          The funnel is the only sign of a filter: always the same solid icon,
-         in the button's normal icon colour while none is chosen and in the
-         accent colour (no filled block, no badge) once at least one value is.
+         in the row's own text colour (the label's) while none is chosen and
+         in the accent colour (no filled block, no badge) once at least one
+         value is. It sits in an h-8 flex box at the row's end, the geometry
+         of the group headers' "…" buttons below, so the two line up.
 
          The menu is a plain flux:menu with keep-open, so ticking a value or
          switching the mode re-renders the component without closing it. Flux
@@ -23,8 +25,8 @@
          element instead of replacing it, hence the fixed wire:keys on the
          dropdown and its menu, and a label row that is never conditional. --}}
     <div class="sticky top-0 z-10 mb-1 flex flex-col bg-zinc-50 dark:bg-zinc-900" x-data>
-        <div class="flex h-8 items-center justify-between ps-3 pe-1">
-            <span class="truncate text-xs font-medium uppercase leading-none tracking-wide text-zinc-500 dark:text-zinc-400">{{ __('tags.filter.label') }}</span>
+        <div class="flex h-8 items-center justify-between ps-3 pe-1 text-zinc-500 dark:text-zinc-400">
+            <span class="truncate text-xs font-medium uppercase leading-none tracking-wide">{{ __('tags.filter.label') }}</span>
 
             @if ($tagCategories->isNotEmpty())
                 @php
@@ -33,7 +35,7 @@
                         : __('tags.filter.button');
                 @endphp
 
-                <div class="relative">
+                <div class="relative flex h-8 items-center">
                     <flux:dropdown position="bottom" align="start" wire:key="tag-filter-dropdown">
                         <flux:button
                             size="xs"
@@ -43,7 +45,7 @@
                             :aria-label="$funnelLabel"
                             :tooltip="$funnelLabel"
                             :data-filter-active="$activeFilterCount > 0 ? 'true' : null"
-                            :class="$activeFilterCount > 0 ? 'text-(--color-accent-content)!' : 'text-zinc-800! dark:text-white!'"
+                            :class="$activeFilterCount > 0 ? 'text-(--color-accent-content)!' : 'text-current!'"
                         />
 
                         <flux:menu keep-open wire:key="tag-filter-menu">
