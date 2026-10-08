@@ -40,8 +40,8 @@ comparisons      id · user_id → cascade · name · series (json) · view (jso
 ```
 
 - `scope` ist ein PHP-Enum `TagScope` (`Persona`, `Project`) mit der Zuordnung zur Model-Klasse
-  (`Expert`, `Project`). Der Morph-Typ wird über die Morph-Map aufgelöst, nicht über
-  Klassennamen-Strings im Code.
+  (`Expert`, `Project`). Der Morph-Typ ist wie in `project_contributors` der volle Klassenname
+  (keine Morph-Map, keine Migration der Studiendaten); Code liest ihn nur über `getMorphClass()`.
 - Die Kategorie steht in `taggables` mit, damit die Datenbank „höchstens ein Wert je Kategorie“
   erzwingt. Beim Zuordnen wird die Zeile der Kategorie ersetzt (upsert), nicht ergänzt.
 - Ein Trait `HasTags` auf `Expert` und `Project`: `tagValues()` (morphToMany über `taggables`),
