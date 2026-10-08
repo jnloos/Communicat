@@ -215,3 +215,18 @@ select:focus[data-flux-control] {
 ):not([disabled]):not([data-disabled]) {
     cursor: pointer;
 }
+
+/* Statistics page pies (components/statistics/pies.blade.php): Flux paints
+   every sector inline in the -500 of a palette name, so the slices of one
+   series become tints of it through fill-opacity, keyed by the datum id that
+   Flux writes into data-key. "Others" is the rest of the group and drawn in
+   zinc; !important beats Flux's inline fill. */
+[data-pie-tints] [data-sector][data-key="tint-1"] { fill-opacity: 0.75; }
+[data-pie-tints] [data-sector][data-key="tint-2"] { fill-opacity: 0.55; }
+[data-pie-tints] [data-sector][data-key="tint-3"] { fill-opacity: 0.4; }
+[data-pie-tints] [data-sector][data-key="tint-4"] { fill-opacity: 0.3; }
+[data-pie-tints] [data-sector][data-key="tint-5"] { fill-opacity: 0.22; }
+[data-pie-tints] [data-sector][data-key="tint-6"] { fill-opacity: 0.16; }
+[data-pie-tints] [data-sector][data-key="tint-7"] { fill-opacity: 0.12; }
+[data-pie-tints] [data-sector][data-key="others"] { fill: var(--color-zinc-300) !important; }
+.dark [data-pie-tints] [data-sector][data-key="others"] { fill: var(--color-zinc-600) !important; }

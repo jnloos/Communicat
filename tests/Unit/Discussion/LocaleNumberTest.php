@@ -44,8 +44,18 @@ class LocaleNumberTest extends TestCase
         app()->setLocale('en');
 
         $this->assertSame(
-            'mean 22.5 % · range 11.7 %–35.0 % · n = 4',
-            __('comparisons.results.bar_text', ['mean' => '22.5 %', 'min' => '11.7 %', 'max' => '35.0 %', 'n' => 4]),
+            'mean 22.5 % · range 11.7–35.0 % · n = 4',
+            __('comparisons.results.bar_text', ['mean' => '22.5 %', 'range' => Metric::TurnShare->formatRange(0.117, 0.35), 'n' => 4]),
         );
+    }
+
+    public function test_a_range_writes_its_unit_once(): void
+    {
+        app()->setLocale('de');
+        $this->assertSame('11,7–35,0 %', Metric::WordShare->formatRange(0.117, 0.35));
+
+        app()->setLocale('en');
+        $this->assertSame('12.5–80.0', Metric::WordsPerTurn->formatRange(12.5, 80));
+        $this->assertSame('0.10–0.40', Metric::TurnGini->formatRange(0.1, 0.4));
     }
 }

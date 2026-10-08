@@ -65,13 +65,16 @@ class ComparisonResultsTest extends TestCase
     {
         $component = $this->editor()->set('viewSettings.display', 'bars');
 
-        $bar = $component->viewData('bars')[0];
+        $group = $component->viewData('barGroups')[0];
+        $bar = $group['rows'][0];
         $this->assertSame(0.75, $bar['mean']);
         $this->assertSame(0.75, $bar['min']);
         $this->assertSame(0.75, $bar['max']);
         $this->assertSame(1.0, $component->viewData('barScale'));
-        $this->assertSame('indigo', $bar['color']);
-        $component->assertSee(__('comparisons.results.bar_text', ['mean' => '75.0 %', 'min' => '75.0 %', 'max' => '75.0 %', 'n' => 1]));
+        $this->assertSame('indigo', $group['color']);
+        $component->assertSee('75.0 %')
+            ->assertSee('75.0–75.0 % · n = 1')
+            ->assertSee(__('comparisons.results.bar_text', ['mean' => '75.0 %', 'range' => '75.0–75.0 %', 'n' => 1]));
     }
 
     public function test_the_curve_has_one_row_per_turn_with_n(): void
@@ -119,7 +122,7 @@ class ComparisonResultsTest extends TestCase
         $this->assertSame(__('comparisons.series.default_label', ['n' => 1]), $component->viewData('lines')[0]['label']);
 
         $component->set('viewSettings.display', 'bars');
-        $this->assertSame(__('comparisons.series.default_label', ['n' => 1]), $component->viewData('bars')[0]['label']);
+        $this->assertSame(__('comparisons.series.default_label', ['n' => 1]), $component->viewData('barGroups')[0]['label']);
     }
 
     public function test_an_empty_label_never_repeats_a_default_name_in_use(): void
@@ -187,15 +190,107 @@ class ComparisonResultsTest extends TestCase
             ->assertSee(__('comparisons.reference.run_level_hint'))
             ->assertDontSee(__('comparisons.reference.shared_hint'));
 
-        $this->assertMatchesRegularExpression('/<select[^>]*wire:model\.live="series\.0\.reference\.type"[^>]*disabled/s', $component->html());
+        $this->assertMatchesRegularExpression('/<ui-select[^>]*wire:model\.live="series\.0\.reference\.type"[^>]*disabled/s', $component->html());
     }
 
     public function test_more_lines_than_colours_says_so(): void
     {
-        $this->editor()->assertDontSee(__('comparisons.results.palette_repeats'));
+        $this->editor()->assertDontSee(__('comparisons.results.palette_repeats', ['count' => count(ComparisonEditor::PALETTE)]));
 
-        $this->comparison->update(['series' => array_fill(0, 9, $this->comparison->series[0])]);
+        $this->comparison->update(['series' => array_fill(0, count(ComparisonEditor::PALETTE) + 1, $this->comparison->series[0])]);
 
-        $this->editor()->assertSee(__('comparisons.results.palette_repeats'));
+        $this->editor()->assertSee(__('comparisons.results.palette_repeats', ['count' => count(ComparisonEditor::PALETTE)]));
+    }
+
+    public function test_bars_mark_the_equal_share_when_every_run_has_the_same_group_size(): void
+    {
+        $component = $this->editor()->set('viewSettings.display', 'bars');
+
+        $this->assertSame(0.5, $component->viewData('equalShare'));
+        $component->assertSee(__('comparisons.results.equal_share', ['share' => '50 %']))
+            ->assertSee('0 %')
+            ->assertSee('100 %');
+    }
+
+    public function test_mixed_group_sizes_have_no_equal_share(): void
+    {
+        $three = Project::factory()->create(['user_id' => $this->user->id, 'pipeline' => 'ScorePipeline']);
+        $experts = Expert::factory()->count(3)->create();
+        $experts->each(fn (Expert $expert) => $three->addContributingExpert($expert));
+        JobLog::create([
+            'job_class' => 'App\Discussion\TurnRunner', 'project_id' => $three->id, 'status' => 'success',
+            'started_at' => now(), 'turn_index' => 1, 'expert_id' => $experts[0]->id, 'words' => 10,
+        ]);
+
+        $component = $this->editor()->set('viewSettings.display', 'bars');
+
+        $this->assertNull($component->viewData('equalShare'));
+        $component->assertDontSee(__('comparisons.results.equal_share', ['share' => '50 %']));
+    }
+
+    public function test_a_measure_that_is_no_share_has_no_equal_share(): void
+    {
+        $this->assertNull($this->editor()->set('viewSettings.display', 'bars')->set('viewSettings.metric', 'words_per_turn')->viewData('equalShare'));
+    }
+
+    public function test_the_lines_of_one_series_share_its_colour(): void
+    {
+        $component = $this->editor()
+            ->set('series.0.reference.type', 'each')
+            ->set('viewSettings.display', 'bars');
+
+        $groups = $component->viewData('barGroups');
+        $this->assertCount(1, $groups);
+        $this->assertSame('indigo', $groups[0]['color']);
+        $this->assertSame([__('comparisons.results.seat', ['seat' => 1]), __('comparisons.results.seat', ['seat' => 2])], array_column($groups[0]['rows'], 'label'));
+
+        $lines = $component->viewData('lines');
+        $this->assertSame(['indigo', 'indigo'], array_column($lines, 'color'));
+        $this->assertNotSame($lines[0]['lineColor'], $lines[1]['lineColor']);
+    }
+
+    public function test_a_pie_of_every_seat_sums_to_a_whole(): void
+    {
+        $pies = $this->editor()
+            ->set('series.0.reference.type', 'each')
+            ->set('viewSettings.display', 'pie')
+            ->viewData('pies');
+
+        $this->assertCount(1, $pies);
+        $this->assertSame(1, $pies[0]['n']);
+        $this->assertSame(['tint-0', 'tint-1'], array_column($pies[0]['slices'], 'id'));
+        $this->assertEqualsWithDelta(100.0, array_sum(array_column($pies[0]['slices'], 'value')), 0.01);
+        $this->assertSame(['75.0 %', '25.0 %'], array_column($pies[0]['slices'], 'share'));
+        $this->assertSame(['indigo', 'indigo'], array_column($pies[0]['slices'], 'color'));
+    }
+
+    public function test_a_pie_of_one_reference_shows_the_group_and_the_others(): void
+    {
+        $component = $this->editor()->set('viewSettings.display', 'pie');
+        $slices = $component->viewData('pies')[0]['slices'];
+
+        $this->assertSame(['Sitz eins', __('comparisons.results.others')], array_column($slices, 'name'));
+        $this->assertSame([75.0, 25.0], array_column($slices, 'value'));
+        $this->assertSame(['tint-0', 'others'], array_column($slices, 'id'));
+        $component->assertSee('n = 1');
+    }
+
+    public function test_words_per_turn_and_gini_have_no_pie(): void
+    {
+        foreach (['words_per_turn', 'turn_gini'] as $metric) {
+            $component = $this->editor()->set('viewSettings.display', 'pie')->set('viewSettings.metric', $metric);
+
+            $this->assertSame('table', $this->comparison->fresh()->view['display']);
+            $this->assertSame([], $component->viewData('pies'));
+            $this->assertMatchesRegularExpression('/value="pie"[^>]*disabled/s', $component->html());
+        }
+    }
+
+    public function test_the_shared_hint_only_shows_for_a_tag_reference(): void
+    {
+        $this->editor()
+            ->assertDontSee(__('comparisons.reference.shared_hint'))
+            ->set('series.0.reference.type', 'persona_tags')
+            ->assertSee(__('comparisons.reference.shared_hint'));
     }
 }

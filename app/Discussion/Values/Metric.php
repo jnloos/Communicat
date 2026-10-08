@@ -34,6 +34,12 @@ enum Metric: string
         return $this->isShare();
     }
 
+    /** A pie needs parts of a whole: only the two shares have one. */
+    public function hasPie(): bool
+    {
+        return $this->isShare();
+    }
+
     /** The trajectory series holding this metric's curve; $mode is 'cumulative' or 'rolling'. */
     public function series(string $mode): ShareSeries
     {
@@ -83,6 +89,15 @@ enum Metric: string
             $this->isShare() => LocaleNumber::percent($value),
             $this === self::WordsPerTurn => LocaleNumber::decimal($value, 1),
             default => LocaleNumber::decimal($value, 2),
+        };
+    }
+
+    /** "11.7–35.0 %": the unit once, after the second figure. */
+    public function formatRange(float $min, float $max): string
+    {
+        return match (true) {
+            $this->isShare() => LocaleNumber::decimal($min * 100, 1).'–'.LocaleNumber::percent($max),
+            default => $this->format($min).'–'.$this->format($max),
         };
     }
 }

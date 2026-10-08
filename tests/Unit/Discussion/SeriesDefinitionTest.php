@@ -63,4 +63,13 @@ class SeriesDefinitionTest extends TestCase
         $this->assertSame(['metric' => 'turn_share', 'display' => 'bars', 'turn_limit' => null, 'trajectory_mode' => 'cumulative'], $view->toArray());
         $this->assertSame(60, ComparisonView::fromArray(['turn_limit' => '60'])->turnLimit);
     }
+
+    public function test_a_pie_falls_back_to_the_table_for_a_metric_without_parts_of_a_whole(): void
+    {
+        $this->assertSame(ComparisonDisplay::Pie, ComparisonView::fromArray(['metric' => 'word_share', 'display' => 'pie'])->display);
+
+        foreach (['words_per_turn', 'turn_gini', 'word_gini'] as $metric) {
+            $this->assertSame(ComparisonDisplay::Table, ComparisonView::fromArray(['metric' => $metric, 'display' => 'pie'])->display, $metric);
+        }
+    }
 }

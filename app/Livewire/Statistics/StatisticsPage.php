@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Statistics;
 
+use App\Discussion\Metrics\Templates\ComparisonTemplates;
 use App\Discussion\Values\ComparisonView;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Comparison;
@@ -65,6 +66,7 @@ class StatisticsPage extends Component
 
         if ($this->renamingId !== null) {
             $this->own($this->renamingId)->update(['name' => $this->name]);
+            $this->dispatch('comparison-renamed');
         } else {
             $comparison = $this->user()->comparisons()->create([
                 'name' => $this->name,
@@ -76,6 +78,24 @@ class StatisticsPage extends Component
 
         $this->reset(['renamingId', 'name']);
         Flux::modal('comparison-name')->close();
+    }
+
+    /**
+     * A standard analysis as a new, normal comparison: editable and saved
+     * like any other, nothing ties it to its template afterwards.
+     */
+    public function createFromTemplate(string $key): void
+    {
+        $templates = app(ComparisonTemplates::class);
+        $template = $templates->find($key) ?? abort(404);
+
+        $comparison = $this->user()->comparisons()->create([
+            'name' => Str::limit($template->name(), 100, ''),
+            'series' => $templates->seriesOf($template),
+            'view' => $template->view->toArray(),
+        ]);
+
+        $this->comparisonId = $comparison->id;
     }
 
     public function duplicate(int $comparisonId): void
@@ -121,6 +141,7 @@ class StatisticsPage extends Component
         return view('livewire.statistics.statistics-page', [
             'comparisons' => $this->user()->comparisons()->get(),
             'current' => $this->comparisonId === null ? null : $this->user()->comparisons()->find($this->comparisonId),
+            'templates' => app(ComparisonTemplates::class)->all(),
         ])->title(__('comparisons.heading'));
     }
 }

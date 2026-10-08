@@ -110,4 +110,16 @@ class StatisticsPageTest extends TestCase
 
         $this->assertSame(0, Comparison::count());
     }
+
+    public function test_new_comparison_is_the_primary_action_only_while_the_list_is_empty(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $primary = '/<button[^>]*bg-\[var\(--color-accent\)\][^>]*wire:click="startCreating"/';
+        $this->assertMatchesRegularExpression($primary, Livewire::test(StatisticsPage::class)->html());
+
+        $this->comparisonOf($user);
+        $this->assertDoesNotMatchRegularExpression($primary, Livewire::test(StatisticsPage::class)->html());
+    }
 }

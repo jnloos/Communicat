@@ -1,17 +1,32 @@
 <section class="mx-auto w-full max-w-6xl">
-    <div>
-        <flux:heading size="xl" level="1">{{ __('comparisons.heading') }}</flux:heading>
-        <flux:text class="mt-1">{{ __('comparisons.subheading') }}</flux:text>
+    {{-- Page actions sit in the page header, as "Create Expert" does on the
+         experts page. "New comparison" is the primary action only while there
+         is nothing to open yet. --}}
+    <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+            <flux:heading size="xl" level="1">{{ __('comparisons.heading') }}</flux:heading>
+            <flux:text class="mt-1">{{ __('comparisons.subheading') }}</flux:text>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <flux:dropdown position="bottom" align="end">
+                <flux:button size="sm" icon="rectangle-stack" icon:trailing="chevron-down" class="cursor-pointer">{{ __('comparisons.templates.menu') }}</flux:button>
+                <flux:menu>
+                    @foreach ($templates as $template)
+                        <flux:menu.item wire:click="createFromTemplate('{{ $template->key }}')" wire:key="template-{{ $template->key }}">{{ $template->name() }}</flux:menu.item>
+                    @endforeach
+                </flux:menu>
+            </flux:dropdown>
+
+            <flux:button size="sm" :variant="$comparisons->isEmpty() ? 'primary' : 'outline'" icon="plus" wire:click="startCreating" class="cursor-pointer">
+                {{ __('comparisons.list.create') }}
+            </flux:button>
+        </div>
     </div>
 
     <div class="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
         <aside class="w-full shrink-0 lg:w-64">
-            <div class="flex items-center justify-between gap-2">
-                <flux:heading size="sm">{{ __('comparisons.list.heading') }}</flux:heading>
-                <flux:button size="sm" variant="primary" icon="plus" wire:click="startCreating" class="cursor-pointer">
-                    {{ __('comparisons.list.create') }}
-                </flux:button>
-            </div>
+            <x-statistics.section-label class="px-3">{{ __('comparisons.list.heading') }}</x-statistics.section-label>
 
             @if ($comparisons->isEmpty())
                 <x-empty-state icon="chart-bar" class="mt-3">{{ __('comparisons.list.empty') }}</x-empty-state>
@@ -43,7 +58,6 @@
 
         <div class="min-w-0 flex-1">
             @if ($current)
-                <flux:heading size="lg" class="mb-4">{{ $current->name }}</flux:heading>
                 <livewire:statistics.comparison-editor :comparison-id="$current->id" wire:key="comparison-editor-{{ $current->id }}" />
             @else
                 <x-empty-state icon="chart-bar">{{ __('comparisons.none_open') }}</x-empty-state>

@@ -21,9 +21,10 @@ final readonly class ComparisonView
         $metric = Metric::tryFrom((string) ($data['metric'] ?? '')) ?? Metric::TurnShare;
         $display = ComparisonDisplay::tryFrom((string) ($data['display'] ?? '')) ?? ComparisonDisplay::Table;
 
-        // A metric without a curve cannot be shown over the run; the table
-        // stands in, so a stored view never sits in an empty state.
-        if ($display === ComparisonDisplay::Trajectory && ! $metric->hasTrajectory()) {
+        // A metric without a curve (or without parts of a whole) cannot be
+        // shown over the run (or as a pie); the table stands in, so a stored
+        // view never sits in an empty state.
+        if (! $display->supports($metric)) {
             $display = ComparisonDisplay::Table;
         }
 

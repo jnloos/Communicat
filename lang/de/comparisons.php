@@ -63,7 +63,7 @@ return [
         'any' => 'beliebig',
         'pipeline' => 'Pipeline',
         'model' => 'Modell',
-        'matches' => '{0}Kein Projekt passt.|{1}1 Projekt passt:|[2,*]:count Projekte passen:',
+        'matches' => '{0}Kein Projekt passt.|{1}1 Projekt passt|[2,*]:count Projekte passen',
     ],
 
     'reference' => [
@@ -104,6 +104,7 @@ return [
         'table' => 'Tabelle',
         'bars' => 'Balken',
         'trajectory' => 'Verlauf',
+        'pie' => 'Kreis',
     ],
 
     'modes' => [
@@ -114,6 +115,7 @@ return [
     'line_with_seat' => ':label · Sitz :seat',
 
     'results' => [
+        'heading' => 'Ergebnis',
         'empty' => 'Lege eine Reihe an, um Werte zu sehen.',
         'line' => 'Reihe',
         'n' => 'n',
@@ -122,10 +124,35 @@ return [
         'max' => 'Max',
         'per_project' => 'Werte je Projekt',
         'excluded' => '{1}„:label“: 1 Projekt fällt heraus (Bezug trifft niemanden oder kein gesprochener Turn).|[2,*]„:label“: :count Projekte fallen heraus (Bezug trifft niemanden oder kein gesprochener Turn).',
-        'bar_text' => 'Mittel :mean · Spanne :min–:max · n = :n',
+        'bar_text' => 'Mittel :mean · Spanne :range · n = :n',
+        'seat' => 'Sitz :seat',
+        'others' => 'Übrige',
+        'equal_share' => 'Gestrichelte Linie: gleicher Anteil (:share)',
         'no_trajectory' => 'Den Verlauf gibt es nur für Turn- und Wortanteil.',
+        'no_pie' => 'Das Kreisdiagramm gibt es nur für Turn- und Wortanteil.',
         'n_of' => ':label · n',
-        'palette_repeats' => 'Mehr als 8 Linien: Farben wiederholen sich. Wähle einen engeren Bezug.',
+        'palette_repeats' => 'Mehr als :count Farben nötig: Farben wiederholen sich. Nimm weniger Reihen oder einen engeren Bezug.',
         'too_short' => 'Für einen Verlauf braucht es mindestens zwei gesprochene Turns.',
+    ],
+
+    'templates' => [
+        'menu' => 'Aus Vorlage',
+        'series' => ':pipeline · :condition',
+        'names' => [
+            'turn_share_by_pipeline' => 'Statuseffekt auf den Turn-Anteil je Pipeline',
+            'word_share_by_pipeline' => 'Statuseffekt auf den Wortanteil je Pipeline',
+            'inequality_by_pipeline' => 'Ungleichheit der Redeanteile je Pipeline',
+            'words_per_turn_seat_one' => 'Wörter pro Turn von Sitz 1',
+            'seat_one_over_the_run' => 'Anteil von Sitz 1 im Verlauf',
+            'blind_vs_seeing_judge' => 'Blinder gegen sehenden Richter',
+            'every_seat_by_condition' => 'Anteil jedes Sitzes je Bedingung',
+        ],
+        'pipelines' => [
+            'ScorePipeline' => 'Score',
+            'OrchestratorPipeline' => 'Orchestrator',
+            'QualityPipeline' => 'Qualität',
+            'RoundRobinPipeline' => 'Round Robin',
+            'BlindQualityPipeline' => 'Qualität blind',
+        ],
     ],
 ];

@@ -39,7 +39,7 @@ class SeriesStatistics
     {
         $metric = $view->metric;
         $withCurve = $view->display === ComparisonDisplay::Trajectory && $metric->hasTrajectory();
-        $values = $seats = $sums = $counts = [];
+        $values = $seats = $sums = $counts = $sizes = [];
         $matched = $excluded = 0;
 
         foreach ($projects as $project) {
@@ -53,6 +53,7 @@ class SeriesStatistics
                 continue;
             }
 
+            $sizes[count($report->speakers)] = true;
             $trajectory = $withCurve ? $this->trajectories->forProject($project, null, $view->turnLimit) : null;
 
             foreach ($groups as $group) {
@@ -73,7 +74,10 @@ class SeriesStatistics
 
         usort($lines, fn (SeriesLine $a, SeriesLine $b) => [$a->seat ?? PHP_INT_MAX, $a->key] <=> [$b->seat ?? PHP_INT_MAX, $b->key]);
 
-        return new SeriesResult($series->label, $lines, $matched, $excluded);
+        $groupSizes = array_keys($sizes);
+        sort($groupSizes);
+
+        return new SeriesResult($series->label, $lines, $matched, $excluded, $groupSizes);
     }
 
     /**

@@ -191,4 +191,22 @@ class ComparisonEditorTest extends TestCase
     {
         $this->editor()->assertSee(__('comparisons.autosave.saved'))->assertSee(__('comparisons.autosave.saving'));
     }
+
+    public function test_the_name_heads_the_editor_and_follows_a_rename(): void
+    {
+        $component = $this->editor()->assertSee('Status')->assertSee(__('comparisons.actions.rename'));
+
+        $this->comparison->update(['name' => 'Titelträger']);
+
+        $component->dispatch('comparison-renamed')->assertSee('Titelträger');
+    }
+
+    public function test_the_match_list_is_folded_with_its_count_visible(): void
+    {
+        Project::factory()->create(['user_id' => $this->user->id, 'title' => 'Zelle A']);
+
+        $html = $this->editor()->call('addSeries')->assertSee(trans_choice('comparisons.series.matches', 1, ['count' => 1]))->html();
+
+        $this->assertMatchesRegularExpression('/<details class="group text-sm">\s*<summary/', $html);
+    }
 }

@@ -63,7 +63,7 @@ return [
         'any' => 'any',
         'pipeline' => 'Pipeline',
         'model' => 'Model',
-        'matches' => '{0}No project matches.|{1}1 project matches:|[2,*]:count projects match:',
+        'matches' => '{0}No project matches.|{1}1 project matches|[2,*]:count projects match',
     ],
 
     'reference' => [
@@ -104,6 +104,7 @@ return [
         'table' => 'Table',
         'bars' => 'Bars',
         'trajectory' => 'Over the run',
+        'pie' => 'Pie',
     ],
 
     'modes' => [
@@ -114,6 +115,7 @@ return [
     'line_with_seat' => ':label · seat :seat',
 
     'results' => [
+        'heading' => 'Result',
         'empty' => 'Add a series to see values.',
         'line' => 'Series',
         'n' => 'n',
@@ -122,10 +124,35 @@ return [
         'max' => 'Max',
         'per_project' => 'Values per project',
         'excluded' => '{1}“:label”: 1 project drops out (the reference hits nobody, or no turn was spoken).|[2,*]“:label”: :count projects drop out (the reference hits nobody, or no turn was spoken).',
-        'bar_text' => 'mean :mean · range :min–:max · n = :n',
+        'bar_text' => 'mean :mean · range :range · n = :n',
+        'seat' => 'Seat :seat',
+        'others' => 'Others',
+        'equal_share' => 'Dashed line: equal share (:share)',
         'no_trajectory' => 'The curve exists for turn share and word share only.',
+        'no_pie' => 'A pie exists for turn share and word share only.',
         'n_of' => ':label · n',
-        'palette_repeats' => 'More than 8 lines: colours repeat. Choose a narrower reference.',
+        'palette_repeats' => 'More than :count colours needed: colours repeat. Use fewer series or a narrower reference.',
         'too_short' => 'A curve needs at least two spoken turns.',
+    ],
+
+    'templates' => [
+        'menu' => 'From template',
+        'series' => ':pipeline · :condition',
+        'names' => [
+            'turn_share_by_pipeline' => 'Status effect on turn share by pipeline',
+            'word_share_by_pipeline' => 'Status effect on word share by pipeline',
+            'inequality_by_pipeline' => 'Speaking inequality by pipeline',
+            'words_per_turn_seat_one' => 'Words per turn of seat 1',
+            'seat_one_over_the_run' => 'Seat 1 share over the run',
+            'blind_vs_seeing_judge' => 'Blind vs seeing judge',
+            'every_seat_by_condition' => 'Share of every seat by condition',
+        ],
+        'pipelines' => [
+            'ScorePipeline' => 'Score',
+            'OrchestratorPipeline' => 'Orchestrator',
+            'QualityPipeline' => 'Quality',
+            'RoundRobinPipeline' => 'Round robin',
+            'BlindQualityPipeline' => 'Quality blind',
+        ],
     ],
 ];

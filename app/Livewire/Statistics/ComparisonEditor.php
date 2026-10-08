@@ -20,6 +20,7 @@ use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
@@ -35,9 +36,11 @@ class ComparisonEditor extends Component
     /**
      * Series colours, handed out in line order. Deliberately not the seat
      * colours of the statistics flyout (blue, violet, emerald, …): a series is
-     * not a participant. All eight exist as --color-*-500 in the built CSS.
+     * not a participant. Ten, so the thesis templates' ten series (five
+     * pipelines × two conditions) need no repeat. All are Flux pie colours
+     * and exist as --color-*-500 in the built CSS.
      */
-    public const PALETTE = ['indigo', 'orange', 'teal', 'pink', 'sky', 'red', 'purple', 'lime'];
+    public const PALETTE = ['indigo', 'orange', 'teal', 'pink', 'sky', 'red', 'purple', 'lime', 'amber', 'emerald'];
 
     #[Locked]
     public int $comparisonId;
@@ -66,6 +69,10 @@ class ComparisonEditor extends Component
         $this->series = array_map(fn (SeriesDefinition $d) => $d->withoutTagValues($missing)->toArray(), $definitions);
         $this->viewSettings = $comparison->comparisonView()->toArray();
     }
+
+    /** The page renamed this comparison; render again so the heading follows. */
+    #[On('comparison-renamed')]
+    public function refreshName(): void {}
 
     public function updated(string $property): void
     {
@@ -131,19 +138,26 @@ class ComparisonEditor extends Component
             $matches,
         );
         $lines = $this->displayLines($results);
-        [$bars, $barScale] = $this->bars($lines, $view->metric);
+        $charts = new ResultCharts($lines, $results, $view->metric);
+        $byLine = $view->display === ComparisonDisplay::Trajectory;
 
         return view('livewire.statistics.comparison-editor', [
+            'name' => $this->comparison($this->comparisonId)->name,
             'definitions' => $definitions,
             'emptiedSeries' => $this->emptiedSeries($this->withDefaultLabels($definitions)),
             'matches' => $matches,
             'results' => $results,
             'lines' => $lines,
-            'seriesColors' => $this->seriesColors($lines, count($definitions)),
-            'bars' => $bars,
-            'barScale' => $barScale,
-            'trajectoryRows' => $this->trajectoryRows($lines, $view->metric),
-            'paletteRepeats' => count($lines) > count(self::PALETTE),
+            'seriesColors' => array_map(fn (int $index) => $this->seriesColor($index), array_keys($definitions)),
+            'barGroups' => $charts->barGroups(),
+            'barScale' => $charts->barScale(),
+            'barTicks' => $charts->barTicks(),
+            'equalShare' => $charts->equalShare(),
+            'pies' => $charts->pies(),
+            'trajectoryRows' => $charts->trajectoryRows(),
+            // The curve colours each line, every other display each series.
+            'paletteRepeats' => ($byLine ? count($lines) : count($definitions)) > count(self::PALETTE),
+            'paletteSize' => count(self::PALETTE),
             'rollingWindow' => (int) config('discussion.share_window'),
             'comparisonView' => $view,
             'metrics' => Metric::cases(),
@@ -218,11 +232,13 @@ class ComparisonEditor extends Component
     }
 
     /**
-     * Every line of every series, flat and in series order, each with the
-     * colour it keeps in the table, the bars and the curve.
+     * Every line of every series, flat and in series order. `color` is the
+     * series' colour (table, bars, pies: lines of one series are told apart by
+     * their label); `lineColor` is one colour per line, for the curve, where
+     * lines of one colour could not be told apart.
      *
      * @param  list<SeriesResult>  $results
-     * @return list<array{label: string, color: string, series: int, line: SeriesLine}>
+     * @return list<array{label: string, short: string, color: string, lineColor: string, series: int, line: SeriesLine}>
      */
     private function displayLines(array $results): array
     {
@@ -230,11 +246,12 @@ class ComparisonEditor extends Component
 
         foreach ($results as $seriesIndex => $result) {
             foreach ($result->lines as $line) {
+                $single = $line->seat === null || $line->key === '';
                 $lines[] = [
-                    'label' => $line->seat === null || $line->key === ''
-                        ? $result->label
-                        : __('comparisons.line_with_seat', ['label' => $result->label, 'seat' => $line->seat]),
-                    'color' => self::PALETTE[count($lines) % count(self::PALETTE)],
+                    'label' => $single ? $result->label : __('comparisons.line_with_seat', ['label' => $result->label, 'seat' => $line->seat]),
+                    'short' => $single ? $result->label : __('comparisons.results.seat', ['seat' => $line->seat]),
+                    'color' => $this->seriesColor($seriesIndex),
+                    'lineColor' => self::PALETTE[count($lines) % count(self::PALETTE)],
                     'series' => $seriesIndex,
                     'line' => $line,
                 ];
@@ -244,85 +261,8 @@ class ComparisonEditor extends Component
         return $lines;
     }
 
-    /**
-     * The colour of each series' first line, for the dot in the editor; a
-     * series without a line yet falls back to its index.
-     *
-     * @return array<int, string>
-     */
-    private function seriesColors(array $lines, int $seriesCount): array
+    private function seriesColor(int $index): string
     {
-        $colors = [];
-
-        foreach (range(0, max(0, $seriesCount - 1)) as $index) {
-            $colors[$index] = self::PALETTE[$index % count(self::PALETTE)];
-        }
-
-        foreach (array_reverse($lines) as $entry) {
-            $colors[$entry['series']] = $entry['color'];
-        }
-
-        return $colors;
-    }
-
-    /**
-     * One bar per line: mean as the bar, min to max as the span. Shares fill
-     * against 100 %; other measures against the largest value shown.
-     *
-     * @return array{0: list<array{label: string, color: string, mean: float, min: float, max: float, text: string}>, 1: float}
-     */
-    private function bars(array $lines, Metric $metric): array
-    {
-        $scale = $metric->isShare() ? 1.0 : max([1.0, ...array_map(fn (array $entry) => $entry['line']->max(), $lines)]);
-
-        $bars = array_map(fn (array $entry) => [
-            'label' => $entry['label'],
-            'color' => $entry['color'],
-            'mean' => $entry['line']->mean(),
-            'min' => $entry['line']->min(),
-            'max' => $entry['line']->max(),
-            'text' => __('comparisons.results.bar_text', [
-                'mean' => $metric->format($entry['line']->mean()),
-                'min' => $metric->format($entry['line']->min()),
-                'max' => $metric->format($entry['line']->max()),
-                'n' => $entry['line']->n(),
-            ]),
-        ], $lines);
-
-        return [$bars, $scale];
-    }
-
-    /**
-     * One row per spoken turn for flux:chart: `l{i}` is line i's mean share in
-     * percent, `t{i}` the same value written as the table writes it (the
-     * tooltip shows it verbatim, independent of the browser's locale), `n{i}`
-     * how many runs reached that turn. A line that ends early has no `l{i}` in
-     * later rows, which the chart draws as its end; its tooltip shows a dash.
-     *
-     * @return list<array<string, int|float|string>>
-     */
-    private function trajectoryRows(array $lines, Metric $metric): array
-    {
-        $rows = [];
-
-        foreach ($lines as $index => $entry) {
-            foreach ($entry['line']->curve as $point) {
-                $rows[$point->turn]['turn'] = $point->turn;
-                $rows[$point->turn]['label'] = __('statistics.trajectory.turn', ['turn' => $point->turn]);
-                $rows[$point->turn]["l{$index}"] = round($point->mean * 100, 1);
-                $rows[$point->turn]["t{$index}"] = $metric->format($point->mean);
-                $rows[$point->turn]["n{$index}"] = $point->n;
-            }
-        }
-
-        ksort($rows);
-
-        $blank = [];
-        foreach (array_keys($lines) as $index) {
-            $blank["t{$index}"] = '—';
-            $blank["n{$index}"] = 0;
-        }
-
-        return array_values(array_map(fn (array $row) => $row + $blank, $rows));
+        return self::PALETTE[$index % count(self::PALETTE)];
     }
 }

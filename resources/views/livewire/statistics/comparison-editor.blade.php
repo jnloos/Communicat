@@ -1,4 +1,27 @@
-<div class="space-y-6">
+<div class="space-y-8">
+    {{-- The comparison is the object of the page: its name is the heading,
+         with the autosave state and the same "…" menu as in the list. Its
+         actions live on the page, which owns the list and the name modal. --}}
+    <div class="flex items-center gap-3">
+        <flux:heading size="xl" level="2" class="min-w-0 truncate">{{ $name }}</flux:heading>
+
+        {{-- Every edit is saved at once; this says so, since there is no save button. --}}
+        <flux:text size="sm" class="flex shrink-0 items-center gap-1" wire:loading.remove>
+            <flux:icon.check variant="micro" />{{ __('comparisons.autosave.saved') }}
+        </flux:text>
+        <flux:text size="sm" class="shrink-0" wire:loading>{{ __('comparisons.autosave.saving') }}</flux:text>
+
+        <flux:dropdown position="bottom" align="end" class="ms-auto">
+            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')" class="cursor-pointer" />
+            <flux:menu>
+                <flux:menu.item icon="pencil-square" wire:click="$parent.startRenaming({{ $comparisonId }})">{{ __('comparisons.actions.rename') }}</flux:menu.item>
+                <flux:menu.item icon="document-duplicate" wire:click="$parent.duplicate({{ $comparisonId }})">{{ __('comparisons.actions.duplicate') }}</flux:menu.item>
+                <flux:menu.separator />
+                <flux:menu.item variant="danger" icon="trash" wire:click="$parent.confirmDelete({{ $comparisonId }})">{{ __('comparisons.actions.delete') }}</flux:menu.item>
+            </flux:menu>
+        </flux:dropdown>
+    </div>
+
     @if ($droppedTagValues > 0 || $emptiedSeries !== [])
         <flux:callout variant="warning" icon="exclamation-triangle">
             @if ($droppedTagValues > 0)
@@ -14,97 +37,101 @@
         </flux:callout>
     @endif
 
-    <section class="space-y-4">
+    <section class="space-y-3">
         <div class="flex items-center justify-between gap-3">
-            <div class="flex items-baseline gap-3">
-                <flux:heading size="lg">{{ __('comparisons.series.heading') }}</flux:heading>
-                {{-- Every edit is saved at once; this says so, since there is no save button. --}}
-                <flux:text size="sm" wire:loading.remove>{{ __('comparisons.autosave.saved') }}</flux:text>
-                <flux:text size="sm" wire:loading>{{ __('comparisons.autosave.saving') }}</flux:text>
-            </div>
-            <flux:button size="sm" icon="plus" wire:click="addSeries" class="cursor-pointer">{{ __('comparisons.series.add') }}</flux:button>
+            <x-statistics.section-label>{{ __('comparisons.series.heading') }}</x-statistics.section-label>
+            <flux:button size="sm" variant="ghost" icon="plus" wire:click="addSeries" class="cursor-pointer">{{ __('comparisons.series.add') }}</flux:button>
         </div>
 
         @if ($definitions === [])
             <x-empty-state icon="queue-list">{{ __('comparisons.series.empty') }}</x-empty-state>
         @endif
 
+        @php($runLevel = $comparisonView->metric->isRunLevel())
+
         @foreach ($definitions as $index => $definition)
             @php($referenceType = $series[$index]['reference']['type'] ?? 'each')
 
             <flux:card wire:key="series-{{ $index }}" class="space-y-5">
-                <div class="flex items-end gap-3">
-                    <span class="mb-3 size-3 shrink-0 rounded-full" style="background-color: var(--color-{{ $seriesColors[$index] }}-500)"></span>
-                    <flux:input wire:model.blur="series.{{ $index }}.label" :label="__('comparisons.series.label')" class="flex-1" />
+                <div class="flex items-center gap-3">
+                    <span class="size-3 shrink-0 rounded-full" style="background-color: var(--color-{{ $seriesColors[$index] }}-500)"></span>
+                    <flux:input size="sm" wire:model.blur="series.{{ $index }}.label" :aria-label="__('comparisons.series.label')"
+                        :placeholder="__('comparisons.series.label')" class="flex-1" />
                     <flux:button variant="ghost" size="sm" icon="trash" wire:click="confirmRemoveSeries({{ $index }})"
-                        class="cursor-pointer" :aria-label="__('comparisons.series.remove')" />
+                        class="cursor-pointer" :aria-label="__('comparisons.series.remove')" :tooltip="__('comparisons.series.remove')" />
                 </div>
 
-                <div class="grid gap-5 md:grid-cols-2">
+                <div class="grid gap-6 md:grid-cols-2">
                     {{-- Which runs --}}
-                    <div class="space-y-3">
-                        <flux:heading size="sm">{{ __('comparisons.series.projects') }}</flux:heading>
+                    <div class="space-y-4">
+                        <flux:subheading size="sm" class="font-medium">{{ __('comparisons.series.projects') }}</flux:subheading>
 
+                        {{-- One pill group per category: OR within it, AND across
+                             categories (TagFilter); no pill picked means any. --}}
                         @foreach ($projectCategories as $category)
-                            <flux:select variant="listbox" multiple
+                            <flux:checkbox.group variant="pills"
                                 wire:key="series-{{ $index }}-project-tags-{{ $category->id }}"
                                 wire:model.live="series.{{ $index }}.projects.tags.{{ $category->id }}"
-                                :label="$category->name" :placeholder="__('comparisons.series.any')">
+                                :label="\Illuminate\Support\Str::ucfirst($category->name)" class="gap-1.5!">
                                 @foreach ($category->values as $value)
-                                    <flux:select.option :value="$value->id">{{ $value->name }}</flux:select.option>
+                                    <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" class="cursor-pointer" />
                                 @endforeach
-                            </flux:select>
+                            </flux:checkbox.group>
                         @endforeach
 
-                        <flux:select wire:model.live="series.{{ $index }}.projects.pipeline" :label="__('comparisons.series.pipeline')">
-                            <option value="">{{ __('comparisons.series.any') }}</option>
-                            @foreach ($pipelines as $name => $label)
-                                <option value="{{ $name }}">{{ $label }}</option>
+                        <flux:select variant="listbox" clearable wire:model.live="series.{{ $index }}.projects.pipeline"
+                            :label="__('comparisons.series.pipeline')" :placeholder="__('comparisons.series.any')">
+                            @foreach ($pipelines as $pipelineName => $label)
+                                <flux:select.option :value="$pipelineName">{{ $label }}</flux:select.option>
                             @endforeach
                         </flux:select>
 
-                        <flux:select wire:model.live="series.{{ $index }}.projects.model" :label="__('comparisons.series.model')">
-                            <option value="">{{ __('comparisons.series.any') }}</option>
+                        <flux:select variant="listbox" clearable wire:model.live="series.{{ $index }}.projects.model"
+                            :label="__('comparisons.series.model')" :placeholder="__('comparisons.series.any')">
                             @foreach ($models as $key => $label)
-                                <option value="{{ $key }}">{{ $label }}</option>
+                                <flux:select.option :value="$key">{{ $label }}</flux:select.option>
                             @endforeach
                         </flux:select>
 
-                        <div>
-                            <flux:text size="sm">{{ trans_choice('comparisons.series.matches', $matches[$index]->count(), ['count' => $matches[$index]->count()]) }}</flux:text>
+                        {{-- Folded by default so every card keeps its height; the count stays visible. --}}
+                        <details class="group text-sm">
+                            <summary class="flex cursor-pointer list-none items-center gap-1 text-zinc-500 dark:text-zinc-400 [&::-webkit-details-marker]:hidden">
+                                @if ($matches[$index]->isNotEmpty())
+                                    <flux:icon.chevron-right variant="micro" class="transition-transform group-open:rotate-90" />
+                                @endif
+                                {{ trans_choice('comparisons.series.matches', $matches[$index]->count(), ['count' => $matches[$index]->count()]) }}
+                            </summary>
                             @if ($matches[$index]->isNotEmpty())
-                                <ul class="mt-1 max-h-32 overflow-y-auto text-xs text-zinc-500 dark:text-zinc-400">
+                                <ul class="mt-1 max-h-40 space-y-0.5 overflow-y-auto ps-5 text-xs text-zinc-500 dark:text-zinc-400">
                                     @foreach ($matches[$index] as $project)
                                         <li wire:key="series-{{ $index }}-match-{{ $project->id }}" class="truncate">{{ $project->title }}</li>
                                     @endforeach
                                 </ul>
                             @endif
-                        </div>
+                        </details>
                     </div>
 
                     {{-- Which agents --}}
-                    <div class="space-y-3">
-                        <flux:heading size="sm">{{ __('comparisons.reference.heading') }}</flux:heading>
+                    <div class="space-y-4">
+                        <flux:subheading size="sm" class="font-medium">{{ __('comparisons.reference.heading') }}</flux:subheading>
 
-                        @php($runLevel = $comparisonView->metric->isRunLevel())
-
-                        <flux:select wire:model.live="series.{{ $index }}.reference.type" :label="__('comparisons.reference.type')" :disabled="$runLevel">
+                        <flux:select variant="listbox" wire:model.live="series.{{ $index }}.reference.type" :label="__('comparisons.reference.type')" :disabled="$runLevel">
                             @foreach ($referenceTypes as $type)
-                                <option value="{{ $type }}">{{ __("comparisons.reference.types.{$type}") }}</option>
+                                <flux:select.option :value="$type">{{ __("comparisons.reference.types.{$type}") }}</flux:select.option>
                             @endforeach
                         </flux:select>
 
                         @switch($referenceType)
                             @case('persona_tags')
                                 @foreach ($personaCategories as $category)
-                                    <flux:select variant="listbox" multiple
+                                    <flux:checkbox.group variant="pills"
                                         wire:key="series-{{ $index }}-persona-tags-{{ $category->id }}"
                                         wire:model.live="series.{{ $index }}.reference.tags.{{ $category->id }}"
-                                        :label="$category->name" :placeholder="__('comparisons.series.any')" :disabled="$runLevel">
+                                        :label="\Illuminate\Support\Str::ucfirst($category->name)" :disabled="$runLevel" class="gap-1.5!">
                                         @foreach ($category->values as $value)
-                                            <flux:select.option :value="$value->id">{{ $value->name }}</flux:select.option>
+                                            <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" class="cursor-pointer" />
                                         @endforeach
-                                    </flux:select>
+                                    </flux:checkbox.group>
                                 @endforeach
                                 @break
 
@@ -113,116 +140,137 @@
                                 @break
 
                             @case('expert_name')
-                                <flux:select wire:model.live="series.{{ $index }}.reference.name" :label="__('comparisons.reference.expert_name')" :disabled="$runLevel">
-                                    <option value="">{{ __('comparisons.reference.choose_expert') }}</option>
+                                <flux:select variant="listbox" searchable wire:model.live="series.{{ $index }}.reference.name"
+                                    :label="__('comparisons.reference.expert_name')" :placeholder="__('comparisons.reference.choose_expert')" :disabled="$runLevel">
                                     @foreach ($expertNames as $expertName)
-                                        <option value="{{ $expertName }}">{{ $expertName }}</option>
+                                        <flux:select.option :value="$expertName">{{ $expertName }}</flux:select.option>
                                     @endforeach
                                 </flux:select>
                                 @break
                         @endswitch
 
-                        <flux:text size="sm">{{ $runLevel ? __('comparisons.reference.run_level_hint') : __('comparisons.reference.shared_hint') }}</flux:text>
+                        {{-- Only a tag reference can hit several agents of one run. --}}
+                        @if ($runLevel)
+                            <flux:text size="sm">{{ __('comparisons.reference.run_level_hint') }}</flux:text>
+                        @elseif ($referenceType === 'persona_tags')
+                            <flux:text size="sm">{{ __('comparisons.reference.shared_hint') }}</flux:text>
+                        @endif
                     </div>
                 </div>
             </flux:card>
         @endforeach
     </section>
 
-    <section class="space-y-4">
-        <flux:heading size="lg">{{ __('comparisons.view.heading') }}</flux:heading>
+    <section class="space-y-3">
+        <x-statistics.section-label>{{ __('comparisons.view.heading') }}</x-statistics.section-label>
 
-        <div class="flex flex-wrap items-end gap-3">
-            <flux:select wire:model.live="viewSettings.metric" :label="__('comparisons.view.metric')" class="max-w-56">
-                @foreach ($metrics as $metric)
-                    <option value="{{ $metric->value }}">{{ $metric->label() }}</option>
-                @endforeach
-            </flux:select>
+        {{-- Every control carries its label the same way, so the row lines up at the bottom. --}}
+        <div class="flex flex-wrap items-end gap-4 rounded-lg bg-zinc-50 p-3 dark:bg-white/5">
+            <flux:field class="w-56">
+                <flux:label>{{ __('comparisons.view.metric') }}</flux:label>
+                <flux:select variant="listbox" wire:model.live="viewSettings.metric">
+                    @foreach ($metrics as $metric)
+                        <flux:select.option :value="$metric->value">{{ $metric->label() }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+            </flux:field>
 
-            <flux:radio.group wire:model.live="viewSettings.display" :label="__('comparisons.view.display')" variant="segmented" size="sm">
-                @foreach ($displays as $display)
-                    @if ($display === \App\Discussion\Values\ComparisonDisplay::Trajectory && ! $comparisonView->metric->hasTrajectory())
-                        <flux:radio :value="$display->value" :label="$display->label()" disabled :title="__('comparisons.results.no_trajectory')" />
-                    @else
-                        <flux:radio :value="$display->value" :label="$display->label()" />
-                    @endif
-                @endforeach
-            </flux:radio.group>
+            <flux:field>
+                <flux:label>{{ __('comparisons.view.display') }}</flux:label>
+                <flux:radio.group wire:model.live="viewSettings.display" variant="segmented">
+                    @foreach ($displays as $display)
+                        @if ($display->supports($comparisonView->metric))
+                            <flux:radio :value="$display->value" :label="$display->label()" />
+                        @else
+                            <flux:radio :value="$display->value" :label="$display->label()" disabled :title="$display->unsupportedHint()" />
+                        @endif
+                    @endforeach
+                </flux:radio.group>
+            </flux:field>
 
-            <flux:input type="number" min="1" class="max-w-40"
-                wire:model.live.debounce.500ms="viewSettings.turn_limit"
-                :label="__('comparisons.view.turn_limit')" :placeholder="__('comparisons.view.all_turns')" />
+            <flux:field class="w-36">
+                <flux:label>{{ __('comparisons.view.turn_limit') }}</flux:label>
+                <flux:input type="number" min="1" wire:model.live.debounce.500ms="viewSettings.turn_limit" :placeholder="__('comparisons.view.all_turns')" />
+            </flux:field>
 
             @if ($comparisonView->display === \App\Discussion\Values\ComparisonDisplay::Trajectory && $comparisonView->metric->hasTrajectory())
-                <div>
-                    <flux:radio.group wire:model.live="viewSettings.trajectory_mode" :label="__('comparisons.view.mode')" variant="segmented" size="sm">
+                <flux:field>
+                    <flux:label>{{ __('comparisons.view.mode') }}</flux:label>
+                    <flux:radio.group wire:model.live="viewSettings.trajectory_mode" variant="segmented">
                         <flux:radio value="cumulative" :label="__('comparisons.modes.cumulative')" />
                         <flux:radio value="rolling" :label="__('comparisons.modes.rolling')" />
                     </flux:radio.group>
-                    @if ($comparisonView->trajectoryMode === 'rolling')
-                        <flux:text size="sm" class="mt-1">{{ trans_choice('statistics.trajectory.rolling_hint', $rollingWindow, ['count' => $rollingWindow]) }}</flux:text>
-                    @endif
-                </div>
+                </flux:field>
             @endif
         </div>
 
-        @if ($paletteRepeats)
-            <flux:text size="sm" class="text-amber-600 dark:text-amber-400">{{ __('comparisons.results.palette_repeats') }}</flux:text>
+        @if ($comparisonView->display === \App\Discussion\Values\ComparisonDisplay::Trajectory && $comparisonView->trajectoryMode === 'rolling')
+            <flux:text size="sm">{{ trans_choice('statistics.trajectory.rolling_hint', $rollingWindow, ['count' => $rollingWindow]) }}</flux:text>
         @endif
+    </section>
 
-        @foreach ($results as $result)
-            @if ($result->excluded > 0)
-                <flux:text size="sm" class="text-amber-600 dark:text-amber-400">
-                    {{ trans_choice('comparisons.results.excluded', $result->excluded, ['count' => $result->excluded, 'label' => $result->label]) }}
-                </flux:text>
-            @endif
-        @endforeach
+    <section class="space-y-4">
+        <x-statistics.section-label>{{ __('comparisons.results.heading') }}</x-statistics.section-label>
+
+        @php($excluded = collect($results)->filter(fn ($result) => $result->excluded > 0))
+
+        @if ($paletteRepeats || $excluded->isNotEmpty())
+            <flux:callout variant="warning" icon="exclamation-triangle">
+                @if ($paletteRepeats)
+                    <flux:callout.text>{{ __('comparisons.results.palette_repeats', ['count' => $paletteSize]) }}</flux:callout.text>
+                @endif
+                @foreach ($excluded as $result)
+                    <flux:callout.text>
+                        {{ trans_choice('comparisons.results.excluded', $result->excluded, ['count' => $result->excluded, 'label' => $result->label]) }}
+                    </flux:callout.text>
+                @endforeach
+            </flux:callout>
+        @endif
 
         @if ($lines === [])
             <x-empty-state icon="chart-bar">{{ __('comparisons.results.empty') }}</x-empty-state>
         @elseif ($comparisonView->display === \App\Discussion\Values\ComparisonDisplay::Table)
-            <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
-                <table class="w-full text-sm">
-                    <thead class="bg-zinc-100 text-xs uppercase tracking-wide text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-                        <tr>
-                            <th class="px-3 py-2 text-left font-medium">{{ __('comparisons.results.line') }}</th>
-                            <th class="px-3 py-2 text-right font-medium">{{ __('comparisons.results.n') }}</th>
-                            <th class="px-3 py-2 text-right font-medium">{{ __('comparisons.results.mean') }}</th>
-                            <th class="px-3 py-2 text-right font-medium">{{ __('comparisons.results.min') }}</th>
-                            <th class="px-3 py-2 text-right font-medium">{{ __('comparisons.results.max') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
-                        @foreach ($lines as $entry)
-                            <tr wire:key="result-row-{{ $loop->index }}">
-                                <td class="px-3 py-2">
-                                    <span class="flex items-center gap-2">
-                                        <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $entry['color'] }}-500)"></span>
-                                        <span class="truncate">{{ $entry['label'] }}</span>
-                                    </span>
-                                    <details class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                                        <summary class="cursor-pointer">{{ __('comparisons.results.per_project') }}</summary>
-                                        <ul class="mt-1 space-y-0.5">
-                                            @foreach ($entry['line']->values as $value)
-                                                <li class="flex justify-between gap-3">
-                                                    <span class="truncate">{{ $value->title }}</span>
-                                                    <span class="font-mono">{{ $comparisonView->metric->format($value->value) }}</span>
-                                                </li>
-                                            @endforeach
-                                        </ul>
-                                    </details>
-                                </td>
-                                <td class="px-3 py-2 text-right align-top font-mono">{{ $entry['line']->n() }}</td>
-                                <td class="px-3 py-2 text-right align-top font-mono">{{ $comparisonView->metric->format($entry['line']->mean()) }}</td>
-                                <td class="px-3 py-2 text-right align-top font-mono">{{ $comparisonView->metric->format($entry['line']->min()) }}</td>
-                                <td class="px-3 py-2 text-right align-top font-mono">{{ $comparisonView->metric->format($entry['line']->max()) }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+            <flux:table>
+                <flux:table.columns>
+                    <flux:table.column>{{ __('comparisons.results.line') }}</flux:table.column>
+                    <flux:table.column align="end">{{ __('comparisons.results.n') }}</flux:table.column>
+                    <flux:table.column align="end">{{ __('comparisons.results.mean') }}</flux:table.column>
+                    <flux:table.column align="end">{{ __('comparisons.results.min') }}</flux:table.column>
+                    <flux:table.column align="end">{{ __('comparisons.results.max') }}</flux:table.column>
+                </flux:table.columns>
+
+                <flux:table.rows>
+                    @foreach ($lines as $entry)
+                        <flux:table.row wire:key="result-row-{{ $loop->index }}">
+                            <flux:table.cell class="align-top">
+                                <span class="flex items-center gap-2">
+                                    <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $entry['color'] }}-500)"></span>
+                                    <span class="truncate font-medium text-zinc-800 dark:text-white">{{ $entry['label'] }}</span>
+                                </span>
+                                <details class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                                    <summary class="cursor-pointer">{{ __('comparisons.results.per_project') }}</summary>
+                                    <ul class="mt-1 space-y-0.5">
+                                        @foreach ($entry['line']->values as $value)
+                                            <li class="flex justify-between gap-3">
+                                                <span class="truncate">{{ $value->title }}</span>
+                                                <span class="tabular-nums">{{ $comparisonView->metric->format($value->value) }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </details>
+                            </flux:table.cell>
+                            <flux:table.cell align="end" class="align-top tabular-nums">{{ $entry['line']->n() }}</flux:table.cell>
+                            <flux:table.cell align="end" class="align-top tabular-nums">{{ $comparisonView->metric->format($entry['line']->mean()) }}</flux:table.cell>
+                            <flux:table.cell align="end" class="align-top tabular-nums">{{ $comparisonView->metric->format($entry['line']->min()) }}</flux:table.cell>
+                            <flux:table.cell align="end" class="align-top tabular-nums">{{ $comparisonView->metric->format($entry['line']->max()) }}</flux:table.cell>
+                        </flux:table.row>
+                    @endforeach
+                </flux:table.rows>
+            </flux:table>
         @elseif ($comparisonView->display === \App\Discussion\Values\ComparisonDisplay::Bars)
-            <x-statistics.range-bars :bars="$bars" :scale="$barScale" />
+            <x-statistics.range-bars :groups="$barGroups" :scale="$barScale" :ticks="$barTicks" :equal-share="$equalShare" />
+        @elseif ($comparisonView->display === \App\Discussion\Values\ComparisonDisplay::Pie)
+            <x-statistics.pies :pies="$pies" />
         @elseif (count($trajectoryRows) < 2)
             <x-empty-state icon="presentation-chart-line">{{ __('comparisons.results.too_short') }}</x-empty-state>
         @else
@@ -231,7 +279,7 @@
             <flux:chart wire:key="comparison-curve-{{ md5(json_encode($trajectoryRows)) }}" :value="$trajectoryRows" class="aspect-[2/1]">
                 <flux:chart.svg>
                     @foreach ($lines as $index => $entry)
-                        <flux:chart.line :field="'l'.$index" curve="none" style="color: var(--color-{{ $entry['color'] }}-500)" />
+                        <flux:chart.line :field="'l'.$index" curve="none" style="color: var(--color-{{ $entry['lineColor'] }}-500)" />
                     @endforeach
 
                     <flux:chart.axis axis="x" field="turn" scale="linear">
@@ -258,7 +306,7 @@
             <div class="flex flex-wrap justify-center gap-x-4 gap-y-1">
                 @foreach ($lines as $entry)
                     <flux:chart.legend :label="$entry['label']" class="p-0!">
-                        <flux:chart.legend.indicator style="background-color: var(--color-{{ $entry['color'] }}-500)" />
+                        <flux:chart.legend.indicator style="background-color: var(--color-{{ $entry['lineColor'] }}-500)" />
                     </flux:chart.legend>
                 @endforeach
             </div>
