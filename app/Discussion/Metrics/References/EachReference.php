@@ -7,7 +7,11 @@ use App\Discussion\Values\Metric;
 use App\Discussion\Values\ShareReport;
 use App\Models\Project;
 
-/** Every agent on its own: one line per seat, or per agent for one who has left the project. */
+/**
+ * Every agent on its own, one line each, named by the agent. Lines are keyed
+ * by name, as "One expert by name" matches, so an agent is followed across
+ * runs whatever seat they sit on and whichever record carries the name.
+ */
 final class EachReference implements AgentReference
 {
     public const TYPE = 'each';
@@ -24,14 +28,15 @@ final class EachReference implements AgentReference
 
     public function pick(Project $project, ShareReport $report, Metric $metric): array
     {
-        $groups = [];
+        $idsByName = [];
 
         foreach ($report->speakers as $speaker) {
-            $groups[] = $speaker->seat === null
-                ? new AgentGroup("expert-{$speaker->expertId}", [$speaker->expertId], null, $speaker->name)
-                : new AgentGroup("seat-{$speaker->seat}", [$speaker->expertId], $speaker->seat);
+            $idsByName[$speaker->name][] = $speaker->expertId;
         }
 
-        return $groups;
+        return array_map(
+            fn (int|string $name) => new AgentGroup("agent:{$name}", $idsByName[$name], (string) $name),
+            array_keys($idsByName),
+        );
     }
 }

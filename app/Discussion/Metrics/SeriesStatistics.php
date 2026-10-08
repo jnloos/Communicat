@@ -26,6 +26,8 @@ use App\Models\Project;
  * - A run whose reference picks nobody, or that has no spoken turn, drops out
  *   of the series and is counted in `excluded`.
  * - A curve point is the mean over the runs that reached that turn, with n.
+ * - The lines of `each` come in the order their agents first appear: the
+ *   seat order of the first run, then anyone new in later runs.
  */
 class SeriesStatistics
 {
@@ -39,7 +41,7 @@ class SeriesStatistics
     {
         $metric = $view->metric;
         $withCurve = $view->display === ComparisonDisplay::Trajectory;
-        $values = $seats = $names = $sums = $counts = $sizes = [];
+        $values = $names = $sums = $counts = $sizes = [];
         $matched = $excluded = 0;
 
         foreach ($projects as $project) {
@@ -57,7 +59,6 @@ class SeriesStatistics
             $trajectory = $withCurve ? $this->trajectories->forProject($project, null, $view->turnLimit) : null;
 
             foreach ($groups as $group) {
-                $seats[$group->key] = $group->seat;
                 $names[$group->key] = $group->name;
                 $values[$group->key][] = new ProjectValue($project->title, $this->valueOf($metric, $report, $group));
 
@@ -70,10 +71,8 @@ class SeriesStatistics
         $lines = [];
 
         foreach ($values as $key => $projectValues) {
-            $lines[] = new SeriesLine((string) $key, $seats[$key], $projectValues, $this->means($sums[$key] ?? [], $counts[$key] ?? []), $names[$key]);
+            $lines[] = new SeriesLine((string) $key, $projectValues, $this->means($sums[$key] ?? [], $counts[$key] ?? []), $names[$key]);
         }
-
-        usort($lines, fn (SeriesLine $a, SeriesLine $b) => [$a->seat ?? PHP_INT_MAX, $a->key] <=> [$b->seat ?? PHP_INT_MAX, $b->key]);
 
         $groupSizes = array_keys($sizes);
         sort($groupSizes);

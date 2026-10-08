@@ -115,15 +115,18 @@
                                 </flux:checkbox.group>
                             @endforeach
 
-                            <flux:select variant="listbox" clearable wire:model.live="series.{{ $index }}.projects.pipeline"
-                                :label="__('comparisons.series.pipeline')" :placeholder="__('comparisons.series.any')">
+                            {{-- Filter as you type; the first option clears the filter again. --}}
+                            <flux:select variant="listbox" searchable wire:model.live="series.{{ $index }}.projects.pipeline"
+                                :label="__('comparisons.series.pipeline')" :placeholder="__('comparisons.series.every_pipeline')">
+                                <flux:select.option value="">{{ __('comparisons.series.every_pipeline') }}</flux:select.option>
                                 @foreach ($pipelines as $pipelineName => $label)
                                     <flux:select.option :value="$pipelineName">{{ $label }}</flux:select.option>
                                 @endforeach
                             </flux:select>
 
-                            <flux:select variant="listbox" clearable wire:model.live="series.{{ $index }}.projects.model"
-                                :label="__('comparisons.series.model')" :placeholder="__('comparisons.series.any')">
+                            <flux:select variant="listbox" searchable wire:model.live="series.{{ $index }}.projects.model"
+                                :label="__('comparisons.series.model')" :placeholder="__('comparisons.series.every_model')">
+                                <flux:select.option value="">{{ __('comparisons.series.every_model') }}</flux:select.option>
                                 @foreach ($models as $key => $label)
                                     <flux:select.option :value="$key">{{ $label }}</flux:select.option>
                                 @endforeach
@@ -169,10 +172,6 @@
                                             @endforeach
                                         </flux:checkbox.group>
                                     @endforeach
-                                    @break
-
-                                @case('seat')
-                                    <flux:input type="number" min="1" wire:model.live.debounce.500ms="series.{{ $index }}.reference.seat" :label="__('comparisons.reference.seat')" :disabled="$runLevel" />
                                     @break
 
                                 @case('expert_name')

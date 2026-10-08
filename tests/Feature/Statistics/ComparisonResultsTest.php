@@ -27,10 +27,10 @@ class ComparisonResultsTest extends TestCase
         $this->user = User::factory()->create();
         $this->actingAs($this->user);
 
-        // One run of four turns: seat 1 speaks three of them.
+        // One run of four turns: Ada speaks three of them.
         $project = Project::factory()->create(['user_id' => $this->user->id, 'pipeline' => 'ScorePipeline', 'title' => 'Zelle 1']);
-        $first = Expert::factory()->create();
-        $second = Expert::factory()->create();
+        $first = Expert::factory()->create(['name' => 'Ada']);
+        $second = Expert::factory()->create(['name' => 'Bo']);
         $project->addContributingExpert($first);
         $project->addContributingExpert($second);
 
@@ -42,8 +42,8 @@ class ComparisonResultsTest extends TestCase
         }
 
         $this->comparison = $this->user->comparisons()->create([
-            'name' => 'Sitz 1',
-            'series' => [['label' => 'Sitz eins', 'projects' => ['pipeline' => 'ScorePipeline'], 'reference' => ['type' => 'seat', 'seat' => 1]]],
+            'name' => 'Ada',
+            'series' => [['label' => 'Ada allein', 'projects' => ['pipeline' => 'ScorePipeline'], 'reference' => ['type' => 'expert_name', 'name' => 'Ada']]],
             'view' => ['metric' => 'turn_share', 'display' => 'table'],
         ]);
     }
@@ -56,7 +56,7 @@ class ComparisonResultsTest extends TestCase
     public function test_the_table_shows_mean_min_max_and_n(): void
     {
         $this->editor()
-            ->assertSee('Sitz eins')
+            ->assertSee('Ada allein')
             ->assertSee('75.0 %')
             ->assertSee('Zelle 1');
     }
@@ -120,7 +120,7 @@ class ComparisonResultsTest extends TestCase
         $rows = $component->viewData('trajectoryRows');
 
         $this->assertSame('75.0 %', $rows[3]['t0']);
-        $component->assertSee(__('comparisons.results.n_of', ['label' => 'Sitz eins']));
+        $component->assertSee(__('comparisons.results.n_of', ['label' => 'Ada allein']));
     }
 
     public function test_a_line_that_ends_early_shows_a_dash_and_zero_runs(): void
@@ -136,7 +136,7 @@ class ComparisonResultsTest extends TestCase
         }
         $this->comparison->update(['series' => [
             ...$this->comparison->series,
-            ['label' => 'Kurz', 'projects' => ['pipeline' => 'RoundRobinPipeline'], 'reference' => ['type' => 'seat', 'seat' => 1]],
+            ['label' => 'Kurz', 'projects' => ['pipeline' => 'RoundRobinPipeline'], 'reference' => ['type' => 'top']],
         ]]);
 
         $rows = $this->editor()->set('viewSettings.display', 'trajectory')->viewData('trajectoryRows');
@@ -194,7 +194,7 @@ class ComparisonResultsTest extends TestCase
     private function addRunOfThree(): void
     {
         $three = Project::factory()->create(['user_id' => $this->user->id, 'pipeline' => 'ScorePipeline']);
-        $experts = Expert::factory()->count(3)->create();
+        $experts = collect([Expert::where('name', 'Ada')->sole(), ...Expert::factory()->count(2)->create()]);
         $experts->each(fn (Expert $expert) => $three->addContributingExpert($expert));
         JobLog::create([
             'job_class' => 'App\Discussion\TurnRunner', 'project_id' => $three->id, 'status' => 'success',
@@ -226,14 +226,14 @@ class ComparisonResultsTest extends TestCase
         $groups = $component->viewData('barGroups');
         $this->assertCount(1, $groups);
         $this->assertSame('indigo-500', (string) $groups[0]['color']);
-        $this->assertSame([__('comparisons.results.seat', ['seat' => 1]), __('comparisons.results.seat', ['seat' => 2])], array_column($groups[0]['rows'], 'label'));
+        $this->assertSame(['Ada', 'Bo'], array_column($groups[0]['rows'], 'label'));
 
         $lines = $component->viewData('lines');
         $this->assertSame(['indigo-500', 'indigo-500'], array_map('strval', array_column($lines, 'color')));
         $this->assertNotSame($lines[0]['lineColor'], $lines[1]['lineColor']);
     }
 
-    public function test_a_pie_of_every_seat_sums_to_a_whole(): void
+    public function test_a_pie_of_every_agent_sums_to_a_whole(): void
     {
         $pies = $this->editor()
             ->set('series.0.reference.type', 'each')
@@ -254,7 +254,7 @@ class ComparisonResultsTest extends TestCase
         $pie = $component->viewData('pies')[0];
         $slices = $pie['slices'];
 
-        $this->assertSame(['Sitz eins', __('comparisons.results.others')], array_column($slices, 'name'));
+        $this->assertSame(['Ada allein', __('comparisons.results.others')], array_column($slices, 'name'));
         $this->assertSame([75.0, 25.0], array_column($slices, 'value'));
         $this->assertSame(['tint-0', 'others'], array_column($slices, 'id'));
         $this->assertSame('75.0 %', $pie['mean'], 'the caption carries the figure');
@@ -262,7 +262,7 @@ class ComparisonResultsTest extends TestCase
             ->assertSee(__('comparisons.results.pie_equal_share', ['share' => '50 %']));
     }
 
-    public function test_a_pie_of_every_seat_needs_one_group_size(): void
+    public function test_a_pie_of_every_agent_needs_the_same_agents_in_every_run(): void
     {
         $this->addRunOfThree();
 
@@ -271,12 +271,35 @@ class ComparisonResultsTest extends TestCase
             ->set('viewSettings.display', 'pie');
         $pie = $component->viewData('pies')[0];
 
-        // Seat 3 exists in one run only: its mean would push the slices past 100 %.
+        // Bo and the two newcomers sit in one run only: their means would push the slices past 100 %.
         $this->assertSame([], $pie['slices']);
         $this->assertTrue($pie['mixed']);
         $this->assertNull($pie['mean']);
-        $component->assertSee(__('comparisons.results.pie_mixed_sizes'))
+        $component->assertSee(__('comparisons.results.pie_mixed_agents'))
             ->assertDontSee(__('comparisons.results.pie_equal_share', ['share' => '50 %']));
+    }
+
+    public function test_a_pie_of_every_agent_holds_when_the_same_agents_sit_elsewhere(): void
+    {
+        [$ada, $bo] = [Expert::where('name', 'Ada')->sole(), Expert::where('name', 'Bo')->sole()];
+        $swapped = Project::factory()->create(['user_id' => $this->user->id, 'pipeline' => 'ScorePipeline']);
+        $swapped->addContributingExpert($bo);
+        $swapped->addContributingExpert($ada);
+        foreach ([$bo, $ada] as $index => $speaker) {
+            JobLog::create([
+                'job_class' => 'App\Discussion\TurnRunner', 'project_id' => $swapped->id, 'status' => 'success',
+                'started_at' => now(), 'turn_index' => $index + 1, 'expert_id' => $speaker->id, 'words' => 10,
+            ]);
+        }
+
+        $pie = $this->editor()
+            ->set('series.0.reference.type', 'each')
+            ->set('viewSettings.display', 'pie')
+            ->viewData('pies')[0];
+
+        $this->assertFalse($pie['mixed']);
+        $this->assertSame(['Ada', 'Bo'], array_column($pie['slices'], 'name'));
+        $this->assertEqualsWithDelta(100.0, array_sum(array_column($pie['slices'], 'value')), 0.01);
     }
 
     public function test_only_the_shown_display_is_prepared(): void

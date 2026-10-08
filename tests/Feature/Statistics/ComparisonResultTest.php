@@ -26,11 +26,11 @@ class ComparisonResultTest extends TestCase
     {
         parent::setUp();
 
-        // One run of four turns: seat 1 speaks three of them.
+        // One run of four turns: Ada speaks three of them.
         $this->user = User::factory()->create();
         $project = Project::factory()->create(['user_id' => $this->user->id, 'pipeline' => 'ScorePipeline']);
-        $first = Expert::factory()->create();
-        $second = Expert::factory()->create();
+        $first = Expert::factory()->create(['name' => 'Ada']);
+        $second = Expert::factory()->create(['name' => 'Bo']);
         $project->addContributingExpert($first);
         $project->addContributingExpert($second);
 
@@ -45,7 +45,7 @@ class ComparisonResultTest extends TestCase
     /** @param  array<string, mixed>  $overrides */
     private function series(array $overrides = []): SeriesDefinition
     {
-        return SeriesDefinition::fromArray($overrides + ['label' => 'Sitz eins', 'projects' => ['pipeline' => 'ScorePipeline'], 'reference' => ['type' => 'seat', 'seat' => 1]]);
+        return SeriesDefinition::fromArray($overrides + ['label' => 'Ada', 'projects' => ['pipeline' => 'ScorePipeline'], 'reference' => ['type' => 'expert_name', 'name' => 'Ada']]);
     }
 
     /** @param  list<SeriesDefinition>  $series */
@@ -78,22 +78,27 @@ class ComparisonResultTest extends TestCase
 
         $this->assertSame(['indigo-500', 'indigo-500'], array_map('strval', array_column($result->lines, 'color')));
         $this->assertNotSame((string) $result->lines[0]['lineColor'], (string) $result->lines[1]['lineColor']);
-        $this->assertSame([__('comparisons.results.seat', ['seat' => 1]), __('comparisons.results.seat', ['seat' => 2])], array_column($result->lines, 'short'));
     }
 
-    public function test_agents_without_a_seat_get_lines_of_their_own_name(): void
+    public function test_every_line_of_each_is_named_by_its_agent_never_by_a_seat(): void
+    {
+        $result = $this->compute([$this->series(['label' => 'Alle', 'reference' => ['type' => 'each']])]);
+
+        $this->assertSame(['Ada', 'Bo'], array_column($result->lines, 'short'));
+        $this->assertSame([
+            __('comparisons.line_with_name', ['label' => 'Alle', 'name' => 'Ada']),
+            __('comparisons.line_with_name', ['label' => 'Alle', 'name' => 'Bo']),
+        ], array_column($result->lines, 'label'));
+    }
+
+    public function test_agents_without_a_seat_are_named_the_same_way(): void
     {
         // Contributors from before seats existed carry none.
         DB::table('project_contributors')->update(['seat' => null]);
-        $experts = Project::sole()->contributingExperts();
 
         $result = $this->compute([$this->series(['reference' => ['type' => 'each']])]);
 
-        $this->assertEqualsCanonicalizing($experts->pluck('name')->all(), array_column($result->lines, 'short'));
-        $this->assertEqualsCanonicalizing(
-            $experts->map(fn (Expert $expert) => __('comparisons.line_with_name', ['label' => 'Sitz eins', 'name' => $expert->name]))->all(),
-            array_column($result->lines, 'label'),
-        );
+        $this->assertEqualsCanonicalizing(['Ada', 'Bo'], array_column($result->lines, 'short'));
     }
 
     public function test_more_series_than_colours_repeat_the_palette(): void

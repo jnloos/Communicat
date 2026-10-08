@@ -18,9 +18,9 @@
         @foreach ($pies as $pie)
             <section class="flex min-w-0 flex-col" data-pie-tints style="--pie-fill: var(--color-{{ $pie['color'] }})" wire:key="pie-{{ $loop->index }}-{{ md5(json_encode($pie['slices'])) }}">
                 @if ($pie['mixed'])
-                    {{-- Mixed group sizes: per-seat means would add up to more than a whole. --}}
+                    {{-- Different agents across runs: per-agent means would add up to more than a whole. --}}
                     <div class="mx-auto flex aspect-square w-full max-w-48 items-center justify-center rounded-full border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-600">
-                        <flux:text size="sm">{{ __('comparisons.results.pie_mixed_sizes') }}</flux:text>
+                        <flux:text size="sm">{{ __('comparisons.results.pie_mixed_agents') }}</flux:text>
                     </div>
                 @else
                     <flux:chart :value="$pie['slices']" class="mx-auto aspect-square w-full max-w-48">

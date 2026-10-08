@@ -119,7 +119,7 @@ final readonly class ComparisonResult
      * their label); `lineColor` is what the curve draws: the series' colour
      * when it has one line, otherwise one palette hue per line, since lines
      * of one colour could not be told apart there. A line of `each` is named
-     * by its seat, or by its agent where the agent has no seat.
+     * by its agent, never by a seat.
      *
      * @param  list<SeriesResult>  $results
      * @param  list<SeriesColor>  $colors  one per series
@@ -131,14 +131,9 @@ final readonly class ComparisonResult
 
         foreach ($results as $seriesIndex => $result) {
             foreach ($result->lines as $line) {
-                [$label, $short] = match (true) {
-                    $line->key === '' => [$result->label, $result->label],
-                    $line->seat === null => [__('comparisons.line_with_name', ['label' => $result->label, 'name' => $line->name]), (string) $line->name],
-                    default => [
-                        __('comparisons.line_with_seat', ['label' => $result->label, 'seat' => $line->seat]),
-                        __('comparisons.results.seat', ['seat' => $line->seat]),
-                    ],
-                };
+                [$label, $short] = $line->key === ''
+                    ? [$result->label, $result->label]
+                    : [__('comparisons.line_with_name', ['label' => $result->label, 'name' => $line->name]), (string) $line->name];
                 $lines[] = [
                     'label' => $label,
                     'short' => $short,

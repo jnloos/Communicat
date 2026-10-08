@@ -67,7 +67,7 @@ final class ResultCharts
 
     /**
      * Bars grouped by series: all lines of one series share its colour and
-     * are told apart by their row label ("Seat 2").
+     * are told apart by their row label (the agent's name).
      *
      * @return list<array{label: string, color: SeriesColor, rows: list<array{label: string, mean: float, min: float, max: float, meanText: string, rangeText: string, n: int, text: string}>}>
      */
@@ -96,15 +96,15 @@ final class ResultCharts
     }
 
     /**
-     * One pie per series with a line. `each` gives a slice per seat (its mean
-     * share); any other reference gives the referenced agents' mean share and
-     * the rest as "Others", and `mean` carries that share for the caption.
+     * One pie per series with a line. `each` gives a slice per agent (their
+     * mean share); any other reference gives the referenced agents' mean share
+     * and the rest as "Others", and `mean` carries that share for the caption.
      *
-     * A per-seat pie needs every counted run of its series to have the same
-     * number of seats: each seat's mean is taken over the runs that have that
-     * seat, so with mixed sizes the slices add up to more than a whole. Such
-     * a series gets no slices and `mixed`, and the view says why. Only the
-     * pie display asks, and ComparisonView allows it for shares only.
+     * A per-agent pie needs the same agents in every counted run of its
+     * series: each agent's mean is taken over the runs they sit in, so where
+     * the agents differ the slices add up to more than a whole. Such a series
+     * gets no slices and `mixed`, and the view says why. Only the pie display
+     * asks, and ComparisonView allows it for shares only.
      *
      * Keys follow Flux's pie datum: `color` must be a pie palette name (the
      * hue), `id` becomes the sector's data-key, which
@@ -125,11 +125,11 @@ final class ResultCharts
             }
 
             $color = $entries[0]['color'];
-            $perSeat = $entries[0]['line']->key !== '';
-            $mixed = $perSeat && count(array_unique($result->groupSizes)) > 1;
+            $perAgent = $entries[0]['line']->key !== '';
+            $mixed = $perAgent && $this->agentsDiffer($result, $entries);
             $slices = match (true) {
                 $mixed => [],
-                $perSeat => array_map(fn (array $entry, int $i) => $this->slice("tint-{$i}", $entry['short'], $entry['line']->mean(), $color->hue), $entries, array_keys($entries)),
+                $perAgent => array_map(fn (array $entry, int $i) => $this->slice("tint-{$i}", $entry['short'], $entry['line']->mean(), $color->hue), $entries, array_keys($entries)),
                 default => [
                     $this->slice('tint-0', $result->label, $entries[0]['line']->mean(), $color->hue),
                     $this->slice('others', __('comparisons.results.others'), max(0.0, 1 - $entries[0]['line']->mean()), $color->hue),
@@ -139,7 +139,7 @@ final class ResultCharts
             $pies[] = [
                 'label' => $result->label,
                 'color' => $color,
-                'mean' => $perSeat ? null : $this->metric->format($entries[0]['line']->mean()),
+                'mean' => $perAgent ? null : $this->metric->format($entries[0]['line']->mean()),
                 'mixed' => $mixed,
                 'n' => max(array_map(fn (array $entry) => $entry['line']->n(), $entries)),
                 'slices' => $slices,
@@ -147,6 +147,19 @@ final class ResultCharts
         }
 
         return $pies;
+    }
+
+    /**
+     * True unless every agent line of the series counts every counted run:
+     * then each run had exactly these agents, and the means add up to a whole.
+     *
+     * @param  list<Line>  $entries  the series' lines
+     */
+    private function agentsDiffer(SeriesResult $result, array $entries): bool
+    {
+        $runs = $result->projects - $result->excluded;
+
+        return array_filter($entries, fn (array $entry) => $entry['line']->n() !== $runs) !== [];
     }
 
     /** @return array{id: string, name: string, value: float, share: string, color: string} */

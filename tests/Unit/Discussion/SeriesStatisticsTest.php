@@ -82,7 +82,7 @@ class SeriesStatisticsTest extends TestCase
     {
         $project = $this->makeRun(['Alice', 'Bob'], [['Alice', 10]]);
 
-        $result = $this->compute(['type' => 'seat', 'seat' => 9], ['metric' => 'turn_share'], $project);
+        $result = $this->compute(['type' => 'expert_name', 'name' => 'Nobody'], ['metric' => 'turn_share'], $project);
 
         $this->assertSame([], $result->lines);
         $this->assertSame(1, $result->projects);
@@ -91,7 +91,7 @@ class SeriesStatisticsTest extends TestCase
 
     public function test_a_run_without_a_spoken_turn_drops_out(): void
     {
-        $result = $this->compute(['type' => 'seat', 'seat' => 1], ['metric' => 'turn_share'], $this->makeRun(['Alice'], []));
+        $result = $this->compute(['type' => 'expert_name', 'name' => 'Alice'], ['metric' => 'turn_share'], $this->makeRun(['Alice'], []));
 
         $this->assertSame(1, $result->excluded);
     }
@@ -100,8 +100,8 @@ class SeriesStatisticsTest extends TestCase
     {
         $project = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Alice', 10], ['Bob', 10], ['Bob', 10]]);
 
-        $this->assertSame(1.0, $this->compute(['type' => 'seat', 'seat' => 1], ['metric' => 'turn_share', 'turn_limit' => 2], $project)->lines[0]->mean());
-        $this->assertSame(0.5, $this->compute(['type' => 'seat', 'seat' => 1], ['metric' => 'turn_share'], $project)->lines[0]->mean());
+        $this->assertSame(1.0, $this->compute(['type' => 'expert_name', 'name' => 'Alice'], ['metric' => 'turn_share', 'turn_limit' => 2], $project)->lines[0]->mean());
+        $this->assertSame(0.5, $this->compute(['type' => 'expert_name', 'name' => 'Alice'], ['metric' => 'turn_share'], $project)->lines[0]->mean());
     }
 
     public function test_mean_min_max_and_n_run_over_the_projects(): void
@@ -109,7 +109,7 @@ class SeriesStatisticsTest extends TestCase
         $a = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Bob', 10]]);
         $b = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Alice', 10], ['Alice', 10], ['Bob', 10]]);
 
-        $line = $this->compute(['type' => 'seat', 'seat' => 1], ['metric' => 'turn_share'], $a, $b)->lines[0];
+        $line = $this->compute(['type' => 'expert_name', 'name' => 'Alice'], ['metric' => 'turn_share'], $a, $b)->lines[0];
 
         $this->assertSame(2, $line->n());
         $this->assertSame(0.625, $line->mean());
@@ -122,7 +122,7 @@ class SeriesStatisticsTest extends TestCase
         $short = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Bob', 10]]);
         $long = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Alice', 10], ['Alice', 10], ['Alice', 10]]);
 
-        $curve = $this->compute(['type' => 'seat', 'seat' => 1], ['metric' => 'turn_share', 'display' => 'trajectory'], $short, $long)->lines[0]->curve;
+        $curve = $this->compute(['type' => 'expert_name', 'name' => 'Alice'], ['metric' => 'turn_share', 'display' => 'trajectory'], $short, $long)->lines[0]->curve;
 
         $this->assertEquals([
             new TrajectoryMean(1, 1.0, 2),
@@ -136,24 +136,36 @@ class SeriesStatisticsTest extends TestCase
     {
         $project = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Bob', 10]]);
 
-        $this->assertSame([], $this->compute(['type' => 'seat', 'seat' => 1], ['metric' => 'turn_share', 'display' => 'table'], $project)->lines[0]->curve);
+        $this->assertSame([], $this->compute(['type' => 'expert_name', 'name' => 'Alice'], ['metric' => 'turn_share', 'display' => 'table'], $project)->lines[0]->curve);
     }
 
-    public function test_each_gives_one_line_per_seat_in_seat_order(): void
+    public function test_each_gives_one_line_per_agent_in_seat_order(): void
     {
-        $project = $this->makeRun(['Alice', 'Bob', 'Carol'], [['Carol', 10], ['Alice', 10], ['Alice', 10], ['Bob', 10]]);
+        $project = $this->makeRun(['Carol', 'Alice', 'Bob'], [['Carol', 10], ['Alice', 10], ['Alice', 10], ['Bob', 10]]);
 
         $lines = $this->compute(['type' => 'each'], ['metric' => 'turn_share'], $project)->lines;
 
-        $this->assertSame([1, 2, 3], array_map(fn ($line) => $line->seat, $lines));
-        $this->assertSame([0.5, 0.25, 0.25], array_map(fn ($line) => $line->mean(), $lines));
+        $this->assertSame(['Carol', 'Alice', 'Bob'], array_map(fn ($line) => $line->name, $lines));
+        $this->assertSame([0.25, 0.5, 0.25], array_map(fn ($line) => $line->mean(), $lines));
+    }
+
+    public function test_each_follows_an_agent_across_runs_whatever_their_seat(): void
+    {
+        $a = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Bob', 10]]);
+        $b = $this->makeRun(['Bob', 'Alice'], [['Alice', 10], ['Alice', 10], ['Alice', 10], ['Bob', 10]]);
+
+        $lines = $this->compute(['type' => 'each'], ['metric' => 'turn_share'], $a, $b)->lines;
+
+        $this->assertSame(['Alice', 'Bob'], array_map(fn ($line) => $line->name, $lines));
+        $this->assertSame([0.625, 0.375], array_map(fn ($line) => $line->mean(), $lines));
+        $this->assertSame([2, 2], array_map(fn ($line) => $line->n(), $lines));
     }
 
     public function test_gini_ignores_the_reference(): void
     {
         $project = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Alice', 10]]);
 
-        $result = $this->compute(['type' => 'seat', 'seat' => 9], ['metric' => 'turn_gini'], $project);
+        $result = $this->compute(['type' => 'expert_name', 'name' => 'Nobody'], ['metric' => 'turn_gini'], $project);
 
         $this->assertSame(0, $result->excluded);
         $this->assertSame(0.5, round($result->lines[0]->mean(), 10));
@@ -189,7 +201,7 @@ class SeriesStatisticsTest extends TestCase
         $speaks = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Bob', 30]]);
         $silent = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Alice', 10]]);
 
-        $result = $this->compute(['type' => 'seat', 'seat' => 2], ['metric' => 'words_per_turn'], $speaks, $silent);
+        $result = $this->compute(['type' => 'expert_name', 'name' => 'Bob'], ['metric' => 'words_per_turn'], $speaks, $silent);
 
         $this->assertSame(1, $result->excluded);
         $this->assertSame(1, $result->lines[0]->n());
@@ -202,7 +214,7 @@ class SeriesStatisticsTest extends TestCase
         $speaks = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Bob', 30]]);
         $silent = $this->makeRun(['Alice', 'Bob'], [['Alice', 10], ['Alice', 10]]);
 
-        $result = $this->compute(['type' => 'seat', 'seat' => 2], ['metric' => 'turn_share'], $speaks, $silent);
+        $result = $this->compute(['type' => 'expert_name', 'name' => 'Bob'], ['metric' => 'turn_share'], $speaks, $silent);
 
         $this->assertSame(0, $result->excluded);
         $this->assertSame(2, $result->lines[0]->n());

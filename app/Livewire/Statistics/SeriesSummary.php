@@ -5,13 +5,12 @@ namespace App\Livewire\Statistics;
 use App\Discussion\Metrics\References\AgentReference;
 use App\Discussion\Metrics\References\ExpertNameReference;
 use App\Discussion\Metrics\References\PersonaTagsReference;
-use App\Discussion\Metrics\References\SeatReference;
 use App\Discussion\Values\SeriesDefinition;
 use App\Discussion\Values\TagFilter;
 
 /**
  * A series in one line, for the header of its folded card:
- * "Status condition: status · Bidding · any model · Seat 1 · 6 projects".
+ * "Status condition: status · Bidding · any model · Experts by persona tag: Title-holder: true · 6 projects".
  * It names the filter as the form shows it and computes nothing.
  */
 final class SeriesSummary
@@ -49,7 +48,6 @@ final class SeriesSummary
     private function reference(AgentReference $reference): string
     {
         return match (true) {
-            $reference instanceof SeatReference => __('comparisons.results.seat', ['seat' => $reference->seat]),
             $reference instanceof ExpertNameReference && $reference->name !== '' => $reference->name,
             $reference instanceof PersonaTagsReference && ! $reference->tags->isEmpty() => __('comparisons.reference.types.persona_tags').': '.$this->tags($reference->tags),
             default => __('comparisons.reference.types.'.$reference->toArray()['type']),

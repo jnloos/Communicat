@@ -61,7 +61,8 @@ return [
         'label' => 'Label',
         'empty' => 'No series yet.',
         'projects' => 'Projects',
-        'any' => 'any',
+        'every_pipeline' => 'Any pipeline',
+        'every_model' => 'Any model',
         'any_pipeline' => 'any pipeline',
         'any_model' => 'any model',
         'summary_projects' => '{0}no project|{1}1 project|[2,*]:count projects',
@@ -77,13 +78,11 @@ return [
         'heading' => 'Reference',
         'type' => 'Which agents',
         'types' => [
-            'persona_tags' => 'Experts with tags',
-            'seat' => 'One seat',
+            'persona_tags' => 'Experts by persona tag',
             'expert_name' => 'One expert by name',
             'top' => 'The run’s strongest agent',
             'each' => 'Every agent on its own',
         ],
-        'seat' => 'Seat',
         'expert_name' => 'Name',
         'choose_expert' => 'Choose an expert …',
         'shared_hint' => 'If the reference hits several agents of a run, their combined share counts.',
@@ -119,7 +118,6 @@ return [
         'rolling' => 'Rolling',
     ],
 
-    'line_with_seat' => ':label · seat :seat',
     'line_with_name' => ':label · :name',
 
     'results' => [
@@ -133,11 +131,10 @@ return [
         'per_project' => 'Values per project',
         'excluded' => '{1}“:label”: 1 project drops out (the reference hits nobody, or no turn was spoken).|[2,*]“:label”: :count projects drop out (the reference hits nobody, or no turn was spoken).',
         'bar_text' => 'mean :mean · range :range · n = :n',
-        'seat' => 'Seat :seat',
         'others' => 'Others',
         'equal_share' => 'Dashed line: equal share (:share)',
         'pie_equal_share' => 'Equal share: :share',
-        'pie_mixed_sizes' => 'No pie per seat: the runs of this series have different group sizes.',
+        'pie_mixed_agents' => 'No pie per agent: not every run of this series has the same agents.',
         'no_trajectory' => 'The curve exists for turn share and word share only.',
         'no_pie' => 'A pie exists for turn share and word share only.',
         'n_of' => ':label · n',
@@ -148,7 +145,11 @@ return [
     'templates' => [
         'menu' => 'From template',
         'unresolved' => 'Some tags of this template do not exist here: :tags. The series that use them match no run until you remove those tags.',
-        'series' => ':pipeline · :condition',
+        'series' => ':pipeline · :part',
+        'titles' => [
+            'true' => 'title holder',
+            'false' => 'others',
+        ],
         'names' => [
             'turn_share_by_pipeline' => 'Status effect on turn share by pipeline',
             'word_share_by_pipeline' => 'Status effect on word share by pipeline',

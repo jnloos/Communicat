@@ -65,7 +65,8 @@ return [
         'any_model' => 'jedes Modell',
         'summary_projects' => '{0}kein Projekt|{1}1 Projekt|[2,*]:count Projekte',
         'toggle' => 'Einstellungen dieser Reihe zeigen oder verbergen',
-        'any' => 'beliebig',
+        'every_pipeline' => 'Jede Pipeline',
+        'every_model' => 'Jedes Modell',
         'pipeline' => 'Pipeline',
         'model' => 'Modell',
         'unresolved' => 'Nicht in dieser Datenbank',
@@ -77,13 +78,11 @@ return [
         'heading' => 'Bezug',
         'type' => 'Welche Agenten',
         'types' => [
-            'persona_tags' => 'Experten mit Tags',
-            'seat' => 'Ein Sitz',
+            'persona_tags' => 'Experten nach Persona-Tag',
             'expert_name' => 'Ein Experte nach Name',
             'top' => 'Der stärkste Agent des Laufs',
             'each' => 'Jeder Agent einzeln',
         ],
-        'seat' => 'Sitz',
         'expert_name' => 'Name',
         'choose_expert' => 'Experte wählen …',
         'shared_hint' => 'Trifft der Bezug mehrere Agenten eines Laufs, zählt ihr gemeinsamer Anteil.',
@@ -119,7 +118,6 @@ return [
         'rolling' => 'Gleitend',
     ],
 
-    'line_with_seat' => ':label · Sitz :seat',
     'line_with_name' => ':label · :name',
 
     'results' => [
@@ -133,11 +131,10 @@ return [
         'per_project' => 'Werte je Projekt',
         'excluded' => '{1}„:label“: 1 Projekt fällt heraus (Bezug trifft niemanden oder kein gesprochener Turn).|[2,*]„:label“: :count Projekte fallen heraus (Bezug trifft niemanden oder kein gesprochener Turn).',
         'bar_text' => 'Mittel :mean · Spanne :range · n = :n',
-        'seat' => 'Sitz :seat',
         'others' => 'Übrige',
         'equal_share' => 'Gestrichelte Linie: gleicher Anteil (:share)',
         'pie_equal_share' => 'Gleicher Anteil: :share',
-        'pie_mixed_sizes' => 'Kein Kreis je Sitz: Die Läufe dieser Reihe haben unterschiedliche Gruppengrößen.',
+        'pie_mixed_agents' => 'Kein Kreis je Agent: Nicht jeder Lauf dieser Reihe hat dieselben Agenten.',
         'no_trajectory' => 'Den Verlauf gibt es nur für Turn- und Wortanteil.',
         'no_pie' => 'Das Kreisdiagramm gibt es nur für Turn- und Wortanteil.',
         'n_of' => ':label · n',
@@ -148,7 +145,11 @@ return [
     'templates' => [
         'menu' => 'Aus Vorlage',
         'unresolved' => 'Einige Tags dieser Vorlage gibt es hier nicht: :tags. Die Reihen, die sie nennen, treffen keinen Lauf, bis du diese Tags entfernst.',
-        'series' => ':pipeline · :condition',
+        'series' => ':pipeline · :part',
+        'titles' => [
+            'true' => 'Titelträger',
+            'false' => 'die anderen',
+        ],
         'names' => [
             'turn_share_by_pipeline' => 'Statuseffekt auf den Turn-Anteil je Pipeline',
             'word_share_by_pipeline' => 'Statuseffekt auf den Wortanteil je Pipeline',

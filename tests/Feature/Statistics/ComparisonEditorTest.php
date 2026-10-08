@@ -3,6 +3,7 @@
 namespace Tests\Feature\Statistics;
 
 use App\Discussion\Pipelines\PipelineRegistry;
+use App\Discussion\Values\ModelConfig;
 use App\Livewire\Statistics\ComparisonEditor;
 use App\Livewire\Statistics\StatisticsPage;
 use App\Models\Comparison;
@@ -60,14 +61,39 @@ class ComparisonEditorTest extends TestCase
         $this->editor()
             ->call('addSeries')
             ->set("series.0.projects.tags.{$condition->id}", [(string) $status->id])
-            ->set('series.0.reference.type', 'seat')
+            ->set('series.0.reference.type', 'top')
             ->set('viewSettings.metric', 'word_share');
 
         $saved = $this->comparison->fresh();
         $this->assertSame([$condition->id => [$status->id]], $saved->series[0]['projects']['tags']);
-        $this->assertSame(['type' => 'seat', 'seat' => 1], $saved->series[0]['reference']);
+        $this->assertSame(['type' => 'top'], $saved->series[0]['reference']);
         $this->assertSame('word_share', $saved->view['metric']);
         $this->assertSame(__('comparisons.series.default_label', ['n' => 1]), $saved->series[0]['label']);
+    }
+
+    public function test_a_saved_seat_reference_opens_as_each_agent(): void
+    {
+        $this->comparison->update(['series' => [['label' => 'Alt', 'reference' => ['type' => 'seat', 'seat' => 1]]]]);
+
+        $component = $this->editor();
+
+        $this->assertSame(['type' => 'each'], $component->get('series.0.reference'));
+        $this->assertStringContainsString(__('comparisons.reference.types.each'), $component->viewData('summaries')[0]);
+    }
+
+    public function test_the_any_option_clears_the_pipeline_and_the_model(): void
+    {
+        $component = $this->editor()
+            ->call('addSeries')
+            ->set('series.0.projects.pipeline', 'ScorePipeline')
+            ->set('series.0.projects.model', array_key_first(ModelConfig::options()))
+            ->assertSee(__('comparisons.series.every_pipeline'))
+            ->assertSee(__('comparisons.series.every_model'))
+            ->set('series.0.projects.pipeline', '')
+            ->set('series.0.projects.model', '');
+
+        $this->assertSame(['pipeline' => null, 'model' => null], array_intersect_key($this->comparison->fresh()->series[0]['projects'], ['pipeline' => 0, 'model' => 0]));
+        $this->assertNull($component->get('series.0.projects.pipeline'));
     }
 
     public function test_removing_a_series_saves_too(): void
@@ -220,14 +246,14 @@ class ComparisonEditorTest extends TestCase
         $this->comparison->update(['series' => [[
             'label' => 'Score · status',
             'projects' => ['tags' => [$condition->id => [$status->id]], 'pipeline' => 'ScorePipeline'],
-            'reference' => ['type' => 'seat', 'seat' => 1],
+            'reference' => ['type' => 'expert_name', 'name' => 'Ada'],
         ]]]);
 
         $summary = implode(' · ', [
             'Status condition: status',
             app(PipelineRegistry::class)->options()['ScorePipeline'],
             __('comparisons.series.any_model'),
-            __('comparisons.results.seat', ['seat' => 1]),
+            'Ada',
             trans_choice('comparisons.series.summary_projects', 2, ['count' => 2]),
         ]);
 

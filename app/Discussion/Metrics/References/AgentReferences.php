@@ -8,7 +8,6 @@ final class AgentReferences
     /** @var array<string, class-string<AgentReference>> */
     public const TYPES = [
         PersonaTagsReference::TYPE => PersonaTagsReference::class,
-        SeatReference::TYPE => SeatReference::class,
         ExpertNameReference::TYPE => ExpertNameReference::class,
         TopReference::TYPE => TopReference::class,
         EachReference::TYPE => EachReference::class,
