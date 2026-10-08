@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasTags;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -223,5 +224,13 @@ class Project extends Model
     public function summarizeOldest(): int
     {
         return (int) ($this->summarize_oldest ?? config('discussion.summarize_oldest'));
+    }
+
+    /** The projects this user may read — the access-project gate's rule (owner or contributor) as a query. */
+    public function scopeAccessibleBy(Builder $query, User $user): void
+    {
+        $query->where(fn (Builder $q) => $q
+            ->where('user_id', $user->id)
+            ->orWhereHas('users', fn (Builder $users) => $users->whereKey($user->id)));
     }
 }
