@@ -6,4 +6,5 @@ return [
     'ScorePipeline' => 'Gebote (jeder Agent bietet 1–5)',
     'OrchestratorPipeline' => 'Orchestrator (ein Modell wählt)',
     'QualityPipeline' => 'Entwurfsqualität (ein Judge wählt)',
+    'BlindQualityPipeline' => 'Entwurfsqualität, blinder Judge (anonyme Entwürfe)',
 ];

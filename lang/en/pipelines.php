@@ -6,4 +6,5 @@ return [
     'ScorePipeline' => 'Bidding (each agent bids 1–5)',
     'OrchestratorPipeline' => 'Orchestrator (a model picks)',
     'QualityPipeline' => 'Proposal quality (a judge picks)',
+    'BlindQualityPipeline' => 'Proposal quality, blind judge (anonymous drafts)',
 ];

@@ -68,8 +68,10 @@ class PipelineSmokeTest extends TestCase
             'speaker' => 'E1',
             'reasoning' => 'Weil E1 noch nicht dran war.',
         ]);
+        // 'speaker' serves the seeing judge, 'label' the blind one.
         FakeAgents::always(JudgeAgent::class, [
             'speaker' => 'E1',
+            'label' => 'A',
             'reasoning' => 'Der Entwurf ist konkret.',
         ]);
     }
