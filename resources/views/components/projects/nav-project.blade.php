@@ -22,7 +22,7 @@
     <flux:sidebar.item
         :href="route('project.show', $project)"
         :current="$current"
-        :title="$outsideFilter ? __('tags.filter.outside') : $project->title"
+        :title="$outsideFilter ? __('tags.filter.outside', ['title' => $project->title]) : $project->title"
         @class(['pe-9', 'opacity-60' => $outsideFilter])
         wire:navigate
     >{{ $project->title }}</flux:sidebar.item>

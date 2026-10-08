@@ -220,23 +220,4 @@ class HasTagsTest extends TestCase
         $this->assertEqualsCanonicalizing([$status->id, $school->id, $untagged->id], Project::whereTaggedAny([])->pluck('id')->all());
         $this->assertSame([], Project::whereTaggedAny([999])->pluck('id')->all());
     }
-
-    public function test_where_tagged_all_needs_every_value_even_two_of_one_category(): void
-    {
-        $condition = $this->category(TagScope::Project, 'condition', ['status', 'control']);
-        $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
-
-        $both = Project::factory()->create();
-        $both->setTag($condition, $this->value($condition, 'status'));
-        $both->setTag($topic, $this->value($topic, 'Schule'));
-        $statusOnly = Project::factory()->create();
-        $statusOnly->setTag($condition, $this->value($condition, 'status'));
-
-        $status = $this->value($condition, 'status')->id;
-
-        $this->assertSame([$both->id], Project::whereTaggedAll([$status, $this->value($topic, 'Schule')->id])->pluck('id')->all());
-        $this->assertSame([], Project::whereTaggedAll([$status, $this->value($condition, 'control')->id])->pluck('id')->all());
-        $this->assertSame([], Project::whereTaggedAll([$status, 999])->pluck('id')->all());
-        $this->assertSame(2, Project::whereTaggedAll([])->count());
-    }
 }

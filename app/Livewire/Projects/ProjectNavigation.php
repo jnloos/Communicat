@@ -55,15 +55,19 @@ class ProjectNavigation extends Component
 
     /**
      * Project tag values the list is narrowed to, combined by $tagFilterMode.
-     * Personal and kept in the session, so it survives navigating from project
-     * to project.
+     * Bound to the popover's pills (one flux:checkbox.group over every
+     * category). Personal and kept in the session, so it survives navigating
+     * from project to project.
      *
      * @var list<int|string>
      */
     #[Session]
     public array $tagFilter = [];
 
-    /** Cut: a project needs every chosen value. Merge: any one of them is enough. */
+    /**
+     * Cut: a project matches every picked category (any picked value within
+     * one). Merge: any one picked value is enough.
+     */
     #[Session]
     public string $tagFilterMode = self::FILTER_CUT;
 
@@ -83,22 +87,6 @@ class ProjectNavigation extends Component
     public function clearTagFilter(): void
     {
         $this->tagFilter = [];
-    }
-
-    public function toggleTagValue(int $valueId): void
-    {
-        if (in_array((string) $valueId, $this->chosenIds(), true)) {
-            $this->removeTagValue($valueId);
-
-            return;
-        }
-
-        $this->tagFilter = [...$this->chosenIds(), (string) $valueId];
-    }
-
-    public function removeTagValue(int $valueId): void
-    {
-        $this->tagFilter = array_values(array_diff($this->chosenIds(), [(string) $valueId]));
     }
 
     /**
@@ -328,12 +316,12 @@ class ProjectNavigation extends Component
     {
         return $this->tagFilterMode === self::FILTER_MERGE
             ? $query->whereTaggedAny($filter)
-            : $query->whereTaggedAll($filter);
+            : $query->whereTagged($filter);
     }
 
     /**
      * The chosen values in category order, each knowing its category, for the
-     * chips under the label row.
+     * summary line under the label row.
      *
      * @param  Collection<int, TagCategory>  $categories  with their values loaded
      * @param  list<int>  $filter
