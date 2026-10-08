@@ -37,15 +37,8 @@ class ExpertEditor extends Component
     #[Validate('nullable|string')]
     public string $description = '';
 
-    /** @var array<int|string, int|string|null> bound to Tags\TagFields; category id => value id */
+    /** @var array<int|string, int|string|null> bound by x-tags.fields; category id => value id */
     public array $tagSelection = [];
-
-    /**
-     * Changes on every edit(): the flyout is reused for every expert, and the
-     * nested TagFields must start from this expert's tags, not the last one's.
-     */
-    #[Locked]
-    public int $formKey = 0;
 
     #[On('edit_expert')]
     public function edit($id = null): void
@@ -63,7 +56,6 @@ class ExpertEditor extends Component
         $this->role = $expert->role ?? '';
         $this->description = $expert->description ?? '';
         $this->tagSelection = $expert?->tagSelection() ?? [];
-        $this->formKey++;
 
         Flux::modal('edit-expert')->show();
     }
@@ -150,7 +142,7 @@ class ExpertEditor extends Component
     {
         return view('livewire.experts.expert-editor', [
             'isUpdate' => ! is_null($this->expertId),
-            'hasTagCategories' => TagCategory::ofScope(TagScope::Persona)->exists(),
+            'tagCategories' => TagCategory::ofScope(TagScope::Persona)->with('values')->get(),
         ]);
     }
 }

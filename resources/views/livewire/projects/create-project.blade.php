@@ -60,8 +60,8 @@
                         </flux:autocomplete>
                     </flux:accordion.content>
                 </flux:accordion.item>
-                @if ($hasTagCategories)
-                    <x-tags.project-accordion-item :values="$chosenTags" />
+                @if ($tagCategories->isNotEmpty())
+                    <x-tags.project-accordion-item :values="$chosenTags" :categories="$tagCategories" />
                 @endif
             </flux:accordion>
 

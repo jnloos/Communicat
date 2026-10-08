@@ -45,7 +45,7 @@ class EditProject extends Component
 
     public string $summarizeOldest = '';
 
-    /** @var array<int|string, int|string|null> bound to Tags\TagFields; category id => value id */
+    /** @var array<int|string, int|string|null> bound by x-tags.fields; category id => value id */
     public array $tagSelection = [];
 
     /** Only informs the user that edits mid-run are recorded — nothing is frozen. */
@@ -186,7 +186,7 @@ class EditProject extends Component
             'pipelines' => app(PipelineRegistry::class)->options(),
             'providers' => ModelConfig::providers(),
             'models' => ModelConfig::optionsFor($this->provider),
-            'hasTagCategories' => TagCategory::ofScope(TagScope::Project)->exists(),
+            'tagCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
             'chosenTags' => TagValue::chosenIn(TagScope::Project, $this->tagSelection),
             'savedTags' => Project::findOrFail($this->forProjectId)->tagValues()->with('category')->get(),
         ]);

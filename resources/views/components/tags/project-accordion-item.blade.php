@@ -1,5 +1,6 @@
 @props([
     'values', {{-- Collection<TagValue> the form currently has chosen, with category loaded --}}
+    'categories', {{-- Collection<TagCategory> of the project scope, values loaded --}}
 ])
 
 {{-- The tag section of the project forms (create and edit), inside their
@@ -22,7 +23,7 @@
     <flux:accordion.content class="my-4">
         <flux:fieldset>
             <flux:description class="mb-4">{{ __('tags.form.help') }}</flux:description>
-            <livewire:tags.tag-fields scope="project" wire:model="tagSelection" />
+            <x-tags.fields :categories="$categories" />
         </flux:fieldset>
     </flux:accordion.content>
 </flux:accordion.item>

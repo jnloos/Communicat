@@ -62,9 +62,9 @@
             rows="8"
         />
 
-        @if ($hasTagCategories)
+        @if ($tagCategories->isNotEmpty())
             <flux:fieldset :legend="__('tags.form.heading')" :description="__('tags.form.help')">
-                <livewire:tags.tag-fields scope="persona" wire:model="tagSelection" wire:key="expert-tags-{{ $formKey }}" />
+                <x-tags.fields :categories="$tagCategories" />
             </flux:fieldset>
         @endif
 

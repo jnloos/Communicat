@@ -6,7 +6,6 @@ use App\Livewire\Experts\ExpertEditor;
 use App\Livewire\Experts\ExpertList;
 use App\Livewire\Projects\CreateProject;
 use App\Livewire\Projects\EditProject;
-use App\Livewire\Tags\TagFields;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\TagCategory;
@@ -43,28 +42,47 @@ class TagFieldsTest extends TestCase
         $this->female = $this->gender->values()->create(['name' => 'weiblich']);
     }
 
-    public function test_it_shows_one_select_per_category_of_its_own_scope(): void
+    public function test_each_form_shows_one_select_per_category_of_its_own_scope_bound_to_its_selection(): void
     {
-        $component = Livewire::test(TagFields::class, ['scope' => 'project']);
+        $this->actingAs(User::factory()->create());
+        $project = Project::factory()->create(['user_id' => auth()->id()]);
+        $binding = fn (TagCategory $category) => 'wire:model="tagSelection.'.$category->id.'"';
 
-        $this->assertSame(['status condition'], $component->viewData('categories')->pluck('name')->all());
-        $component->assertSee('no-status')->assertDontSee('weiblich');
+        foreach ([Livewire::test(CreateProject::class), Livewire::test(EditProject::class, ['project' => $project])] as $form) {
+            $form->assertSeeHtml($binding($this->condition))
+                ->assertDontSeeHtml($binding($this->gender))
+                ->assertSee('no-status')
+                ->assertSee(__('tags.fields.unset'));
+        }
+
+        Livewire::test(ExpertEditor::class)
+            ->assertSeeHtml($binding($this->gender))
+            ->assertDontSeeHtml($binding($this->condition))
+            ->assertSee('weiblich');
     }
 
-    public function test_category_names_are_capitalised_as_labels_but_stay_as_stored(): void
+    public function test_a_form_without_categories_of_its_scope_shows_no_tag_section(): void
     {
-        Livewire::test(TagFields::class, ['scope' => 'project'])
-            ->assertSee('Status condition')
-            ->assertDontSee('status condition');
+        $this->actingAs(User::factory()->create());
+        $this->gender->delete();
 
-        $this->assertSame('status condition', $this->condition->fresh()->name);
+        Livewire::test(ExpertEditor::class)
+            ->assertDontSeeHtml('wire:model="tagSelection.')
+            ->assertDontSee(__('tags.form.heading'));
     }
 
-    public function test_it_renders_nothing_without_categories(): void
+    public function test_the_reused_expert_flyout_shows_each_experts_own_tags(): void
     {
-        TagCategory::query()->delete();
+        $this->actingAs(User::factory()->create());
+        $tagged = Expert::factory()->create();
+        $tagged->setTag($this->gender, $this->female);
+        $untagged = Expert::factory()->create();
 
-        Livewire::test(TagFields::class, ['scope' => 'persona'])->assertDontSeeHtml('<select');
+        Livewire::test(ExpertEditor::class)
+            ->call('edit', $tagged->id)
+            ->assertSet('tagSelection', [$this->gender->id => $this->female->id])
+            ->call('edit', $untagged->id)
+            ->assertSet('tagSelection', []);
     }
 
     public function test_creating_a_project_stores_the_selection(): void

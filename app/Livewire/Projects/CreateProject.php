@@ -37,7 +37,7 @@ class CreateProject extends Component
 
     public string $summarizeOldest = '';
 
-    /** @var array<int|string, int|string|null> bound to Tags\TagFields; category id => value id */
+    /** @var array<int|string, int|string|null> bound by x-tags.fields; category id => value id */
     public array $tagSelection = [];
 
     #[Validate('nullable|file|max:20480')]
@@ -128,7 +128,7 @@ class CreateProject extends Component
             'pipelines' => app(PipelineRegistry::class)->options(),
             'providers' => ModelConfig::providers(),
             'models' => ModelConfig::optionsFor($this->provider),
-            'hasTagCategories' => TagCategory::ofScope(TagScope::Project)->exists(),
+            'tagCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
             'chosenTags' => TagValue::chosenIn(TagScope::Project, $this->tagSelection),
         ]);
     }
