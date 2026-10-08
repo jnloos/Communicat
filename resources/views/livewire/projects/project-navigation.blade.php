@@ -11,9 +11,9 @@
          stable, thin scrollbar (app.css, [data-project-list]) keeps the row
          from shifting when a filter makes the list long enough to scroll.
 
-         The funnel is the only sign of a filter: outline and subtle while
-         none is chosen, solid in the accent colour (no filled block, no
-         badge) once at least one value is.
+         The funnel is the only sign of a filter: always the same solid icon,
+         in the button's normal icon colour while none is chosen and in the
+         accent colour (no filled block, no badge) once at least one value is.
 
          The menu is a plain flux:menu with keep-open, so ticking a value or
          switching the mode re-renders the component without closing it. Flux
@@ -39,11 +39,11 @@
                             size="xs"
                             variant="subtle"
                             icon="funnel"
-                            :icon:variant="$activeFilterCount > 0 ? 'solid' : 'outline'"
+                            icon:variant="solid"
                             :aria-label="$funnelLabel"
                             :tooltip="$funnelLabel"
                             :data-filter-active="$activeFilterCount > 0 ? 'true' : null"
-                            :class="$activeFilterCount > 0 ? 'cursor-pointer text-(--color-accent-content)!' : 'cursor-pointer'"
+                            :class="$activeFilterCount > 0 ? 'text-(--color-accent-content)!' : 'text-zinc-800! dark:text-white!'"
                         />
 
                         <flux:menu keep-open wire:key="tag-filter-menu">
