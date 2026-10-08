@@ -54,6 +54,74 @@
                     @endforeach
                 </div>
 
+                {{-- How the shares got where they are. Cumulative shows where the run
+                     settles, but flattens by arithmetic alone (one turn moves it by at
+                     most ~1/n); the rolling view forgets everything older than the
+                     window and shows whether the discussion itself is still moving. --}}
+                <section class="mt-6 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                            <flux:heading size="sm">{{ __('statistics.trajectory.title') }}</flux:heading>
+                            <flux:text size="sm" class="mt-0.5">
+                                {{ $trajectoryMode === 'rolling'
+                                    ? trans_choice('statistics.trajectory.rolling_hint', $trajectoryWindow, ['count' => $trajectoryWindow])
+                                    : __('statistics.trajectory.cumulative_hint') }}
+                            </flux:text>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <flux:radio.group wire:model.live="trajectoryUnit" variant="segmented" size="sm">
+                                <flux:radio value="turns" :label="__('statistics.turn_share')" />
+                                <flux:radio value="words" :label="__('statistics.word_share')" />
+                            </flux:radio.group>
+                            <flux:radio.group wire:model.live="trajectoryMode" variant="segmented" size="sm">
+                                <flux:radio value="cumulative" :label="__('statistics.trajectory.cumulative')" />
+                                <flux:radio value="rolling" :label="__('statistics.trajectory.rolling')" />
+                            </flux:radio.group>
+                        </div>
+                    </div>
+
+                    {{-- Keyed on the toggles: the chart's children are wire:ignore'd, so a
+                         new series needs a fresh element rather than a morphed one. --}}
+                    <flux:chart
+                        wire:key="trajectory-{{ $trajectoryUnit }}-{{ $trajectoryMode }}-{{ count($trajectoryRows) }}"
+                        :value="$trajectoryRows"
+                        class="mt-4 aspect-[2/1]"
+                    >
+                        <flux:chart.svg>
+                            @foreach ($trajectoryLines as $line)
+                                <flux:chart.line :field="$line['field']" curve="none" style="color: var(--color-{{ $line['color'] }}-500)" />
+                            @endforeach
+
+                            <flux:chart.axis axis="x" field="turn" scale="linear">
+                                <flux:chart.axis.line />
+                                <flux:chart.axis.tick />
+                            </flux:chart.axis>
+                            <flux:chart.axis axis="y" tick-start="0" tick-end="100" tick-suffix=" %">
+                                <flux:chart.axis.grid />
+                                <flux:chart.axis.tick />
+                            </flux:chart.axis>
+
+                            <flux:chart.cursor />
+                        </flux:chart.svg>
+
+                        <flux:chart.tooltip>
+                            <flux:chart.tooltip.heading field="label" />
+                            @foreach ($trajectoryLines as $line)
+                                <flux:chart.tooltip.value :field="$line['field']" :label="$line['name']" suffix=" %" />
+                            @endforeach
+                        </flux:chart.tooltip>
+                    </flux:chart>
+
+                    <div class="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-1">
+                        @foreach ($trajectoryLines as $line)
+                            <flux:chart.legend :label="$line['name']" class="p-0!">
+                                <flux:chart.legend.indicator style="background-color: var(--color-{{ $line['color'] }}-500)" />
+                            </flux:chart.legend>
+                        @endforeach
+                    </div>
+                </section>
+
                 {{-- The numbers behind the slices: a pie cannot be read off precisely,
                      and a participant who never spoke has no slice at all. --}}
                 <div class="mt-6 overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">

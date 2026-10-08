@@ -2,9 +2,13 @@
 
 namespace App\Livewire\Projects;
 
+use App\Discussion\Metrics\ShareTrajectory;
 use App\Discussion\Metrics\SpeakingShares;
+use App\Discussion\Values\Participant;
 use App\Discussion\Values\ShareReport;
+use App\Discussion\Values\ShareSeries;
 use App\Discussion\Values\SpeakerShare;
+use App\Discussion\Values\Trajectory;
 use App\Models\Project;
 use Closure;
 use Flux\Flux;
@@ -20,8 +24,13 @@ use Livewire\Component;
  * both — that is the whole point of putting them side by side. Where a slice is
  * larger on the right than on the left, that agent speaks rarely and at length.
  *
- * It computes nothing itself: SpeakingShares owns the study's counting rules, so
- * the panel, the CLI and the thesis's evaluation script cannot disagree.
+ * Below them, a line per participant shows how those shares developed turn by
+ * turn (ShareTrajectory), in the same colours — cumulative, to see where the
+ * run settles, or over a sliding window, to see whether it is still moving.
+ *
+ * It computes nothing itself: SpeakingShares and ShareTrajectory read the
+ * study's counting rules from SpokenTurns, so the panel, the CLI and the
+ * thesis's evaluation script cannot disagree.
  */
 class StatisticsFlyout extends Component
 {
@@ -35,6 +44,12 @@ class StatisticsFlyout extends Component
 
     /** Computed on first open, not on mount: an unopened flyout should cost no queries. */
     public bool $opened = false;
+
+    /** Which unit the line chart shows: `turns` or `words`. */
+    public string $trajectoryUnit = 'turns';
+
+    /** How the line chart aggregates: `cumulative` or `rolling`. */
+    public string $trajectoryMode = 'cumulative';
 
     public function mount(Project $project): void
     {
@@ -103,11 +118,78 @@ class StatisticsFlyout extends Component
         return self::COLOURS[$index % count(self::COLOURS)];
     }
 
+    /**
+     * The curve the toggles ask for. Both toggles are public and the browser
+     * can send anything, so an unknown combination falls back to the default
+     * instead of breaking the panel.
+     */
+    private function series(): ShareSeries
+    {
+        return ShareSeries::tryFrom("{$this->trajectoryMode}_{$this->trajectoryUnit}") ?? ShareSeries::CumulativeTurns;
+    }
+
+    /**
+     * One row per spoken turn for a Flux line chart: the turn on the x axis, its
+     * tooltip heading, and one percentage per participant under the key
+     * `e{expert id}` that the participant's line reads.
+     *
+     * @return list<array<string, int|float|string>>
+     */
+    private function trajectoryRows(Trajectory $trajectory, ShareSeries $series): array
+    {
+        $rows = [];
+
+        foreach ($trajectory->points as $point) {
+            $row = ['turn' => $point->turn, 'label' => __('statistics.trajectory.turn', ['turn' => $point->turn])];
+
+            foreach ($trajectory->participants as $participant) {
+                $row[$this->fieldFor($participant)] = round($point->share($series, $participant->expertId) * 100, 1);
+            }
+
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
+    /**
+     * One line per participant, including one who never spoke: unlike a pie
+     * sector, a line flat at zero says something. Coloured by seat index, the
+     * same index the pies and the table use.
+     *
+     * @return list<array{field: string, name: string, color: string}>
+     */
+    private function trajectoryLines(Trajectory $trajectory): array
+    {
+        $lines = [];
+
+        foreach ($trajectory->participants as $index => $participant) {
+            $lines[] = [
+                'field' => $this->fieldFor($participant),
+                'name' => $participant->name,
+                'color' => $this->colorFor($index),
+            ];
+        }
+
+        return $lines;
+    }
+
+    private function fieldFor(Participant $participant): string
+    {
+        return 'e'.$participant->expertId;
+    }
+
     public function render(): mixed
     {
-        $report = $this->opened
-            ? app(SpeakingShares::class)->forProject(Project::findOrFail($this->projectId))
+        $project = $this->opened ? Project::findOrFail($this->projectId) : null;
+
+        $report = $project
+            ? app(SpeakingShares::class)->forProject($project)
             : ShareReport::empty();
+
+        $trajectory = $project
+            ? app(ShareTrajectory::class)->forProject($project)
+            : new Trajectory(participants: [], window: (int) config('discussion.share_window'), points: []);
 
         return view('livewire.projects.statistics-flyout', [
             'report' => $report,
@@ -121,6 +203,9 @@ class StatisticsFlyout extends Component
                 fn (SpeakerShare $s) => $s->words,
                 fn (SpeakerShare $s) => $s->wordShare,
             ),
+            'trajectoryWindow' => $trajectory->window,
+            'trajectoryRows' => $this->trajectoryRows($trajectory, $this->series()),
+            'trajectoryLines' => $this->trajectoryLines($trajectory),
         ]);
     }
 }

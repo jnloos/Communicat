@@ -18,6 +18,15 @@ return [
 
     'gini' => 'Gini',
 
+    'trajectory' => [
+        'title' => 'Over the course of the run',
+        'cumulative' => 'Cumulative',
+        'rolling' => 'Rolling',
+        'cumulative_hint' => 'Share of everything said up to each turn. Settles by arithmetic alone: after n turns one more moves it by at most about 1/n.',
+        'rolling_hint' => '{1}Share of the last turn only.|[2,*]Share of the last :count turns. Only when this holds steady has the discussion itself stopped shifting.',
+        'turn' => 'Turn :turn',
+    ],
+
     'columns' => [
         'participant' => 'Participant',
         'turns' => 'Turns',

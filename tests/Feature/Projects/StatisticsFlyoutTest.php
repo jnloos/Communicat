@@ -160,6 +160,97 @@ class StatisticsFlyoutTest extends TestCase
         $this->assertSame(0, $component->viewData('report')->spokenTurns);
     }
 
+    // --- the trajectory chart -------------------------------------------
+
+    public function test_the_trajectory_has_one_row_per_turn_with_a_percentage_per_participant(): void
+    {
+        $this->turn('Alice', 10);
+        $this->turn('Bob', 30);
+        $this->turn('Alice', 20);
+
+        $rows = Livewire::test(StatisticsFlyout::class, ['project' => $this->project])
+            ->call('open')
+            ->viewData('trajectoryRows');
+
+        $alice = 'e'.$this->experts['Alice']->id;
+        $bob = 'e'.$this->experts['Bob']->id;
+
+        $this->assertSame([1, 2, 3], array_column($rows, 'turn'));
+        $this->assertSame([100.0, 50.0, 66.7], array_column($rows, $alice));
+        $this->assertSame([0.0, 50.0, 33.3], array_column($rows, $bob));
+    }
+
+    /** One participant, one colour: the lines must match the slices above them. */
+    public function test_each_line_takes_its_participants_pie_colour(): void
+    {
+        $this->turn('Alice', 10);
+        $this->turn('Bob', 30);
+
+        $component = Livewire::test(StatisticsFlyout::class, ['project' => $this->project])->call('open');
+
+        $pieColours = collect($component->viewData('turnSectors'))->pluck('color', 'name');
+        $lineColours = collect($component->viewData('trajectoryLines'))->pluck('color', 'name');
+
+        $this->assertSame($pieColours->all(), $lineColours->all());
+    }
+
+    /** A participant who never spoke has no slice, but a line flat at zero. */
+    public function test_a_silent_participant_still_gets_a_line(): void
+    {
+        $this->turn('Alice', 10);
+
+        $lines = Livewire::test(StatisticsFlyout::class, ['project' => $this->project])
+            ->call('open')
+            ->viewData('trajectoryLines');
+
+        $this->assertSame(['Alice', 'Bob'], array_column($lines, 'name'));
+    }
+
+    public function test_the_toggles_switch_unit_and_mode(): void
+    {
+        config(['discussion.share_window' => 1]);
+
+        $this->turn('Alice', 10);
+        $this->turn('Bob', 30);
+
+        $alice = 'e'.$this->experts['Alice']->id;
+        $component = Livewire::test(StatisticsFlyout::class, ['project' => $this->project])->call('open');
+
+        $this->assertSame(50.0, $component->viewData('trajectoryRows')[1][$alice], 'cumulative turns by default');
+
+        $component->set('trajectoryUnit', 'words');
+        $this->assertSame(25.0, $component->viewData('trajectoryRows')[1][$alice]);
+
+        $component->set('trajectoryMode', 'rolling');
+        $this->assertSame(0.0, $component->viewData('trajectoryRows')[1][$alice], 'a window of one holds only Bob');
+    }
+
+    /** The toggles are public, so the browser can send anything; that must not break the panel. */
+    public function test_an_unknown_toggle_value_falls_back_to_cumulative_turns(): void
+    {
+        $this->turn('Alice', 10);
+        $this->turn('Bob', 30);
+
+        $rows = Livewire::test(StatisticsFlyout::class, ['project' => $this->project])
+            ->call('open')
+            ->set('trajectoryUnit', 'tokens')
+            ->viewData('trajectoryRows');
+
+        $this->assertSame(50.0, $rows[1]['e'.$this->experts['Alice']->id]);
+    }
+
+    public function test_the_open_panel_renders_the_line_chart(): void
+    {
+        $this->turn('Alice', 10);
+        $this->turn('Bob', 30);
+
+        Livewire::test(StatisticsFlyout::class, ['project' => $this->project])
+            ->call('open')
+            ->assertSee(__('statistics.trajectory.title'))
+            ->assertSeeHtml('name="line"')
+            ->assertSeeHtml('field="e'.$this->experts['Bob']->id.'"');
+    }
+
     public function test_another_projects_turns_do_not_leak_in(): void
     {
         $other = Project::factory()->create();
