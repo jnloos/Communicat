@@ -38,7 +38,7 @@ class SeriesStatistics
     public function compute(SeriesDefinition $series, ComparisonView $view, iterable $projects): SeriesResult
     {
         $metric = $view->metric;
-        $withCurve = $view->display === ComparisonDisplay::Trajectory && $metric->hasTrajectory();
+        $withCurve = $view->display === ComparisonDisplay::Trajectory;
         $values = $seats = $names = $sums = $counts = $sizes = [];
         $matched = $excluded = 0;
 
@@ -59,7 +59,7 @@ class SeriesStatistics
             foreach ($groups as $group) {
                 $seats[$group->key] = $group->seat;
                 $names[$group->key] = $group->name;
-                $values[$group->key][] = new ProjectValue($project->id, $project->title, $this->valueOf($metric, $report, $group));
+                $values[$group->key][] = new ProjectValue($project->title, $this->valueOf($metric, $report, $group));
 
                 if ($trajectory !== null) {
                     $this->addCurve($sums, $counts, $group, $trajectory, $metric->series($view->trajectoryMode));

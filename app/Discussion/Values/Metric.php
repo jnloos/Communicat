@@ -23,21 +23,10 @@ enum Metric: string
         return $this === self::TurnGini || $this === self::WordGini;
     }
 
+    /** Only the two shares have a curve over the run (ShareTrajectory) and parts of a whole for a pie. */
     public function isShare(): bool
     {
         return $this === self::TurnShare || $this === self::WordShare;
-    }
-
-    /** Only the two shares have a curve over the run (ShareTrajectory). */
-    public function hasTrajectory(): bool
-    {
-        return $this->isShare();
-    }
-
-    /** A pie needs parts of a whole: only the two shares have one. */
-    public function hasPie(): bool
-    {
-        return $this->isShare();
     }
 
     /** The trajectory series holding this metric's curve; $mode is 'cumulative' or 'rolling'. */
@@ -45,7 +34,7 @@ enum Metric: string
     {
         $unit = $this === self::WordShare ? 'words' : 'turns';
 
-        return ShareSeries::tryFrom("{$mode}_{$unit}") ?? ShareSeries::from("cumulative_{$unit}");
+        return ShareSeries::from("{$mode}_{$unit}");
     }
 
     /**

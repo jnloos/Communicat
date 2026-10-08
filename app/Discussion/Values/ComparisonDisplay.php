@@ -19,8 +19,7 @@ enum ComparisonDisplay: string
     public function supports(Metric $metric): bool
     {
         return match ($this) {
-            self::Trajectory => $metric->hasTrajectory(),
-            self::Pie => $metric->hasPie(),
+            self::Trajectory, self::Pie => $metric->isShare(),
             default => true,
         };
     }

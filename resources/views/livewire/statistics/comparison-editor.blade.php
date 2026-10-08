@@ -230,7 +230,7 @@
                 <flux:input type="number" min="1" wire:model.live.debounce.500ms="viewSettings.turn_limit" :placeholder="__('comparisons.view.all_turns')" />
             </flux:field>
 
-            @if ($comparisonView->display === ComparisonDisplay::Trajectory && $comparisonView->metric->hasTrajectory())
+            @if ($comparisonView->display === ComparisonDisplay::Trajectory)
                 <flux:field>
                     <flux:label>{{ __('comparisons.view.mode') }}</flux:label>
                     <flux:radio.group wire:model.live="viewSettings.trajectory_mode" variant="segmented">

@@ -48,6 +48,6 @@ class TagCategory extends Model
 
     protected function siblings(): Builder
     {
-        return static::query()->where('scope', $this->scope instanceof TagScope ? $this->scope->value : $this->scope);
+        return static::query()->where('scope', $this->scope->value);
     }
 }

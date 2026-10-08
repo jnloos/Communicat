@@ -24,13 +24,6 @@ enum TagScope: string
         };
     }
 
-    public function morphType(): string
-    {
-        $class = $this->modelClass();
-
-        return (new $class)->getMorphClass();
-    }
-
     public static function forModel(Model $model): self
     {
         foreach (self::cases() as $scope) {

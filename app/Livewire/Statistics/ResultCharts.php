@@ -103,8 +103,11 @@ final class ResultCharts
      * A per-seat pie needs every counted run of its series to have the same
      * number of seats: each seat's mean is taken over the runs that have that
      * seat, so with mixed sizes the slices add up to more than a whole. Such
-     * a series gets no slices and `mixed`, and the view says why. Keys follow Flux's pie datum: `color` must be a
-     * pie palette name (the hue), `id` becomes the sector's data-key, which
+     * a series gets no slices and `mixed`, and the view says why. Only the
+     * pie display asks, and ComparisonView allows it for shares only.
+     *
+     * Keys follow Flux's pie datum: `color` must be a pie palette name (the
+     * hue), `id` becomes the sector's data-key, which
      * app.css reads to tint the slices of one series (`tint-N`, `others`).
      * The series' own shade reaches the sectors through `--pie-fill`.
      *
@@ -112,10 +115,6 @@ final class ResultCharts
      */
     public function pies(): array
     {
-        if (! $this->metric->hasPie()) {
-            return [];
-        }
-
         $pies = [];
 
         foreach ($this->results as $index => $result) {
