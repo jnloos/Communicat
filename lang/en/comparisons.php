@@ -70,7 +70,7 @@ return [
         'heading' => 'Reference',
         'type' => 'Which agents',
         'types' => [
-            'persona_tags' => 'Personas with tags',
+            'persona_tags' => 'Experts with tags',
             'seat' => 'One seat',
             'expert_name' => 'One expert by name',
             'top' => 'The run’s strongest agent',

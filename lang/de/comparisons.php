@@ -70,7 +70,7 @@ return [
         'heading' => 'Bezug',
         'type' => 'Welche Agenten',
         'types' => [
-            'persona_tags' => 'Personas mit Tags',
+            'persona_tags' => 'Experten mit Tags',
             'seat' => 'Ein Sitz',
             'expert_name' => 'Ein Experte nach Name',
             'top' => 'Der stärkste Agent des Laufs',

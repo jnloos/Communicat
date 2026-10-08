@@ -8,15 +8,18 @@
 
 return [
     'heading' => 'Tags',
-    'subheading' => 'Categories with fixed values for personas and projects. The models never see them.',
+    'subheading' => 'Categories with fixed values for experts and projects. The models never see them.',
     'empty' => 'No category yet. Add the first one below.',
 
     'scopes' => [
-        'persona' => 'Personas',
+        'persona' => 'Experts',
         'project' => 'Projects',
     ],
 
-    'assignments' => '{0}unassigned|{1}1 assignment|[2,*]:count assignments',
+    'usage' => [
+        'persona' => '{0}not used|{1}1 expert|[2,*]:count experts',
+        'project' => '{0}not used|{1}1 project|[2,*]:count projects',
+    ],
 
     'form' => [
         'heading' => 'Tags',
@@ -36,11 +39,13 @@ return [
 
     'actions' => [
         'add_category' => 'Add category',
-        'add_value' => 'Add',
-        'rename' => 'Click to rename',
+        'add_value' => 'Add value',
+        'add' => 'Add',
+        'rename' => 'Rename',
+        'delete' => 'Delete',
         'drag' => 'Drag to reorder',
-        'delete_category' => 'Delete category',
-        'delete_value' => 'Delete value',
+        'category_menu' => 'Category actions',
+        'value_menu' => 'Value actions',
     ],
 
     'confirm' => [
@@ -52,11 +57,11 @@ return [
             'title' => 'Delete value?',
         ],
         'category_assignments' => [
-            'persona' => '{0}No persona carries any of its values.|{1}1 persona loses its assignment.|[2,*]:count personas lose their assignment.',
+            'persona' => '{0}No expert carries any of its values.|{1}1 expert loses its assignment.|[2,*]:count experts lose their assignment.',
             'project' => '{0}No project carries any of its values.|{1}1 project loses its assignment.|[2,*]:count projects lose their assignment.',
         ],
         'value_assignments' => [
-            'persona' => '{0}The value “:name” is not assigned to any persona.|{1}The value “:name” is assigned to 1 persona; that assignment will be deleted.|[2,*]The value “:name” is assigned to :count personas; these assignments will be deleted.',
+            'persona' => '{0}The value “:name” is not assigned to any expert.|{1}The value “:name” is assigned to 1 expert; that assignment will be deleted.|[2,*]The value “:name” is assigned to :count experts; these assignments will be deleted.',
             'project' => '{0}The value “:name” is not assigned to any project.|{1}The value “:name” is assigned to 1 project; that assignment will be deleted.|[2,*]The value “:name” is assigned to :count projects; these assignments will be deleted.',
         ],
     ],

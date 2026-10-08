@@ -4,6 +4,7 @@ namespace Tests\Feature\Settings;
 
 use App\Livewire\Settings\Tags;
 use App\Models\Expert;
+use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\Taggable;
 use App\Models\TagScope;
@@ -152,14 +153,47 @@ class TagsTest extends TestCase
         $this->assertSame(2, $first->fresh()->position);
     }
 
-    public function test_each_value_shows_its_assignment_count(): void
+    public function test_each_value_counts_its_experts_or_projects_in_words(): void
     {
         $this->actingAs($this->admin());
         $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'Geschlecht']);
         $value = $category->values()->create(['name' => 'weiblich']);
+        $category->values()->create(['name' => 'männlich']);
         Expert::factory()->create()->setTag($category, $value);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+        Project::factory()->count(2)->create()->each->setTag($condition, $status);
 
-        Livewire::test(Tags::class)->assertSee(trans_choice('tags.assignments', 1, ['count' => 1]));
+        Livewire::test(Tags::class)
+            ->assertSee('1 expert')
+            ->assertSee('not used')
+            ->assertDontSee('assignment')
+            ->set('scope', 'project')
+            ->assertSee('2 projects');
+    }
+
+    public function test_the_scopes_are_called_experts_and_projects(): void
+    {
+        $this->actingAs($this->admin());
+
+        Livewire::test(Tags::class)
+            ->assertSee('Experts')
+            ->assertDontSee('Personas');
+    }
+
+    public function test_rename_and_delete_sit_in_a_menu_without_red_icons_on_the_page(): void
+    {
+        $this->actingAs($this->admin());
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'Geschlecht']);
+        $value = $category->values()->create(['name' => 'weiblich']);
+
+        Livewire::test(Tags::class)
+            ->assertSeeHtml('wire:click="startRenamingCategory('.$category->id.')"')
+            ->assertSeeHtml('wire:click="confirmDeleteCategory('.$category->id.')"')
+            ->assertSeeHtml('wire:click="startRenamingValue('.$value->id.')"')
+            ->assertSeeHtml('wire:click="confirmDeleteValue('.$value->id.')"')
+            ->assertSeeHtml('data-flux-menu')
+            ->assertDontSeeHtml('text-red-600!');
     }
 
     public function test_a_rename_can_be_cancelled_and_the_new_name_fields_are_labelled(): void

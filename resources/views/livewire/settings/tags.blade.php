@@ -2,24 +2,33 @@
     @include('partials.settings-heading')
 
     <x-settings.layout :heading="__('tags.heading')" :subheading="__('tags.subheading')" wide>
-        <flux:radio.group wire:model.live="scope" variant="segmented" size="sm" class="mb-6">
-            @foreach ($scopes as $option)
-                <flux:radio :value="$option->value" :label="$option->label()" />
-            @endforeach
-        </flux:radio.group>
+        {{-- Tabs, not a segmented switch: this navigates between two lists,
+             while the segmented controls elsewhere switch a mode. Without
+             panels, the group is only there because Flux's tabs expect one. --}}
+        <flux:tab.group class="mb-6">
+            <flux:tabs wire:model.live="scope">
+                @foreach ($scopes as $option)
+                    <flux:tab :name="$option->value" class="cursor-pointer">{{ $option->label() }}</flux:tab>
+                @endforeach
+            </flux:tabs>
+        </flux:tab.group>
 
         @if ($categories->isEmpty())
             <x-empty-state icon="tag">{{ __('tags.empty') }}</x-empty-state>
         @endif
 
         {{-- Categories and, inside each, its values are both sortable. Each list
-             has its own handles; the inner list is a sortable of its own, so a
-             value never drags its category along. --}}
+             has its own handles, shown on hover; the inner list is a sortable of
+             its own, so a value never drags its category along.
+
+             Rename and delete sit in a "…" menu per row, as for sidebar groups
+             and comparisons: red appears only on the delete item and in the
+             confirm dialog. --}}
         <div class="space-y-4" wire:sort="sortCategory">
             @foreach ($categories as $category)
                 <flux:card size="sm" wire:key="tag-category-{{ $category->id }}" wire:sort:item="{{ $category->id }}">
-                    <div class="flex items-center gap-2">
-                        <span wire:sort:handle class="cursor-grab text-zinc-400" title="{{ __('tags.actions.drag') }}">
+                    <div class="group/category flex items-center gap-2">
+                        <span wire:sort:handle class="cursor-grab text-zinc-400 opacity-0 transition-opacity group-hover/category:opacity-100" title="{{ __('tags.actions.drag') }}">
                             <flux:icon.bars-2 variant="micro" />
                         </span>
 
@@ -30,20 +39,20 @@
                                 <flux:button size="sm" variant="ghost" wire:click="cancelRenaming" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
                             </form>
                         @else
-                            <button type="button" class="group/rename flex flex-1 cursor-text items-center gap-1.5 text-start font-medium text-zinc-800 dark:text-white"
-                                wire:click="startRenamingCategory({{ $category->id }})" title="{{ __('tags.actions.rename') }}">
-                                {{ $category->name }}
-                                <flux:icon.pencil variant="micro" class="text-zinc-400 opacity-0 transition-opacity group-hover/rename:opacity-100" />
-                            </button>
-                            <flux:button variant="ghost" size="xs" icon="trash" class="cursor-pointer text-red-600! dark:text-red-400!"
-                                wire:click="confirmDeleteCategory({{ $category->id }})" :aria-label="__('tags.actions.delete_category')" />
+                            <span class="flex-1 font-medium text-zinc-800 dark:text-white">{{ $category->name }}</span>
+
+                            <x-tags.row-menu
+                                :label="__('tags.actions.category_menu')"
+                                :rename="'startRenamingCategory('.$category->id.')'"
+                                :delete="'confirmDeleteCategory('.$category->id.')'"
+                            />
                         @endif
                     </div>
 
-                    <ul class="mt-3 space-y-1 ps-6" wire:sort="sortValue">
+                    <ul class="mt-2 divide-y divide-zinc-100 ps-6 dark:divide-white/10" wire:sort="sortValue">
                         @foreach ($category->values as $value)
-                            <li class="flex items-center gap-2" wire:key="tag-value-{{ $value->id }}" wire:sort:item="{{ $value->id }}">
-                                <span wire:sort:handle class="cursor-grab text-zinc-400" title="{{ __('tags.actions.drag') }}">
+                            <li class="group/value flex min-h-9 items-center gap-2 py-1" wire:key="tag-value-{{ $value->id }}" wire:sort:item="{{ $value->id }}">
+                                <span wire:sort:handle class="cursor-grab text-zinc-400 opacity-0 transition-opacity group-hover/value:opacity-100" title="{{ __('tags.actions.drag') }}">
                                     <flux:icon.bars-2 variant="micro" />
                                 </span>
 
@@ -54,30 +63,41 @@
                                         <flux:button size="sm" variant="ghost" wire:click="cancelRenaming" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
                                     </form>
                                 @else
-                                    <button type="button" class="group/rename flex flex-1 cursor-text items-center gap-1.5 text-start text-sm"
-                                        wire:click="startRenamingValue({{ $value->id }})" title="{{ __('tags.actions.rename') }}">
-                                        {{ $value->name }}
-                                        <flux:icon.pencil variant="micro" class="text-zinc-400 opacity-0 transition-opacity group-hover/rename:opacity-100" />
-                                    </button>
-                                    <flux:badge size="sm" color="zinc">{{ trans_choice('tags.assignments', $value->assignments_count, ['count' => $value->assignments_count]) }}</flux:badge>
-                                    <flux:button variant="ghost" size="xs" icon="trash" class="cursor-pointer text-red-600! dark:text-red-400!"
-                                        wire:click="confirmDeleteValue({{ $value->id }})" :aria-label="__('tags.actions.delete_value')" />
+                                    <span class="flex-1 text-sm text-zinc-800 dark:text-white">{{ $value->name }}</span>
+
+                                    <flux:text size="sm" class="tabular-nums">
+                                        {{ trans_choice("tags.usage.{$category->scope->value}", $value->assignments_count, ['count' => $value->assignments_count]) }}
+                                    </flux:text>
+
+                                    <x-tags.row-menu
+                                        :label="__('tags.actions.value_menu')"
+                                        :rename="'startRenamingValue('.$value->id.')'"
+                                        :delete="'confirmDeleteValue('.$value->id.')'"
+                                    />
                                 @endif
                             </li>
                         @endforeach
                     </ul>
 
-                    <form wire:submit="createValue({{ $category->id }})" class="mt-3 flex items-start gap-2 ps-6">
-                        <flux:input wire:model="newValueNames.{{ $category->id }}" size="sm" :placeholder="__('tags.placeholders.new_value')" :aria-label="__('tags.placeholders.new_value')" class="flex-1" />
-                        <flux:button type="submit" size="sm" icon="plus" class="cursor-pointer">{{ __('tags.actions.add_value') }}</flux:button>
-                    </form>
+                    <x-tags.add-form
+                        class="mt-2 ps-6"
+                        :submit="'createValue('.$category->id.')'"
+                        :model="'newValueNames.'.$category->id"
+                        :open="$errors->has('newValueNames.'.$category->id)"
+                        :button="__('tags.actions.add_value')"
+                        :placeholder="__('tags.placeholders.new_value')"
+                    />
                 </flux:card>
             @endforeach
         </div>
 
-        <form wire:submit="createCategory" class="mt-6 flex items-start gap-2">
-            <flux:input wire:model="newCategoryName" :placeholder="__('tags.placeholders.new_category')" :aria-label="__('tags.placeholders.new_category')" class="flex-1" />
-            <flux:button type="submit" variant="primary" icon="plus" class="cursor-pointer">{{ __('tags.actions.add_category') }}</flux:button>
-        </form>
+        <x-tags.add-form
+            class="mt-4"
+            :submit="'createCategory'"
+            :model="'newCategoryName'"
+            :open="$errors->has('newCategoryName')"
+            :button="__('tags.actions.add_category')"
+            :placeholder="__('tags.placeholders.new_category')"
+        />
     </x-settings.layout>
 </section>

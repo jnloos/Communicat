@@ -8,15 +8,18 @@
 
 return [
     'heading' => 'Tags',
-    'subheading' => 'Kategorien mit festen Werten für Personas und Projekte. Die Modelle sehen sie nie.',
+    'subheading' => 'Kategorien mit festen Werten für Experten und Projekte. Die Modelle sehen sie nie.',
     'empty' => 'Noch keine Kategorie. Lege unten die erste an.',
 
     'scopes' => [
-        'persona' => 'Personas',
+        'persona' => 'Experten',
         'project' => 'Projekte',
     ],
 
-    'assignments' => '{0}nicht zugeordnet|{1}1 Zuordnung|[2,*]:count Zuordnungen',
+    'usage' => [
+        'persona' => '{0}nicht verwendet|{1}1 Experte|[2,*]:count Experten',
+        'project' => '{0}nicht verwendet|{1}1 Projekt|[2,*]:count Projekte',
+    ],
 
     'form' => [
         'heading' => 'Tags',
@@ -36,11 +39,13 @@ return [
 
     'actions' => [
         'add_category' => 'Kategorie anlegen',
-        'add_value' => 'Hinzufügen',
-        'rename' => 'Zum Umbenennen klicken',
+        'add_value' => 'Wert hinzufügen',
+        'add' => 'Hinzufügen',
+        'rename' => 'Umbenennen',
+        'delete' => 'Löschen',
         'drag' => 'Zum Sortieren ziehen',
-        'delete_category' => 'Kategorie löschen',
-        'delete_value' => 'Wert löschen',
+        'category_menu' => 'Aktionen für die Kategorie',
+        'value_menu' => 'Aktionen für den Wert',
     ],
 
     'confirm' => [
@@ -52,11 +57,11 @@ return [
             'title' => 'Wert löschen?',
         ],
         'category_assignments' => [
-            'persona' => '{0}Keiner Persona ist ein Wert davon zugeordnet.|{1}1 Persona verliert damit ihre Zuordnung.|[2,*]:count Personas verlieren damit ihre Zuordnung.',
+            'persona' => '{0}Keinem Experten ist ein Wert davon zugeordnet.|{1}1 Experte verliert damit seine Zuordnung.|[2,*]:count Experten verlieren damit ihre Zuordnung.',
             'project' => '{0}Keinem Projekt ist ein Wert davon zugeordnet.|{1}1 Projekt verliert damit seine Zuordnung.|[2,*]:count Projekte verlieren damit ihre Zuordnung.',
         ],
         'value_assignments' => [
-            'persona' => '{0}Der Wert „:name“ ist keiner Persona zugeordnet.|{1}Der Wert „:name“ ist 1 Persona zugeordnet; diese Zuordnung wird gelöscht.|[2,*]Der Wert „:name“ ist :count Personas zugeordnet; diese Zuordnungen werden gelöscht.',
+            'persona' => '{0}Der Wert „:name“ ist keinem Experten zugeordnet.|{1}Der Wert „:name“ ist 1 Experten zugeordnet; diese Zuordnung wird gelöscht.|[2,*]Der Wert „:name“ ist :count Experten zugeordnet; diese Zuordnungen werden gelöscht.',
             'project' => '{0}Der Wert „:name“ ist keinem Projekt zugeordnet.|{1}Der Wert „:name“ ist 1 Projekt zugeordnet; diese Zuordnung wird gelöscht.|[2,*]Der Wert „:name“ ist :count Projekten zugeordnet; diese Zuordnungen werden gelöscht.',
         ],
     ],
