@@ -60,4 +60,10 @@ return [
             'project' => '{0}The value “:name” is not assigned to any project.|{1}The value “:name” is assigned to 1 project; that assignment will be deleted.|[2,*]The value “:name” is assigned to :count projects; these assignments will be deleted.',
         ],
     ],
+
+    'filter' => [
+        'button' => 'Filter',
+        'clear' => 'Clear filter',
+        'no_matches' => 'No project matches the filter.',
+    ],
 ];

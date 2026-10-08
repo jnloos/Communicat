@@ -4,6 +4,38 @@
     are none — which is why no flux:sidebar.spacer is needed here.
 --}}
 <div class="-mx-2 flex min-h-0 flex-1 flex-col overflow-y-auto px-2">
+    {{-- Filter by project tags. Shown only once project categories exist; an
+         active filter shows its count on the button and can be cleared in one
+         click beside it. --}}
+    @if ($tagCategories->isNotEmpty())
+        <div class="mb-1 flex items-center gap-1">
+            <flux:dropdown position="bottom" align="start">
+                <flux:button size="sm" variant="ghost" icon="funnel" class="cursor-pointer">
+                    {{ __('tags.filter.button') }}
+                    @if ($activeFilterCount > 0)
+                        <flux:badge size="sm" color="blue" class="ms-1">{{ $activeFilterCount }}</flux:badge>
+                    @endif
+                </flux:button>
+
+                <flux:menu keep-open>
+                    <flux:menu.checkbox.group wire:model.live="tagFilter">
+                        @foreach ($tagCategories as $category)
+                            <flux:menu.heading>{{ $category->name }}</flux:menu.heading>
+                            @foreach ($category->values as $value)
+                                <flux:menu.checkbox :value="$value->id" wire:key="tag-filter-{{ $value->id }}">{{ $value->name }}</flux:menu.checkbox>
+                            @endforeach
+                        @endforeach
+                    </flux:menu.checkbox.group>
+                </flux:menu>
+            </flux:dropdown>
+
+            @if ($activeFilterCount > 0)
+                <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearTagFilter" class="cursor-pointer"
+                    :aria-label="__('tags.filter.clear')" :tooltip="__('tags.filter.clear')" />
+            @endif
+        </div>
+    @endif
+
     {{-- The list is its own flex column so its spacing stays clear of the modals
          below, which are children of the component's root as well.
 
@@ -80,6 +112,10 @@
                     />
                 @endforeach
             </flux:sidebar.group>
+        @endif
+
+        @if ($activeFilterCount > 0 && $groups->isEmpty() && $ungrouped->isEmpty())
+            <div class="px-3 py-1 text-sm text-zinc-400">{{ __('tags.filter.no_matches') }}</div>
         @endif
     </div>
 

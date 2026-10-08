@@ -60,4 +60,10 @@ return [
             'project' => '{0}Der Wert „:name“ ist keinem Projekt zugeordnet.|{1}Der Wert „:name“ ist 1 Projekt zugeordnet; diese Zuordnung wird gelöscht.|[2,*]Der Wert „:name“ ist :count Projekten zugeordnet; diese Zuordnungen werden gelöscht.',
         ],
     ],
+
+    'filter' => [
+        'button' => 'Filter',
+        'clear' => 'Filter zurücksetzen',
+        'no_matches' => 'Kein Projekt passt zum Filter.',
+    ],
 ];

@@ -5,6 +5,8 @@ namespace Tests\Feature\Projects;
 use App\Livewire\Projects\ProjectNavigation;
 use App\Models\Project;
 use App\Models\ProjectGroup;
+use App\Models\TagCategory;
+use App\Models\TagScope;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
@@ -485,5 +487,85 @@ class ProjectNavigationTest extends TestCase
             ->assertOk()
             ->assertSee('Pilotläufe')
             ->assertSee('Sichtbares Projekt');
+    }
+
+    public function test_the_tag_filter_hides_projects_and_drawers_without_a_match(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $status = $condition->values()->create(['name' => 'status']);
+
+        $tagged = $this->projectOwnedBy($user, 'Mit Status');
+        $tagged->setTag($condition, $status);
+        $untagged = $this->projectOwnedBy($user, 'Ohne');
+        $full = $this->groupFor($user, 'Voll');
+        $empty = $this->groupFor($user, 'Leer');
+        $tagged->fileInGroupFor($user, $full->id);
+
+        $unfiltered = Livewire::test(ProjectNavigation::class);
+        $this->assertSame([$full->id, $empty->id], $unfiltered->viewData('groups')->pluck('id')->sort()->values()->all());
+        $this->assertSame([$untagged->id], $unfiltered->viewData('ungrouped')->pluck('id')->all());
+
+        $filtered = Livewire::test(ProjectNavigation::class)->set('tagFilter', [(string) $status->id]);
+        $this->assertSame([$full->id], $filtered->viewData('groups')->pluck('id')->all());
+        $this->assertSame([$tagged->id], $this->projectsInGroup($filtered, $full)->pluck('id')->all());
+        $this->assertSame([], $filtered->viewData('ungrouped')->pluck('id')->all());
+        $this->assertSame(1, $filtered->viewData('activeFilterCount'));
+    }
+
+    public function test_the_tag_filter_is_and_across_categories_and_or_within_one(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $control = $condition->values()->create(['name' => 'kontrolle']);
+        $topic = TagCategory::create(['scope' => TagScope::Project, 'name' => 'thema']);
+        $school = $topic->values()->create(['name' => 'Schule']);
+
+        $a = $this->projectOwnedBy($user, 'A');
+        $a->setTag($condition, $status);
+        $a->setTag($topic, $school);
+        $b = $this->projectOwnedBy($user, 'B');
+        $b->setTag($condition, $control);
+
+        $or = Livewire::test(ProjectNavigation::class)->set('tagFilter', [(string) $status->id, (string) $control->id]);
+        $this->assertEqualsCanonicalizing([$a->id, $b->id], $or->viewData('ungrouped')->pluck('id')->all());
+
+        $and = Livewire::test(ProjectNavigation::class)->set('tagFilter', [(string) $control->id, (string) $school->id]);
+        $this->assertSame([], $and->viewData('ungrouped')->pluck('id')->all());
+    }
+
+    public function test_the_tag_filter_survives_the_next_page_and_resets_in_one_click(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $status = $condition->values()->create(['name' => 'status']);
+
+        Livewire::test(ProjectNavigation::class)->set('tagFilter', [(string) $status->id]);
+
+        Livewire::test(ProjectNavigation::class)
+            ->assertSet('tagFilter', [(string) $status->id])
+            ->call('clearTagFilter')
+            ->assertSet('tagFilter', [])
+            ->assertViewHas('activeFilterCount', 0);
+    }
+
+    public function test_a_deleted_value_in_the_filter_is_ignored(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $project = $this->projectOwnedBy($user);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $gone = $condition->values()->create(['name' => 'weg']);
+        $goneId = $gone->id;
+        $gone->delete();
+
+        $component = Livewire::test(ProjectNavigation::class)->set('tagFilter', [(string) $goneId]);
+
+        $this->assertSame([$project->id], $component->viewData('ungrouped')->pluck('id')->all());
+        $this->assertSame(0, $component->viewData('activeFilterCount'));
     }
 }

@@ -5,6 +5,9 @@ namespace App\Livewire\Projects;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Project;
 use App\Models\ProjectGroup;
+use App\Models\TagCategory;
+use App\Models\TagScope;
+use App\Models\TagValue;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Support\Collection;
@@ -13,6 +16,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Session;
 use Livewire\Component;
 
 /**
@@ -43,6 +47,16 @@ class ProjectNavigation extends Component
 
     public string $projectTitle = '';
 
+    /**
+     * Project tag values the list is narrowed to: AND across categories, OR
+     * within one. Personal and kept in the session, so it survives navigating
+     * from project to project.
+     *
+     * @var list<int|string>
+     */
+    #[Session]
+    public array $tagFilter = [];
+
     public function mount(?int $currentProjectId = null): void
     {
         $this->currentProjectId = $currentProjectId;
@@ -53,6 +67,11 @@ class ProjectNavigation extends Component
     public function refreshList(): void
     {
         // Rendering again is the whole job; Livewire does that after every call.
+    }
+
+    public function clearTagFilter(): void
+    {
+        $this->tagFilter = [];
     }
 
     /**
@@ -241,9 +260,36 @@ class ProjectNavigation extends Component
         ];
     }
 
+    /**
+     * The chosen values that still exist and describe projects. A value deleted
+     * since it was chosen must not leave the list filtered by nothing.
+     *
+     * @return list<int>
+     */
+    private function activeTagFilter(): array
+    {
+        if ($this->tagFilter === []) {
+            return [];
+        }
+
+        return TagValue::whereKey($this->tagFilter)
+            ->whereHas('category', fn ($query) => $query->where('scope', TagScope::Project->value))
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
     public function render(): mixed
     {
+        $filter = $this->activeTagFilter();
+
+        // Forget values that no longer exist, so the session does not carry them on.
+        if (count($filter) !== count($this->tagFilter)) {
+            $this->tagFilter = array_map('strval', $filter);
+        }
+
         [$filed, $ungrouped] = $this->user()->projects()
+            ->whereTagged($filter)
             ->orderByDesc('projects.updated_at')
             ->get()
             ->partition(fn (Project $project) => $project->pivot->project_group_id !== null);
@@ -251,13 +297,20 @@ class ProjectNavigation extends Component
         $byGroup = $filed->groupBy(fn (Project $project) => (int) $project->pivot->project_group_id);
         $groups = $this->user()->projectGroups()->get();
 
+        // Unfiltered, an empty drawer stays visible so it can be filled; while a
+        // filter is on, a drawer without a match is only noise.
+        if ($filter !== []) {
+            $groups = $groups->filter(fn (ProjectGroup $group) => $byGroup->has($group->id))->values();
+        }
+
         return view('livewire.projects.project-navigation', [
             'groups' => $groups,
-            // Keyed by every group, empty ones included: an empty drawer stays visible.
             'grouped' => $groups
                 ->mapWithKeys(fn (ProjectGroup $group) => [$group->id => $byGroup->get($group->id, new Collection)])
                 ->all(),
             'ungrouped' => $ungrouped,
+            'tagCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
+            'activeFilterCount' => count($filter),
         ]);
     }
 }
