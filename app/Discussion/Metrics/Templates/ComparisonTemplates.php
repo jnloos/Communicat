@@ -3,7 +3,6 @@
 namespace App\Discussion\Metrics\Templates;
 
 use App\Discussion\Metrics\References\AgentReference;
-use App\Discussion\Metrics\References\PersonaTagsReference;
 use App\Discussion\Metrics\References\SeatReference;
 use App\Discussion\Values\ComparisonDisplay;
 use App\Discussion\Values\ComparisonView;
@@ -70,20 +69,10 @@ final class ComparisonTemplates
      */
     public function seriesOf(ComparisonTemplate $template): array
     {
-        $categories = [
-            TagScope::Project->value => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
-            TagScope::Persona->value => TagCategory::ofScope(TagScope::Persona)->with('values')->get(),
-        ];
+        $categories = TagCategory::ofScope(TagScope::Project)->with('values')->get();
 
         return array_map(function (array $series) use ($categories) {
-            [$series['projects']['tags'], $unresolved] = $this->resolve($categories[TagScope::Project->value], $series['projects']['tags'] ?? []);
-
-            if (($series['reference']['type'] ?? null) === PersonaTagsReference::TYPE) {
-                [$series['reference']['tags'], $unresolvedPersona] = $this->resolve($categories[TagScope::Persona->value], $series['reference']['tags'] ?? []);
-                $unresolved = [...$unresolved, ...$unresolvedPersona];
-            }
-
-            $series['unresolved_tags'] = $unresolved;
+            [$series['projects']['tags'], $series['unresolved_tags']] = $this->resolve($categories, $series['projects']['tags'] ?? []);
 
             return SeriesDefinition::fromArray($series)->toArray();
         }, $template->series);
