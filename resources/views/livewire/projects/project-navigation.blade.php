@@ -45,7 +45,7 @@
                             :aria-label="$funnelLabel"
                             :tooltip="$funnelLabel"
                             :data-filter-active="$activeFilterCount > 0 ? 'true' : null"
-                            :class="$activeFilterCount > 0 ? 'text-(--color-accent-content)!' : 'text-current!'"
+                            :class="'[&_svg]:size-3.5 '.($activeFilterCount > 0 ? 'text-(--color-accent-content)!' : 'text-current!')"
                         />
 
                         <flux:menu keep-open wire:key="tag-filter-menu">
