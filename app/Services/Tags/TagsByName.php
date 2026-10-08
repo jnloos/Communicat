@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Tags as they travel between instances: {category name: value name}, because
  * ids differ. Reading is sorted like the settings page; writing never creates a
- * category or a value, it reports what it could not place.
+ * category or a value, it reports what it could not place. Names match as
+ * TagNames::same() reads them, like the comparison templates do.
  */
 class TagsByName
 {
@@ -37,7 +38,7 @@ class TagsByName
             return [];
         }
 
-        $categories = TagCategory::ofScope($model->tagScope())->with('values')->get()->keyBy('name');
+        $categories = TagCategory::ofScope($model->tagScope())->with('values')->get();
         $held = $overwrite ? [] : $model->tagSelection();
         $skipped = [];
 
@@ -48,8 +49,8 @@ class TagsByName
                 continue;
             }
 
-            $category = $categories->get((string) $categoryName);
-            $value = $category?->values->firstWhere('name', (string) $valueName);
+            $category = $categories->first(fn (TagCategory $category) => TagNames::same($category->name, (string) $categoryName));
+            $value = $category?->values->first(fn (TagValue $value) => TagNames::same($value->name, (string) $valueName));
 
             if ($value === null) {
                 $skipped[] = "{$categoryName}: {$valueName}";

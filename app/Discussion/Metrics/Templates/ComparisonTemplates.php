@@ -13,6 +13,7 @@ use App\Discussion\Values\SeriesDefinition;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
+use App\Services\Tags\TagNames;
 use Illuminate\Support\Collection;
 
 /**
@@ -104,10 +105,10 @@ final class ComparisonTemplates
         $unresolved = [];
 
         foreach ($names as $categoryName => $valueNames) {
-            $category = $categories->first(fn (TagCategory $c) => self::same($c->name, $categoryName));
+            $category = $categories->first(fn (TagCategory $c) => TagNames::same($c->name, $categoryName));
 
             foreach ($valueNames as $valueName) {
-                $value = $category?->values->first(fn (TagValue $v) => self::same($v->name, $valueName));
+                $value = $category?->values->first(fn (TagValue $v) => TagNames::same($v->name, $valueName));
 
                 if ($value === null) {
                     $unresolved[] = ['category' => $category->name ?? $categoryName, 'value' => $valueName];
@@ -118,11 +119,6 @@ final class ComparisonTemplates
         }
 
         return [$ids, $unresolved];
-    }
-
-    private static function same(string $a, string $b): bool
-    {
-        return mb_strtolower(trim($a)) === mb_strtolower(trim($b));
     }
 
     /**
