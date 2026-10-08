@@ -319,24 +319,6 @@ class ProjectNavigation extends Component
             : $query->whereTagged($filter);
     }
 
-    /**
-     * The chosen values in category order, each knowing its category, for the
-     * summary line under the label row.
-     *
-     * @param  Collection<int, TagCategory>  $categories  with their values loaded
-     * @param  list<int>  $filter
-     * @return Collection<int, TagValue>
-     */
-    private function chosenValues(Collection $categories, array $filter): Collection
-    {
-        return $categories
-            // Without its own relations: the category holds these very values,
-            // and a value pointing back at it would make the pair circular.
-            ->flatMap(fn (TagCategory $category) => $category->values->each->setRelation('category', $category->withoutRelations()))
-            ->filter(fn (TagValue $value) => in_array($value->id, $filter, true))
-            ->values();
-    }
-
     public function render(): mixed
     {
         $filter = $this->normaliseFilterState();
@@ -362,8 +344,8 @@ class ProjectNavigation extends Component
 
         $tagCategories = TagCategory::ofScope(TagScope::Project)->with('values')->get();
 
-        // The counts live in the menu, which exists only once there are
-        // categories to filter by; without one they would be two wasted queries.
+        // The match count only serves the no-match message, which exists once
+        // there are categories to filter by; without one it would be a wasted query.
         $hasCategories = $tagCategories->isNotEmpty();
 
         return view('livewire.projects.project-navigation', [
@@ -373,11 +355,9 @@ class ProjectNavigation extends Component
                 ->all(),
             'ungrouped' => $ungrouped,
             'tagCategories' => $tagCategories,
-            'chosenValues' => $this->chosenValues($tagCategories, $filter),
             'activeFilterCount' => count($filter),
             'tagFilterMode' => $this->tagFilterMode,
             'matchCount' => $hasCategories ? $this->applyTagFilter($this->user()->projects(), $filter)->count() : null,
-            'projectCount' => $hasCategories ? $this->user()->projects()->count() : null,
             'outsideFilterProjectId' => $outsideFilterProjectId,
         ]);
     }

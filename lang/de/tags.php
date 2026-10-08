@@ -74,7 +74,6 @@ return [
         'clear_label' => 'Filter zurücksetzen',
         'no_matches' => 'Kein Projekt passt zum Filter.',
         'outside' => ':title – passt nicht zum aktiven Filter',
-        'summary' => ':matches von :total · :values',
         'modes' => [
             'merge' => [
                 'label' => 'Merge',

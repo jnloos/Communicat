@@ -74,7 +74,6 @@ return [
         'clear_label' => 'Clear filter',
         'no_matches' => 'No project matches the filter.',
         'outside' => ':title – does not match the active filter',
-        'summary' => ':matches of :total · :values',
         'modes' => [
             'merge' => [
                 'label' => 'Merge',

@@ -623,12 +623,10 @@ class ProjectNavigationTest extends TestCase
 
         $unfiltered = Livewire::test(ProjectNavigation::class, ['currentProjectId' => $open->id]);
         $this->assertSame(3, $unfiltered->viewData('matchCount'));
-        $this->assertSame(3, $unfiltered->viewData('projectCount'));
 
         // The open project stays in the list, dimmed, but it is no match.
         $filtered = $unfiltered->set('tagFilter', [(string) $status->id]);
         $this->assertSame(1, $filtered->viewData('matchCount'));
-        $this->assertSame(3, $filtered->viewData('projectCount'));
     }
 
     public function test_merge_counts_every_project_with_any_value_but_not_the_dimmed_open_one(): void
@@ -651,7 +649,6 @@ class ProjectNavigationTest extends TestCase
             ->set('tagFilter', [(string) $status->id, (string) $control->id]);
 
         $this->assertSame(2, $component->viewData('matchCount'));
-        $this->assertSame(5, $component->viewData('projectCount'));
         $this->assertSame($open->id, $component->viewData('outsideFilterProjectId'));
         $this->assertEqualsCanonicalizing([$a->id, $b->id, $open->id], $component->viewData('ungrouped')->pluck('id')->all());
     }
@@ -707,7 +704,7 @@ class ProjectNavigationTest extends TestCase
         return preg_match('/wire:key="(nav-group-'.$group->id.'(?:-[a-z]+)?)"/', $html, $match) === 1 ? $match[1] : null;
     }
 
-    public function test_an_active_filter_shows_one_summary_line_with_count_and_tags(): void
+    public function test_an_active_filter_turns_the_funnel_accent_and_shows_no_summary_line(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -718,12 +715,16 @@ class ProjectNavigationTest extends TestCase
         $this->projectOwnedBy($user, 'B')->setTag($condition, $control);
         $this->projectOwnedBy($user, 'C');
 
-        $component = Livewire::test(ProjectNavigation::class);
-        $component->assertDontSeeHtml('$refs.tagFilterTrigger.click()');
+        $component = Livewire::test(ProjectNavigation::class)
+            ->assertDontSeeHtml('data-filter-active');
 
         $component->set('tagFilter', [(string) $status->id, (string) $control->id])
-            ->assertSee('2 of 3 · Status condition: status, Status condition: no-status')
-            ->assertSeeHtml('$refs.tagFilterTrigger.click()');
+            ->assertSeeHtml('data-filter-active="true"')
+            ->assertDontSee('2 of 3')
+            ->assertDontSee('Status condition: status, Status condition: no-status')
+            ->assertDontSeeHtml('$refs.tagFilterTrigger');
+
+        $component->call('clearTagFilter')->assertDontSeeHtml('data-filter-active');
     }
 
     public function test_cut_with_two_values_of_one_category_finds_projects_with_either(): void
@@ -772,14 +773,13 @@ class ProjectNavigationTest extends TestCase
             ->assertSee('Filter projects (2 active)');
     }
 
-    public function test_the_projects_label_shows_without_categories_and_skips_the_counts(): void
+    public function test_the_projects_label_shows_without_categories_and_skips_the_count(): void
     {
         $this->actingAs(User::factory()->create());
 
         Livewire::test(ProjectNavigation::class)
             ->assertSee(__('tags.filter.label'))
-            ->assertViewHas('matchCount', null)
-            ->assertViewHas('projectCount', null);
+            ->assertViewHas('matchCount', null);
     }
 
     public function test_the_tag_filter_survives_the_next_page_and_resets_in_one_click(): void

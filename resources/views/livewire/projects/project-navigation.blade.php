@@ -7,13 +7,13 @@
     {{-- The label row is the title of the list, not one of its groups: an xs
          uppercase section label, set apart from the text-sm group headers
          below. It sticks to the top with the sidebar's own background, so the
-         funnel and the summary stay in reach while the list scrolls; the
+         funnel stays in reach while the list scrolls; the
          stable, thin scrollbar (app.css, [data-project-list]) keeps the row
          from shifting when a filter makes the list long enough to scroll.
 
-         The funnel stays an outline icon without a badge; an active filter
-         shows as one summary line underneath ("26 of 47 · Condition:
-         status"), whose text opens the menu and whose × clears.
+         The funnel is the only sign of a filter: outline and subtle while
+         none is chosen, solid in the accent colour (no filled block, no
+         badge) once at least one value is.
 
          The menu is a plain flux:menu with keep-open, so ticking a value or
          switching the mode re-renders the component without closing it. Flux
@@ -39,10 +39,11 @@
                             size="xs"
                             variant="subtle"
                             icon="funnel"
+                            :icon:variant="$activeFilterCount > 0 ? 'solid' : 'outline'"
                             :aria-label="$funnelLabel"
                             :tooltip="$funnelLabel"
-                            x-ref="tagFilterTrigger"
-                            class="cursor-pointer"
+                            :data-filter-active="$activeFilterCount > 0 ? 'true' : null"
+                            :class="$activeFilterCount > 0 ? 'cursor-pointer text-(--color-accent-content)!' : 'cursor-pointer'"
                         />
 
                         <flux:menu keep-open wire:key="tag-filter-menu">
@@ -72,35 +73,9 @@
                             <flux:menu.item icon="x-mark" wire:click="clearTagFilter" :disabled="$activeFilterCount === 0">{{ __('tags.filter.clear_label') }}</flux:menu.item>
                         </flux:menu>
                     </flux:dropdown>
-
                 </div>
             @endif
         </div>
-
-        @if ($chosenValues->isNotEmpty())
-            <div class="flex items-center gap-1 ps-3 pe-1 pb-1">
-                {{-- Tags as "category: value", like every badge; the tooltip
-                     holds the full list once the line truncates. Clicking the
-                     text opens the menu through the funnel itself, so
-                     there is still only one dropdown to keep open. --}}
-                <button
-                    type="button"
-                    class="min-w-0 flex-1 cursor-pointer truncate text-start text-xs text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white"
-                    title="{{ $chosenValues->map->fullLabel()->implode(', ') }}"
-                    x-on:click.stop="$refs.tagFilterTrigger.click()"
-                >{{ __('tags.filter.summary', ['matches' => $matchCount, 'total' => $projectCount, 'values' => $chosenValues->map->fullLabel()->implode(', ')]) }}</button>
-
-                <flux:button
-                    size="xs"
-                    variant="subtle"
-                    icon="x-mark"
-                    wire:click="clearTagFilter"
-                    :aria-label="__('tags.filter.clear_label')"
-                    :tooltip="__('tags.filter.clear_label')"
-                    class="cursor-pointer"
-                />
-            </div>
-        @endif
     </div>
 
     {{-- The list is its own flex column so its spacing stays clear of the modals
