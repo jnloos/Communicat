@@ -514,7 +514,7 @@ class ProjectNavigationTest extends TestCase
         $this->assertSame(1, $filtered->viewData('activeFilterCount'));
     }
 
-    public function test_the_tag_filter_is_and_across_categories_and_or_within_one(): void
+    public function test_merge_shows_projects_with_any_value_and_cut_only_those_with_all(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -530,11 +530,103 @@ class ProjectNavigationTest extends TestCase
         $b = $this->projectOwnedBy($user, 'B');
         $b->setTag($condition, $control);
 
-        $or = Livewire::test(ProjectNavigation::class)->set('tagFilter', [(string) $status->id, (string) $control->id]);
-        $this->assertEqualsCanonicalizing([$a->id, $b->id], $or->viewData('ungrouped')->pluck('id')->all());
+        $across = [(string) $status->id, (string) $school->id];
+        $sameCategory = [(string) $status->id, (string) $control->id];
 
-        $and = Livewire::test(ProjectNavigation::class)->set('tagFilter', [(string) $control->id, (string) $school->id]);
-        $this->assertSame([], $and->viewData('ungrouped')->pluck('id')->all());
+        $merge = Livewire::test(ProjectNavigation::class)->set('tagFilterMode', 'merge');
+        $this->assertEqualsCanonicalizing([$a->id, $b->id], $merge->set('tagFilter', $sameCategory)->viewData('ungrouped')->pluck('id')->all());
+        $this->assertEqualsCanonicalizing([$a->id, $b->id], $merge->set('tagFilter', [(string) $control->id, (string) $school->id])->viewData('ungrouped')->pluck('id')->all());
+
+        $cut = Livewire::test(ProjectNavigation::class)->set('tagFilterMode', 'cut');
+        $this->assertSame([$a->id], $cut->set('tagFilter', $across)->viewData('ungrouped')->pluck('id')->all());
+        $this->assertSame([], $cut->set('tagFilter', $sameCategory)->viewData('ungrouped')->pluck('id')->all());
+    }
+
+    public function test_the_filter_mode_defaults_to_cut_and_falls_back_to_it_when_forged(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(ProjectNavigation::class)
+            ->assertSet('tagFilterMode', 'cut')
+            ->set('tagFilterMode', 'xor')
+            ->assertSet('tagFilterMode', 'cut')
+            ->assertViewHas('tagFilterMode', 'cut');
+    }
+
+    public function test_the_filter_mode_survives_the_next_page(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(ProjectNavigation::class)->set('tagFilterMode', 'merge');
+
+        Livewire::test(ProjectNavigation::class)->assertSet('tagFilterMode', 'merge');
+    }
+
+    public function test_removing_a_chip_drops_only_its_value(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $control = $condition->values()->create(['name' => 'control']);
+
+        Livewire::test(ProjectNavigation::class)
+            ->set('tagFilter', [(string) $status->id, (string) $control->id])
+            ->assertSee('condition: status')
+            ->assertSee('condition: control')
+            ->call('removeTagValue', $status->id)
+            ->assertSet('tagFilter', [(string) $control->id])
+            ->assertDontSee('condition: status')
+            ->assertSee('condition: control');
+    }
+
+    public function test_toggling_a_value_adds_and_removes_it(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+
+        Livewire::test(ProjectNavigation::class)
+            ->call('toggleTagValue', $status->id)
+            ->assertSet('tagFilter', [(string) $status->id])
+            ->call('toggleTagValue', $status->id)
+            ->assertSet('tagFilter', []);
+    }
+
+    public function test_clearing_empties_the_values_but_keeps_the_mode(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+
+        Livewire::test(ProjectNavigation::class)
+            ->set('tagFilterMode', 'merge')
+            ->set('tagFilter', [(string) $status->id])
+            ->call('clearTagFilter')
+            ->assertSet('tagFilter', [])
+            ->assertSet('tagFilterMode', 'merge')
+            ->assertDontSee('condition: status');
+    }
+
+    public function test_the_popover_counts_matching_projects_out_of_all_of_the_users(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $this->projectOwnedBy($user, 'Mit Status')->setTag($condition, $status);
+        $open = $this->projectOwnedBy($user, 'Offen');
+        $this->projectOwnedBy($user, 'Anderes');
+        Project::factory()->create();
+
+        $unfiltered = Livewire::test(ProjectNavigation::class, ['currentProjectId' => $open->id]);
+        $this->assertSame(3, $unfiltered->viewData('matchCount'));
+        $this->assertSame(3, $unfiltered->viewData('projectCount'));
+
+        // The open project stays in the list, dimmed, but it is no match.
+        $filtered = $unfiltered->set('tagFilter', [(string) $status->id]);
+        $this->assertSame(1, $filtered->viewData('matchCount'));
+        $this->assertSame(3, $filtered->viewData('projectCount'));
+        $filtered->assertSee(__('tags.filter.count', ['matches' => 1, 'total' => 3]));
     }
 
     public function test_the_tag_filter_survives_the_next_page_and_resets_in_one_click(): void
@@ -606,11 +698,14 @@ class ProjectNavigationTest extends TestCase
         $this->assertNull($stranger->viewData('outsideFilterProjectId'));
     }
 
-    public function test_the_filter_menu_explains_how_values_combine(): void
+    public function test_the_popover_names_both_modes(): void
     {
         $this->actingAs(User::factory()->create());
         TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition'])->values()->create(['name' => 'status']);
 
-        Livewire::test(ProjectNavigation::class)->assertSee(__('tags.filter.help'));
+        Livewire::test(ProjectNavigation::class)
+            ->assertSee(__('tags.filter.modes.merge.label'))
+            ->assertSee(__('tags.filter.modes.cut.label'))
+            ->assertSee(__('tags.filter.modes.cut.description'));
     }
 }

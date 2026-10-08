@@ -139,6 +139,35 @@ trait HasTags
     }
 
     /**
+     * Only models that carry at least one of the values, whatever their
+     * category. An empty list filters nothing; unknown ids match nothing.
+     *
+     * @param  list<int>  $valueIds
+     */
+    public function scopeWhereTaggedAny(Builder $query, array $valueIds): void
+    {
+        if ($valueIds === []) {
+            return;
+        }
+
+        $query->whereHas('tagValues', fn (Builder $tagged) => $tagged->whereIn('tag_values.id', $valueIds));
+    }
+
+    /**
+     * Only models that carry every one of the values. A model holds one value
+     * per category, so two values of one category match nothing — that is the
+     * rule, not an edge case. An empty list filters nothing.
+     *
+     * @param  list<int>  $valueIds
+     */
+    public function scopeWhereTaggedAll(Builder $query, array $valueIds): void
+    {
+        foreach ($valueIds as $valueId) {
+            $query->whereHas('tagValues', fn (Builder $tagged) => $tagged->where('tag_values.id', $valueId));
+        }
+    }
+
+    /**
      * Like whereTagged(), but by the filter's own categories: a category whose
      * values have all been deleted matches nothing instead of dropping out.
      */

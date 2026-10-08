@@ -10,6 +10,8 @@ use App\Models\TagScope;
 use App\Models\TagValue;
 use App\Models\User;
 use Flux\Flux;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Gate;
@@ -28,6 +30,10 @@ use Livewire\Component;
 class ProjectNavigation extends Component
 {
     use NeedsConfirmation;
+
+    public const FILTER_CUT = 'cut';
+
+    public const FILTER_MERGE = 'merge';
 
     /** Which project the page is showing, so the list can mark it. */
     #[Locked]
@@ -48,14 +54,18 @@ class ProjectNavigation extends Component
     public string $projectTitle = '';
 
     /**
-     * Project tag values the list is narrowed to: AND across categories, OR
-     * within one. Personal and kept in the session, so it survives navigating
-     * from project to project.
+     * Project tag values the list is narrowed to, combined by $tagFilterMode.
+     * Personal and kept in the session, so it survives navigating from project
+     * to project.
      *
      * @var list<int|string>
      */
     #[Session]
     public array $tagFilter = [];
+
+    /** Cut: a project needs every chosen value. Merge: any one of them is enough. */
+    #[Session]
+    public string $tagFilterMode = self::FILTER_CUT;
 
     public function mount(?int $currentProjectId = null): void
     {
@@ -69,9 +79,37 @@ class ProjectNavigation extends Component
         // Rendering again is the whole job; Livewire does that after every call.
     }
 
+    /** Empties the chosen values; the mode is a preference and stays. */
     public function clearTagFilter(): void
     {
         $this->tagFilter = [];
+    }
+
+    public function toggleTagValue(int $valueId): void
+    {
+        if (in_array((string) $valueId, $this->chosenIds(), true)) {
+            $this->removeTagValue($valueId);
+
+            return;
+        }
+
+        $this->tagFilter = [...$this->chosenIds(), (string) $valueId];
+    }
+
+    public function removeTagValue(int $valueId): void
+    {
+        $this->tagFilter = array_values(array_diff($this->chosenIds(), [(string) $valueId]));
+    }
+
+    /**
+     * The session property as plain id strings; it is client-writable, so
+     * anything else in it is dropped.
+     *
+     * @return list<string>
+     */
+    private function chosenIds(): array
+    {
+        return array_values(array_map('strval', array_filter($this->tagFilter, 'is_numeric')));
     }
 
     /**
@@ -268,8 +306,7 @@ class ProjectNavigation extends Component
      */
     private function activeTagFilter(): array
     {
-        // The session property is client-writable: only plain ids go on.
-        $ids = array_values(array_map('intval', array_filter($this->tagFilter, 'is_numeric')));
+        $ids = array_map('intval', $this->chosenIds());
 
         if ($ids === []) {
             return [];
@@ -282,8 +319,41 @@ class ProjectNavigation extends Component
             ->all();
     }
 
+    /**
+     * Narrows a project query by the chosen values in the chosen mode.
+     *
+     * @param  list<int>  $filter
+     */
+    private function applyTagFilter(Builder|Relation $query, array $filter): Builder|Relation
+    {
+        return $this->tagFilterMode === self::FILTER_MERGE
+            ? $query->whereTaggedAny($filter)
+            : $query->whereTaggedAll($filter);
+    }
+
+    /**
+     * The chosen values in category order, each knowing its category, for the
+     * chips under the label row.
+     *
+     * @param  Collection<int, TagCategory>  $categories  with their values loaded
+     * @param  list<int>  $filter
+     * @return Collection<int, TagValue>
+     */
+    private function chosenValues(Collection $categories, array $filter): Collection
+    {
+        return $categories
+            ->flatMap(fn (TagCategory $category) => $category->values->each->setRelation('category', $category))
+            ->filter(fn (TagValue $value) => in_array($value->id, $filter, true))
+            ->values();
+    }
+
     public function render(): mixed
     {
+        // Client-writable as well: anything but merge reads as the default.
+        if ($this->tagFilterMode !== self::FILTER_MERGE) {
+            $this->tagFilterMode = self::FILTER_CUT;
+        }
+
         $filter = $this->activeTagFilter();
 
         // Forget values that no longer exist, so the session does not carry them on.
@@ -296,8 +366,7 @@ class ProjectNavigation extends Component
         // The open project always stays in the list, even when it does not match:
         // the row marking where the user is must not vanish under a filter.
         [$filed, $ungrouped] = $this->user()->projects()
-            ->where(fn ($query) => $query
-                ->whereTagged($filter)
+            ->where(fn ($query) => $this->applyTagFilter($query, $filter)
                 ->when($outsideFilterProjectId !== null, fn ($query) => $query->orWhere('projects.id', $outsideFilterProjectId)))
             ->orderByDesc('projects.updated_at')
             ->get()
@@ -312,14 +381,20 @@ class ProjectNavigation extends Component
             $groups = $groups->filter(fn (ProjectGroup $group) => $byGroup->has($group->id))->values();
         }
 
+        $tagCategories = TagCategory::ofScope(TagScope::Project)->with('values')->get();
+
         return view('livewire.projects.project-navigation', [
             'groups' => $groups,
             'grouped' => $groups
                 ->mapWithKeys(fn (ProjectGroup $group) => [$group->id => $byGroup->get($group->id, new Collection)])
                 ->all(),
             'ungrouped' => $ungrouped,
-            'tagCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
+            'tagCategories' => $tagCategories,
+            'chosenValues' => $this->chosenValues($tagCategories, $filter),
             'activeFilterCount' => count($filter),
+            'tagFilterMode' => $this->tagFilterMode,
+            'matchCount' => $this->applyTagFilter($this->user()->projects(), $filter)->count(),
+            'projectCount' => $this->user()->projects()->count(),
             'outsideFilterProjectId' => $outsideFilterProjectId,
         ]);
     }
@@ -338,7 +413,7 @@ class ProjectNavigation extends Component
 
         $own = $this->user()->projects()->whereKey($this->currentProjectId);
 
-        if (! (clone $own)->exists() || $own->whereTagged($filter)->exists()) {
+        if (! (clone $own)->exists() || $this->applyTagFilter($own, $filter)->exists()) {
             return null;
         }
 

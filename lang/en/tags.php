@@ -62,10 +62,24 @@ return [
     ],
 
     'filter' => [
-        'button' => 'Filter',
-        'clear' => 'Clear filter',
+        'label' => 'Projects',
+        'button' => 'Filter projects',
+        'title' => 'Filter projects',
+        'clear' => 'Clear',
+        'clear_label' => 'Clear filter',
+        'remove' => 'Remove :value',
         'no_matches' => 'No project matches the filter.',
         'outside' => 'Does not match the active filter',
-        'help' => 'Within a category: any of them. Across categories: all.',
+        'count' => ':matches of :total projects',
+        'modes' => [
+            'merge' => [
+                'label' => 'Merge',
+                'description' => 'Projects with any selected value',
+            ],
+            'cut' => [
+                'label' => 'Cut',
+                'description' => 'Projects with all selected values',
+            ],
+        ],
     ],
 ];

@@ -4,37 +4,96 @@
     are none — which is why no flux:sidebar.spacer is needed here.
 --}}
 <div class="-mx-2 flex min-h-0 flex-1 flex-col overflow-y-auto px-2">
-    {{-- Filter by project tags. Shown only once project categories exist; an
-         active filter shows its count on the button and can be cleared in one
-         click beside it. --}}
+    {{-- Filter by project tags. Shown only once project categories exist.
+
+         The label row reads like the group headers below it (text-sm, medium,
+         zinc-400, px-3), with the funnel at its end; an active filter tints the
+         funnel in the accent colour and lists its values as chips underneath,
+         so the state is visible without opening anything.
+
+         A popover, not a flux:menu: the panel holds a mode switch and toggle
+         pills, which a menu's roving focus and item roles do not fit. --}}
     @if ($tagCategories->isNotEmpty())
-        <div class="mb-1 flex items-center gap-1">
-            <flux:dropdown position="bottom" align="start">
-                <flux:button size="sm" variant="ghost" icon="funnel" class="cursor-pointer">
-                    {{ __('tags.filter.button') }}
-                    @if ($activeFilterCount > 0)
-                        <flux:badge size="sm" color="blue" class="ms-1">{{ $activeFilterCount }}</flux:badge>
-                    @endif
-                </flux:button>
+        <div class="mb-1 flex flex-col">
+            <div class="flex h-8 items-center justify-between ps-3 pe-1">
+                <span class="truncate text-sm font-medium leading-none text-zinc-400">{{ __('tags.filter.label') }}</span>
 
-                <flux:menu keep-open>
-                    <flux:menu.checkbox.group wire:model.live="tagFilter">
+                <flux:dropdown position="bottom" align="end">
+                    <flux:button
+                        size="xs"
+                        variant="subtle"
+                        icon="funnel"
+                        :icon:variant="$activeFilterCount > 0 ? 'solid' : 'outline'"
+                        :aria-label="__('tags.filter.button')"
+                        :tooltip="__('tags.filter.button')"
+                        @class([
+                            'cursor-pointer',
+                            'text-accent-content! hover:text-accent-content!' => $activeFilterCount > 0,
+                        ])
+                    />
+
+                    <flux:popover class="flex w-64 flex-col gap-3">
+                        <flux:heading size="sm">{{ __('tags.filter.title') }}</flux:heading>
+
+                        <div class="flex flex-col gap-1.5">
+                            <flux:radio.group wire:model.live="tagFilterMode" variant="segmented" size="sm">
+                                <flux:radio :value="\App\Livewire\Projects\ProjectNavigation::FILTER_MERGE" :label="__('tags.filter.modes.merge.label')" class="cursor-pointer" />
+                                <flux:radio :value="\App\Livewire\Projects\ProjectNavigation::FILTER_CUT" :label="__('tags.filter.modes.cut.label')" class="cursor-pointer" />
+                            </flux:radio.group>
+
+                            <flux:text size="sm">{{ __("tags.filter.modes.{$tagFilterMode}.description") }}</flux:text>
+                        </div>
+
                         @foreach ($tagCategories as $category)
-                            <flux:menu.heading>{{ $category->name }}</flux:menu.heading>
-                            @foreach ($category->values as $value)
-                                <flux:menu.checkbox :value="$value->id" wire:key="tag-filter-{{ $value->id }}">{{ $value->name }}</flux:menu.checkbox>
-                            @endforeach
+                            <div class="flex flex-col gap-1.5" wire:key="tag-filter-category-{{ $category->id }}">
+                                <div class="text-xs font-medium uppercase tracking-wide text-zinc-400">{{ $category->name }}</div>
+
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach ($category->values as $value)
+                                        @php $chosen = $chosenValues->contains('id', $value->id); @endphp
+                                        <flux:button
+                                            size="xs"
+                                            :variant="$chosen ? 'primary' : 'outline'"
+                                            wire:click="toggleTagValue({{ $value->id }})"
+                                            wire:key="tag-filter-{{ $value->id }}"
+                                            aria-pressed="{{ $chosen ? 'true' : 'false' }}"
+                                            class="cursor-pointer"
+                                        >{{ $value->name }}</flux:button>
+                                    @endforeach
+                                </div>
+                            </div>
                         @endforeach
-                    </flux:menu.checkbox.group>
 
-                    <flux:menu.separator />
-                    <div class="max-w-56 px-2 py-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('tags.filter.help') }}</div>
-                </flux:menu>
-            </flux:dropdown>
+                        <flux:separator variant="subtle" />
 
-            @if ($activeFilterCount > 0)
-                <flux:button size="sm" variant="ghost" icon="x-mark" wire:click="clearTagFilter" class="cursor-pointer"
-                    :aria-label="__('tags.filter.clear')" :tooltip="__('tags.filter.clear')" />
+                        <div class="flex items-center justify-between gap-2">
+                            <flux:text size="sm">{{ __('tags.filter.count', ['matches' => $matchCount, 'total' => $projectCount]) }}</flux:text>
+
+                            <flux:button size="xs" variant="ghost" wire:click="clearTagFilter" :disabled="$activeFilterCount === 0" class="cursor-pointer">
+                                {{ __('tags.filter.clear') }}
+                            </flux:button>
+                        </div>
+                    </flux:popover>
+                </flux:dropdown>
+            </div>
+
+            @if ($chosenValues->isNotEmpty())
+                <div class="flex flex-wrap items-center gap-1 px-3 pb-1">
+                    @foreach ($chosenValues as $value)
+                        <flux:badge size="sm" wire:key="tag-filter-chip-{{ $value->id }}">
+                            {{ $value->category->name }}: {{ $value->name }}
+                            <flux:badge.close
+                                wire:click="removeTagValue({{ $value->id }})"
+                                :aria-label="__('tags.filter.remove', ['value' => $value->name])"
+                                class="cursor-pointer"
+                            />
+                        </flux:badge>
+                    @endforeach
+
+                    <flux:button size="xs" variant="ghost" wire:click="clearTagFilter" :aria-label="__('tags.filter.clear_label')" class="cursor-pointer">
+                        {{ __('tags.filter.clear') }}
+                    </flux:button>
+                </div>
             @endif
         </div>
     @endif

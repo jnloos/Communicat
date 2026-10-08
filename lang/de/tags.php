@@ -62,10 +62,24 @@ return [
     ],
 
     'filter' => [
-        'button' => 'Filter',
-        'clear' => 'Filter zurücksetzen',
+        'label' => 'Projekte',
+        'button' => 'Projekte filtern',
+        'title' => 'Projekte filtern',
+        'clear' => 'Zurücksetzen',
+        'clear_label' => 'Filter zurücksetzen',
+        'remove' => ':value entfernen',
         'no_matches' => 'Kein Projekt passt zum Filter.',
         'outside' => 'Passt nicht zum aktiven Filter',
-        'help' => 'Innerhalb einer Kategorie: eines davon. Zwischen Kategorien: alle.',
+        'count' => ':matches von :total Projekten',
+        'modes' => [
+            'merge' => [
+                'label' => 'Merge',
+                'description' => 'Projekte mit einem der gewählten Werte',
+            ],
+            'cut' => [
+                'label' => 'Cut',
+                'description' => 'Projekte mit allen gewählten Werten',
+            ],
+        ],
     ],
 ];

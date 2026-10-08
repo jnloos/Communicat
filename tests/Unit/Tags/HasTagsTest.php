@@ -202,4 +202,41 @@ class HasTagsTest extends TestCase
         $this->assertSame([], Project::whereTagFilter($emptied)->pluck('id')->all());
         $this->assertSame([$project->id], Project::whereTagFilter(new TagFilter)->pluck('id')->all());
     }
+
+    public function test_where_tagged_any_matches_a_model_carrying_one_of_the_values(): void
+    {
+        $condition = $this->category(TagScope::Project, 'condition', ['status', 'control']);
+        $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
+
+        $status = Project::factory()->create();
+        $status->setTag($condition, $this->value($condition, 'status'));
+        $school = Project::factory()->create();
+        $school->setTag($topic, $this->value($topic, 'Schule'));
+        $untagged = Project::factory()->create();
+
+        $any = Project::whereTaggedAny([$this->value($condition, 'status')->id, $this->value($topic, 'Schule')->id])->pluck('id')->all();
+
+        $this->assertEqualsCanonicalizing([$status->id, $school->id], $any);
+        $this->assertEqualsCanonicalizing([$status->id, $school->id, $untagged->id], Project::whereTaggedAny([])->pluck('id')->all());
+        $this->assertSame([], Project::whereTaggedAny([999])->pluck('id')->all());
+    }
+
+    public function test_where_tagged_all_needs_every_value_even_two_of_one_category(): void
+    {
+        $condition = $this->category(TagScope::Project, 'condition', ['status', 'control']);
+        $topic = $this->category(TagScope::Project, 'thema', ['Schule']);
+
+        $both = Project::factory()->create();
+        $both->setTag($condition, $this->value($condition, 'status'));
+        $both->setTag($topic, $this->value($topic, 'Schule'));
+        $statusOnly = Project::factory()->create();
+        $statusOnly->setTag($condition, $this->value($condition, 'status'));
+
+        $status = $this->value($condition, 'status')->id;
+
+        $this->assertSame([$both->id], Project::whereTaggedAll([$status, $this->value($topic, 'Schule')->id])->pluck('id')->all());
+        $this->assertSame([], Project::whereTaggedAll([$status, $this->value($condition, 'control')->id])->pluck('id')->all());
+        $this->assertSame([], Project::whereTaggedAll([$status, 999])->pluck('id')->all());
+        $this->assertSame(2, Project::whereTaggedAll([])->count());
+    }
 }
