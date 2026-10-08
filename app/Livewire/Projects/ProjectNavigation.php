@@ -342,25 +342,16 @@ class ProjectNavigation extends Component
     private function chosenValues(Collection $categories, array $filter): Collection
     {
         return $categories
-            ->flatMap(fn (TagCategory $category) => $category->values->each->setRelation('category', $category))
+            // Without its own relations: the category holds these very values,
+            // and a value pointing back at it would make the pair circular.
+            ->flatMap(fn (TagCategory $category) => $category->values->each->setRelation('category', $category->withoutRelations()))
             ->filter(fn (TagValue $value) => in_array($value->id, $filter, true))
             ->values();
     }
 
     public function render(): mixed
     {
-        // Client-writable as well: anything but merge reads as the default.
-        if ($this->tagFilterMode !== self::FILTER_MERGE) {
-            $this->tagFilterMode = self::FILTER_CUT;
-        }
-
-        $filter = $this->activeTagFilter();
-
-        // Forget values that no longer exist, so the session does not carry them on.
-        if (count($filter) !== count($this->tagFilter)) {
-            $this->tagFilter = array_map('strval', $filter);
-        }
-
+        $filter = $this->normaliseFilterState();
         $outsideFilterProjectId = $this->openProjectOutside($filter);
 
         // The open project always stays in the list, even when it does not match:
@@ -383,6 +374,10 @@ class ProjectNavigation extends Component
 
         $tagCategories = TagCategory::ofScope(TagScope::Project)->with('values')->get();
 
+        // The counts live in the popover, which exists only once there are
+        // categories to filter by; without one they would be two wasted queries.
+        $hasCategories = $tagCategories->isNotEmpty();
+
         return view('livewire.projects.project-navigation', [
             'groups' => $groups,
             'grouped' => $groups
@@ -393,10 +388,33 @@ class ProjectNavigation extends Component
             'chosenValues' => $this->chosenValues($tagCategories, $filter),
             'activeFilterCount' => count($filter),
             'tagFilterMode' => $this->tagFilterMode,
-            'matchCount' => $this->applyTagFilter($this->user()->projects(), $filter)->count(),
-            'projectCount' => $this->user()->projects()->count(),
+            'matchCount' => $hasCategories ? $this->applyTagFilter($this->user()->projects(), $filter)->count() : null,
+            'projectCount' => $hasCategories ? $this->user()->projects()->count() : null,
             'outsideFilterProjectId' => $outsideFilterProjectId,
         ]);
+    }
+
+    /**
+     * Both filter properties are client-writable and session-persisted, so each
+     * render first puts them back into shape: anything but merge reads as the
+     * default mode, and values that no longer exist are forgotten, so the
+     * session does not carry them on.
+     *
+     * @return list<int> the chosen values that still apply
+     */
+    private function normaliseFilterState(): array
+    {
+        if ($this->tagFilterMode !== self::FILTER_MERGE) {
+            $this->tagFilterMode = self::FILTER_CUT;
+        }
+
+        $filter = $this->activeTagFilter();
+
+        if (count($filter) !== count($this->tagFilter)) {
+            $this->tagFilter = array_map('strval', $filter);
+        }
+
+        return $filter;
     }
 
     /**

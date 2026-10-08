@@ -64,13 +64,15 @@ return [
     'filter' => [
         'label' => 'Projects',
         'button' => 'Filter projects',
+        'button_active' => 'Filter projects (:count active)',
         'title' => 'Filter projects',
         'clear' => 'Clear',
         'clear_label' => 'Clear filter',
         'remove' => 'Remove :value',
         'no_matches' => 'No project matches the filter.',
+        'no_matches_cut' => 'No project has all selected values. Try Merge.',
         'outside' => 'Does not match the active filter',
-        'count' => ':matches of :total projects',
+        'count' => '{1}:matches of :total project|[0,*]:matches of :total projects',
         'modes' => [
             'merge' => [
                 'label' => 'Merge',

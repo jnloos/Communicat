@@ -468,7 +468,7 @@ class ProjectNavigationTest extends TestCase
      */
     private function groupIsExpanded(string $html, ProjectGroup $group): bool
     {
-        preg_match('/wire:key="nav-group-'.$group->id.'".*?(<ui-disclosure.*?data-flux-sidebar-group>)/s', $html, $match);
+        preg_match('/wire:key="nav-group-'.$group->id.'(?:-[a-z]+)?".*?(<ui-disclosure.*?data-flux-sidebar-group>)/s', $html, $match);
 
         return preg_match('/\sopen\s/', $match[1]) === 1;
     }
@@ -626,7 +626,181 @@ class ProjectNavigationTest extends TestCase
         $filtered = $unfiltered->set('tagFilter', [(string) $status->id]);
         $this->assertSame(1, $filtered->viewData('matchCount'));
         $this->assertSame(3, $filtered->viewData('projectCount'));
-        $filtered->assertSee(__('tags.filter.count', ['matches' => 1, 'total' => 3]));
+        $filtered->assertSee('1 of 3 projects');
+    }
+
+    public function test_the_count_names_one_project_in_the_singular(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition'])->values()->create(['name' => 'status']);
+        $this->projectOwnedBy($user);
+
+        Livewire::test(ProjectNavigation::class)
+            ->assertSee('1 of 1 project')
+            ->assertDontSee('1 of 1 projects');
+    }
+
+    public function test_merge_counts_every_project_with_any_value_but_not_the_dimmed_open_one(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $control = $condition->values()->create(['name' => 'control']);
+        $a = $this->projectOwnedBy($user, 'A');
+        $a->setTag($condition, $status);
+        $b = $this->projectOwnedBy($user, 'B');
+        $b->setTag($condition, $control);
+        $open = $this->projectOwnedBy($user, 'Offen');
+        $this->projectOwnedBy($user, 'Anderes');
+        $this->projectOwnedBy($user, 'Drittes');
+
+        $component = Livewire::test(ProjectNavigation::class, ['currentProjectId' => $open->id])
+            ->set('tagFilterMode', 'merge')
+            ->set('tagFilter', [(string) $status->id, (string) $control->id]);
+
+        $this->assertSame(2, $component->viewData('matchCount'));
+        $this->assertSame(5, $component->viewData('projectCount'));
+        $this->assertSame($open->id, $component->viewData('outsideFilterProjectId'));
+        $this->assertEqualsCanonicalizing([$a->id, $b->id, $open->id], $component->viewData('ungrouped')->pluck('id')->all());
+        $component->assertSee('2 of 5 projects');
+    }
+
+    public function test_an_active_filter_unfolds_every_remaining_group(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $first = $this->groupFor($user, 'Eins');
+        $second = $this->groupFor($user, 'Zwei');
+        foreach ([$first, $second] as $group) {
+            $project = $this->projectOwnedBy($user, $group->name);
+            $project->setTag($condition, $status);
+            $project->fileInGroupFor($user, $group->id);
+        }
+
+        $component = Livewire::test(ProjectNavigation::class);
+        $this->assertSame([false, false], [$this->groupIsExpanded($component->html(), $first), $this->groupIsExpanded($component->html(), $second)]);
+
+        $html = $component->set('tagFilter', [(string) $status->id])->html();
+        $this->assertSame([true, true], [$this->groupIsExpanded($html, $first), $this->groupIsExpanded($html, $second)]);
+    }
+
+    /**
+     * Flux keeps a disclosure's open state across a morph, so the server's
+     * `expanded` alone would not unfold a group already on the page: the key
+     * has to change with the filter state.
+     */
+    public function test_the_group_key_changes_when_a_filter_becomes_active(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $group = $this->groupFor($user, 'Eins');
+        $project = $this->projectOwnedBy($user);
+        $project->setTag($condition, $status);
+        $project->fileInGroupFor($user, $group->id);
+
+        $component = Livewire::test(ProjectNavigation::class);
+        $before = $this->groupKey($component->html(), $group);
+        $after = $this->groupKey($component->set('tagFilter', [(string) $status->id])->html(), $group);
+
+        $this->assertNotNull($before);
+        $this->assertNotNull($after);
+        $this->assertNotSame($before, $after);
+    }
+
+    private function groupKey(string $html, ProjectGroup $group): ?string
+    {
+        return preg_match('/wire:key="(nav-group-'.$group->id.'(?:-[a-z]+)?)"/', $html, $match) === 1 ? $match[1] : null;
+    }
+
+    public function test_the_chip_row_names_the_mode_only_when_it_combines_values(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $control = $condition->values()->create(['name' => 'control']);
+
+        $one = Livewire::test(ProjectNavigation::class)
+            ->set('tagFilterMode', 'merge')
+            ->set('tagFilter', [(string) $status->id]);
+        $one->assertDontSeeHtml('title="'.__('tags.filter.modes.merge.description').'"');
+        $one->assertDontSee(__('tags.filter.clear_label'));
+
+        $two = $one->set('tagFilter', [(string) $status->id, (string) $control->id]);
+        $two->assertSeeHtml('title="'.__('tags.filter.modes.merge.description').'"');
+        $two->assertSeeHtml('>'.__('tags.filter.modes.merge.label').':<');
+        $two->assertSee(__('tags.filter.clear_label'));
+    }
+
+    public function test_a_chip_carries_its_full_text_as_a_title(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+
+        Livewire::test(ProjectNavigation::class)
+            ->set('tagFilter', [(string) $status->id])
+            ->assertSeeHtml('title="condition: status"');
+    }
+
+    public function test_cut_without_matches_suggests_merge(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $control = $condition->values()->create(['name' => 'control']);
+        $this->projectOwnedBy($user)->setTag($condition, $status);
+
+        Livewire::test(ProjectNavigation::class)
+            ->set('tagFilter', [(string) $status->id, (string) $control->id])
+            ->assertSee(__('tags.filter.no_matches_cut'))
+            ->set('tagFilterMode', 'merge')
+            ->assertDontSee(__('tags.filter.no_matches_cut'));
+    }
+
+    public function test_no_match_is_reported_even_while_the_open_project_stays_dimmed(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $open = $this->projectOwnedBy($user, 'Offen');
+
+        $component = Livewire::test(ProjectNavigation::class, ['currentProjectId' => $open->id])
+            ->set('tagFilter', [(string) $status->id]);
+
+        $this->assertSame([$open->id], $component->viewData('ungrouped')->pluck('id')->all());
+        $component->assertSee(__('tags.filter.no_matches'));
+    }
+
+    public function test_the_funnel_names_how_many_values_are_active(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $control = $condition->values()->create(['name' => 'control']);
+
+        Livewire::test(ProjectNavigation::class)
+            ->assertDontSee('Filter projects (')
+            ->set('tagFilter', [(string) $status->id, (string) $control->id])
+            ->assertSee('Filter projects (2 active)');
+    }
+
+    public function test_the_projects_label_shows_without_categories_and_skips_the_counts(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(ProjectNavigation::class)
+            ->assertSee(__('tags.filter.label'))
+            ->assertDontSee(__('tags.filter.title'))
+            ->assertViewHas('matchCount', null)
+            ->assertViewHas('projectCount', null);
     }
 
     public function test_the_tag_filter_survives_the_next_page_and_resets_in_one_click(): void
