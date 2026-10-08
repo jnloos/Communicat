@@ -3,11 +3,12 @@
 namespace App\Services\ProjectTransfer;
 
 use App\Models\Project;
+use App\Models\TagValue;
 
 class ProjectExport
 {
     /** Current export schema version (consumed by ProjectImporter). */
-    public const SCHEMA_VERSION = 8;
+    public const SCHEMA_VERSION = 9;
 
     /**
      * Build the full clone payload for a project: pipeline/model config,
@@ -42,6 +43,12 @@ class ProjectExport
                 'summarized_until_message_id' => $project->summarized_until_message_id,
                 'created_at' => optional($project->created_at)->toIso8601String(),
             ],
+            // By name, not id: ids differ between instances. Only project tags --
+            // persona tags belong to the experts, which are linked, not copied.
+            'tags' => $project->tagValues()->with('category')->get()
+                ->sortBy(fn (TagValue $value) => [$value->category->position, $value->category->id])
+                ->mapWithKeys(fn (TagValue $value) => [$value->category->name => $value->name])
+                ->all(),
             'experts' => $project->contributingExperts()
                 ->map(fn ($e) => [
                     'id' => $e->id,

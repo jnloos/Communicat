@@ -43,6 +43,7 @@ return [
     ],
 
     'import' => [
+        'skipped_tags' => 'These tags do not exist here and were skipped: :tags',
         'heading' => 'Create from File',
         'description' => 'Upload a JSON export to create a full copy as a new project.',
         'dropzone_heading' => 'Drop a JSON export here or click to browse',

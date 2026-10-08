@@ -114,6 +114,10 @@ class CreateProject extends Component
             session()->flash('import_warning', __('projects.import.missing_experts'));
         }
 
+        if (! empty($result['skipped_tags'])) {
+            session()->flash('import_tags_skipped', __('projects.import.skipped_tags', ['tags' => implode(', ', $result['skipped_tags'])]));
+        }
+
         $this->redirect(route('project.show', $result['project']), navigate: true);
     }
 

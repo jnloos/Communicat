@@ -5,6 +5,9 @@ namespace Tests\Feature;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\Summary;
+use App\Models\TagCategory;
+use App\Models\TagScope;
+use App\Models\TagValue;
 use App\Models\User;
 use App\Services\ProjectTransfer\ProjectExport;
 use App\Services\ProjectTransfer\ProjectImporter;
@@ -33,7 +36,7 @@ class ProjectTransferTest extends TestCase
 
         $data = (new ProjectExport)->toArray($source->fresh());
 
-        $this->assertSame(8, $data['schema_version']);
+        $this->assertSame(ProjectExport::SCHEMA_VERSION, $data['schema_version']);
         $this->assertArrayNotHasKey('settings', $data['project']);
 
         $copy = app(ProjectImporter::class)->import($data, $owner)['project']->fresh();
@@ -186,5 +189,46 @@ class ProjectTransferTest extends TestCase
         $this->assertNull($copy->summarize_oldest);
         $this->assertSame(config('discussion.summarize_threshold'), $copy->summarizeThreshold());
         $this->assertSame(config('discussion.summarize_oldest'), $copy->summarizeOldest());
+    }
+
+    public function test_the_export_names_the_project_tags(): void
+    {
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $project = Project::factory()->create();
+        $project->setTag($condition, $status);
+
+        $this->assertSame(['bedingung' => 'status'], (new ProjectExport)->toArray($project->fresh())['tags']);
+        $this->assertSame(9, (new ProjectExport)->toArray($project->fresh())['schema_version']);
+    }
+
+    public function test_a_round_trip_keeps_the_tags_by_name(): void
+    {
+        $owner = User::factory()->create();
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $status = $condition->values()->create(['name' => 'status']);
+        $source = Project::factory()->create();
+        $source->setTag($condition, $status);
+
+        $result = app(ProjectImporter::class)->import((new ProjectExport)->toArray($source->fresh()), $owner);
+
+        $this->assertSame('status', $result['project']->fresh()->tagFor($condition)?->name);
+        $this->assertSame([], $result['skipped_tags']);
+    }
+
+    public function test_unknown_tags_are_skipped_reported_and_never_created(): void
+    {
+        $owner = User::factory()->create();
+        TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung'])->values()->create(['name' => 'status']);
+
+        $result = app(ProjectImporter::class)->import([
+            'project' => ['title' => 'Alt', 'description' => 'x'],
+            'tags' => ['bedingung' => 'unbekannt', 'thema' => 'Schule'],
+        ], $owner);
+
+        $this->assertSame(['bedingung: unbekannt', 'thema: Schule'], $result['skipped_tags']);
+        $this->assertSame(1, TagCategory::count());
+        $this->assertSame(1, TagValue::count());
+        $this->assertSame([], $result['project']->fresh()->tagSelection());
     }
 }

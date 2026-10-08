@@ -43,6 +43,7 @@ return [
     ],
 
     'import' => [
+        'skipped_tags' => 'Diese Tags gibt es hier nicht; sie wurden übersprungen: :tags',
         'heading' => 'Aus Datei erstellen',
         'description' => 'Laden Sie einen JSON-Export hoch, um eine vollständige Kopie als neues Projekt anzulegen.',
         'dropzone_heading' => 'JSON-Export hierher ziehen oder zum Auswählen klicken',

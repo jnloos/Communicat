@@ -7,6 +7,8 @@ use App\Models\Expert;
 use App\Models\Message;
 use App\Models\Project;
 use App\Models\Summary;
+use App\Models\TagCategory;
+use App\Models\TagScope;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +22,7 @@ class ProjectImporter
      * exist are skipped and returned so the caller can warn. User and system
      * messages are reassigned to $owner (the export carries no stable user id).
      *
-     * @return array{project: Project, missing_experts: array<int, int>}
+     * @return array{project: Project, missing_experts: array<int, int>, skipped_tags: list<string>}
      */
     public function import(array $data, User $owner): array
     {
@@ -52,6 +54,7 @@ class ProjectImporter
 
             $project->save();
             $project->addContributingUser($owner);
+            $skippedTags = $this->restoreTags($project, $data['tags'] ?? []);
 
             foreach ($data['experts'] ?? [] as $exported) {
                 $expert = Expert::find((int) ($exported['id'] ?? 0));
@@ -111,8 +114,40 @@ class ProjectImporter
             $project->summarized_until_message_id = $idMap[$watermark] ?? null;
             $project->save();
 
-            return ['project' => $project, 'missing_experts' => $missing];
+            return ['project' => $project, 'missing_experts' => $missing, 'skipped_tags' => $skippedTags];
         });
+    }
+
+    /**
+     * Assigns the exported project tags by name. A category or value that does
+     * not exist here is skipped and reported, never created: the tag set is
+     * curated in the settings, not grown by whatever a file carries.
+     *
+     * @return list<string> "category: value" for every pair that was skipped
+     */
+    private function restoreTags(Project $project, mixed $tags): array
+    {
+        if (! is_array($tags)) {
+            return [];
+        }
+
+        $categories = TagCategory::ofScope(TagScope::Project)->with('values')->get()->keyBy('name');
+        $skipped = [];
+
+        foreach ($tags as $categoryName => $valueName) {
+            $category = $categories->get((string) $categoryName);
+            $value = $category?->values->firstWhere('name', (string) $valueName);
+
+            if ($value === null) {
+                $skipped[] = "{$categoryName}: {$valueName}";
+
+                continue;
+            }
+
+            $project->setTag($category, $value);
+        }
+
+        return $skipped;
     }
 
     private function knownPipeline(?string $name): string
