@@ -72,11 +72,6 @@ trait HasTags
         $this->unsetRelation('tagValues');
     }
 
-    public function tagFor(TagCategory $category): ?TagValue
-    {
-        return $this->tagValues()->wherePivot('tag_category_id', $category->id)->first();
-    }
-
     /**
      * The model's tags as a form holds them.
      *

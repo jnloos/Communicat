@@ -43,7 +43,7 @@ class HasTagsTest extends TestCase
         $expert->setTag($gender, $this->value($gender, 'männlich'));
 
         $this->assertSame(1, Taggable::count());
-        $this->assertSame('männlich', $expert->tagFor($gender)?->name);
+        $this->assertSame([$gender->id => $this->value($gender, 'männlich')->id], $expert->tagSelection());
         $this->assertSame((new Expert)->getMorphClass(), Taggable::sole()->taggable_type);
     }
 
@@ -55,7 +55,7 @@ class HasTagsTest extends TestCase
         $expert->setTag($gender, $this->value($gender, 'weiblich'));
         $expert->setTag($gender, null);
 
-        $this->assertNull($expert->tagFor($gender));
+        $this->assertArrayNotHasKey($gender->id, $expert->tagSelection());
         $this->assertSame(0, Taggable::count());
     }
 

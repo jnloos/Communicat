@@ -78,7 +78,7 @@ class TagFieldsTest extends TestCase
             ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertSame('status', Project::sole()->tagFor($this->condition)?->name);
+        $this->assertSame('status', TagValue::find(Project::sole()->tagSelection()[$this->condition->id] ?? null)?->name);
     }
 
     public function test_editing_a_project_loads_and_changes_the_selection(): void
@@ -94,13 +94,13 @@ class TagFieldsTest extends TestCase
             ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertSame('no-status', $project->fresh()->tagFor($this->condition)?->name);
+        $this->assertSame('no-status', TagValue::find($project->fresh()->tagSelection()[$this->condition->id] ?? null)?->name);
 
         Livewire::test(EditProject::class, ['project' => $project->fresh()])
             ->set("tagSelection.{$this->condition->id}", '')
             ->call('save');
 
-        $this->assertNull($project->fresh()->tagFor($this->condition));
+        $this->assertArrayNotHasKey($this->condition->id, $project->fresh()->tagSelection());
     }
 
     public function test_only_the_owner_may_change_a_projects_tags(): void
@@ -116,7 +116,7 @@ class TagFieldsTest extends TestCase
             ->call('save')
             ->assertForbidden();
 
-        $this->assertNull($project->fresh()->tagFor($this->condition));
+        $this->assertArrayNotHasKey($this->condition->id, $project->fresh()->tagSelection());
     }
 
     public function test_the_expert_editor_loads_and_saves_the_persona_tags(): void
@@ -131,7 +131,7 @@ class TagFieldsTest extends TestCase
             ->call('save')
             ->assertHasNoErrors();
 
-        $this->assertSame('weiblich', $expert->fresh()->tagFor($this->gender)?->name);
+        $this->assertSame('weiblich', TagValue::find($expert->fresh()->tagSelection()[$this->gender->id] ?? null)?->name);
 
         Livewire::test(ExpertEditor::class)
             ->call('edit', $expert->id)

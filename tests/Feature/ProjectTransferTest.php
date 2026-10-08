@@ -215,7 +215,7 @@ class ProjectTransferTest extends TestCase
 
         $result = app(ProjectImporter::class)->import((new ProjectExport)->toArray($source->fresh()), $owner);
 
-        $this->assertSame('status', $result['project']->fresh()->tagFor($condition)?->name);
+        $this->assertSame('status', TagValue::find($result['project']->fresh()->tagSelection()[$condition->id] ?? null)?->name);
         $this->assertSame([], $result['skipped_tags']);
     }
 
@@ -284,10 +284,10 @@ class ProjectTransferTest extends TestCase
             ],
         ], $owner);
 
-        $this->assertSame($yes->id, $fresh->fresh()->tagFor($title)?->id);
-        $this->assertSame($senior->id, $fresh->fresh()->tagFor($seniority)?->id);
-        $this->assertSame($no->id, $held->fresh()->tagFor($title)?->id);
-        $this->assertSame($senior->id, $held->fresh()->tagFor($seniority)?->id);
+        $this->assertSame($yes->id, $fresh->fresh()->tagSelection()[$title->id] ?? null);
+        $this->assertSame($senior->id, $fresh->fresh()->tagSelection()[$seniority->id] ?? null);
+        $this->assertSame($no->id, $held->fresh()->tagSelection()[$title->id] ?? null);
+        $this->assertSame($senior->id, $held->fresh()->tagSelection()[$seniority->id] ?? null);
         $this->assertSame(['mood: happy'], $result['skipped_tags']);
         $this->assertSame(2, TagCategory::count());
     }
@@ -306,7 +306,7 @@ class ProjectTransferTest extends TestCase
 
         app(ProjectImporter::class)->import($data, $owner);
 
-        $this->assertSame('true', $expert->fresh()->tagFor($title)?->name);
+        $this->assertSame('true', TagValue::find($expert->fresh()->tagSelection()[$title->id] ?? null)?->name);
     }
 
     public function test_a_file_from_before_persona_tags_still_imports(): void

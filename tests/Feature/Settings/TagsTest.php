@@ -133,7 +133,7 @@ class TagsTest extends TestCase
             ->set('renameTo', 'Gender')
             ->call('saveCategoryName');
 
-        $this->assertSame('Frau', $expert->fresh()->tagFor($category->fresh())?->name);
+        $this->assertSame('Frau', TagValue::find($expert->fresh()->tagSelection()[$category->id] ?? null)?->name);
         $this->assertSame('Gender', $category->fresh()->name);
     }
 
