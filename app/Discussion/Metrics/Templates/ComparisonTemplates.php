@@ -3,7 +3,6 @@
 namespace App\Discussion\Metrics\Templates;
 
 use App\Discussion\Metrics\References\AgentReference;
-use App\Discussion\Metrics\References\EachReference;
 use App\Discussion\Metrics\References\PersonaTagsReference;
 use App\Discussion\Metrics\References\SeatReference;
 use App\Discussion\Values\ComparisonDisplay;
@@ -41,15 +40,15 @@ final class ComparisonTemplates
     public function all(): array
     {
         $byPipeline = $this->byPipelineAndCondition(self::PIPELINES);
+        $overall = $this->byCondition(new SeatReference(1));
 
         $templates = [
             new ComparisonTemplate('turn_share_by_pipeline', $byPipeline, $this->view(Metric::TurnShare, ComparisonDisplay::Bars)),
             new ComparisonTemplate('word_share_by_pipeline', $byPipeline, $this->view(Metric::WordShare, ComparisonDisplay::Bars)),
             new ComparisonTemplate('inequality_by_pipeline', $byPipeline, $this->view(Metric::TurnGini, ComparisonDisplay::Bars)),
-            new ComparisonTemplate('words_per_turn_seat_one', $byPipeline, $this->view(Metric::WordsPerTurn, ComparisonDisplay::Bars)),
-            new ComparisonTemplate('seat_one_over_the_run', $this->byCondition(new SeatReference(1)), $this->view(Metric::TurnShare, ComparisonDisplay::Trajectory)),
+            new ComparisonTemplate('turn_share_overall', $overall, $this->view(Metric::TurnShare, ComparisonDisplay::Bars)),
+            new ComparisonTemplate('word_share_overall', $overall, $this->view(Metric::WordShare, ComparisonDisplay::Bars)),
             new ComparisonTemplate('blind_vs_seeing_judge', $this->byPipelineAndCondition(['QualityPipeline', 'BlindQualityPipeline']), $this->view(Metric::TurnShare, ComparisonDisplay::Bars)),
-            new ComparisonTemplate('every_seat_by_condition', $this->byCondition(new EachReference), $this->view(Metric::TurnShare, ComparisonDisplay::Pie)),
         ];
 
         return array_column(array_map(fn (ComparisonTemplate $t) => [$t->key, $t], $templates), 1, 0);

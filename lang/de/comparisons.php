@@ -152,10 +152,9 @@ return [
             'turn_share_by_pipeline' => 'Statuseffekt auf den Turn-Anteil je Pipeline',
             'word_share_by_pipeline' => 'Statuseffekt auf den Wortanteil je Pipeline',
             'inequality_by_pipeline' => 'Ungleichheit der Redeanteile je Pipeline',
-            'words_per_turn_seat_one' => 'Wörter pro Turn von Sitz 1',
-            'seat_one_over_the_run' => 'Anteil von Sitz 1 im Verlauf',
+            'turn_share_overall' => 'Statuseffekt auf den Turn-Anteil (gesamt)',
+            'word_share_overall' => 'Statuseffekt auf den Wortanteil (gesamt)',
             'blind_vs_seeing_judge' => 'Blinder gegen sehenden Richter',
-            'every_seat_by_condition' => 'Anteil jedes Sitzes je Bedingung',
         ],
         'pipelines' => [
             'ScorePipeline' => 'Score',

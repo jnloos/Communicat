@@ -53,7 +53,10 @@ class ComparisonTemplatesTest extends TestCase
             $component->assertSee($template->name());
         }
 
-        $this->assertCount(7, app(ComparisonTemplates::class)->all());
+        $this->assertSame(
+            ['turn_share_by_pipeline', 'word_share_by_pipeline', 'inequality_by_pipeline', 'turn_share_overall', 'word_share_overall', 'blind_vs_seeing_judge'],
+            array_keys(app(ComparisonTemplates::class)->all()),
+        );
     }
 
     public function test_every_template_creates_a_comparison_with_resolved_tag_ids(): void
@@ -104,10 +107,9 @@ class ComparisonTemplatesTest extends TestCase
             'turn_share_by_pipeline' => ['turn_share', 'bars'],
             'word_share_by_pipeline' => ['word_share', 'bars'],
             'inequality_by_pipeline' => ['turn_gini', 'bars'],
-            'words_per_turn_seat_one' => ['words_per_turn', 'bars'],
-            'seat_one_over_the_run' => ['turn_share', 'trajectory'],
+            'turn_share_overall' => ['turn_share', 'bars'],
+            'word_share_overall' => ['word_share', 'bars'],
             'blind_vs_seeing_judge' => ['turn_share', 'bars'],
-            'every_seat_by_condition' => ['turn_share', 'pie'],
         ];
 
         foreach ($views as $key => [$metric, $display]) {
@@ -115,11 +117,26 @@ class ComparisonTemplatesTest extends TestCase
             $this->assertSame([$metric, $display, 'cumulative'], [$view['metric'], $view['display'], $view['trajectory_mode']], $key);
         }
 
-        $this->assertSame(['each'], array_unique(array_column(array_column($this->createFrom('every_seat_by_condition')->series, 'reference'), 'type')));
         $this->assertSame(
             ['QualityPipeline', 'QualityPipeline', 'BlindQualityPipeline', 'BlindQualityPipeline'],
             array_map(fn (SeriesDefinition $s) => $s->pipeline, $this->createFrom('blind_vs_seeing_judge')->seriesDefinitions()),
         );
+    }
+
+    public function test_the_overall_templates_compare_the_two_conditions_across_all_pipelines(): void
+    {
+        [$condition, $status, $control] = $this->conditions();
+
+        foreach (['turn_share_overall', 'word_share_overall'] as $key) {
+            $series = $this->createFrom($key)->seriesDefinitions();
+
+            $this->assertCount(2, $series, $key);
+            $this->assertSame(ComparisonTemplates::CONDITIONS, array_map(fn (SeriesDefinition $s) => $s->label, $series), $key);
+            $this->assertSame([null, null], array_map(fn (SeriesDefinition $s) => $s->pipeline, $series), $key);
+            $this->assertSame([[$condition->id => [$status]], [$condition->id => [$control]]], array_map(fn (SeriesDefinition $s) => $s->projectTags->toArray(), $series), $key);
+            $this->assertSame(['type' => 'seat', 'seat' => 1], $series[0]->reference->toArray(), $key);
+            $this->assertSame(['indigo-500', 'indigo-300'], array_map(fn (SeriesDefinition $s) => (string) $s->color, $series), $key);
+        }
     }
 
     public function test_unknown_tag_names_never_widen_the_filter(): void
@@ -172,7 +189,7 @@ class ComparisonTemplatesTest extends TestCase
     public function test_creating_from_a_template_says_once_which_tags_do_not_exist(): void
     {
         $page = Livewire::test(StatisticsPage::class)
-            ->call('createFromTemplate', 'every_seat_by_condition')
+            ->call('createFromTemplate', 'turn_share_overall')
             ->assertSee(__('comparisons.templates.unresolved', ['tags' => 'Status condition: status, Status condition: no-status']));
 
         // One-time: opening a comparison (or dismissing it) clears it.
@@ -185,7 +202,7 @@ class ComparisonTemplatesTest extends TestCase
         $this->conditions();
 
         Livewire::test(StatisticsPage::class)
-            ->call('createFromTemplate', 'every_seat_by_condition')
+            ->call('createFromTemplate', 'turn_share_overall')
             ->assertSet('templateNotice', null);
     }
 

@@ -152,10 +152,9 @@ return [
             'turn_share_by_pipeline' => 'Status effect on turn share by pipeline',
             'word_share_by_pipeline' => 'Status effect on word share by pipeline',
             'inequality_by_pipeline' => 'Speaking inequality by pipeline',
-            'words_per_turn_seat_one' => 'Words per turn of seat 1',
-            'seat_one_over_the_run' => 'Seat 1 share over the run',
+            'turn_share_overall' => 'Status effect on turn share (overall)',
+            'word_share_overall' => 'Status effect on word share (overall)',
             'blind_vs_seeing_judge' => 'Blind vs seeing judge',
-            'every_seat_by_condition' => 'Share of every seat by condition',
         ],
         'pipelines' => [
             'ScorePipeline' => 'Score',
