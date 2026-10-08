@@ -16,4 +16,5 @@ return [
     'dashboard' => 'Dashboard',
     'platform' => 'Platform',
     'search' => 'Search',
+    'statistics' => 'Statistics',
 ];

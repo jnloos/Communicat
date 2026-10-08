@@ -33,6 +33,10 @@
                     {{ __('navigation.repository') }}
                 </flux:sidebar.item>
 
+                <flux:sidebar.item icon="chart-bar" :href="route('statistics')" :current="request()->routeIs('statistics')" wire:navigate>
+                    {{ __('navigation.statistics') }}
+                </flux:sidebar.item>
+
                 <flux:sidebar.item icon="cog" :href="route('settings.profile')" :current="request()->routeIs('settings.*')" wire:navigate>
                     {{ __('navigation.settings') }}
                 </flux:sidebar.item>

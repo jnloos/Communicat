@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,7 +13,7 @@ use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -22,7 +23,7 @@ class User extends Authenticatable
      */
     protected function promptId(): Attribute
     {
-        return Attribute::get(fn () => 'U' . $this->id);
+        return Attribute::get(fn () => 'U'.$this->id);
     }
 
     protected $fillable = [
@@ -41,12 +42,13 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'is_admin'          => 'boolean',
+            'password' => 'hashed',
+            'is_admin' => 'boolean',
         ];
     }
 
-    public function projects(): MorphToMany {
+    public function projects(): MorphToMany
+    {
         return $this->morphToMany(Project::class, 'contributor', 'project_contributors')
             ->withPivot('project_group_id');
     }
@@ -55,20 +57,29 @@ class User extends Authenticatable
      * This user's sidebar drawers. Ordered by position first so a future
      * reordering UI has something to write to; the name only breaks ties.
      */
-    public function projectGroups(): HasMany {
+    public function projectGroups(): HasMany
+    {
         return $this->hasMany(ProjectGroup::class)
             ->orderBy('position')
             ->orderBy('name');
     }
 
-    public function ownedProjects(): HasMany {
+    public function ownedProjects(): HasMany
+    {
         return $this->hasMany(Project::class, 'user_id');
     }
 
-    public function initials(): string {
+    /** This user's saved comparisons on the statistics page. */
+    public function comparisons(): HasMany
+    {
+        return $this->hasMany(Comparison::class)->orderBy('name')->orderBy('id');
+    }
+
+    public function initials(): string
+    {
         return Str::of($this->name)
             ->explode(' ')
-            ->map(fn(string $name) => Str::of($name)->substr(0, 1))
+            ->map(fn (string $name) => Str::of($name)->substr(0, 1))
             ->implode('');
     }
 }

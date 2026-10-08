@@ -7,6 +7,7 @@ use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Tags;
 use App\Livewire\Settings\Users;
+use App\Livewire\Statistics\StatisticsPage;
 use App\Models\Project;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Gate;
@@ -59,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
     Route::get('settings/users', Users::class)->middleware('admin')->name('settings.users');
     Route::get('settings/tags', Tags::class)->middleware('admin')->name('settings.tags');
+    Route::get('statistics', StatisticsPage::class)->middleware('verified')->name('statistics');
 
     Route::get('debug/jobs', JobDebugPanel::class)->name('debug.jobs');
 });
