@@ -131,6 +131,8 @@ return [
         'seat' => 'Sitz :seat',
         'others' => 'Übrige',
         'equal_share' => 'Gestrichelte Linie: gleicher Anteil (:share)',
+        'pie_equal_share' => 'Gleicher Anteil: :share',
+        'pie_mixed_sizes' => 'Kein Kreis je Sitz: Die Läufe dieser Reihe haben unterschiedliche Gruppengrößen.',
         'no_trajectory' => 'Den Verlauf gibt es nur für Turn- und Wortanteil.',
         'no_pie' => 'Das Kreisdiagramm gibt es nur für Turn- und Wortanteil.',
         'n_of' => ':label · n',

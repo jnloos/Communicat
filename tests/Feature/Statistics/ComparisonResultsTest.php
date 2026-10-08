@@ -225,7 +225,8 @@ class ComparisonResultsTest extends TestCase
             ->assertSee('100 %');
     }
 
-    public function test_mixed_group_sizes_have_no_equal_share(): void
+    /** A second run of the series, with three agents instead of two. */
+    private function addRunOfThree(): void
     {
         $three = Project::factory()->create(['user_id' => $this->user->id, 'pipeline' => 'ScorePipeline']);
         $experts = Expert::factory()->count(3)->create();
@@ -234,6 +235,11 @@ class ComparisonResultsTest extends TestCase
             'job_class' => 'App\Discussion\TurnRunner', 'project_id' => $three->id, 'status' => 'success',
             'started_at' => now(), 'turn_index' => 1, 'expert_id' => $experts[0]->id, 'words' => 10,
         ]);
+    }
+
+    public function test_mixed_group_sizes_have_no_equal_share(): void
+    {
+        $this->addRunOfThree();
 
         $component = $this->editor()->set('viewSettings.display', 'bars');
 
@@ -280,12 +286,43 @@ class ComparisonResultsTest extends TestCase
     public function test_a_pie_of_one_reference_shows_the_group_and_the_others(): void
     {
         $component = $this->editor()->set('viewSettings.display', 'pie');
-        $slices = $component->viewData('pies')[0]['slices'];
+        $pie = $component->viewData('pies')[0];
+        $slices = $pie['slices'];
 
         $this->assertSame(['Sitz eins', __('comparisons.results.others')], array_column($slices, 'name'));
         $this->assertSame([75.0, 25.0], array_column($slices, 'value'));
         $this->assertSame(['tint-0', 'others'], array_column($slices, 'id'));
-        $component->assertSee('n = 1');
+        $this->assertSame('75.0 %', $pie['mean'], 'the caption carries the figure');
+        $component->assertSee('n = 1')
+            ->assertSee(__('comparisons.results.pie_equal_share', ['share' => '50 %']));
+    }
+
+    public function test_a_pie_of_every_seat_needs_one_group_size(): void
+    {
+        $this->addRunOfThree();
+
+        $component = $this->editor()
+            ->set('series.0.reference.type', 'each')
+            ->set('viewSettings.display', 'pie');
+        $pie = $component->viewData('pies')[0];
+
+        // Seat 3 exists in one run only: its mean would push the slices past 100 %.
+        $this->assertSame([], $pie['slices']);
+        $this->assertTrue($pie['mixed']);
+        $this->assertNull($pie['mean']);
+        $component->assertSee(__('comparisons.results.pie_mixed_sizes'))
+            ->assertDontSee(__('comparisons.results.pie_equal_share', ['share' => '50 %']));
+    }
+
+    public function test_only_the_shown_display_is_prepared(): void
+    {
+        $component = $this->editor();
+
+        $this->assertNull($component->viewData('barGroups'));
+        $this->assertNull($component->viewData('pies'));
+        $this->assertNull($component->viewData('trajectoryRows'));
+        $this->assertNotNull($component->set('viewSettings.display', 'bars')->viewData('barGroups'));
+        $this->assertNull($component->viewData('pies'));
     }
 
     public function test_words_per_turn_and_gini_have_no_pie(): void
@@ -294,7 +331,7 @@ class ComparisonResultsTest extends TestCase
             $component = $this->editor()->set('viewSettings.display', 'pie')->set('viewSettings.metric', $metric);
 
             $this->assertSame('table', $this->comparison->fresh()->view['display']);
-            $this->assertSame([], $component->viewData('pies'));
+            $this->assertEmpty($component->viewData('pies'));
             $this->assertMatchesRegularExpression('/value="pie"[^>]*disabled/s', $component->html());
         }
     }

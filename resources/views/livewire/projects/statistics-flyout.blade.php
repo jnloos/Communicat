@@ -1,3 +1,5 @@
+@use('App\Discussion\Support\LocaleNumber')
+
 <div>
     <flux:modal :name="\App\Livewire\Projects\StatisticsFlyout::MODAL" variant="flyout" class="flex w-full flex-col p-5! sm:p-8! md:w-[720px]">
         <x-modal-header :heading="__('statistics.title')" :subheading="__('statistics.subheading')" />
@@ -14,7 +16,7 @@
                 <div class="grid gap-6 sm:grid-cols-2">
                     @foreach ([
                         ['sectors' => $turnSectors, 'label' => __('statistics.turn_share'), 'unit' => __('statistics.columns.turns'), 'gini' => $report->turnGini, 'total' => trans_choice('statistics.turns_total', $report->spokenTurns, ['count' => $report->spokenTurns])],
-                        ['sectors' => $wordSectors, 'label' => __('statistics.word_share'), 'unit' => __('statistics.columns.words'), 'gini' => $report->wordGini, 'total' => trans_choice('statistics.words_total', $report->totalWords, ['count' => \App\Discussion\Support\LocaleNumber::decimal($report->totalWords, 0)])],
+                        ['sectors' => $wordSectors, 'label' => __('statistics.word_share'), 'unit' => __('statistics.columns.words'), 'gini' => $report->wordGini, 'total' => trans_choice('statistics.words_total', $report->totalWords, ['count' => LocaleNumber::decimal($report->totalWords, 0)])],
                     ] as $chart)
                         <section class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
                             <flux:heading size="sm">{{ $chart['label'] }}</flux:heading>
@@ -46,8 +48,8 @@
                             <div class="mt-4 flex items-baseline justify-between border-t border-zinc-200 pt-3 dark:border-zinc-700">
                                 <span class="text-xs uppercase tracking-wide text-zinc-500">{{ __('statistics.gini') }}</span>
                                 <span class="font-mono text-sm text-zinc-700 dark:text-zinc-300">
-                                    {{ \App\Discussion\Support\LocaleNumber::decimal($chart['gini'], 2) }}
-                                    <span class="text-zinc-400">/ {{ \App\Discussion\Support\LocaleNumber::decimal($report->giniCeiling, 2) }}</span>
+                                    {{ LocaleNumber::decimal($chart['gini'], 2) }}
+                                    <span class="text-zinc-400">/ {{ LocaleNumber::decimal($report->giniCeiling, 2) }}</span>
                                 </span>
                             </div>
                         </section>
@@ -146,10 +148,10 @@
                                         </span>
                                     </td>
                                     <td class="px-3 py-2 text-right font-mono">{{ $share->turns }}</td>
-                                    <td class="px-3 py-2 text-right font-mono">{{ \App\Discussion\Support\LocaleNumber::percent($share->turnShare) }}</td>
-                                    <td class="px-3 py-2 text-right font-mono">{{ \App\Discussion\Support\LocaleNumber::decimal($share->words, 0) }}</td>
-                                    <td class="px-3 py-2 text-right font-mono">{{ \App\Discussion\Support\LocaleNumber::percent($share->wordShare) }}</td>
-                                    <td class="px-3 py-2 text-right font-mono">{{ \App\Discussion\Support\LocaleNumber::decimal($share->wordsPerTurn(), 1) }}</td>
+                                    <td class="px-3 py-2 text-right font-mono">{{ LocaleNumber::percent($share->turnShare) }}</td>
+                                    <td class="px-3 py-2 text-right font-mono">{{ LocaleNumber::decimal($share->words, 0) }}</td>
+                                    <td class="px-3 py-2 text-right font-mono">{{ LocaleNumber::percent($share->wordShare) }}</td>
+                                    <td class="px-3 py-2 text-right font-mono">{{ LocaleNumber::decimal($share->wordsPerTurn(), 1) }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

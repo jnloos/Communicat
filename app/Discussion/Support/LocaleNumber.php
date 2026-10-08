@@ -12,9 +12,12 @@ use Illuminate\Support\Number;
  */
 final class LocaleNumber
 {
+    /** Falls back to English separators if the formatter fails, never to an empty string. */
     public static function decimal(float|int $value, int $places): string
     {
-        return (string) Number::format($value, precision: $places, locale: app()->getLocale());
+        $formatted = Number::format($value, precision: $places, locale: app()->getLocale());
+
+        return $formatted === false ? number_format($value, $places, '.', ',') : $formatted;
     }
 
     /** A share from 0..1 as a percentage with a space before the sign. */

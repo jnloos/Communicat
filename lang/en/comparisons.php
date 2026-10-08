@@ -131,6 +131,8 @@ return [
         'seat' => 'Seat :seat',
         'others' => 'Others',
         'equal_share' => 'Dashed line: equal share (:share)',
+        'pie_equal_share' => 'Equal share: :share',
+        'pie_mixed_sizes' => 'No pie per seat: the runs of this series have different group sizes.',
         'no_trajectory' => 'The curve exists for turn share and word share only.',
         'no_pie' => 'A pie exists for turn share and word share only.',
         'n_of' => ':label · n',

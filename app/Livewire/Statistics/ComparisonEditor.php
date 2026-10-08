@@ -21,7 +21,6 @@ use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
 use Livewire\Attributes\Locked;
-use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
@@ -33,6 +32,9 @@ use Livewire\Component;
 class ComparisonEditor extends Component
 {
     use NeedsConfirmation;
+
+    /** The page renamed this comparison; render again so the heading follows. */
+    protected $listeners = ['comparison-renamed' => '$refresh'];
 
     #[Locked]
     public int $comparisonId;
@@ -66,10 +68,6 @@ class ComparisonEditor extends Component
         $this->series = array_map(fn (SeriesDefinition $d) => $d->withoutTagValues($missing)->toArray(), $definitions);
         $this->viewSettings = $comparison->comparisonView()->toArray();
     }
-
-    /** The page renamed this comparison; render again so the heading follows. */
-    #[On('comparison-renamed')]
-    public function refreshName(): void {}
 
     public function updated(string $property): void
     {
@@ -165,12 +163,7 @@ class ComparisonEditor extends Component
             'results' => $results,
             'lines' => $lines,
             'seriesColors' => $colors,
-            'barGroups' => $charts->barGroups(),
-            'barScale' => $charts->barScale(),
-            'barTicks' => $charts->barTicks(),
-            'equalShare' => $charts->equalShare(),
-            'pies' => $charts->pies(),
-            'trajectoryRows' => $charts->trajectoryRows(),
+            ...$this->chartData($view->display, $charts),
             'paletteRepeats' => count(array_unique($drawn)) < count($drawn),
             'rollingWindow' => (int) config('discussion.share_window'),
             'comparisonView' => $view,
@@ -183,6 +176,28 @@ class ComparisonEditor extends Component
             'expertNames' => Expert::query()->distinct()->orderBy('name')->pluck('name'),
             'referenceTypes' => array_keys(AgentReferences::TYPES),
         ]);
+    }
+
+    /**
+     * What the shown display draws, and nothing for the others.
+     *
+     * @return array<string, mixed>
+     */
+    private function chartData(ComparisonDisplay $display, ResultCharts $charts): array
+    {
+        $none = ['barGroups' => null, 'barScale' => null, 'barTicks' => null, 'equalShare' => null, 'pies' => null, 'trajectoryRows' => null];
+
+        return match ($display) {
+            ComparisonDisplay::Table => [],
+            ComparisonDisplay::Bars => [
+                'barGroups' => $charts->barGroups(),
+                'barScale' => $charts->barScale(),
+                'barTicks' => $charts->barTicks(),
+                'equalShare' => $charts->equalShare(),
+            ],
+            ComparisonDisplay::Pie => ['pies' => $charts->pies(), 'equalShare' => $charts->equalShare()],
+            ComparisonDisplay::Trajectory => ['trajectoryRows' => $charts->trajectoryRows()],
+        } + $none;
     }
 
     /**

@@ -1,3 +1,5 @@
+@use('App\Discussion\Values\ComparisonDisplay')
+
 <div class="space-y-8">
     {{-- The comparison is the object of the page: its name is the heading,
          with the autosave state and the same "…" menu as in the list. Its
@@ -215,7 +217,7 @@
                 <flux:input type="number" min="1" wire:model.live.debounce.500ms="viewSettings.turn_limit" :placeholder="__('comparisons.view.all_turns')" />
             </flux:field>
 
-            @if ($comparisonView->display === \App\Discussion\Values\ComparisonDisplay::Trajectory && $comparisonView->metric->hasTrajectory())
+            @if ($comparisonView->display === ComparisonDisplay::Trajectory && $comparisonView->metric->hasTrajectory())
                 <flux:field>
                     <flux:label>{{ __('comparisons.view.mode') }}</flux:label>
                     <flux:radio.group wire:model.live="viewSettings.trajectory_mode" variant="segmented">
@@ -226,7 +228,7 @@
             @endif
         </div>
 
-        @if ($comparisonView->display === \App\Discussion\Values\ComparisonDisplay::Trajectory && $comparisonView->trajectoryMode === 'rolling')
+        @if ($comparisonView->display === ComparisonDisplay::Trajectory && $comparisonView->trajectoryMode === 'rolling')
             <flux:text size="sm">{{ trans_choice('statistics.trajectory.rolling_hint', $rollingWindow, ['count' => $rollingWindow]) }}</flux:text>
         @endif
     </section>
@@ -251,7 +253,7 @@
 
         @if ($lines === [])
             <x-empty-state icon="chart-bar">{{ __('comparisons.results.empty') }}</x-empty-state>
-        @elseif ($comparisonView->display === \App\Discussion\Values\ComparisonDisplay::Table)
+        @elseif ($comparisonView->display === ComparisonDisplay::Table)
             <flux:table>
                 <flux:table.columns>
                     <flux:table.column>{{ __('comparisons.results.line') }}</flux:table.column>
@@ -289,10 +291,10 @@
                     @endforeach
                 </flux:table.rows>
             </flux:table>
-        @elseif ($comparisonView->display === \App\Discussion\Values\ComparisonDisplay::Bars)
+        @elseif ($comparisonView->display === ComparisonDisplay::Bars)
             <x-statistics.range-bars :groups="$barGroups" :scale="$barScale" :ticks="$barTicks" :equal-share="$equalShare" />
-        @elseif ($comparisonView->display === \App\Discussion\Values\ComparisonDisplay::Pie)
-            <x-statistics.pies :pies="$pies" />
+        @elseif ($comparisonView->display === ComparisonDisplay::Pie)
+            <x-statistics.pies :pies="$pies" :equal-share="$equalShare" />
         @elseif (count($trajectoryRows) < 2)
             <x-empty-state icon="presentation-chart-line">{{ __('comparisons.results.too_short') }}</x-empty-state>
         @else

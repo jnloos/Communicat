@@ -1,3 +1,5 @@
+@use('App\Discussion\Support\LocaleNumber')
+
 @props([
     'groups',     {{-- ResultCharts::barGroups() --}}
     'scale',      {{-- the value the full width stands for --}}
@@ -78,7 +80,7 @@
     @if ($equalShare !== null)
         <flux:text size="sm" class="flex items-center gap-2">
             <span class="inline-block h-3 border-s border-dashed border-zinc-500 dark:border-zinc-300"></span>
-            {{ __('comparisons.results.equal_share', ['share' => \App\Discussion\Support\LocaleNumber::percent($equalShare, 0)]) }}
+            {{ __('comparisons.results.equal_share', ['share' => LocaleNumber::percent($equalShare, 0)]) }}
         </flux:text>
     @endif
 </div>
