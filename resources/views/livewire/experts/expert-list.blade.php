@@ -37,7 +37,13 @@
                         :role="$expert->role"
                         :avatar-url="$expert->avatar_url ?? null"
                         :description="Str::limit($expert->description, 140)"
-                    />
+                    >
+                        @if ($expert->tagValues->isNotEmpty())
+                            <x-slot:badges>
+                                <x-tags.badges :values="$expert->tagValues" />
+                            </x-slot:badges>
+                        @endif
+                    </x-contributors.contributors-card>
                 @endforeach
             </div>
         @endif

@@ -18,6 +18,11 @@ return [
 
     'assignments' => '{0}unassigned|{1}1 assignment|[2,*]:count assignments',
 
+    'form' => [
+        'heading' => 'Tags',
+        'help' => 'For the evaluation only. The models never see them.',
+    ],
+
     'fields' => [
         'category' => 'Category',
         'value' => 'Value',

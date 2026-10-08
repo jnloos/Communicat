@@ -38,5 +38,9 @@
         @if (filled($description))
             <p class="mt-3 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{{ $description }}</p>
         @endif
+
+        @isset($badges)
+            <div class="mt-3">{{ $badges }}</div>
+        @endisset
     </flux:card>
 </button>

@@ -18,6 +18,11 @@ return [
 
     'assignments' => '{0}nicht zugeordnet|{1}1 Zuordnung|[2,*]:count Zuordnungen',
 
+    'form' => [
+        'heading' => 'Tags',
+        'help' => 'Nur für die Auswertung. Die Modelle sehen sie nie.',
+    ],
+
     'fields' => [
         'category' => 'Kategorie',
         'value' => 'Wert',

@@ -7,6 +7,8 @@ use App\Discussion\Values\ModelConfig;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\JobLog;
 use App\Models\Project;
+use App\Models\TagCategory;
+use App\Models\TagScope;
 use Flux\Flux;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Gate;
@@ -41,6 +43,9 @@ class EditProject extends Component
 
     public string $summarizeOldest = '';
 
+    /** @var array<int|string, int|string|null> bound to Tags\TagFields; category id => value id */
+    public array $tagSelection = [];
+
     /** Only informs the user that edits mid-run are recorded — nothing is frozen. */
     public bool $runStarted = false;
 
@@ -55,6 +60,7 @@ class EditProject extends Component
         $this->summarizeThreshold = (string) $project->summarizeThreshold();
         $this->summarizeOldest = (string) $project->summarizeOldest();
         $this->runStarted = $project->run_config !== null;
+        $this->tagSelection = $project->tagSelection();
     }
 
     #[On('edit_project')]
@@ -98,6 +104,7 @@ class EditProject extends Component
         $project->summarize_threshold = (int) $this->summarizeThreshold;
         $project->summarize_oldest = (int) $this->summarizeOldest;
         $project->save();
+        $project->syncTags($this->tagSelection);
 
         $this->dispatch('project_edited');
         Flux::modal('edit-project')->close();
@@ -173,6 +180,8 @@ class EditProject extends Component
             'pipelines' => app(PipelineRegistry::class)->options(),
             'providers' => ModelConfig::providers(),
             'models' => ModelConfig::optionsFor($this->provider),
+            'hasTagCategories' => TagCategory::ofScope(TagScope::Project)->exists(),
+            'savedTags' => Project::findOrFail($this->forProjectId)->tagValues()->with('category')->get(),
         ]);
     }
 }

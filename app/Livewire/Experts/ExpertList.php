@@ -23,6 +23,7 @@ class ExpertList extends Component
         $search = trim($this->search);
 
         $experts = Expert::query()
+            ->with('tagValues.category')
             ->when($search !== '', function ($q) use ($search) {
                 $like = '%'.$search.'%';
                 $q->where(function ($w) use ($like) {

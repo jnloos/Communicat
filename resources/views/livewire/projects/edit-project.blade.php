@@ -22,6 +22,8 @@
             </x-slot:actions>
         </x-modal-header>
 
+        <x-tags.badges :values="$savedTags" class="-mt-3" />
+
         <form wire:submit.prevent="save" class="flex flex-1 flex-col gap-6">
             <flux:input wire:model.defer="title" :label="__('common.fields.title')"/>
             <flux:textarea wire:model.defer="description" :label="__('common.fields.description')" rows="10"/>
@@ -79,6 +81,9 @@
                         </flux:autocomplete>
                     </flux:accordion.content>
                 </flux:accordion.item>
+                @if ($hasTagCategories)
+                    <x-tags.project-accordion-item />
+                @endif
             </flux:accordion>
 
             <x-modal-footer>

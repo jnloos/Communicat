@@ -4,6 +4,8 @@ namespace App\Livewire\Experts;
 
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Expert;
+use App\Models\TagCategory;
+use App\Models\TagScope;
 use Flux\Flux;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
@@ -34,6 +36,16 @@ class ExpertEditor extends Component
     #[Validate('nullable|string')]
     public string $description = '';
 
+    /** @var array<int|string, int|string|null> bound to Tags\TagFields; category id => value id */
+    public array $tagSelection = [];
+
+    /**
+     * Changes on every edit(): the flyout is reused for every expert, and the
+     * nested TagFields must start from this expert's tags, not the last one's.
+     */
+    #[Locked]
+    public int $formKey = 0;
+
     #[On('edit_expert')]
     public function edit($id = null): void
     {
@@ -49,6 +61,8 @@ class ExpertEditor extends Component
         $this->avatarUrl = $expert->avatar_url ?? null;
         $this->role = $expert->role ?? '';
         $this->description = $expert->description ?? '';
+        $this->tagSelection = $expert?->tagSelection() ?? [];
+        $this->formKey++;
 
         Flux::modal('edit-expert')->show();
     }
@@ -63,6 +77,7 @@ class ExpertEditor extends Component
         $expert->role = $this->role;
         $expert->description = $this->description;
         $expert->save();
+        $expert->syncTags($this->tagSelection);
 
         if (! is_null($this->avatarUpload)) {
             $this->deleteAvatar($expert->avatar_url);
@@ -123,13 +138,14 @@ class ExpertEditor extends Component
 
     protected function resetForm(): void
     {
-        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'role', 'description']);
+        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'role', 'description', 'tagSelection']);
     }
 
     public function render(): mixed
     {
         return view('livewire.experts.expert-editor', [
             'isUpdate' => ! is_null($this->expertId),
+            'hasTagCategories' => TagCategory::ofScope(TagScope::Persona)->exists(),
         ]);
     }
 }

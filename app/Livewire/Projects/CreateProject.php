@@ -5,7 +5,10 @@ namespace App\Livewire\Projects;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Values\ModelConfig;
 use App\Models\Project;
+use App\Models\TagCategory;
+use App\Models\TagScope;
 use App\Services\ProjectTransfer\ProjectImporter;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -32,6 +35,9 @@ class CreateProject extends Component
     public string $summarizeThreshold = '';
 
     public string $summarizeOldest = '';
+
+    /** @var array<int|string, int|string|null> bound to Tags\TagFields; category id => value id */
+    public array $tagSelection = [];
 
     #[Validate('nullable|file|max:20480')]
     public $importFile = null;
@@ -77,7 +83,12 @@ class CreateProject extends Component
         $project->model = $this->model;
         $project->summarize_threshold = (int) $this->summarizeThreshold;
         $project->summarize_oldest = (int) $this->summarizeOldest;
-        $project->save();
+
+        // One transaction, so a forged tag value does not leave a half-created project behind.
+        DB::transaction(function () use ($project) {
+            $project->save();
+            $project->syncTags($this->tagSelection);
+        });
 
         $project->addContributingUser(auth()->user());
         $project->addMessage(view('components.projects.welcome-message', ['project' => $project])->render());
@@ -112,6 +123,7 @@ class CreateProject extends Component
             'pipelines' => app(PipelineRegistry::class)->options(),
             'providers' => ModelConfig::providers(),
             'models' => ModelConfig::optionsFor($this->provider),
+            'hasTagCategories' => TagCategory::ofScope(TagScope::Project)->exists(),
         ]);
     }
 }

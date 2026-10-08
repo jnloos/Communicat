@@ -60,6 +60,9 @@
                         </flux:autocomplete>
                     </flux:accordion.content>
                 </flux:accordion.item>
+                @if ($hasTagCategories)
+                    <x-tags.project-accordion-item />
+                @endif
             </flux:accordion>
 
             <div class="flex justify-end">

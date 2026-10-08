@@ -62,6 +62,16 @@
             rows="8"
         />
 
+        @if ($hasTagCategories)
+            <div class="space-y-3">
+                <div>
+                    <flux:heading size="sm">{{ __('tags.form.heading') }}</flux:heading>
+                    <flux:text size="sm">{{ __('tags.form.help') }}</flux:text>
+                </div>
+                <livewire:tags.tag-fields scope="persona" wire:model="tagSelection" wire:key="expert-tags-{{ $formKey }}" />
+            </div>
+        @endif
+
         <x-modal-footer>
             <flux:modal.close>
                 <flux:button variant="filled" class="cursor-pointer">{{ __('common.actions.cancel') }}</flux:button>
