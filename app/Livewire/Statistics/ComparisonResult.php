@@ -118,7 +118,8 @@ final readonly class ComparisonResult
      * series' colour (table, bars, pies: lines of one series are told apart by
      * their label); `lineColor` is what the curve draws: the series' colour
      * when it has one line, otherwise one palette hue per line, since lines
-     * of one colour could not be told apart there.
+     * of one colour could not be told apart there. A line of `each` is named
+     * by its seat, or by its agent where the agent has no seat.
      *
      * @param  list<SeriesResult>  $results
      * @param  list<SeriesColor>  $colors  one per series
@@ -130,10 +131,17 @@ final readonly class ComparisonResult
 
         foreach ($results as $seriesIndex => $result) {
             foreach ($result->lines as $line) {
-                $single = $line->seat === null || $line->key === '';
+                [$label, $short] = match (true) {
+                    $line->key === '' => [$result->label, $result->label],
+                    $line->seat === null => [__('comparisons.line_with_name', ['label' => $result->label, 'name' => $line->name]), (string) $line->name],
+                    default => [
+                        __('comparisons.line_with_seat', ['label' => $result->label, 'seat' => $line->seat]),
+                        __('comparisons.results.seat', ['seat' => $line->seat]),
+                    ],
+                };
                 $lines[] = [
-                    'label' => $single ? $result->label : __('comparisons.line_with_seat', ['label' => $result->label, 'seat' => $line->seat]),
-                    'short' => $single ? $result->label : __('comparisons.results.seat', ['seat' => $line->seat]),
+                    'label' => $label,
+                    'short' => $short,
                     'color' => $colors[$seriesIndex],
                     'lineColor' => count($result->lines) === 1
                         ? $colors[$seriesIndex]

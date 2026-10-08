@@ -6,7 +6,8 @@ namespace App\Discussion\Values;
 final readonly class SeriesLine
 {
     /**
-     * @param  string  $key  '' for a single line, 'seat-N' for the lines of `each`
+     * @param  string  $key  '' for a single line, 'seat-N' (or 'expert-N' without a seat) for the lines of `each`
+     * @param  ?string  $name  the agent's name for a line without a seat
      * @param  list<ProjectValue>  $values
      * @param  list<TrajectoryMean>  $curve
      */
@@ -15,6 +16,7 @@ final readonly class SeriesLine
         public ?int $seat,
         public array $values,
         public array $curve = [],
+        public ?string $name = null,
     ) {}
 
     public function n(): int

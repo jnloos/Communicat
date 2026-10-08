@@ -120,6 +120,7 @@ return [
     ],
 
     'line_with_seat' => ':label · Sitz :seat',
+    'line_with_name' => ':label · :name',
 
     'results' => [
         'heading' => 'Ergebnis',

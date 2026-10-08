@@ -7,7 +7,7 @@ use App\Discussion\Values\Metric;
 use App\Discussion\Values\ShareReport;
 use App\Models\Project;
 
-/** Every agent on its own: one line per seat. */
+/** Every agent on its own: one line per seat, or per agent for one who has left the project. */
 final class EachReference implements AgentReference
 {
     public const TYPE = 'each';
@@ -27,8 +27,9 @@ final class EachReference implements AgentReference
         $groups = [];
 
         foreach ($report->speakers as $speaker) {
-            $key = $speaker->seat === null ? "expert-{$speaker->expertId}" : "seat-{$speaker->seat}";
-            $groups[] = new AgentGroup($key, [$speaker->expertId], $speaker->seat);
+            $groups[] = $speaker->seat === null
+                ? new AgentGroup("expert-{$speaker->expertId}", [$speaker->expertId], null, $speaker->name)
+                : new AgentGroup("seat-{$speaker->seat}", [$speaker->expertId], $speaker->seat);
         }
 
         return $groups;
