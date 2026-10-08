@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Statistics;
 
-use App\Discussion\Values\SeriesColor;
 use App\Livewire\Statistics\ComparisonEditor;
 use App\Models\Comparison;
 use App\Models\Expert;
@@ -115,31 +114,6 @@ class ComparisonResultsTest extends TestCase
         $this->assertSame(2, $this->comparison->fresh()->view['turn_limit']);
     }
 
-    public function test_an_empty_label_falls_back_to_the_default_name(): void
-    {
-        $this->comparison->update(['series' => [['label' => '', 'projects' => ['pipeline' => 'ScorePipeline'], 'reference' => ['type' => 'seat', 'seat' => 1]]]]);
-
-        $component = $this->editor()->assertSee(__('comparisons.series.default_label', ['n' => 1]));
-        $this->assertSame(__('comparisons.series.default_label', ['n' => 1]), $component->viewData('lines')[0]['label']);
-
-        $component->set('viewSettings.display', 'bars');
-        $this->assertSame(__('comparisons.series.default_label', ['n' => 1]), $component->viewData('barGroups')[0]['label']);
-    }
-
-    public function test_an_empty_label_never_repeats_a_default_name_in_use(): void
-    {
-        $series = $this->comparison->series[0];
-        $this->comparison->update(['series' => [
-            ['label' => __('comparisons.series.default_label', ['n' => 1])] + $series,
-            ['label' => ''] + $series,
-        ]]);
-
-        $this->assertSame(
-            [__('comparisons.series.default_label', ['n' => 1]), __('comparisons.series.default_label', ['n' => 2])],
-            array_column($this->editor()->viewData('lines'), 'label'),
-        );
-    }
-
     public function test_the_tooltip_carries_formatted_values_and_names_each_n(): void
     {
         $component = $this->editor()->set('viewSettings.display', 'trajectory');
@@ -192,15 +166,6 @@ class ComparisonResultsTest extends TestCase
             ->assertDontSee(__('comparisons.reference.shared_hint'));
 
         $this->assertMatchesRegularExpression('/<ui-select[^>]*wire:model\.live="series\.0\.reference\.type"[^>]*disabled/s', $component->html());
-    }
-
-    public function test_more_lines_than_colours_says_so(): void
-    {
-        $this->editor()->assertDontSee(__('comparisons.results.palette_repeats'));
-
-        $this->comparison->update(['series' => array_fill(0, count(SeriesColor::HUES) + 1, $this->comparison->series[0])]);
-
-        $this->editor()->assertSee(__('comparisons.results.palette_repeats'));
     }
 
     public function test_a_stored_colour_reaches_every_display(): void

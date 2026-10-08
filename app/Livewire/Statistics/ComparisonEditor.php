@@ -3,24 +3,18 @@
 namespace App\Livewire\Statistics;
 
 use App\Discussion\Metrics\References\AgentReferences;
-use App\Discussion\Metrics\SeriesProjects;
-use App\Discussion\Metrics\SeriesStatistics;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Values\ComparisonDisplay;
 use App\Discussion\Values\ComparisonView;
 use App\Discussion\Values\Metric;
 use App\Discussion\Values\ModelConfig;
-use App\Discussion\Values\SeriesColor;
 use App\Discussion\Values\SeriesDefinition;
-use App\Discussion\Values\SeriesLine;
-use App\Discussion\Values\SeriesResult;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Comparison;
 use App\Models\Expert;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
-use Illuminate\Support\Collection;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -54,17 +48,16 @@ class ComparisonEditor extends Component
     #[Locked]
     public int $droppedTagValues = 0;
 
+    /** The comparison of this request; not a property Livewire keeps between requests. */
+    private ?Comparison $loaded = null;
+
     public function mount(int $comparisonId): void
     {
         $comparison = $this->comparison($comparisonId);
         $definitions = $comparison->seriesDefinitions();
 
-        // Ids only: a template's unknown tag names are no deletion. An id 0 was
-        // the placeholder of older template comparisons, never a real value.
-        $named = array_values(array_filter(
-            array_unique(array_merge([], ...array_map(fn (SeriesDefinition $d) => $d->tagValueIds(), $definitions))),
-            fn (int $id) => $id > 0,
-        ));
+        // Ids only: a template's unknown tag names are no deletion.
+        $named = array_values(array_unique(array_merge([], ...array_map(fn (SeriesDefinition $d) => $d->tagValueIds(), $definitions))));
         $existing = TagValue::whereKey($named)->pluck('id')->map(fn ($id) => (int) $id)->all();
         $missing = array_values(array_diff($named, $existing));
 
@@ -83,14 +76,14 @@ class ComparisonEditor extends Component
 
     public function addSeries(): void
     {
-        $this->series[] = (new SeriesDefinition($this->defaultLabel($this->definitions())))->toArray();
+        $this->series[] = (new SeriesDefinition(SeriesLabels::next($this->definitions())))->toArray();
         $this->addedSeries = array_key_last($this->series);
         $this->persist();
     }
 
     public function confirmRemoveSeries(int $index): void
     {
-        $definition = $this->withDefaultLabels($this->definitions())[$index] ?? null;
+        $definition = SeriesLabels::withDefaults($this->definitions())[$index] ?? null;
 
         if ($definition === null) {
             return;
@@ -136,53 +129,47 @@ class ComparisonEditor extends Component
         return SeriesDefinition::listFrom($this->series);
     }
 
-    /** Through the user's own comparisons: someone else's does not exist here. */
+    /**
+     * Through the user's own comparisons: someone else's does not exist here.
+     * Loaded once per request, so saving and rendering share one query.
+     */
     private function comparison(int $comparisonId): Comparison
     {
-        return auth()->user()->comparisons()->findOrFail($comparisonId);
+        if ($this->loaded?->id !== $comparisonId) {
+            $this->loaded = auth()->user()->comparisons()->findOrFail($comparisonId);
+        }
+
+        return $this->loaded;
     }
 
     public function render(): mixed
     {
         $definitions = $this->definitions();
-        $labelled = $this->withDefaultLabels($definitions);
-        $view = ComparisonView::fromArray($this->viewSettings);
-        $matches = array_map(fn (SeriesDefinition $d) => app(SeriesProjects::class)->for(auth()->user(), $d), $definitions);
-        $results = array_map(
-            fn (SeriesDefinition $d, $projects) => app(SeriesStatistics::class)->compute($d, $view, $projects),
-            $labelled,
-            $matches,
-        );
-        $colors = SeriesColor::assign(array_map(fn (SeriesDefinition $d) => $d->color, $definitions));
-        $lines = $this->displayLines($results, $colors);
-        $charts = new ResultCharts($lines, $results, $view->metric);
-        // The curve colours each line, every other display each series.
-        $drawn = array_map('strval', $view->display === ComparisonDisplay::Trajectory ? array_column($lines, 'lineColor') : $colors);
+        $pipelines = app(PipelineRegistry::class)->options();
+        $models = ModelConfig::options();
+        $result = ComparisonResult::compute(auth()->user(), $definitions, ComparisonView::fromArray($this->viewSettings), $pipelines, $models);
 
         return view('livewire.statistics.comparison-editor', [
             'name' => $this->comparison($this->comparisonId)->name,
             'definitions' => $definitions,
-            'emptiedSeries' => $this->emptiedSeries($labelled),
-            'unresolvedSeries' => array_values(array_map(
-                fn (SeriesDefinition $d) => $d->label,
-                array_filter($labelled, fn (SeriesDefinition $d) => $d->hasUnresolvedTags()),
-            )),
-            'matches' => $matches,
-            'results' => $results,
-            'lines' => $lines,
-            'seriesColors' => $colors,
-            'summaries' => $this->summaries($labelled, $matches),
+            'emptiedSeries' => $result->emptiedSeries,
+            'unresolvedSeries' => $result->unresolvedSeries,
+            'matches' => $result->matches,
+            'results' => $result->results,
+            'lines' => $result->lines,
+            'seriesColors' => $result->colors,
+            'summaries' => $result->summaries,
             'openCards' => $this->openCards(count($definitions)),
-            ...$this->chartData($view->display, $charts),
-            'paletteRepeats' => count(array_unique($drawn)) < count($drawn),
+            ...$result->chartData(),
+            'paletteRepeats' => $result->paletteRepeats(),
             'rollingWindow' => (int) config('discussion.share_window'),
-            'comparisonView' => $view,
+            'comparisonView' => $result->view,
             'metrics' => Metric::cases(),
             'displays' => ComparisonDisplay::cases(),
             'projectCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
             'personaCategories' => TagCategory::ofScope(TagScope::Persona)->with('values')->get(),
-            'pipelines' => app(PipelineRegistry::class)->options(),
-            'models' => ModelConfig::options(),
+            'pipelines' => $pipelines,
+            'models' => $models,
             'expertNames' => Expert::query()->distinct()->orderBy('name')->pluck('name'),
             'referenceTypes' => array_keys(AgentReferences::TYPES),
         ]);
@@ -198,135 +185,5 @@ class ComparisonEditor extends Component
     private function openCards(int $count): array
     {
         return array_map(fn (int $index) => $count <= 3 || $index === $this->addedSeries, $count === 0 ? [] : range(0, $count - 1));
-    }
-
-    /**
-     * @param  list<SeriesDefinition>  $definitions  carrying their display labels
-     * @param  list<Collection>  $matches
-     * @return list<string>
-     */
-    private function summaries(array $definitions, array $matches): array
-    {
-        $ids = array_merge([], ...array_map(fn (SeriesDefinition $d) => $d->tagValueIds(), $definitions));
-        $tagLabels = TagValue::with('category')->whereKey($ids)->get()->mapWithKeys(fn (TagValue $v) => [$v->id => $v->fullLabel()])->all();
-        $summary = new SeriesSummary($tagLabels, app(PipelineRegistry::class)->options(), ModelConfig::options());
-
-        return array_map(fn (SeriesDefinition $d, $projects) => $summary->of($d, $projects->count()), $definitions, $matches);
-    }
-
-    /**
-     * What the shown display draws, and nothing for the others.
-     *
-     * @return array<string, mixed>
-     */
-    private function chartData(ComparisonDisplay $display, ResultCharts $charts): array
-    {
-        $none = ['barGroups' => null, 'barScale' => null, 'barTicks' => null, 'equalShare' => null, 'pies' => null, 'trajectoryRows' => null];
-
-        return match ($display) {
-            ComparisonDisplay::Table => [],
-            ComparisonDisplay::Bars => [
-                'barGroups' => $charts->barGroups(),
-                'barScale' => $charts->barScale(),
-                'barTicks' => $charts->barTicks(),
-                'equalShare' => $charts->equalShare(),
-            ],
-            ComparisonDisplay::Pie => ['pies' => $charts->pies(), 'equalShare' => $charts->equalShare()],
-            ComparisonDisplay::Trajectory => ['trajectoryRows' => $charts->trajectoryRows()],
-        } + $none;
-    }
-
-    /**
-     * Series whose project filter names a category none of whose chosen values
-     * exists any more. They match no run (never all of them), and the notice
-     * says which ones.
-     *
-     * @param  list<SeriesDefinition>  $definitions  already carrying their display labels
-     * @return list<string>
-     */
-    private function emptiedSeries(array $definitions): array
-    {
-        $named = array_merge([], ...array_map(fn (SeriesDefinition $d) => $d->projectTags->valueIds(), $definitions));
-        $existing = TagValue::whereKey($named)->pluck('id')->map(fn ($id) => (int) $id)->all();
-
-        return array_values(array_map(
-            fn (SeriesDefinition $d) => $d->label,
-            array_filter($definitions, fn (SeriesDefinition $d) => $d->projectTags->isUnsatisfiable($existing)),
-        ));
-    }
-
-    /**
-     * A label may be stored empty; the result then shows the next free default
-     * name, so no legend, row or tooltip renders blank.
-     *
-     * @param  list<SeriesDefinition>  $definitions
-     * @return list<SeriesDefinition>
-     */
-    private function withDefaultLabels(array $definitions): array
-    {
-        $labelled = [];
-
-        foreach ($definitions as $definition) {
-            $labelled[] = $definition->label === ''
-                ? $definition->withLabel($this->defaultLabel([...$definitions, ...$labelled]))
-                : $definition;
-        }
-
-        return $labelled;
-    }
-
-    /**
-     * "Series N" with N one above the highest default number in use, so a
-     * removal never leads to two series of the same name.
-     *
-     * @param  list<SeriesDefinition>  $definitions
-     */
-    private function defaultLabel(array $definitions): string
-    {
-        $placeholder = '__N__';
-        $pattern = '/^'.str_replace(preg_quote($placeholder, '/'), '(\d+)', preg_quote(__('comparisons.series.default_label', ['n' => $placeholder]), '/')).'$/u';
-        $highest = 0;
-
-        foreach ($definitions as $definition) {
-            if (preg_match($pattern, $definition->label, $match) === 1) {
-                $highest = max($highest, (int) $match[1]);
-            }
-        }
-
-        return __('comparisons.series.default_label', ['n' => $highest + 1]);
-    }
-
-    /**
-     * Every line of every series, flat and in series order. `color` is the
-     * series' colour (table, bars, pies: lines of one series are told apart by
-     * their label); `lineColor` is what the curve draws: the series' colour
-     * when it has one line, otherwise one palette hue per line, since lines
-     * of one colour could not be told apart there.
-     *
-     * @param  list<SeriesResult>  $results
-     * @param  list<SeriesColor>  $colors  one per series
-     * @return list<array{label: string, short: string, color: SeriesColor, lineColor: SeriesColor, series: int, line: SeriesLine}>
-     */
-    private function displayLines(array $results, array $colors): array
-    {
-        $lines = [];
-
-        foreach ($results as $seriesIndex => $result) {
-            foreach ($result->lines as $line) {
-                $single = $line->seat === null || $line->key === '';
-                $lines[] = [
-                    'label' => $single ? $result->label : __('comparisons.line_with_seat', ['label' => $result->label, 'seat' => $line->seat]),
-                    'short' => $single ? $result->label : __('comparisons.results.seat', ['seat' => $line->seat]),
-                    'color' => $colors[$seriesIndex],
-                    'lineColor' => count($result->lines) === 1
-                        ? $colors[$seriesIndex]
-                        : SeriesColor::of(SeriesColor::HUES[count($lines) % count(SeriesColor::HUES)]),
-                    'series' => $seriesIndex,
-                    'line' => $line,
-                ];
-            }
-        }
-
-        return $lines;
     }
 }
