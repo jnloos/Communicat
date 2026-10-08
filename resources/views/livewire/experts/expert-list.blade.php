@@ -40,7 +40,7 @@
                     >
                         @if ($expert->tagValues->isNotEmpty())
                             <x-slot:badges>
-                                <x-tags.badges :values="$expert->tagValues" />
+                                <x-tags.badges :values="$expert->tagValues" class="justify-end" />
                             </x-slot:badges>
                         @endif
                     </x-contributors.contributors-card>

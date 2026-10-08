@@ -7,6 +7,7 @@ use App\Discussion\Values\ModelConfig;
 use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\TagScope;
+use App\Models\TagValue;
 use App\Services\ProjectTransfer\ProjectImporter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -128,6 +129,7 @@ class CreateProject extends Component
             'providers' => ModelConfig::providers(),
             'models' => ModelConfig::optionsFor($this->provider),
             'hasTagCategories' => TagCategory::ofScope(TagScope::Project)->exists(),
+            'chosenTags' => TagValue::chosenIn(TagScope::Project, $this->tagSelection),
         ]);
     }
 }

@@ -24,6 +24,7 @@ return [
     'form' => [
         'heading' => 'Tags',
         'help' => 'Nur für die Auswertung. Die Modelle sehen sie nie.',
+        'none_set' => 'Nichts gesetzt',
     ],
 
     'fields' => [

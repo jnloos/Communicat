@@ -9,6 +9,7 @@ use App\Models\JobLog;
 use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\TagScope;
+use App\Models\TagValue;
 use Flux\Flux;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
@@ -186,6 +187,7 @@ class EditProject extends Component
             'providers' => ModelConfig::providers(),
             'models' => ModelConfig::optionsFor($this->provider),
             'hasTagCategories' => TagCategory::ofScope(TagScope::Project)->exists(),
+            'chosenTags' => TagValue::chosenIn(TagScope::Project, $this->tagSelection),
             'savedTags' => Project::findOrFail($this->forProjectId)->tagValues()->with('category')->get(),
         ]);
     }

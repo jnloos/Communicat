@@ -26,6 +26,12 @@
                 <div class="line-clamp-2 text-sm text-zinc-500 dark:text-zinc-400">{{ $role }}</div>
             </div>
 
+            {{-- Tags sit in the header row, beside name and role, so the card's
+                 bottom does not jump between cards with and without them. --}}
+            @isset($badges)
+                <div class="flex max-w-[45%] shrink-0 justify-end self-start">{{ $badges }}</div>
+            @endisset
+
             @if ($selectable)
                 @if ($selected)
                     <flux:icon.check-circle variant="solid" class="size-6 shrink-0 text-accent" aria-hidden="true" />
@@ -38,9 +44,5 @@
         @if (filled($description))
             <p class="mt-3 text-sm leading-relaxed text-zinc-500 dark:text-zinc-400">{{ $description }}</p>
         @endif
-
-        @isset($badges)
-            <div class="mt-3">{{ $badges }}</div>
-        @endisset
     </flux:card>
 </button>

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\HasPosition;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,6 +23,48 @@ class TagValue extends Model
     public function assignments(): HasMany
     {
         return $this->hasMany(Taggable::class);
+    }
+
+    /**
+     * What a badge shows. A yes/no category says nothing through its value, so
+     * "true" shows the category's name ("title holder") and "false" shows no
+     * badge at all (null); any other value shows itself. Needs the category
+     * loaded.
+     */
+    public function badgeLabel(): ?string
+    {
+        return match (strtolower(trim($this->name))) {
+            'true' => $this->category->name,
+            'false' => null,
+            default => $this->name,
+        };
+    }
+
+    /** "category: value", for tooltips where the badge alone would be ambiguous. */
+    public function fullLabel(): string
+    {
+        return "{$this->category->name}: {$this->name}";
+    }
+
+    /**
+     * The values a form's selection names, with their category, for showing
+     * that selection; ids of other scopes or that no longer exist drop out.
+     *
+     * @param  array<int|string, int|string|null>  $selection  category id => value id
+     * @return Collection<int, TagValue>
+     */
+    public static function chosenIn(TagScope $scope, array $selection): Collection
+    {
+        $ids = array_values(array_filter($selection, 'is_numeric'));
+
+        if ($ids === []) {
+            return new Collection;
+        }
+
+        return static::whereKey($ids)
+            ->whereHas('category', fn (Builder $query) => $query->where('scope', $scope->value))
+            ->with('category')
+            ->get();
     }
 
     protected function siblings(): Builder

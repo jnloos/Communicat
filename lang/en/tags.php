@@ -24,6 +24,7 @@ return [
     'form' => [
         'heading' => 'Tags',
         'help' => 'For the evaluation only. The models never see them.',
+        'none_set' => 'None set',
     ],
 
     'fields' => [

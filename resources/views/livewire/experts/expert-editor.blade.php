@@ -63,13 +63,9 @@
         />
 
         @if ($hasTagCategories)
-            <div class="space-y-3">
-                <div>
-                    <flux:heading size="sm">{{ __('tags.form.heading') }}</flux:heading>
-                    <flux:text size="sm">{{ __('tags.form.help') }}</flux:text>
-                </div>
+            <flux:fieldset :legend="__('tags.form.heading')" :description="__('tags.form.help')">
                 <livewire:tags.tag-fields scope="persona" wire:model="tagSelection" wire:key="expert-tags-{{ $formKey }}" />
-            </div>
+            </flux:fieldset>
         @endif
 
         <x-modal-footer>

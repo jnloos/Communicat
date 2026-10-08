@@ -51,6 +51,15 @@ class TagFieldsTest extends TestCase
         $component->assertSee('control')->assertDontSee('weiblich');
     }
 
+    public function test_category_names_are_capitalised_as_labels_but_stay_as_stored(): void
+    {
+        Livewire::test(TagFields::class, ['scope' => 'project'])
+            ->assertSee('Condition')
+            ->assertDontSee('condition');
+
+        $this->assertSame('condition', $this->condition->fresh()->name);
+    }
+
     public function test_it_renders_nothing_without_categories(): void
     {
         TagCategory::query()->delete();
@@ -134,7 +143,39 @@ class TagFieldsTest extends TestCase
         $this->actingAs(User::factory()->create());
         Expert::factory()->create(['name' => 'Ada'])->setTag($this->gender, $this->female);
 
-        Livewire::test(ExpertList::class)->assertSee('weiblich')->assertSee('Geschlecht:');
+        Livewire::test(ExpertList::class)
+            ->assertSee('weiblich')
+            ->assertSeeHtml('title="Geschlecht: weiblich"')
+            ->assertDontSeeHtml('text-zinc-400">Geschlecht:');
+    }
+
+    public function test_a_true_false_category_shows_its_name_for_true_and_nothing_for_false(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $titleHolder = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
+        $true = $titleHolder->values()->create(['name' => 'true']);
+        $false = $titleHolder->values()->create(['name' => 'false']);
+        Expert::factory()->create(['name' => 'Ada'])->setTag($titleHolder, $true);
+        Expert::factory()->create(['name' => 'Bo'])->setTag($titleHolder, $false);
+
+        Livewire::test(ExpertList::class)
+            ->assertSeeHtml('title="title holder: true"')
+            ->assertDontSeeHtml('title="title holder: false"');
+    }
+
+    public function test_the_collapsed_tag_section_shows_the_current_values_or_none_set(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+        $project = Project::factory()->create(['user_id' => $owner->id]);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->assertSee(__('tags.form.none_set'))
+            ->set('tagSelection', [$this->condition->id => (string) $this->status->id])
+            ->assertDontSee(__('tags.form.none_set'))
+            ->assertSeeHtml('title="condition: status"');
+
+        Livewire::test(CreateProject::class)->assertSee(__('tags.form.none_set'));
     }
 
     public function test_a_forged_tag_value_leaves_no_half_created_project_behind(): void

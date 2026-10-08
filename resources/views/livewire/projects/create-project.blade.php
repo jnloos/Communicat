@@ -61,7 +61,7 @@
                     </flux:accordion.content>
                 </flux:accordion.item>
                 @if ($hasTagCategories)
-                    <x-tags.project-accordion-item />
+                    <x-tags.project-accordion-item :values="$chosenTags" />
                 @endif
             </flux:accordion>
 
