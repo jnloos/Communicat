@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Expert;
+use App\Models\TagCategory;
+use App\Models\TagScope;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
@@ -129,5 +131,27 @@ class InitExpertsCommandTest extends TestCase
             $this->assertSame($configured[$name] ?? [], $roles, "{$name} must carry exactly its configured labels");
             $this->assertCount(1, $personas->pluck('description')->unique(), "{$name}'s descriptions must be identical");
         }
+    }
+
+    public function test_tags_are_assigned_by_name_and_unknown_ones_are_skipped_and_reported(): void
+    {
+        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
+        $title->values()->create(['name' => 'true']);
+        TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition'])->values()->create(['name' => 'status']);
+        $entry = [
+            'scenario' => 'school', 'name' => 'Alex Brandt', 'avatar_url' => '', 'description' => 'Wei\u00dfs.',
+            'roles' => ['Lehrer'],
+            'tags' => ['title holder' => 'true', 'condition' => 'status', 'mood' => 'happy'],
+        ];
+
+        $this->assertSame(0, $this->runOn([$entry]));
+        $this->assertSame(0, $this->runOn([$entry]));
+
+        $expert = Expert::where('name', 'Alex Brandt')->sole();
+        $this->assertSame(['true'], $expert->tagValues()->pluck('name')->all());
+        $this->assertSame(2, TagCategory::count());
+        $output = Artisan::output();
+        $this->assertStringContainsString('mood: happy', $output);
+        $this->assertStringContainsString('condition: status', $output);
     }
 }

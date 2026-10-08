@@ -7,14 +7,15 @@ use App\Models\Expert;
 use App\Models\Message;
 use App\Models\Project;
 use App\Models\Summary;
-use App\Models\TagCategory;
-use App\Models\TagScope;
 use App\Models\User;
+use App\Services\Tags\TagsByName;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class ProjectImporter
 {
+    public function __construct(private readonly TagsByName $tags = new TagsByName) {}
+
     /**
      * Clone a project from an exported payload into a new project owned by $owner.
      *
@@ -54,13 +55,16 @@ class ProjectImporter
 
             $project->save();
             $project->addContributingUser($owner);
-            $skippedTags = $this->restoreTags($project, $data['tags'] ?? []);
+            $skippedTags = $this->tags->assign($project, $data['tags'] ?? []);
 
             foreach ($data['experts'] ?? [] as $exported) {
                 $expert = Expert::find((int) ($exported['id'] ?? 0));
 
                 if ($expert !== null) {
                     $project->addContributingExpert($expert);
+                    // Persona tags fill gaps only: the expert is shared, so a
+                    // value someone set here must not be overwritten by a file.
+                    $skippedTags = [...$skippedTags, ...$this->tags->assign($expert, $exported['tags'] ?? [], overwrite: false)];
                 }
             }
 
@@ -116,44 +120,6 @@ class ProjectImporter
 
             return ['project' => $project, 'missing_experts' => $missing, 'skipped_tags' => $skippedTags];
         });
-    }
-
-    /**
-     * Assigns the exported project tags by name. A category or value that does
-     * not exist here is skipped and reported, never created: the tag set is
-     * curated in the settings, not grown by whatever a file carries.
-     *
-     * @return list<string> "category: value" for every pair that was skipped
-     */
-    private function restoreTags(Project $project, mixed $tags): array
-    {
-        if (! is_array($tags)) {
-            return [];
-        }
-
-        $categories = TagCategory::ofScope(TagScope::Project)->with('values')->get()->keyBy('name');
-        $skipped = [];
-
-        foreach ($tags as $categoryName => $valueName) {
-            if (! is_scalar($valueName)) {
-                $skipped[] = (string) $categoryName;
-
-                continue;
-            }
-
-            $category = $categories->get((string) $categoryName);
-            $value = $category?->values->firstWhere('name', (string) $valueName);
-
-            if ($value === null) {
-                $skipped[] = "{$categoryName}: {$valueName}";
-
-                continue;
-            }
-
-            $project->setTag($category, $value);
-        }
-
-        return $skipped;
     }
 
     private function knownPipeline(?string $name): string

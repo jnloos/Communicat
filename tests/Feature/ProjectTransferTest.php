@@ -202,7 +202,7 @@ class ProjectTransferTest extends TestCase
         $project->setTag($condition, $status);
 
         $this->assertSame(['condition' => 'status'], (new ProjectExport)->toArray($project->fresh())['tags']);
-        $this->assertSame(9, (new ProjectExport)->toArray($project->fresh())['schema_version']);
+        $this->assertSame(10, (new ProjectExport)->toArray($project->fresh())['schema_version']);
     }
 
     public function test_a_round_trip_keeps_the_tags_by_name(): void
@@ -247,6 +247,82 @@ class ProjectTransferTest extends TestCase
 
         $this->assertSame(['condition'], $result['skipped_tags']);
         $this->assertSame([], $result['project']->fresh()->tagSelection());
+    }
+
+    public function test_the_export_names_each_experts_tags(): void
+    {
+        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
+        $yes = $title->values()->create(['name' => 'true']);
+        [$alice, $bob] = Expert::factory()->count(2)->create()->all();
+        $alice->setTag($title, $yes);
+        $project = Project::factory()->create();
+        $project->addContributingExpert($alice);
+        $project->addContributingExpert($bob);
+
+        $experts = (new ProjectExport)->toArray($project->fresh())['experts'];
+
+        $this->assertSame(['title holder' => 'true'], $experts[0]['tags']);
+        $this->assertSame([], $experts[1]['tags']);
+    }
+
+    public function test_persona_tags_fill_gaps_but_never_overwrite_and_unknown_ones_are_reported(): void
+    {
+        $owner = User::factory()->create();
+        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
+        $yes = $title->values()->create(['name' => 'true']);
+        $no = $title->values()->create(['name' => 'false']);
+        $seniority = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'seniority']);
+        $senior = $seniority->values()->create(['name' => 'senior']);
+        [$fresh, $held] = Expert::factory()->count(2)->create()->all();
+        $held->setTag($title, $no);
+
+        $result = app(ProjectImporter::class)->import([
+            'project' => ['title' => 'Alt', 'description' => 'x'],
+            'experts' => [
+                ['id' => $fresh->id, 'tags' => ['title holder' => 'true', 'seniority' => 'senior', 'mood' => 'happy']],
+                ['id' => $held->id, 'tags' => ['title holder' => 'true', 'seniority' => 'senior']],
+            ],
+        ], $owner);
+
+        $this->assertSame($yes->id, $fresh->fresh()->tagFor($title)?->id);
+        $this->assertSame($senior->id, $fresh->fresh()->tagFor($seniority)?->id);
+        $this->assertSame($no->id, $held->fresh()->tagFor($title)?->id);
+        $this->assertSame($senior->id, $held->fresh()->tagFor($seniority)?->id);
+        $this->assertSame(['mood: happy'], $result['skipped_tags']);
+        $this->assertSame(2, TagCategory::count());
+    }
+
+    public function test_a_persona_round_trip_keeps_the_tags(): void
+    {
+        $owner = User::factory()->create();
+        $title = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
+        $yes = $title->values()->create(['name' => 'true']);
+        $expert = Expert::factory()->create();
+        $expert->setTag($title, $yes);
+        $source = Project::factory()->create();
+        $source->addContributingExpert($expert);
+        $data = (new ProjectExport)->toArray($source->fresh());
+        $expert->setTag($title, null);
+
+        app(ProjectImporter::class)->import($data, $owner);
+
+        $this->assertSame('true', $expert->fresh()->tagFor($title)?->name);
+    }
+
+    public function test_a_file_from_before_persona_tags_still_imports(): void
+    {
+        $owner = User::factory()->create();
+        $expert = Expert::factory()->create();
+
+        $result = app(ProjectImporter::class)->import([
+            'schema_version' => 9,
+            'project' => ['title' => 'Alt', 'description' => 'x'],
+            'tags' => [],
+            'experts' => [['id' => $expert->id, 'name' => $expert->name]],
+        ], $owner);
+
+        $this->assertSame([$expert->id], $result['project']->contributingExperts()->pluck('id')->all());
+        $this->assertSame([], $result['skipped_tags']);
     }
 
     public function test_the_import_notices_show_on_the_page_it_leads_to(): void

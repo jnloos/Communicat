@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Expert;
+use App\Services\Tags\TagsByName;
 use Illuminate\Console\Command;
 
 class InitExperts extends Command
@@ -24,7 +25,7 @@ class InitExperts extends Command
     /**
      * Execute the console command.
      */
-    public function handle(): int
+    public function handle(TagsByName $tags): int
     {
         $file = $this->option('file');
 
@@ -45,6 +46,7 @@ class InitExperts extends Command
 
         $created = 0;
         $updated = 0;
+        $skipped = [];
 
         foreach ($experts as $expert) {
             $avatarUrl = ! empty($expert['avatar_url']) ? asset($expert['avatar_url']) : null;
@@ -67,10 +69,18 @@ class InitExperts extends Command
                 );
 
                 $model->wasRecentlyCreated ? $created++ : $updated++;
+
+                // Optional {"category": "value"}; only existing persona categories
+                // and values are used, and a value already set stays.
+                $skipped = [...$skipped, ...$tags->assign($model, $expert['tags'] ?? [], overwrite: false)];
             }
         }
 
         $this->info("Experts initialized: {$created} created, {$updated} updated.");
+
+        foreach (array_unique($skipped) as $pair) {
+            $this->warn("Tag does not exist and was skipped: {$pair}");
+        }
 
         return 0;
     }
