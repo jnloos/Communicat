@@ -24,9 +24,24 @@ class SeriesDefinitionTest extends TestCase
             'label' => 'Titelträger',
             'projects' => ['tags' => [2 => [5, 6]], 'pipeline' => null, 'model' => 'openai-gpt-5-mini'],
             'reference' => ['type' => 'persona_tags', 'tags' => [9 => [11]]],
+            'unresolved_tags' => [],
         ], $series->toArray());
         $this->assertInstanceOf(PersonaTagsReference::class, $series->reference);
         $this->assertEqualsCanonicalizing([5, 6, 11], $series->tagValueIds());
+    }
+
+    public function test_unresolved_template_tags_are_kept_by_name_and_removable(): void
+    {
+        $series = SeriesDefinition::fromArray([
+            'label' => 'x',
+            'unresolved_tags' => [['category' => ' condition ', 'value' => 'status'], ['category' => '', 'value' => 'x'], 'junk', ['category' => 'condition', 'value' => 'control']],
+        ]);
+
+        $this->assertSame([['category' => 'condition', 'value' => 'status'], ['category' => 'condition', 'value' => 'control']], $series->unresolvedTags);
+        $this->assertSame(['Condition: status', 'Condition: control'], $series->unresolvedLabels());
+        $this->assertSame([], $series->tagValueIds(), 'a name is no id');
+        $this->assertSame([['category' => 'condition', 'value' => 'control']], $series->withoutUnresolvedTag(0)->unresolvedTags);
+        $this->assertSame($series->unresolvedTags, $series->withLabel('y')->withoutTagValues([1])->unresolvedTags);
     }
 
     public function test_deleted_tag_values_drop_out_of_project_and_persona_filters(): void

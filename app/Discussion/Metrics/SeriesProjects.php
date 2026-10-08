@@ -16,6 +16,8 @@ class SeriesProjects
         return Project::query()
             ->accessibleBy($user)
             ->whereTagFilter($series->projectTags)
+            // A tag this database does not know can match no run — never all of them.
+            ->when($series->hasUnresolvedTags(), fn ($query) => $query->whereRaw('1 = 0'))
             ->when($series->pipeline !== null, fn ($query) => $query->where('pipeline', $series->pipeline))
             ->when($series->model !== null, fn ($query) => $query->where('model', $series->model))
             ->orderBy('id')

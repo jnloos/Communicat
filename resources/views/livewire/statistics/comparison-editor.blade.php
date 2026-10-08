@@ -22,7 +22,7 @@
         </flux:dropdown>
     </div>
 
-    @if ($droppedTagValues > 0 || $emptiedSeries !== [])
+    @if ($droppedTagValues > 0 || $emptiedSeries !== [] || $unresolvedSeries !== [])
         <flux:callout variant="warning" icon="exclamation-triangle">
             @if ($droppedTagValues > 0)
                 <flux:callout.heading>{{ trans_choice('comparisons.dropped_tags', $droppedTagValues, ['count' => $droppedTagValues]) }}</flux:callout.heading>
@@ -31,6 +31,13 @@
                 <flux:callout.text>
                     {{ trans_choice('comparisons.emptied_series', count($emptiedSeries), [
                         'labels' => collect($emptiedSeries)->map(fn ($label) => __('comparisons.quoted', ['label' => $label]))->implode(', '),
+                    ]) }}
+                </flux:callout.text>
+            @endif
+            @if ($unresolvedSeries !== [])
+                <flux:callout.text>
+                    {{ trans_choice('comparisons.unresolved_series', count($unresolvedSeries), [
+                        'labels' => collect($unresolvedSeries)->map(fn ($label) => __('comparisons.quoted', ['label' => $label]))->implode(', '),
                     ]) }}
                 </flux:callout.text>
             @endif
@@ -65,6 +72,21 @@
                     {{-- Which runs --}}
                     <div class="space-y-4">
                         <flux:subheading size="sm" class="font-medium">{{ __('comparisons.series.projects') }}</flux:subheading>
+
+                        {{-- A template's tag this database does not know: the series
+                             matches no run while it is here; removing it is the
+                             user's explicit choice to widen. --}}
+                        @if ($definition->hasUnresolvedTags())
+                            <div class="flex flex-wrap gap-1.5">
+                                @foreach ($definition->unresolvedLabels() as $tagIndex => $tagLabel)
+                                    <flux:badge size="sm" color="amber" icon="exclamation-triangle" :title="__('comparisons.series.unresolved')"
+                                        wire:key="series-{{ $index }}-unresolved-{{ $tagIndex }}">
+                                        {{ $tagLabel }}
+                                        <flux:badge.close wire:click="removeUnresolvedTag({{ $index }}, {{ $tagIndex }})" :aria-label="__('comparisons.series.remove_unresolved', ['tag' => $tagLabel])" class="cursor-pointer" />
+                                    </flux:badge>
+                                @endforeach
+                            </div>
+                        @endif
 
                         {{-- One pill group per category: OR within it, AND across
                              categories (TagFilter); no pill picked means any. --}}

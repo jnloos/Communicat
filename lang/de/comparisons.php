@@ -45,6 +45,7 @@ return [
     'dropped_tags' => '{1}Ein Tag-Wert dieses Vergleichs wurde inzwischen gelöscht und ist aus den Filtern herausgefallen.|[2,*]:count Tag-Werte dieses Vergleichs wurden inzwischen gelöscht und sind aus den Filtern herausgefallen.',
 
     'emptied_series' => '{1}Die Reihe :labels filtert nach einer Kategorie, deren gewählte Werte alle gelöscht wurden, und trifft deshalb keinen Lauf.|[2,*]Die Reihen :labels filtern nach einer Kategorie, deren gewählte Werte alle gelöscht wurden, und treffen deshalb keinen Lauf.',
+    'unresolved_series' => '{1}Die Reihe :labels nennt Tags, die es hier nicht gibt, und trifft deshalb keinen Lauf. Entferne sie aus der Reihe oder lösche die Reihe.|[2,*]Die Reihen :labels nennen Tags, die es hier nicht gibt, und treffen deshalb keinen Lauf. Entferne sie aus den Reihen oder lösche die Reihen.',
     'quoted' => '„:label“',
 
     'autosave' => [
@@ -63,6 +64,8 @@ return [
         'any' => 'beliebig',
         'pipeline' => 'Pipeline',
         'model' => 'Modell',
+        'unresolved' => 'Nicht in dieser Datenbank',
+        'remove_unresolved' => ':tag entfernen',
         'matches' => '{0}Kein Projekt passt.|{1}1 Projekt passt|[2,*]:count Projekte passen',
     ],
 
@@ -137,6 +140,7 @@ return [
 
     'templates' => [
         'menu' => 'Aus Vorlage',
+        'unresolved' => 'Einige Tags dieser Vorlage gibt es hier nicht: :tags. Die Reihen, die sie nennen, treffen keinen Lauf, bis du diese Tags entfernst.',
         'series' => ':pipeline · :condition',
         'names' => [
             'turn_share_by_pipeline' => 'Statuseffekt auf den Turn-Anteil je Pipeline',

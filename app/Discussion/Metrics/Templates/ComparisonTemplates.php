@@ -12,6 +12,8 @@ use App\Discussion\Values\Metric;
 use App\Discussion\Values\SeriesDefinition;
 use App\Models\TagCategory;
 use App\Models\TagScope;
+use App\Models\TagValue;
+use Illuminate\Support\Collection;
 
 /**
  * The thesis's standard analyses: does a status title raise the speaking share
@@ -33,13 +35,6 @@ final class ComparisonTemplates
     public const CONDITIONS = ['status', 'control'];
 
     public const TURN_LIMIT = 60;
-
-    /**
-     * Stand-in for a category or value name this database does not know: id 0
-     * never exists, so the series matches nothing instead of silently
-     * dropping the filter and widening to every run.
-     */
-    private const UNKNOWN = 0;
 
     /** @return array<string, ComparisonTemplate> keyed by template key, in menu order */
     public function all(): array
@@ -66,45 +61,68 @@ final class ComparisonTemplates
 
     /**
      * The template's series as a comparison stores them: tag names resolved
-     * to ids of this database, then normalised like any form input.
+     * to ids of this database (ignoring case), then normalised like any form
+     * input. A name this database does not know becomes an unresolved tag of
+     * its series, which then matches no run until the user removes it.
      *
      * @return list<array<string, mixed>>
      */
     public function seriesOf(ComparisonTemplate $template): array
     {
-        return array_map(function (array $series) {
-            $series['projects']['tags'] = $this->idsFor(TagScope::Project, $series['projects']['tags'] ?? []);
+        $categories = [
+            TagScope::Project->value => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
+            TagScope::Persona->value => TagCategory::ofScope(TagScope::Persona)->with('values')->get(),
+        ];
+
+        return array_map(function (array $series) use ($categories) {
+            [$series['projects']['tags'], $unresolved] = $this->resolve($categories[TagScope::Project->value], $series['projects']['tags'] ?? []);
 
             if (($series['reference']['type'] ?? null) === PersonaTagsReference::TYPE) {
-                $series['reference']['tags'] = $this->idsFor(TagScope::Persona, $series['reference']['tags'] ?? []);
+                [$series['reference']['tags'], $unresolvedPersona] = $this->resolve($categories[TagScope::Persona->value], $series['reference']['tags'] ?? []);
+                $unresolved = [...$unresolved, ...$unresolvedPersona];
             }
+
+            $series['unresolved_tags'] = $unresolved;
 
             return SeriesDefinition::fromArray($series)->toArray();
         }, $template->series);
     }
 
     /**
-     * Category name => value names, as category id => value ids. Unknown
-     * names never widen the filter: a category none of whose values exists
-     * stays in it with the id 0, which matches nothing.
+     * Category name => value names, as category id => value ids, plus every
+     * name pair that has no id here. Never a placeholder id: a value that
+     * does not exist cannot sit in a filter, and dropping it silently would
+     * widen the filter.
      *
+     * @param  Collection<int, TagCategory>  $categories  of one scope, values loaded
      * @param  array<string, list<string>>  $names
-     * @return array<int, list<int>>
+     * @return array{0: array<int, list<int>>, 1: list<array{category: string, value: string}>}
      */
-    private function idsFor(TagScope $scope, array $names): array
+    private function resolve(Collection $categories, array $names): array
     {
-        $categories = TagCategory::ofScope($scope)->with('values')->get();
         $ids = [];
+        $unresolved = [];
 
         foreach ($names as $categoryName => $valueNames) {
-            $category = $categories->firstWhere('name', $categoryName);
-            $valueIds = $category === null ? [] : $category->values->whereIn('name', $valueNames)->pluck('id')->map(fn ($id) => (int) $id)->all();
-            $categoryId = $category === null ? self::UNKNOWN : $category->id;
+            $category = $categories->first(fn (TagCategory $c) => self::same($c->name, $categoryName));
 
-            $ids[$categoryId] = $valueIds === [] ? [self::UNKNOWN] : array_values($valueIds);
+            foreach ($valueNames as $valueName) {
+                $value = $category?->values->first(fn (TagValue $v) => self::same($v->name, $valueName));
+
+                if ($value === null) {
+                    $unresolved[] = ['category' => $category->name ?? $categoryName, 'value' => $valueName];
+                } else {
+                    $ids[$category->id][] = (int) $value->id;
+                }
+            }
         }
 
-        return $ids;
+        return [$ids, $unresolved];
+    }
+
+    private static function same(string $a, string $b): bool
+    {
+        return mb_strtolower(trim($a)) === mb_strtolower(trim($b));
     }
 
     /**

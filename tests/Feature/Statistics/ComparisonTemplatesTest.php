@@ -126,12 +126,17 @@ class ComparisonTemplatesTest extends TestCase
         $comparison = $this->createFrom('turn_share_by_pipeline');
         $series = $comparison->seriesDefinitions()[0];
 
-        $this->assertSame([0 => [0]], $series->projectTags->toArray());
+        $this->assertSame([], $series->projectTags->toArray(), 'no placeholder id 0');
+        $this->assertSame([['category' => 'condition', 'value' => 'status']], $series->unresolvedTags);
         $this->assertCount(0, app(SeriesProjects::class)->for($this->user, $series));
 
-        // The editor's existing notice explains it instead of showing an unfiltered result.
+        // The editor names the series and the unknown tag, and reports no deletion.
         Livewire::test(ComparisonEditor::class, ['comparisonId' => $comparison->id])
-            ->assertSee(__('comparisons.quoted', ['label' => 'Score · status']), false);
+            ->assertSet('droppedTagValues', 0)
+            ->assertSee('name tags that do not exist here')
+            ->assertSee(__('comparisons.quoted', ['label' => 'Score · status']), false)
+            ->assertSee('Condition: status')
+            ->assertDontSee(trans_choice('comparisons.dropped_tags', 1));
     }
 
     public function test_a_known_category_with_unknown_values_matches_nothing(): void
@@ -142,8 +147,58 @@ class ComparisonTemplatesTest extends TestCase
 
         $series = $this->createFrom('turn_share_by_pipeline')->seriesDefinitions()[0];
 
-        $this->assertSame([$condition->id => [0]], $series->projectTags->toArray());
+        $this->assertSame([], $series->projectTags->toArray());
+        $this->assertSame([['category' => 'condition', 'value' => 'status']], $series->unresolvedTags);
         $this->assertCount(0, app(SeriesProjects::class)->for($this->user, $series));
+    }
+
+    public function test_tag_names_match_regardless_of_case(): void
+    {
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'Condition']);
+        $status = $condition->values()->create(['name' => 'Status'])->id;
+        $control = $condition->values()->create(['name' => 'CONTROL'])->id;
+
+        $series = $this->createFrom('turn_share_by_pipeline')->seriesDefinitions();
+
+        $this->assertSame([$condition->id => [$status]], $series[0]->projectTags->toArray());
+        $this->assertSame([$condition->id => [$control]], $series[1]->projectTags->toArray());
+        $this->assertSame([], $series[0]->unresolvedTags);
+    }
+
+    public function test_creating_from_a_template_says_once_which_tags_do_not_exist(): void
+    {
+        $page = Livewire::test(StatisticsPage::class)
+            ->call('createFromTemplate', 'every_seat_by_condition')
+            ->assertSee(__('comparisons.templates.unresolved', ['tags' => 'Condition: status, Condition: control']));
+
+        // One-time: opening a comparison (or dismissing it) clears it.
+        $page->call('open', Comparison::latest('id')->first()->id)
+            ->assertDontSee(__('comparisons.templates.unresolved', ['tags' => 'Condition: status, Condition: control']));
+    }
+
+    public function test_no_notice_when_every_template_tag_exists(): void
+    {
+        $this->conditions();
+
+        Livewire::test(StatisticsPage::class)
+            ->call('createFromTemplate', 'every_seat_by_condition')
+            ->assertSet('templateNotice', null);
+    }
+
+    public function test_an_unknown_tag_can_be_removed_from_its_series(): void
+    {
+        Project::factory()->create(['user_id' => $this->user->id, 'pipeline' => 'ScorePipeline']);
+        $comparison = $this->createFrom('turn_share_by_pipeline');
+
+        Livewire::test(ComparisonEditor::class, ['comparisonId' => $comparison->id])
+            ->call('removeUnresolvedTag', 0, 0)
+            ->assertViewHas('unresolvedSeries', fn (array $labels) => ! in_array('Score · status', $labels, true) && in_array('Score · control', $labels, true));
+
+        $series = $comparison->fresh()->seriesDefinitions();
+
+        $this->assertSame([], $series[0]->unresolvedTags);
+        $this->assertCount(1, app(SeriesProjects::class)->for($this->user, $series[0]), 'removing it is the user\'s choice to widen');
+        $this->assertNotSame([], $series[1]->unresolvedTags, 'the other series keep theirs');
     }
 
     public function test_an_unknown_template_does_not_exist(): void

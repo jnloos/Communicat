@@ -60,7 +60,12 @@ class ComparisonEditor extends Component
         $comparison = $this->comparison($comparisonId);
         $definitions = $comparison->seriesDefinitions();
 
-        $named = array_values(array_unique(array_merge([], ...array_map(fn (SeriesDefinition $d) => $d->tagValueIds(), $definitions))));
+        // Ids only: a template's unknown tag names are no deletion. An id 0 was
+        // the placeholder of older template comparisons, never a real value.
+        $named = array_values(array_filter(
+            array_unique(array_merge([], ...array_map(fn (SeriesDefinition $d) => $d->tagValueIds(), $definitions))),
+            fn (int $id) => $id > 0,
+        ));
         $existing = TagValue::whereKey($named)->pluck('id')->map(fn ($id) => (int) $id)->all();
         $missing = array_values(array_diff($named, $existing));
 
@@ -106,6 +111,19 @@ class ComparisonEditor extends Component
         $this->persist();
     }
 
+    /** Removes one tag name the series' template knew and this database does not. */
+    public function removeUnresolvedTag(int $index, int $tag): void
+    {
+        $definition = $this->definitions()[$index] ?? null;
+
+        if ($definition === null) {
+            return;
+        }
+
+        $this->series[$index] = $definition->withoutUnresolvedTag($tag)->toArray();
+        $this->persist();
+    }
+
     /** Normalises the form state, writes it back so the form shows what is stored, and saves it. */
     private function persist(): void
     {
@@ -145,6 +163,10 @@ class ComparisonEditor extends Component
             'name' => $this->comparison($this->comparisonId)->name,
             'definitions' => $definitions,
             'emptiedSeries' => $this->emptiedSeries($this->withDefaultLabels($definitions)),
+            'unresolvedSeries' => array_values(array_map(
+                fn (SeriesDefinition $d) => $d->label,
+                array_filter($this->withDefaultLabels($definitions), fn (SeriesDefinition $d) => $d->hasUnresolvedTags()),
+            )),
             'matches' => $matches,
             'results' => $results,
             'lines' => $lines,

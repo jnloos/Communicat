@@ -45,6 +45,7 @@ return [
     'dropped_tags' => '{1}A tag value of this comparison has since been deleted and dropped out of its filters.|[2,*]:count tag values of this comparison have since been deleted and dropped out of its filters.',
 
     'emptied_series' => '{1}The series :labels filters by a category whose chosen values have all been deleted, so it matches no run.|[2,*]The series :labels filter by a category whose chosen values have all been deleted, so they match no run.',
+    'unresolved_series' => '{1}The series :labels names tags that do not exist here, so it matches no run. Remove them from the series or delete it.|[2,*]The series :labels name tags that do not exist here, so they match no run. Remove them from the series or delete them.',
     'quoted' => '“:label”',
 
     'autosave' => [
@@ -63,6 +64,8 @@ return [
         'any' => 'any',
         'pipeline' => 'Pipeline',
         'model' => 'Model',
+        'unresolved' => 'Not in this database',
+        'remove_unresolved' => 'Remove :tag',
         'matches' => '{0}No project matches.|{1}1 project matches|[2,*]:count projects match',
     ],
 
@@ -137,6 +140,7 @@ return [
 
     'templates' => [
         'menu' => 'From template',
+        'unresolved' => 'Some tags of this template do not exist here: :tags. The series that use them match no run until you remove those tags.',
         'series' => ':pipeline · :condition',
         'names' => [
             'turn_share_by_pipeline' => 'Status effect on turn share by pipeline',

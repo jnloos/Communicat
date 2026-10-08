@@ -4,6 +4,7 @@ namespace App\Livewire\Statistics;
 
 use App\Discussion\Metrics\Templates\ComparisonTemplates;
 use App\Discussion\Values\ComparisonView;
+use App\Discussion\Values\SeriesDefinition;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Comparison;
 use App\Models\User;
@@ -31,6 +32,9 @@ class StatisticsPage extends Component
 
     public string $name = '';
 
+    /** Said once after a template named tags this database lacks; cleared on the next open. */
+    public ?string $templateNotice = null;
+
     public function mount(): void
     {
         if ($this->comparisonId !== null && $this->user()->comparisons()->find($this->comparisonId) === null) {
@@ -41,6 +45,7 @@ class StatisticsPage extends Component
     public function open(int $comparisonId): void
     {
         $this->comparisonId = $this->own($comparisonId)->id;
+        $this->templateNotice = null;
     }
 
     public function startCreating(): void
@@ -89,13 +94,26 @@ class StatisticsPage extends Component
         $templates = app(ComparisonTemplates::class);
         $template = $templates->find($key) ?? abort(404);
 
+        $series = $templates->seriesOf($template);
         $comparison = $this->user()->comparisons()->create([
             'name' => Str::limit($template->name(), 100, ''),
-            'series' => $templates->seriesOf($template),
+            'series' => $series,
             'view' => $template->view->toArray(),
         ]);
 
         $this->comparisonId = $comparison->id;
+        $this->templateNotice = $this->unresolvedNotice($series);
+    }
+
+    /** @param  list<array<string, mixed>>  $series */
+    private function unresolvedNotice(array $series): ?string
+    {
+        $labels = array_values(array_unique(array_merge([], ...array_map(
+            fn (SeriesDefinition $definition) => $definition->unresolvedLabels(),
+            SeriesDefinition::listFrom($series),
+        ))));
+
+        return $labels === [] ? null : __('comparisons.templates.unresolved', ['tags' => implode(', ', $labels)]);
     }
 
     public function duplicate(int $comparisonId): void

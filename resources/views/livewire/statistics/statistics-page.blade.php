@@ -24,6 +24,15 @@
         </div>
     </div>
 
+    @if ($templateNotice)
+        <flux:callout variant="warning" icon="exclamation-triangle" class="mt-6">
+            <flux:callout.text>{{ $templateNotice }}</flux:callout.text>
+            <x-slot name="controls">
+                <flux:button variant="ghost" size="sm" icon="x-mark" wire:click="$set('templateNotice', null)" :aria-label="__('common.actions.close')" class="cursor-pointer" />
+            </x-slot>
+        </flux:callout>
+    @endif
+
     <div class="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
         <aside class="w-full shrink-0 lg:w-64">
             <x-statistics.section-label class="px-3">{{ __('comparisons.list.heading') }}</x-statistics.section-label>
