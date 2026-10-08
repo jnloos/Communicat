@@ -44,7 +44,7 @@
         <div class="min-w-0 flex-1">
             @if ($current)
                 <flux:heading size="lg" class="mb-4">{{ $current->name }}</flux:heading>
-                {{-- comparison-editor --}}
+                <livewire:statistics.comparison-editor :comparison-id="$current->id" wire:key="comparison-editor-{{ $current->id }}" />
             @else
                 <x-empty-state icon="chart-bar">{{ __('comparisons.none_open') }}</x-empty-state>
             @endif
