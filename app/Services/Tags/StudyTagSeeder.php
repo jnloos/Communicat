@@ -25,7 +25,10 @@ class StudyTagSeeder
 
     public const TITLE_CATEGORY = 'title holder';
 
-    public const TITLE_YES = 'yes';
+    public const TITLE_YES = 'true';
+
+    /** Exists as an allowed value, but nothing is assigned it automatically. */
+    public const TITLE_NO = 'false';
 
     /** "without" first: "with status" is not a substring of it, but the order states the intent. */
     public function conditionFor(string $title): ?string
@@ -108,6 +111,7 @@ class StudyTagSeeder
 
             $titleCategory = $this->category(TagScope::Persona, self::TITLE_CATEGORY);
             $yes = $this->value($titleCategory, self::TITLE_YES);
+            $this->value($titleCategory, self::TITLE_NO);
 
             foreach ($plan->titleHolders as $row) {
                 $row['expert']->setTag($titleCategory, $yes);

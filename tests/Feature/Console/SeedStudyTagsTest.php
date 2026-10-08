@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\Taggable;
 use App\Models\TagScope;
+use App\Models\TagValue;
 use App\Services\Tags\StudyTagSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -61,10 +62,15 @@ class SeedStudyTagsTest extends TestCase
         $this->assertSame('status', $this->tagOf($status, TagScope::Project, 'condition'));
         $this->assertSame('control', $this->tagOf($control, TagScope::Project, 'condition'));
         $this->assertNull($this->tagOf($untitled, TagScope::Project, 'condition'));
-        $this->assertSame('yes', $this->tagOf($ceo, TagScope::Persona, 'title holder'));
+        $this->assertSame('true', $this->tagOf($ceo, TagScope::Persona, 'title holder'));
         $this->assertNull($this->tagOf($neutral, TagScope::Persona, 'title holder'));
         $this->assertSame(2, TagCategory::count());
         $this->assertSame(3, Taggable::count());
+
+        $false = TagValue::where('name', 'false')->sole();
+        $this->assertSame('title holder', $false->category->name);
+        $this->assertSame(0, $false->assignments()->count());
+        $this->assertSame(1, TagValue::where('name', 'true')->count());
     }
 
     public function test_a_title_holder_who_also_sits_in_a_control_cell_is_reported_not_tagged(): void
