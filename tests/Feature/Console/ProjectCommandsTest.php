@@ -251,6 +251,69 @@ class ProjectCommandsTest extends TestCase
             ->assertSuccessful();
     }
 
+    public function test_metrics_writes_the_trajectory_as_csv_one_row_per_turn_and_participant(): void
+    {
+        $project = $this->seatedProject();
+        $this->turn($project, 'Alice', 10);
+        $this->turn($project, 'Bob', 30);
+        $this->turn($project, 'Alice', 20);
+
+        $this->assertSame(0, Artisan::call('project:metrics', [
+            'project' => $project->id, '--trajectory' => true, '--window' => 2, '--format' => 'csv',
+        ]));
+
+        $rows = array_map('str_getcsv', array_filter(explode("\n", Artisan::output())));
+        $header = array_shift($rows);
+        $rows = array_map(fn ($row) => array_combine($header, $row), $rows);
+
+        $this->assertSame(['project_id', 'turn', 'speaker_id', 'expert_id', 'name', 'seat', 'window',
+            'cumulative_turns', 'cumulative_words', 'rolling_turns', 'rolling_words'], $header);
+        $this->assertCount(6, $rows, 'three turns times two participants');
+
+        $aliceAfterThree = collect($rows)->first(fn ($r) => $r['turn'] === '3' && $r['name'] === 'Alice');
+        $this->assertSame((string) $project->id, $aliceAfterThree['project_id']);
+        $this->assertSame('0.666667', $aliceAfterThree['cumulative_turns']);
+        $this->assertSame('0.5', $aliceAfterThree['cumulative_words']);
+        $this->assertSame('0.5', $aliceAfterThree['rolling_turns'], 'the window of two holds Bob and Alice');
+        $this->assertSame('0.4', $aliceAfterThree['rolling_words']);
+        $this->assertSame('2', $aliceAfterThree['window']);
+    }
+
+    public function test_metrics_writes_the_trajectory_as_json(): void
+    {
+        $project = $this->seatedProject();
+        $this->turn($project, 'Alice', 10);
+        $this->turn($project, 'Bob', 30);
+
+        $this->assertSame(0, Artisan::call('project:metrics', [
+            'project' => $project->id, '--trajectory' => true, '--format' => 'json',
+        ]));
+
+        $json = json_decode(Artisan::output(), true, flags: JSON_THROW_ON_ERROR);
+
+        $this->assertSame(20, $json['window'], 'the configured default');
+        $this->assertSame(['Alice', 'Bob'], array_column($json['participants'], 'name'));
+        $this->assertCount(2, $json['points']);
+        $this->assertSame(0.25, $json['points'][1]['shares']['cumulative_words'][(string) $this->experts['Alice']->id]);
+    }
+
+    /** The trajectory is data for a script; a table of 100 turns would help nobody. */
+    public function test_metrics_refuses_the_trajectory_as_a_table(): void
+    {
+        $this->artisan('project:metrics', ['project' => $this->seatedProject()->id, '--trajectory' => true])
+            ->expectsOutputToContain('--format=csv or --format=json')
+            ->assertFailed();
+    }
+
+    public function test_metrics_refuses_a_window_below_one(): void
+    {
+        $this->artisan('project:metrics', [
+            'project' => $this->seatedProject()->id, '--trajectory' => true, '--window' => 0, '--format' => 'csv',
+        ])
+            ->expectsOutputToContain('--window')
+            ->assertFailed();
+    }
+
     // --- project:list ---------------------------------------------------
 
     /**
