@@ -21,7 +21,9 @@
                     <flux:menu.item icon="pencil-square" wire:click="$parent.startRenaming({{ $questionId }})">{{ __('questions.actions.rename') }}</flux:menu.item>
                     @unless ($readOnly)
                         <flux:menu.item icon="document-duplicate" wire:click="$parent.duplicate({{ $questionId }})">{{ __('questions.actions.duplicate') }}</flux:menu.item>
-                        <flux:menu.item icon="rectangle-stack" wire:click="$parent.saveAsTemplate({{ $questionId }})">{{ __('questions.actions.save_as_template') }}</flux:menu.item>
+                        @if ($mayShare)
+                            <flux:menu.item icon="rectangle-stack" wire:click="$parent.saveAsTemplate({{ $questionId }})">{{ __('questions.actions.save_as_template') }}</flux:menu.item>
+                        @endif
                         <flux:menu.separator />
                     @endunless
                     <flux:menu.item variant="danger" icon="trash" wire:click="$parent.confirmDelete({{ $questionId }})">{{ __('questions.actions.delete') }}</flux:menu.item>

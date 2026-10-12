@@ -4,9 +4,12 @@ namespace Tests\Feature\Statistics;
 
 use App\Livewire\Statistics\StatisticsPage;
 use App\Models\Question;
+use App\Models\TagCategory;
+use App\Models\TagScope;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -97,7 +100,7 @@ class StatisticsPageTest extends TestCase
 
     public function test_saving_as_template_keeps_the_question_and_names_it(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['is_admin' => true]);
         $this->actingAs($user);
         $question = $user->questions()->create(['definition' => ['metric' => 'word_share']]);
 
@@ -164,7 +167,7 @@ class StatisticsPageTest extends TestCase
 
     public function test_a_template_cannot_be_renamed_to_nothing(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['is_admin' => true]);
         $this->actingAs($user);
         $template = $user->questions()->create(['name' => 'Shared', 'is_template' => true]);
 
@@ -197,7 +200,7 @@ class StatisticsPageTest extends TestCase
 
     public function test_saving_as_a_template_drops_the_groups_and_says_so(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['is_admin' => true]);
         $this->actingAs($user);
         $group = $user->projectGroups()->create(['name' => 'Score', 'position' => 0]);
         $question = $user->questions()->create(['definition' => ['compare_by' => 'group', 'split_by' => 'pipeline', 'projects' => ['groups' => [$group->id], 'pipelines' => ['ScorePipeline']]]]);
@@ -216,7 +219,7 @@ class StatisticsPageTest extends TestCase
 
     public function test_a_template_without_groups_gives_no_notice(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['is_admin' => true]);
         $this->actingAs($user);
         $question = $user->questions()->create(['definition' => ['metric' => 'word_share']]);
 
@@ -240,7 +243,7 @@ class StatisticsPageTest extends TestCase
 
     public function test_copying_duplicating_and_saving_as_template_keep_the_notes(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['is_admin' => true]);
         $this->actingAs($user);
         $template = User::factory()->create()->questions()->create(['name' => 'Fix', 'notes' => 'From the template', 'is_template' => true]);
         $own = $user->questions()->create(['name' => 'Own', 'notes' => 'My conclusion']);
@@ -253,5 +256,78 @@ class StatisticsPageTest extends TestCase
         $this->assertSame('From the template', $user->questions()->notTemplates()->where('name', 'Fix')->sole()->notes);
         $this->assertSame('My conclusion', $user->questions()->notTemplates()->where('name', 'Copy of Own')->sole()->notes);
         $this->assertSame('My conclusion', $user->questions()->where('is_template', true)->sole()->notes);
+    }
+
+    public function test_the_list_reads_the_names_its_sentences_use_once_not_per_entry(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $category = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
+        $status = $category->values()->create(['name' => 'status']);
+        $group = $user->projectGroups()->create(['name' => 'Score', 'position' => 0]);
+        $definition = ['projects' => ['tags' => [$category->id => [$status->id]], 'groups' => [$group->id]], 'compare_by' => "project_tag:{$category->id}"];
+        $user->questions()->create(['definition' => $definition]);
+
+        $queries = function (): int {
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            Livewire::test(StatisticsPage::class)->assertSee('Status condition: status');
+            DB::disableQueryLog();
+
+            return count(DB::getQueryLog());
+        };
+
+        $one = $queries();
+
+        foreach (range(1, 7) as $more) {
+            $user->questions()->create(['definition' => $definition]);
+        }
+
+        $this->assertSame($one, $queries());
+    }
+
+    public function test_only_an_admin_saves_a_template_and_sees_the_action(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $question = $user->questions()->create(['name' => 'Mine']);
+
+        Livewire::test(StatisticsPage::class)
+            ->assertDontSee('Save as template')
+            ->call('saveAsTemplate', $question->id)
+            ->assertForbidden();
+
+        $this->assertSame(0, Question::templates()->count());
+
+        $user->update(['is_admin' => true]);
+        Livewire::test(StatisticsPage::class)->assertSee('Save as template');
+    }
+
+    public function test_a_template_owner_who_is_no_admin_cannot_rename_or_delete_it(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $template = $user->questions()->create(['name' => 'Shared', 'is_template' => true]);
+
+        Livewire::test(StatisticsPage::class)->call('startRenaming', $template->id)->assertForbidden();
+        Livewire::test(StatisticsPage::class)->call('delete', $template->id)->assertForbidden();
+
+        $this->assertSame('Shared', $template->fresh()?->name);
+    }
+
+    public function test_an_owner_who_is_no_admin_still_renames_and_deletes_own_questions(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $question = $user->questions()->create(['name' => 'Mine']);
+
+        Livewire::test(StatisticsPage::class)
+            ->call('startRenaming', $question->id)
+            ->set('name', 'Renamed')
+            ->call('saveName')
+            ->assertHasNoErrors()
+            ->call('delete', $question->id);
+
+        $this->assertNull($question->fresh());
     }
 }

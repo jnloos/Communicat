@@ -2,7 +2,7 @@
 
 /*
 |--------------------------------------------------------------------------
-| Statistics page: a question across many runs, answered in one fixed form
+| Statistics page: a question across many runs, answered as runs, shares or curves
 |--------------------------------------------------------------------------
 */
 
@@ -99,9 +99,7 @@ return [
         'baseline' => 'Baseline',
         'split_by' => 'Split by',
         'none' => 'Nothing',
-        'people_hint' => 'Several tags: every category must match, any value within one.',
         'gini_hint' => 'Gini describes the whole run, so it counts everyone.',
-        'curve' => 'Curve',
     ],
 
     'aggregates' => [

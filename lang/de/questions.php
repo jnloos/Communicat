@@ -2,7 +2,7 @@
 
 /*
 |--------------------------------------------------------------------------
-| Statistik-Seite: eine Frage über viele Läufe, in fester Form beantwortet
+| Statistik-Seite: eine Frage über viele Läufe, beantwortet als Läufe, Anteile oder Kurven
 |--------------------------------------------------------------------------
 */
 
@@ -99,9 +99,7 @@ return [
         'baseline' => 'Bezug',
         'split_by' => 'Aufgeteilt nach',
         'none' => 'Nichts',
-        'people_hint' => 'Mehrere Tags: jede Kategorie muss passen, innerhalb einer genügt ein Wert.',
         'gini_hint' => 'Gini beschreibt den ganzen Lauf und zählt daher alle.',
-        'curve' => 'Kurve',
     ],
 
     'aggregates' => [

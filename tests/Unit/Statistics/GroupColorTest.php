@@ -19,9 +19,9 @@ class GroupColorTest extends TestCase
     {
         for ($index = 0; $index < count(self::HEX); $index++) {
             $color = GroupColor::at($index);
-            $text = self::TEXT[GroupColor::textOn($color)];
+            $text = self::TEXT[GroupColor::TEXT_ON];
 
-            $this->assertGreaterThanOrEqual(4.5, $this->contrast($text, self::HEX[$color]), "{$color} with ".GroupColor::textOn($color));
+            $this->assertGreaterThanOrEqual(4.5, $this->contrast($text, self::HEX[$color]), "{$color} with ".GroupColor::TEXT_ON);
         }
     }
 

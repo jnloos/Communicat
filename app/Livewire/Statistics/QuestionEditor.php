@@ -20,6 +20,8 @@ use App\Models\Question;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -78,7 +80,9 @@ class QuestionEditor extends Component
         }
 
         if ($this->readOnly) {
+            // Back to the stored definition, which may name tag values deleted since: drop them again.
             $this->definition = $this->onlyTheViewChanged();
+            $this->dropDeletedTagValues();
 
             return;
         }
@@ -153,6 +157,11 @@ class QuestionEditor extends Component
     {
         $filters = ['people' => TagFilter::fromArray($this->definition['people']['tags'] ?? []), 'projects' => TagFilter::fromArray($this->definition['projects']['tags'] ?? [])];
         $named = array_merge(...array_map(fn (TagFilter $filter) => $filter->valueIds(), array_values($filters)));
+
+        if ($named === []) {
+            return;
+        }
+
         $gone = array_values(array_diff($named, TagValue::whereKey($named)->pluck('id')->all()));
 
         if ($gone === []) {
@@ -184,20 +193,23 @@ class QuestionEditor extends Component
     public function render(): mixed
     {
         $definition = QuestionDefinition::fromArray($this->definition);
-        $sentence = app(QuestionSentence::class);
+        $sentence = app(QuestionSentence::class)->prime([$definition]);
         $result = app(QuestionEvaluator::class)->evaluate(auth()->user(), $definition);
+        $personaCategories = TagCategory::ofScope(TagScope::Persona)->with('values')->get();
+        $projectCategories = TagCategory::ofScope(TagScope::Project)->with('values')->get();
 
         return view('livewire.statistics.question-editor', [
             'title' => $this->question($this->questionId)->name,
             'current' => $definition,
-            'mayManage' => ! $this->readOnly || $this->question($this->questionId)->user_id === auth()->id(),
+            'mayManage' => $this->mayManage(),
+            'mayShare' => Gate::allows('admin'),
             'parts' => $sentence->parts($definition, $result),
             'result' => $result,
             'metrics' => Metric::cases(),
             'aggregates' => Aggregate::cases(),
             'forms' => ResultForm::cases(),
-            'personaCategories' => TagCategory::ofScope(TagScope::Persona)->with('values')->get(),
-            'projectCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
+            'personaCategories' => $personaCategories,
+            'projectCategories' => $projectCategories,
             'projectSource' => TagScope::Project->source(),
             'personaSource' => TagScope::Persona->source(),
             'runSource' => DimensionSource::Run,
@@ -206,28 +218,40 @@ class QuestionEditor extends Component
             'models' => ModelConfig::options(),
             'groups' => ProjectGroup::where('user_id', auth()->id())->orderBy('position')->orderBy('name')->pluck('name', 'id'),
             'expertNames' => Expert::query()->distinct()->orderBy('name')->pluck('name'),
-            'compareOptions' => $this->dimensionOptions($sentence, withPersona: ! $definition->metric->isRunLevel()),
+            'compareOptions' => $this->dimensionOptions($sentence, $projectCategories, $definition->metric->isRunLevel() ? collect() : $personaCategories),
             'baselineOptions' => $definition->compareBy === null ? [] : $this->dimensionValues()->labels($definition->compareBy),
-            'splitOptions' => $this->dimensionOptions($sentence, withPersona: false),
+            'splitOptions' => $this->dimensionOptions($sentence, $projectCategories, collect()),
             'rollingWindow' => (int) config('discussion.share_window'),
         ]);
     }
 
-    /** @return array<string, string> dimension key => its name with the source in brackets: project tags, persona tags, pipeline, model, group */
-    private function dimensionOptions(QuestionSentence $sentence, bool $withPersona): array
+    /**
+     * An own question is managed by its owner; a template only by an admin who owns it.
+     */
+    private function mayManage(): bool
     {
-        $dimensions = [
-            ...TagCategory::ofScope(TagScope::Project)->get()->map(fn (TagCategory $c) => new Dimension(DimensionType::ProjectTag, $c->id)),
-            ...($withPersona ? TagCategory::ofScope(TagScope::Persona)->get()->map(fn (TagCategory $c) => new Dimension(DimensionType::PersonaTag, $c->id)) : []),
-            new Dimension(DimensionType::Pipeline),
-            new Dimension(DimensionType::Model),
-            new Dimension(DimensionType::Group),
-        ];
+        return ! $this->readOnly
+            || ($this->question($this->questionId)->user_id === auth()->id() && Gate::allows('admin'));
+    }
 
+    /**
+     * @param  Collection<int, TagCategory>  $projectCategories
+     * @param  Collection<int, TagCategory>  $personaCategories  empty when agents cannot be compared
+     * @return array<string, string> dimension key => its name with the source in brackets: project tags, persona tags, pipeline, model, group
+     */
+    private function dimensionOptions(QuestionSentence $sentence, Collection $projectCategories, Collection $personaCategories): array
+    {
         $options = [];
 
-        foreach ($dimensions as $dimension) {
-            $options[$dimension->key()] = $dimension->type->source()->named($sentence->dimension($dimension));
+        foreach ([[DimensionType::ProjectTag, $projectCategories], [DimensionType::PersonaTag, $personaCategories]] as [$type, $categories]) {
+            foreach ($categories as $category) {
+                $options[(new Dimension($type, $category->id))->key()] = $type->source()->named($category->label());
+            }
+        }
+
+        foreach ([DimensionType::Pipeline, DimensionType::Model, DimensionType::Group] as $type) {
+            $dimension = new Dimension($type);
+            $options[$dimension->key()] = $type->source()->named($sentence->dimension($dimension));
         }
 
         return $options;

@@ -533,4 +533,21 @@ class QuestionEditorTest extends TestCase
         $editor->set('definition.metric', 'word_share');
         $this->assertArrayHasKey('html', $editor->effects);
     }
+
+    public function test_a_template_viewed_in_another_form_still_drops_its_deleted_tag_values(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'rolle']);
+        $kept = $category->values()->create(['name' => 'kept']);
+        $gone = $category->values()->create(['name' => 'gone']);
+        $template = User::factory()->create()->questions()->create(['definition' => ['people' => ['tags' => [$category->id => [$kept->id, $gone->id]]]], 'is_template' => true]);
+        $gone->delete();
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $template->id])
+            ->set('definition.form', 'trajectory')
+            ->assertSet('definition.form', 'trajectory')
+            ->assertSet('definition.people.tags', [$category->id => [$kept->id]]);
+
+        $this->assertSame([$kept->id, $gone->id], $template->fresh()->definition['people']['tags'][$category->id]);
+    }
 }

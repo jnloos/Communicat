@@ -26,9 +26,9 @@
                         @foreach ($templates as $template)
                             <div class="group/template relative" wire:key="template-{{ $template->id }}">
                                 <x-statistics.entry :title="$template->name" :notes="$template->notes" :sentence="$sentences[$template->id]" :current="$questionId === $template->id"
-                                    icon="rectangle-stack" :with-menu="$template->user_id === auth()->id()" wire:click="open({{ $template->id }})" />
+                                    icon="rectangle-stack" :with-menu="$mayShare && $template->user_id === auth()->id()" wire:click="open({{ $template->id }})" />
 
-                                @if ($template->user_id === auth()->id())
+                                @if ($mayShare && $template->user_id === auth()->id())
                                     <div class="absolute end-1 top-1.5">
                                         <flux:dropdown position="bottom" align="end">
                                             <flux:button variant="ghost" size="xs" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')"
@@ -66,7 +66,9 @@
                                         <flux:menu>
                                             <flux:menu.item icon="pencil-square" wire:click="startRenaming({{ $question->id }})">{{ __('questions.actions.rename') }}</flux:menu.item>
                                             <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $question->id }})">{{ __('questions.actions.duplicate') }}</flux:menu.item>
-                                            <flux:menu.item icon="rectangle-stack" wire:click="saveAsTemplate({{ $question->id }})">{{ __('questions.actions.save_as_template') }}</flux:menu.item>
+                                            @if ($mayShare)
+                                                <flux:menu.item icon="rectangle-stack" wire:click="saveAsTemplate({{ $question->id }})">{{ __('questions.actions.save_as_template') }}</flux:menu.item>
+                                            @endif
                                             <flux:menu.separator />
                                             <flux:menu.item variant="danger" icon="trash" wire:click="confirmDelete({{ $question->id }})">{{ __('questions.actions.delete') }}</flux:menu.item>
                                         </flux:menu>

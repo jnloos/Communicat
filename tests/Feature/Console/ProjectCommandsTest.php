@@ -324,6 +324,8 @@ class ProjectCommandsTest extends TestCase
     public function test_list_shows_the_projects_with_their_progress(): void
     {
         $project = $this->seatedProject(budget: 6);
+        // A short fixed title: a long random one may be wrapped by the table and miss the match.
+        $project->update(['title' => 'Listed run']);
         $this->turn($project, 'Alice', 10);
 
         $this->assertSame(0, Artisan::call('project:list'));

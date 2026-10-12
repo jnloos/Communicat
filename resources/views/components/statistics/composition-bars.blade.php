@@ -21,7 +21,7 @@
             <div class="flex h-7 overflow-hidden rounded" role="img"
                 aria-label="{{ collect($panel->groups)->map(fn ($group) => $group->label.': '.$metric->format($panel->shareOf($group)))->implode(', ') }}">
                 @foreach ($panel->groups as $group)
-                    <div class="flex min-w-0 items-center justify-center overflow-hidden text-xs font-medium {{ GroupColor::textOn(GroupColor::of($result, $group)) }}"
+                    <div class="flex min-w-0 items-center justify-center overflow-hidden text-xs font-medium {{ GroupColor::TEXT_ON }}"
                         style="width: {{ $panel->shareOf($group) * 100 }}%; background-color: var(--color-{{ GroupColor::of($result, $group) }})"
                         title="{{ $group->label }}: {{ $metric->format($panel->shareOf($group)) }}">
                         <span class="truncate px-1">{{ $metric->format($panel->shareOf($group)) }}</span>

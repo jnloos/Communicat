@@ -34,7 +34,7 @@
                         </div>
 
                         <div class="relative mt-1 h-5 rounded bg-zinc-100 dark:bg-white/10" role="img"
-                            aria-label="{{ $group->label }}: {{ __('questions.result.mean') }} {{ $metric->format($group->mean()) }}, n = {{ $group->n() }}">
+                            aria-label="{{ $group->label !== '' ? $group->label : __('questions.result.all') }}: {{ __('questions.result.mean') }} {{ $metric->format($group->mean()) }}, n = {{ $group->n() }}">
                             @if ($group->fairShare() !== null)
                                 <span class="absolute inset-y-0 border-s border-dashed border-zinc-500 dark:border-zinc-300" style="left: {{ $at($group->fairShare()) }}%"></span>
                             @endif

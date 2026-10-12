@@ -7,6 +7,7 @@ use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Question;
 use App\Models\User;
 use Flux\Flux;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -17,9 +18,13 @@ use Livewire\Component;
  * The statistics page: everyone's templates and the user's own questions on
  * the left, the open question on the right. An own question is always
  * resolved through the user's own rows; someone else's does not exist here.
- * A template (a row with is_template) is opened by everyone to view, copied
- * to adjust, renamed or deleted only by its owner.
+ * A template (a row with is_template) is opened by everyone to view and
+ * copied to adjust. Only admins save templates, and only an admin who owns
+ * one renames or deletes it: a template is read by everyone. The editor's
+ * question-saved event renders the page again, so the list shows the new
+ * sentence.
  */
+#[On('question-saved')]
 class StatisticsPage extends Component
 {
     use NeedsConfirmation;
@@ -85,9 +90,10 @@ class StatisticsPage extends Component
         ])->id;
     }
 
-    /** A snapshot of the question as a template (without groups, which are personal), titled like it, or by its sentence when untitled; the question stays the user's own. */
+    /** A snapshot of the question as a template (without groups, which are personal), titled like it, or by its sentence when untitled; the question stays the user's own. Admins only. */
     public function saveAsTemplate(int $questionId): void
     {
+        Gate::authorize('admin');
         $question = $this->owned($questionId);
         $asked = $question->definition();
         $template = $asked->withoutGroups();
@@ -105,7 +111,7 @@ class StatisticsPage extends Component
 
     public function startRenaming(int $questionId): void
     {
-        $question = $this->owned($questionId);
+        $question = $this->managed($questionId);
         $this->renamingId = $question->id;
         $this->name = (string) $question->name;
         $this->resetValidation();
@@ -118,7 +124,7 @@ class StatisticsPage extends Component
      */
     public function saveName(): void
     {
-        $question = $this->owned((int) $this->renamingId);
+        $question = $this->managed((int) $this->renamingId);
         $this->name = trim($this->name);
         $this->validate(['name' => [$question->is_template ? 'required' : 'nullable', 'string', 'max:100']], [], ['name' => __('questions.name.field')]);
 
@@ -141,7 +147,7 @@ class StatisticsPage extends Component
 
     public function confirmDelete(int $questionId): void
     {
-        $question = $this->owned($questionId);
+        $question = $this->managed($questionId);
         $kind = $question->is_template ? 'delete_template' : 'delete';
 
         $this->confirmTitle = __("questions.confirm.{$kind}.title");
@@ -151,7 +157,7 @@ class StatisticsPage extends Component
 
     public function delete(int $questionId): void
     {
-        $this->owned($questionId)->delete();
+        $this->managed($questionId)->delete();
 
         if ($this->questionId === $questionId) {
             $this->questionId = null;
@@ -164,25 +170,36 @@ class StatisticsPage extends Component
         return $this->user()->questions()->findOrFail($questionId);
     }
 
+    /** An own row the user may rename or delete: a template only while they are an admin. */
+    private function managed(int $questionId): Question
+    {
+        $question = $this->owned($questionId);
+
+        if ($question->is_template) {
+            Gate::authorize('admin');
+        }
+
+        return $question;
+    }
+
     private function user(): User
     {
         return auth()->user();
     }
-
-    /** The editor saved a change: re-render so the list shows the new sentence. */
-    #[On('question-saved')]
-    public function refreshList(): void {}
 
     public function render(): mixed
     {
         $questions = $this->user()->questions()->notTemplates()->get();
 
         $templates = Question::templates()->get();
+        $definitions = $questions->concat($templates)->mapWithKeys(fn (Question $question) => [$question->id => $question->definition()]);
+        $sentence = app(QuestionSentence::class)->prime($definitions);
 
         return view('livewire.statistics.statistics-page', [
             'questions' => $questions,
             'templates' => $templates,
-            'sentences' => $questions->concat($templates)->mapWithKeys(fn (Question $question) => [$question->id => app(QuestionSentence::class)->of($question->definition())]),
+            'sentences' => $definitions->map(fn (QuestionDefinition $definition) => $sentence->of($definition)),
+            'mayShare' => Gate::allows('admin'),
             'current' => $this->questionId === null ? null : $questions->firstWhere('id', $this->questionId) ?? $templates->firstWhere('id', $this->questionId),
         ])->title(__('questions.heading'));
     }

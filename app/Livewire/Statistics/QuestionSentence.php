@@ -19,10 +19,53 @@ use App\Models\TagValue;
 /**
  * A question in words: part by part for the chips of the editor, joined into
  * the sentence shown beside every question's title. Reads labels; decides nothing.
+ *
+ * The tag values, categories and groups it names are read once per instance
+ * and kept; prime() reads those of many questions in one go, so a list of
+ * sentences costs a few queries, not a few per entry.
  */
 final class QuestionSentence
 {
+    /** @var array<int, TagValue> id => value with its category; an id read but not found is absent */
+    private array $values = [];
+
+    /** @var array<int, ?TagCategory> id => category, null for one that no longer exists */
+    private array $categories = [];
+
+    /** @var array<int, ?ProjectGroup> id => the viewer's group, null for one that is not (or no longer) theirs */
+    private array $groupsRead = [];
+
+    /** @var array<int, true> tag value ids already asked for */
+    private array $valuesRead = [];
+
     public function __construct(private readonly PipelineRegistry $pipelines) {}
+
+    /**
+     * Reads ahead what these questions name, in at most three queries.
+     *
+     * @param  iterable<QuestionDefinition>  $definitions
+     */
+    public function prime(iterable $definitions): self
+    {
+        $valueIds = $categoryIds = $groupIds = [];
+
+        foreach ($definitions as $definition) {
+            array_push($valueIds, ...$definition->people->tags->valueIds(), ...$definition->projects->tags->valueIds());
+            array_push($groupIds, ...$definition->projects->groups);
+
+            foreach ([$definition->compareBy, $definition->splitBy] as $dimension) {
+                if ($dimension?->categoryId !== null) {
+                    $categoryIds[] = $dimension->categoryId;
+                }
+            }
+        }
+
+        $this->readValues($valueIds);
+        $this->readCategories($categoryIds);
+        $this->readGroups($groupIds);
+
+        return $this;
+    }
 
     /**
      * @param  QuestionResult|null  $result  what the question was read over; its window carries the upper bound the
@@ -117,11 +160,62 @@ final class QuestionSentence
      */
     private function tags(array $valueIds): array
     {
-        $values = TagValue::whereKey($valueIds)->with('category')->orderBy('tag_category_id')->orderBy('position')->get();
-        $deleted = array_fill(0, count($valueIds) - $values->count(), __('questions.sentence.deleted_value'));
+        $this->readValues($valueIds);
+        $values = array_values(array_intersect_key($this->values, array_flip($valueIds)));
+        usort($values, fn (TagValue $a, TagValue $b) => [$a->tag_category_id, $a->position, $a->id] <=> [$b->tag_category_id, $b->position, $b->id]);
+        $deleted = array_fill(0, count(array_unique($valueIds)) - count($values), __('questions.sentence.deleted_value'));
 
         // A chip is never empty: a value that was deleted still says so, and stays until the user removes it.
-        return [...$values->map(fn (TagValue $value) => $value->fullLabel())->all(), ...$deleted];
+        return [...array_map(fn (TagValue $value) => $value->fullLabel(), $values), ...$deleted];
+    }
+
+    /** @param  list<int>  $ids */
+    private function readValues(array $ids): void
+    {
+        $unread = array_values(array_unique(array_diff($ids, array_keys($this->valuesRead))));
+
+        if ($unread === []) {
+            return;
+        }
+
+        foreach (TagValue::whereKey($unread)->with('category')->get() as $value) {
+            $this->values[$value->id] = $value;
+            $this->categories[$value->tag_category_id] = $value->category;
+        }
+
+        $this->valuesRead += array_fill_keys($unread, true);
+    }
+
+    /** @param  list<int>  $ids */
+    private function readCategories(array $ids): void
+    {
+        $unread = array_values(array_unique(array_diff($ids, array_keys($this->categories))));
+
+        if ($unread === []) {
+            return;
+        }
+
+        $found = TagCategory::whereKey($unread)->get()->keyBy('id');
+
+        foreach ($unread as $id) {
+            $this->categories[$id] = $found[$id] ?? null;
+        }
+    }
+
+    /** @param  list<int>  $ids */
+    private function readGroups(array $ids): void
+    {
+        $unread = array_values(array_unique(array_diff($ids, array_keys($this->groupsRead))));
+
+        if ($unread === []) {
+            return;
+        }
+
+        $found = ProjectGroup::where('user_id', auth()->id())->whereKey($unread)->get()->keyBy('id');
+
+        foreach ($unread as $id) {
+            $this->groupsRead[$id] = $found[$id] ?? null;
+        }
     }
 
     /**
@@ -133,13 +227,24 @@ final class QuestionSentence
      */
     private function groups(array $ids): array
     {
-        $names = ProjectGroup::where('user_id', auth()->id())->whereKey($ids)->orderBy('position')->orderBy('name')->pluck('name')->all();
+        $this->readGroups($ids);
+        $groups = array_values(array_filter(array_map(fn (int $id) => $this->groupsRead[$id] ?? null, array_unique($ids))));
+        usort($groups, fn (ProjectGroup $a, ProjectGroup $b) => [$a->position, $a->name] <=> [$b->position, $b->name]);
 
-        return [...$names, ...array_fill(0, count($ids) - count($names), __('questions.sentence.deleted_group'))];
+        return [
+            ...array_map(fn (ProjectGroup $group) => $group->name, $groups),
+            ...array_fill(0, count(array_unique($ids)) - count($groups), __('questions.sentence.deleted_group')),
+        ];
     }
 
     private function category(?int $id): string
     {
-        return TagCategory::find($id)?->label() ?? __('questions.sentence.deleted');
+        if ($id === null) {
+            return __('questions.sentence.deleted');
+        }
+
+        $this->readCategories([$id]);
+
+        return $this->categories[$id]?->label() ?? __('questions.sentence.deleted');
     }
 }
