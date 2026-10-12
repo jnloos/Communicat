@@ -49,7 +49,7 @@
     <flux:card size="sm" class="text-base">
         {{-- Each connector word travels with the trigger it introduces and breaks only as a whole unit. --}}
         <div class="flex flex-wrap items-center gap-x-1.5 gap-y-2">
-        <span class="inline-flex max-w-full min-w-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
+        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
         <x-statistics.chip :read-only="$readOnly" :label="$parts['metric']">
             <flux:menu>
                 <flux:menu.radio.group wire:model.live="question.metric">
@@ -62,7 +62,7 @@
         </span>
 
         @if ($parts['people'] !== null)
-        <span class="inline-flex max-w-full min-w-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
+        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
             <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.of') }}</span>
             <x-statistics.chip :read-only="$readOnly" :label="$parts['people']" :muted="$current->people->isEveryone()">
                 <flux:menu keep-open>
@@ -86,9 +86,11 @@
                     </flux:menu.submenu>
                 </flux:menu>
             </x-statistics.chip>
+        </span>
         @endif
 
         @if ($parts['aggregate'] !== null)
+        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
             <x-statistics.chip :read-only="$readOnly" :label="$parts['aggregate']" :muted="true">
                 <flux:menu>
                     <flux:menu.radio.group wire:model.live="question.aggregate">
@@ -98,12 +100,10 @@
                     </flux:menu.radio.group>
                 </flux:menu>
             </x-statistics.chip>
-        @endif
-        @if ($parts['people'] !== null)
         </span>
         @endif
 
-        <span class="inline-flex max-w-full min-w-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
+        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.in') }}</span>
         <x-statistics.chip :read-only="$readOnly" :label="$parts['projects']" :muted="$current->projects->isEmpty()">
             <flux:menu keep-open>
@@ -147,7 +147,7 @@
         </span>
 
         {{-- Menus cannot hold input fields, so the window is the one part that opens a popover. --}}
-        <span class="inline-flex max-w-full min-w-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
+        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
         <x-statistics.chip :read-only="$readOnly" :label="$parts['turns']" :muted="$current->turns->isWholeRun() && ! $result->cappedByShortestRun">
             <flux:popover class="w-80 max-w-[calc(100vw-2rem)] space-y-4">
                 <div class="grid grid-cols-2 gap-3">
@@ -166,7 +166,7 @@
         </x-statistics.chip>
         </span>
 
-        <span class="inline-flex max-w-full min-w-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
+        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.compared_by') }}</span>
         <x-statistics.chip :read-only="$readOnly" :label="$parts['compare_by'] ?? __('questions.sentence.nothing')" :muted="$parts['compare_by'] === null">
             <flux:menu>
@@ -184,7 +184,7 @@
         </x-statistics.chip>
         </span>
 
-        <span class="inline-flex max-w-full min-w-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
+        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.split_by') }}</span>
         <x-statistics.chip :read-only="$readOnly" :label="$parts['split_by'] ?? __('questions.sentence.nothing')" :muted="$parts['split_by'] === null">
             <flux:menu>
