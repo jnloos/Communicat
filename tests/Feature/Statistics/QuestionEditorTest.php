@@ -323,20 +323,7 @@ class QuestionEditorTest extends TestCase
 
         Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSee('over turns 1 to 1')
-            ->assertSee('The upper bound is at most the shortest selected run, “', false)
-            ->assertSee('School | with status | 60')
-            ->assertSee('”, which has 1 turn.', false);
-    }
-
-    public function test_the_shortest_run_in_the_hint_links_to_its_chat(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $run = $this->spokenRun($user);
-        $question = $user->questions()->create([]);
-
-        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
-            ->assertSeeHtml('href="'.route('project.show', $run->id).'"');
+            ->assertDontSee('The upper bound is at most the shortest selected run', false);
     }
 
     public function test_the_turn_fields_show_the_effective_window_as_placeholders(): void

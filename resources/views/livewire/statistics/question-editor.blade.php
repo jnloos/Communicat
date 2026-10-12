@@ -164,13 +164,6 @@
                     <flux:input type="number" min="1" wire:model.live.debounce.500ms="definition.turns.from" :label="__('questions.controls.turn_from')" :placeholder="$result->turns->from" />
                     <flux:input type="number" min="1" wire:model.live.debounce.500ms="definition.turns.to" :label="__('questions.controls.turn_to')" :placeholder="$result->turns->to" />
                 </div>
-                @if ($result->shortestRun !== null)
-                    @php($run = e($result->shortestRunTitle))
-                    <flux:text size="sm">{!! trans_choice('questions.controls.turns_hint', $result->shortestRun, [
-                        'count' => $result->shortestRun,
-                        'run' => '<a href="'.route('project.show', $result->shortestRunId).'" class="underline">'.$run.'</a>',
-                    ]) !!}</flux:text>
-                @endif
             </flux:popover>
         </x-statistics.chip>
         </span>

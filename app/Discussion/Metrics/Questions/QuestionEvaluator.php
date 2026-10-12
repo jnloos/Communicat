@@ -63,7 +63,7 @@ final class QuestionEvaluator
         $accepted = $this->acceptedPeople($question, $projects);
         $places = $projects->mapWithKeys(fn (Project $project) => [$project->id => $this->placeOf($question, $project, $values, $accepted)]);
 
-        [$shortestRun, $shortest] = $this->shortestRun($projects->filter(fn (Project $project) => $places[$project->id] !== null));
+        $shortest = $this->shortestRun($projects->filter(fn (Project $project) => $places[$project->id] !== null));
         $turns = $this->window($question->turns, $shortest);
 
         // A start past the shortest run: the capped bound cannot make the window empty for the longer
@@ -104,8 +104,6 @@ final class QuestionEvaluator
             $turns,
             $shortest !== null && ($question->turns->to === null || $question->turns->to > $shortest),
             $shortest,
-            $shortestRun?->id,
-            $shortestRun?->title,
             $baseline,
         );
     }
@@ -245,25 +243,17 @@ final class QuestionEvaluator
     }
 
     /**
-     * The shortest of these runs: its length is the most turns every one can
-     * be read over. A run that never spoke has no length to cap by. Of equal
-     * runs the one with the lowest id is named.
+     * The length of the shortest of these runs: the most turns every one can
+     * be read over. A run that never spoke has no length to cap by.
      *
      * @param  Collection<int, Project>  $projects
-     * @return array{0: ?Project, 1: ?int} the run and its length, both null when no run spoke
+     * @return int|null null when no run spoke
      */
-    private function shortestRun(Collection $projects): array
+    private function shortestRun(Collection $projects): ?int
     {
         $lengths = array_filter($this->spoken->counts($projects), fn (int $length) => $length > 0);
 
-        if ($lengths === []) {
-            return [null, null];
-        }
-
-        ksort($lengths);
-        $length = min($lengths);
-
-        return [$projects->firstWhere('id', array_search($length, $lengths, true)), $length];
+        return $lengths === [] ? null : min($lengths);
     }
 
     /** No agents, or words per turn of agents who never spoke: no value, not a zero. */
