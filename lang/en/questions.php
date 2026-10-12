@@ -12,17 +12,17 @@ return [
     'none_open' => 'Pick a template or one of your questions on the left, or ask a new one.',
 
     'list' => [
-        'others' => 'Questions',
-        'fix' => 'Templates',
+        'questions' => 'Questions',
+        'templates' => 'Templates',
         'create' => 'New question',
         'empty' => 'No question yet.',
-        'no_fix' => 'No template yet. Save a question as a template to share it.',
+        'no_templates' => 'No template yet. Save a question as a template to share it.',
     ],
 
     'actions' => [
         'rename' => 'Rename',
         'duplicate' => 'Duplicate',
-        'save_as_fix_question' => 'Save as template',
+        'save_as_template' => 'Save as template',
         'copy_to_adjust' => 'Copy to adjust',
         'delete' => 'Delete',
     ],
@@ -53,7 +53,7 @@ return [
         ],
     ],
 
-    'fix' => [
+    'template' => [
         'without_groups' => 'Groups are personal, so the template does not use them.',
         'view_only_notice' => 'This template is view only. Copy it to adjust.',
     ],

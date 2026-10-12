@@ -10,7 +10,7 @@ namespace App\Discussion\Values;
  * — so both live in one report rather than being computed apart.
  *
  * Length is counted in words, never in model tokens: the tokenizers of the
- * model families differ, which would bias the very comparison the study makes.
+ * model families differ, which would bias the very contrast the study draws.
  */
 final readonly class ShareReport
 {

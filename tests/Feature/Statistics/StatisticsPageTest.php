@@ -3,7 +3,7 @@
 namespace Tests\Feature\Statistics;
 
 use App\Livewire\Statistics\StatisticsPage;
-use App\Models\Comparison;
+use App\Models\Question;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,15 +35,15 @@ class StatisticsPageTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        Livewire::test(StatisticsPage::class)->call('create')->assertSet('comparisonId', Comparison::sole()->id);
+        Livewire::test(StatisticsPage::class)->call('create')->assertSet('questionId', Question::sole()->id);
 
-        $this->assertNull(Comparison::sole()->name);
-        $this->assertFalse(Comparison::sole()->is_template);
+        $this->assertNull(Question::sole()->name);
+        $this->assertFalse(Question::sole()->is_template);
     }
 
-    public function test_a_fix_question_opens_to_view_without_a_copy(): void
+    public function test_a_template_opens_to_view_without_a_copy(): void
     {
-        $fix = User::factory()->create()->comparisons()->create(['name' => 'Status effect', 'question' => ['metric' => 'word_share'], 'is_template' => true]);
+        $template = User::factory()->create()->questions()->create(['name' => 'Status effect', 'definition' => ['metric' => 'word_share'], 'is_template' => true]);
         $user = User::factory()->create();
         $this->actingAs($user);
 
@@ -51,59 +51,59 @@ class StatisticsPageTest extends TestCase
             ->assertSee('Templates')
             ->assertSee('Questions')
             ->assertSee('Status effect')
-            ->call('open', $fix->id)
-            ->assertSet('comparisonId', $fix->id)
+            ->call('open', $template->id)
+            ->assertSet('questionId', $template->id)
             ->assertSee('Copy to adjust');
 
-        $this->assertSame(0, $user->comparisons()->count());
-        $this->assertSame(1, Comparison::count());
+        $this->assertSame(0, $user->questions()->count());
+        $this->assertSame(1, Question::count());
     }
 
-    public function test_copying_a_fix_question_makes_an_own_question_and_opens_it(): void
+    public function test_copying_a_template_makes_an_own_question_and_opens_it(): void
     {
-        $fix = User::factory()->create()->comparisons()->create(['name' => 'Status effect', 'question' => ['metric' => 'word_share'], 'is_template' => true]);
+        $template = User::factory()->create()->questions()->create(['name' => 'Status effect', 'definition' => ['metric' => 'word_share'], 'is_template' => true]);
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        $page = Livewire::test(StatisticsPage::class)->call('copyFixQuestion', $fix->id);
+        $page = Livewire::test(StatisticsPage::class)->call('copyTemplate', $template->id);
 
-        $copy = $user->comparisons()->sole();
-        $page->assertSet('comparisonId', $copy->id);
+        $copy = $user->questions()->sole();
+        $page->assertSet('questionId', $copy->id);
         $this->assertFalse($copy->is_template);
         $this->assertSame('Status effect', $copy->name);
-        $this->assertSame('word_share', $copy->question['metric']);
-        $this->assertTrue($fix->fresh()->is_template);
+        $this->assertSame('word_share', $copy->definition['metric']);
+        $this->assertTrue($template->fresh()->is_template);
     }
 
     public function test_the_copy_keeps_the_form_being_viewed(): void
     {
-        $fix = User::factory()->create()->comparisons()->create(['name' => 'F', 'question' => ['metric' => 'word_share'], 'is_template' => true]);
+        $template = User::factory()->create()->questions()->create(['name' => 'F', 'definition' => ['metric' => 'word_share'], 'is_template' => true]);
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        Livewire::test(StatisticsPage::class)->call('copyFixQuestion', $fix->id, 'trajectory', 'rolling');
+        Livewire::test(StatisticsPage::class)->call('copyTemplate', $template->id, 'trajectory', 'rolling');
 
-        $this->assertSame('trajectory', $user->comparisons()->sole()->question['form']);
-        $this->assertSame('rolling', $user->comparisons()->sole()->question['curve']);
+        $this->assertSame('trajectory', $user->questions()->sole()->definition['form']);
+        $this->assertSame('rolling', $user->questions()->sole()->definition['curve']);
     }
 
-    public function test_a_fix_question_opens_by_url_parameter(): void
+    public function test_a_template_opens_by_url_parameter(): void
     {
-        $fix = User::factory()->create()->comparisons()->create(['name' => 'F', 'is_template' => true]);
+        $template = User::factory()->create()->questions()->create(['name' => 'F', 'is_template' => true]);
         $this->actingAs(User::factory()->create());
 
-        Livewire::withQueryParams(['c' => $fix->id])->test(StatisticsPage::class)->assertSet('comparisonId', $fix->id);
+        Livewire::withQueryParams(['q' => $template->id])->test(StatisticsPage::class)->assertSet('questionId', $template->id);
     }
 
-    public function test_saving_as_fix_question_keeps_the_question_and_names_it(): void
+    public function test_saving_as_template_keeps_the_question_and_names_it(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $question = $user->comparisons()->create(['question' => ['metric' => 'word_share']]);
+        $question = $user->questions()->create(['definition' => ['metric' => 'word_share']]);
 
         Livewire::test(StatisticsPage::class)->call('saveAsTemplate', $question->id);
 
-        $template = Comparison::templates()->sole();
+        $template = Question::templates()->sole();
         $this->assertSame('Word share of everyone', $template->name);
         $this->assertFalse($question->fresh()->is_template);
     }
@@ -112,7 +112,7 @@ class StatisticsPageTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $question = $user->comparisons()->create(['name' => 'Mine']);
+        $question = $user->questions()->create(['name' => 'Mine']);
 
         Livewire::test(StatisticsPage::class)
             ->call('startRenaming', $question->id)
@@ -127,8 +127,8 @@ class StatisticsPageTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $user->comparisons()->create(['name' => 'Mine', 'question' => ['metric' => 'word_share']]);
-        $user->comparisons()->create(['name' => 'Shared', 'question' => ['metric' => 'gini'], 'is_template' => true]);
+        $user->questions()->create(['name' => 'Mine', 'definition' => ['metric' => 'word_share']]);
+        $user->questions()->create(['name' => 'Shared', 'definition' => ['metric' => 'gini'], 'is_template' => true]);
 
         Livewire::test(StatisticsPage::class)
             ->assertSee('Mine')
@@ -141,7 +141,7 @@ class StatisticsPageTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $user->comparisons()->create(['question' => ['metric' => 'word_share']]);
+        $user->questions()->create(['definition' => ['metric' => 'word_share']]);
 
         Livewire::test(StatisticsPage::class)
             ->assertSee('Untitled question')
@@ -152,7 +152,7 @@ class StatisticsPageTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $question = $user->comparisons()->create(['name' => 'Mine']);
+        $question = $user->questions()->create(['name' => 'Mine']);
 
         Livewire::test(StatisticsPage::class)
             ->assertDontSee('Untitled question')
@@ -166,7 +166,7 @@ class StatisticsPageTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $template = $user->comparisons()->create(['name' => 'Shared', 'is_template' => true]);
+        $template = $user->questions()->create(['name' => 'Shared', 'is_template' => true]);
 
         Livewire::test(StatisticsPage::class)
             ->call('startRenaming', $template->id)
@@ -180,7 +180,7 @@ class StatisticsPageTest extends TestCase
     public function test_only_the_owner_deletes_a_template(): void
     {
         $owner = User::factory()->create();
-        $template = $owner->comparisons()->create(['name' => 'T', 'is_template' => true]);
+        $template = $owner->questions()->create(['name' => 'T', 'is_template' => true]);
         $this->actingAs(User::factory()->create());
 
         $this->expectException(ModelNotFoundException::class);
@@ -189,10 +189,10 @@ class StatisticsPageTest extends TestCase
 
     public function test_someone_elses_question_does_not_exist_here(): void
     {
-        $foreign = User::factory()->create()->comparisons()->create([]);
+        $foreign = User::factory()->create()->questions()->create([]);
         $this->actingAs(User::factory()->create());
 
-        Livewire::withQueryParams(['c' => $foreign->id])->test(StatisticsPage::class)->assertSet('comparisonId', null);
+        Livewire::withQueryParams(['q' => $foreign->id])->test(StatisticsPage::class)->assertSet('questionId', null);
     }
 
     public function test_saving_as_a_template_drops_the_groups_and_says_so(): void
@@ -200,25 +200,25 @@ class StatisticsPageTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
         $group = $user->projectGroups()->create(['name' => 'Score', 'position' => 0]);
-        $question = $user->comparisons()->create(['question' => ['compare_by' => 'group', 'split_by' => 'pipeline', 'projects' => ['groups' => [$group->id], 'pipelines' => ['ScorePipeline']]]]);
+        $question = $user->questions()->create(['definition' => ['compare_by' => 'group', 'split_by' => 'pipeline', 'projects' => ['groups' => [$group->id], 'pipelines' => ['ScorePipeline']]]]);
 
         Livewire::test(StatisticsPage::class)
             ->call('saveAsTemplate', $question->id)
             ->assertSee('Groups are personal, so the template does not use them.');
 
-        $template = Comparison::templates()->sole()->toQuestion();
+        $template = Question::templates()->sole()->definition();
         $this->assertSame([], $template->projects->groups);
         $this->assertSame(['ScorePipeline'], $template->projects->pipelines);
         $this->assertNull($template->compareBy);
         $this->assertSame('pipeline', $template->splitBy->key());
-        $this->assertSame([$group->id], $question->fresh()->toQuestion()->projects->groups);
+        $this->assertSame([$group->id], $question->fresh()->definition()->projects->groups);
     }
 
     public function test_a_template_without_groups_gives_no_notice(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $question = $user->comparisons()->create(['question' => ['metric' => 'word_share']]);
+        $question = $user->questions()->create(['definition' => ['metric' => 'word_share']]);
 
         Livewire::test(StatisticsPage::class)
             ->call('saveAsTemplate', $question->id)
@@ -229,8 +229,8 @@ class StatisticsPageTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $user->comparisons()->create(['name' => 'With notes', 'notes' => "First line of notes\nSecond line"]);
-        $user->comparisons()->create(['name' => 'Without notes']);
+        $user->questions()->create(['name' => 'With notes', 'notes' => "First line of notes\nSecond line"]);
+        $user->questions()->create(['name' => 'Without notes']);
 
         Livewire::test(StatisticsPage::class)
             ->assertSee('First line of notes')
@@ -242,16 +242,16 @@ class StatisticsPageTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $fix = User::factory()->create()->comparisons()->create(['name' => 'Fix', 'notes' => 'From the template', 'is_template' => true]);
-        $own = $user->comparisons()->create(['name' => 'Own', 'notes' => 'My conclusion']);
+        $template = User::factory()->create()->questions()->create(['name' => 'Fix', 'notes' => 'From the template', 'is_template' => true]);
+        $own = $user->questions()->create(['name' => 'Own', 'notes' => 'My conclusion']);
 
         $page = Livewire::test(StatisticsPage::class);
-        $page->call('copyFixQuestion', $fix->id);
+        $page->call('copyTemplate', $template->id);
         $page->call('duplicate', $own->id);
         $page->call('saveAsTemplate', $own->id);
 
-        $this->assertSame('From the template', $user->comparisons()->questions()->where('name', 'Fix')->sole()->notes);
-        $this->assertSame('My conclusion', $user->comparisons()->questions()->where('name', 'Copy of Own')->sole()->notes);
-        $this->assertSame('My conclusion', $user->comparisons()->where('is_template', true)->sole()->notes);
+        $this->assertSame('From the template', $user->questions()->notTemplates()->where('name', 'Fix')->sole()->notes);
+        $this->assertSame('My conclusion', $user->questions()->notTemplates()->where('name', 'Copy of Own')->sole()->notes);
+        $this->assertSame('My conclusion', $user->questions()->where('is_template', true)->sole()->notes);
     }
 }

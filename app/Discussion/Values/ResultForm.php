@@ -2,7 +2,7 @@
 
 namespace App\Discussion\Values;
 
-/** The shapes an answer can take. Which ones a question allows is Question::supports()' call. */
+/** The shapes an answer can take. Which ones a question allows is QuestionDefinition::supports()' call. */
 enum ResultForm: string
 {
     case Points = 'points';

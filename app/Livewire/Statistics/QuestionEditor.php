@@ -10,12 +10,12 @@ use App\Discussion\Values\DimensionSource;
 use App\Discussion\Values\DimensionType;
 use App\Discussion\Values\Metric;
 use App\Discussion\Values\ModelConfig;
-use App\Discussion\Values\Question;
+use App\Discussion\Values\QuestionDefinition;
 use App\Discussion\Values\ResultForm;
 use App\Discussion\Values\TagFilter;
-use App\Models\Comparison;
 use App\Models\Expert;
 use App\Models\ProjectGroup;
+use App\Models\Question;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
@@ -24,26 +24,26 @@ use Livewire\Component;
 
 /**
  * One question, edited in place: its sentence on top, its answer below. Every
- * change is normalised through Question and saved at once; there is no draft.
- * The user's own questions open for editing. A fix question opens read only:
+ * change is normalised through QuestionDefinition and saved at once; there is no draft.
+ * The user's own questions open for editing. A template opens read only:
  * nothing it shows is saved, the form and curve switches change this view and
  * nothing else, and the page copies it to adjust.
  */
 class QuestionEditor extends Component
 {
     /** The page renamed this question; render again so the heading follows. */
-    protected $listeners = ['comparison-renamed' => '$refresh'];
+    protected $listeners = ['question-renamed' => '$refresh'];
 
     #[Locked]
-    public int $comparisonId;
+    public int $questionId;
 
-    /** @var array<string, mixed> Question::toArray() */
-    public array $question = [];
+    /** @var array<string, mixed> QuestionDefinition::toArray() */
+    public array $definition = [];
 
     /** Free text under the title: what the question asks, what was concluded. Saved like the question. */
     public string $notes = '';
 
-    /** A fix question: shown, never saved. */
+    /** A template: shown, never saved. */
     #[Locked]
     public bool $readOnly = false;
 
@@ -51,16 +51,16 @@ class QuestionEditor extends Component
     #[Locked]
     public int $droppedTagValues = 0;
 
-    /** The comparison of this request; not a property Livewire keeps between requests. */
-    private ?Comparison $loaded = null;
+    /** The question of this request; not a property Livewire keeps between requests. */
+    private ?Question $loaded = null;
 
-    public function mount(int $comparisonId): void
+    public function mount(int $questionId): void
     {
-        $comparison = $this->comparison($comparisonId);
-        $this->comparisonId = $comparison->id;
-        $this->readOnly = $comparison->is_template;
-        $this->question = $comparison->toQuestion()->toArray();
-        $this->notes = (string) $comparison->notes;
+        $question = $this->question($questionId);
+        $this->questionId = $question->id;
+        $this->readOnly = $question->is_template;
+        $this->definition = $question->definition()->toArray();
+        $this->notes = (string) $question->notes;
         $this->dropDeletedTagValues();
     }
 
@@ -72,33 +72,33 @@ class QuestionEditor extends Component
             return;
         }
 
-        if (! str_starts_with($property, 'question')) {
+        if (! str_starts_with($property, 'definition')) {
             return;
         }
 
         if ($this->readOnly) {
-            $this->question = $this->onlyTheViewChanged();
+            $this->definition = $this->onlyTheViewChanged();
 
             return;
         }
 
-        $this->question = Question::fromArray($this->question)->toArray();
-        $this->comparison($this->comparisonId)->update(['question' => $this->question]);
+        $this->definition = QuestionDefinition::fromArray($this->definition)->toArray();
+        $this->question($this->questionId)->update(['definition' => $this->definition]);
 
         $this->dispatch('question-saved');
     }
 
-    /** Trimmed; empty is no notes. A fix question's notes are only shown, so nothing is saved there. */
+    /** Trimmed; empty is no notes. A template's notes are only shown, so nothing is saved there. */
     private function saveNotes(): void
     {
-        $comparison = $this->comparison($this->comparisonId);
-        $this->notes = $this->readOnly ? (string) $comparison->notes : trim($this->notes);
+        $question = $this->question($this->questionId);
+        $this->notes = $this->readOnly ? (string) $question->notes : trim($this->notes);
 
         if ($this->readOnly) {
             return;
         }
 
-        $comparison->update(['notes' => $this->notes === '' ? null : $this->notes]);
+        $question->update(['notes' => $this->notes === '' ? null : $this->notes]);
 
         $this->dispatch('question-saved');
     }
@@ -106,10 +106,10 @@ class QuestionEditor extends Component
     /** The stored question with the form and curve of this view: the only things a viewer may switch. */
     private function onlyTheViewChanged(): array
     {
-        $stored = $this->comparison($this->comparisonId)->toQuestion()->toArray();
-        $viewed = Question::fromArray($this->question)->toArray();
+        $stored = $this->question($this->questionId)->definition()->toArray();
+        $viewed = QuestionDefinition::fromArray($this->definition)->toArray();
 
-        return Question::fromArray(['form' => $viewed['form'], 'curve' => $viewed['curve']] + $stored)->toArray();
+        return QuestionDefinition::fromArray(['form' => $viewed['form'], 'curve' => $viewed['curve']] + $stored)->toArray();
     }
 
     /**
@@ -120,7 +120,7 @@ class QuestionEditor extends Component
      */
     private function dropDeletedTagValues(): void
     {
-        $filters = ['people' => TagFilter::fromArray($this->question['people']['tags'] ?? []), 'projects' => TagFilter::fromArray($this->question['projects']['tags'] ?? [])];
+        $filters = ['people' => TagFilter::fromArray($this->definition['people']['tags'] ?? []), 'projects' => TagFilter::fromArray($this->definition['projects']['tags'] ?? [])];
         $named = array_merge(...array_map(fn (TagFilter $filter) => $filter->valueIds(), array_values($filters)));
         $gone = array_values(array_diff($named, TagValue::whereKey($named)->pluck('id')->all()));
 
@@ -129,22 +129,22 @@ class QuestionEditor extends Component
         }
 
         foreach ($filters as $part => $filter) {
-            $this->question[$part]['tags'] = $filter->without($gone)->toArray();
+            $this->definition[$part]['tags'] = $filter->without($gone)->toArray();
         }
 
-        $this->question = Question::fromArray($this->question)->toArray();
+        $this->definition = QuestionDefinition::fromArray($this->definition)->toArray();
         $this->droppedTagValues = count($gone);
 
         if (! $this->readOnly) {
-            $this->comparison($this->comparisonId)->update(['question' => $this->question]);
+            $this->question($this->questionId)->update(['definition' => $this->definition]);
         }
     }
 
-    private function comparison(int $comparisonId): Comparison
+    private function question(int $questionId): Question
     {
-        if ($this->loaded?->id !== $comparisonId) {
-            $this->loaded = Comparison::templates()->find($comparisonId)
-                ?? auth()->user()->comparisons()->where('is_template', false)->findOrFail($comparisonId);
+        if ($this->loaded?->id !== $questionId) {
+            $this->loaded = Question::templates()->find($questionId)
+                ?? auth()->user()->questions()->notTemplates()->findOrFail($questionId);
         }
 
         return $this->loaded;
@@ -152,15 +152,15 @@ class QuestionEditor extends Component
 
     public function render(): mixed
     {
-        $question = Question::fromArray($this->question);
+        $definition = QuestionDefinition::fromArray($this->definition);
         $sentence = app(QuestionSentence::class);
-        $result = app(QuestionEvaluator::class)->evaluate(auth()->user(), $question);
+        $result = app(QuestionEvaluator::class)->evaluate(auth()->user(), $definition);
 
         return view('livewire.statistics.question-editor', [
-            'title' => $this->comparison($this->comparisonId)->name,
-            'current' => $question,
-            'mayManage' => ! $this->readOnly || $this->comparison($this->comparisonId)->user_id === auth()->id(),
-            'parts' => $sentence->parts($question, $result),
+            'title' => $this->question($this->questionId)->name,
+            'current' => $definition,
+            'mayManage' => ! $this->readOnly || $this->question($this->questionId)->user_id === auth()->id(),
+            'parts' => $sentence->parts($definition, $result),
             'result' => $result,
             'metrics' => Metric::cases(),
             'aggregates' => Aggregate::cases(),
@@ -175,7 +175,7 @@ class QuestionEditor extends Component
             'models' => ModelConfig::options(),
             'groups' => ProjectGroup::where('user_id', auth()->id())->orderBy('position')->orderBy('name')->pluck('name', 'id'),
             'expertNames' => Expert::query()->distinct()->orderBy('name')->pluck('name'),
-            'compareOptions' => $this->dimensionOptions($sentence, withPersona: ! $question->metric->isRunLevel()),
+            'compareOptions' => $this->dimensionOptions($sentence, withPersona: ! $definition->metric->isRunLevel()),
             'splitOptions' => $this->dimensionOptions($sentence, withPersona: false),
             'rollingWindow' => (int) config('discussion.share_window'),
         ]);

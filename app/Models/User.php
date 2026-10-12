@@ -79,10 +79,10 @@ class User extends Authenticatable
         return $this->hasMany(Project::class, 'user_id');
     }
 
-    /** This user's saved comparisons on the statistics page. */
-    public function comparisons(): HasMany
+    /** This user's saved questions on the statistics page, templates included. */
+    public function questions(): HasMany
     {
-        return $this->hasMany(Comparison::class);
+        return $this->hasMany(Question::class);
     }
 
     public function initials(): string

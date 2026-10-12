@@ -22,7 +22,7 @@
              its own, so a value never drags its category along.
 
              Rename and delete sit in a "…" menu per row, as for sidebar groups
-             and comparisons: red appears only on the delete item and in the
+             and saved questions: red appears only on the delete item and in the
              confirm dialog. --}}
         <div class="space-y-4" wire:sort="sortCategory">
             @foreach ($categories as $category)

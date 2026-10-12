@@ -15,7 +15,7 @@ namespace App\Discussion\Values;
  *   compareBy already uses.
  * - A form the question cannot show falls back to points.
  */
-final readonly class Question
+final readonly class QuestionDefinition
 {
     public function __construct(
         public Metric $metric = Metric::TurnShare,

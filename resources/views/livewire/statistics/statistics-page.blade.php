@@ -17,15 +17,15 @@
     <div class="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
         <aside class="w-full shrink-0 space-y-6 lg:w-64">
             <div>
-                <flux:heading size="sm" class="px-3">{{ __('questions.list.fix') }}</flux:heading>
+                <flux:heading size="sm" class="px-3">{{ __('questions.list.templates') }}</flux:heading>
 
-                @if ($fixQuestions->isEmpty())
-                    <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.no_fix') }}</flux:text>
+                @if ($templates->isEmpty())
+                    <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.no_templates') }}</flux:text>
                 @else
                     <div class="mt-2 space-y-0.5">
-                        @foreach ($fixQuestions as $template)
+                        @foreach ($templates as $template)
                             <div class="group/template relative" wire:key="template-{{ $template->id }}">
-                                <x-statistics.entry :title="$template->name" :notes="$template->notes" :sentence="$sentences[$template->id]" :current="$comparisonId === $template->id"
+                                <x-statistics.entry :title="$template->name" :notes="$template->notes" :sentence="$sentences[$template->id]" :current="$questionId === $template->id"
                                     icon="rectangle-stack" :with-menu="$template->user_id === auth()->id()" wire:click="open({{ $template->id }})" />
 
                                 @if ($template->user_id === auth()->id())
@@ -48,7 +48,7 @@
             </div>
 
             <div>
-                <flux:heading size="sm" class="px-3">{{ __('questions.list.others') }}</flux:heading>
+                <flux:heading size="sm" class="px-3">{{ __('questions.list.questions') }}</flux:heading>
 
                 @if ($questions->isEmpty())
                     <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.empty') }}</flux:text>
@@ -56,7 +56,7 @@
                     <div class="mt-2 space-y-0.5">
                         @foreach ($questions as $question)
                             <div class="relative" wire:key="question-{{ $question->id }}">
-                                <x-statistics.entry :title="$question->name" :notes="$question->notes" :sentence="$sentences[$question->id]" :current="$comparisonId === $question->id"
+                                <x-statistics.entry :title="$question->name" :notes="$question->notes" :sentence="$sentences[$question->id]" :current="$questionId === $question->id"
                                     with-menu wire:click="open({{ $question->id }})" />
 
                                 <div class="absolute end-1 top-1.5">
@@ -66,7 +66,7 @@
                                         <flux:menu>
                                             <flux:menu.item icon="pencil-square" wire:click="startRenaming({{ $question->id }})">{{ __('questions.actions.rename') }}</flux:menu.item>
                                             <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $question->id }})">{{ __('questions.actions.duplicate') }}</flux:menu.item>
-                                            <flux:menu.item icon="rectangle-stack" wire:click="saveAsTemplate({{ $question->id }})">{{ __('questions.actions.save_as_fix_question') }}</flux:menu.item>
+                                            <flux:menu.item icon="rectangle-stack" wire:click="saveAsTemplate({{ $question->id }})">{{ __('questions.actions.save_as_template') }}</flux:menu.item>
                                             <flux:menu.separator />
                                             <flux:menu.item variant="danger" icon="trash" wire:click="confirmDelete({{ $question->id }})">{{ __('questions.actions.delete') }}</flux:menu.item>
                                         </flux:menu>
@@ -81,7 +81,7 @@
 
         <div class="min-w-0 flex-1">
             @if ($current)
-                <livewire:statistics.question-editor :comparison-id="$current->id" wire:key="question-editor-{{ $current->id }}" />
+                <livewire:statistics.question-editor :question-id="$current->id" wire:key="question-editor-{{ $current->id }}" />
             @else
                 <x-empty-state icon="chart-bar">{{ __('questions.none_open') }}</x-empty-state>
             @endif

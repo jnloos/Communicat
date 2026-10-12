@@ -17,11 +17,11 @@ return new class extends Migration
      * assignments. The tagged row itself has no foreign key (it is
      * polymorphic); HasTags removes its assignments when the model is deleted.
      *
-     * comparisons: one saved question per row (Question::toArray() in
-     * `question`), with an optional title (`name`; null reads as "Untitled
+     * questions: one saved question per row (QuestionDefinition::toArray() in
+     * `definition`), with an optional title (`name`; null reads as "Untitled
      * question") and the researcher's free text (`notes`). A template is the
-     * same row with `is_template` set: everyone may open and copy it, only its
-     * owner renames or deletes it.
+     * same row with `is_template` set: everyone may open and copy it, only an
+     * admin who owns it renames or deletes it.
      */
     public function up(): void
     {
@@ -53,12 +53,12 @@ return new class extends Migration
             $table->unique(['taggable_type', 'taggable_id', 'tag_category_id']);
         });
 
-        Schema::create('comparisons', function (Blueprint $table) {
+        Schema::create('questions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('name', 100)->nullable();
             $table->text('notes')->nullable();
-            $table->json('question')->nullable();
+            $table->json('definition')->nullable();
             $table->boolean('is_template')->default(false)->index();
             $table->timestamps();
         });
@@ -66,7 +66,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('comparisons');
+        Schema::dropIfExists('questions');
         Schema::dropIfExists('taggables');
         Schema::dropIfExists('tag_values');
         Schema::dropIfExists('tag_categories');

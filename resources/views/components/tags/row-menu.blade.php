@@ -5,7 +5,7 @@
 ])
 
 {{-- The "…" menu of one row in Settings → Tags, the pattern of the sidebar
-     groups and the comparisons: rename, and delete as the only red. --}}
+     groups and the saved questions: rename, and delete as the only red. --}}
 <flux:dropdown position="bottom" align="end">
     <flux:button
         variant="ghost"

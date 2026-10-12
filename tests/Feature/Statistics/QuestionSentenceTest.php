@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Statistics;
 
-use App\Discussion\Values\Question;
+use App\Discussion\Values\QuestionDefinition;
 use App\Discussion\Values\QuestionResult;
 use App\Discussion\Values\TurnRange;
 use App\Livewire\Statistics\QuestionSentence;
@@ -24,7 +24,7 @@ class QuestionSentenceTest extends TestCase
 
     public function test_an_empty_question_says_everyone_and_all_runs(): void
     {
-        $parts = app(QuestionSentence::class)->parts(new Question);
+        $parts = app(QuestionSentence::class)->parts(new QuestionDefinition);
 
         $this->assertSame('Turn share', $parts['metric']);
         $this->assertSame('everyone', $parts['people']);
@@ -41,7 +41,7 @@ class QuestionSentenceTest extends TestCase
         $true = $focus->values()->create(['name' => 'true']);
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
 
-        $name = app(QuestionSentence::class)->of(Question::fromArray([
+        $name = app(QuestionSentence::class)->of(QuestionDefinition::fromArray([
             'people' => ['tags' => [$focus->id => [$true->id]]],
             'turns' => ['to' => 60],
             'compare_by' => "project_tag:{$condition->id}",
@@ -56,7 +56,7 @@ class QuestionSentenceTest extends TestCase
         $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'focus persona']);
         $true = $category->values()->create(['name' => 'true']);
 
-        $parts = app(QuestionSentence::class)->parts(Question::fromArray([
+        $parts = app(QuestionSentence::class)->parts(QuestionDefinition::fromArray([
             'people' => ['tags' => [$category->id => [$true->id, 9999]]],
         ]));
 
@@ -65,12 +65,12 @@ class QuestionSentenceTest extends TestCase
 
     public function test_gini_names_no_people(): void
     {
-        $this->assertNull(app(QuestionSentence::class)->parts(Question::fromArray(['metric' => 'turn_gini']))['people']);
+        $this->assertNull(app(QuestionSentence::class)->parts(QuestionDefinition::fromArray(['metric' => 'turn_gini']))['people']);
     }
 
     private function turns(array $turns, ?QuestionResult $effective = null): string
     {
-        return app(QuestionSentence::class)->parts(Question::fromArray(['turns' => $turns]), $effective)['turns'];
+        return app(QuestionSentence::class)->parts(QuestionDefinition::fromArray(['turns' => $turns]), $effective)['turns'];
     }
 
     private function resultOver(TurnRange $turns, bool $capped): QuestionResult
@@ -96,7 +96,7 @@ class QuestionSentenceTest extends TestCase
         $this->assertSame('in den Turns 1 bis 60', $this->turns(['to' => 60]));
         $this->assertSame('ab Turn 5', $this->turns(['from' => 5]));
         $this->assertSame('in allen Turns', $this->turns([]));
-        $this->assertSame('Turn-Anteil von allen ab Turn 5', app(QuestionSentence::class)->of(Question::fromArray(['turns' => ['from' => 5]])));
+        $this->assertSame('Turn-Anteil von allen ab Turn 5', app(QuestionSentence::class)->of(QuestionDefinition::fromArray(['turns' => ['from' => 5]])));
     }
 
     public function test_a_bound_set_by_the_shortest_run_reads_like_any_other(): void
@@ -109,16 +109,16 @@ class QuestionSentenceTest extends TestCase
     {
         $sentence = app(QuestionSentence::class);
 
-        $this->assertSame('Turn share of everyone', $sentence->of(new Question));
-        $this->assertSame('Turn share of everyone from turn 4 onwards', $sentence->of(Question::fromArray(['turns' => ['from' => 4]])));
+        $this->assertSame('Turn share of everyone', $sentence->of(new QuestionDefinition));
+        $this->assertSame('Turn share of everyone from turn 4 onwards', $sentence->of(QuestionDefinition::fromArray(['turns' => ['from' => 4]])));
     }
 
     public function test_the_sentence_names_per_head_and_leaves_gini_without_people(): void
     {
         $sentence = app(QuestionSentence::class);
 
-        $this->assertSame('Turn share of everyone per head', $sentence->of(Question::fromArray(['aggregate' => 'per_head'])));
-        $this->assertSame('Gini of turns', $sentence->of(Question::fromArray(['metric' => 'turn_gini'])));
+        $this->assertSame('Turn share of everyone per head', $sentence->of(QuestionDefinition::fromArray(['aggregate' => 'per_head'])));
+        $this->assertSame('Gini of turns', $sentence->of(QuestionDefinition::fromArray(['metric' => 'turn_gini'])));
     }
 
     public function test_a_start_beyond_the_shortest_run_says_why_the_answer_is_empty(): void
@@ -132,7 +132,7 @@ class QuestionSentenceTest extends TestCase
     {
         $focus = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
 
-        $parts = app(QuestionSentence::class)->parts(Question::fromArray([
+        $parts = app(QuestionSentence::class)->parts(QuestionDefinition::fromArray([
             'compare_by' => "persona_tag:{$focus->id}",
             'split_by' => 'pipeline',
         ]));
@@ -150,7 +150,7 @@ class QuestionSentenceTest extends TestCase
         $quality = $user->projectGroups()->create(['name' => 'Quality', 'position' => 1]);
         $sentence = app(QuestionSentence::class);
 
-        $question = Question::fromArray(['projects' => ['groups' => [$score->id, $quality->id, 9999]], 'compare_by' => 'group']);
+        $question = QuestionDefinition::fromArray(['projects' => ['groups' => [$score->id, $quality->id, 9999]], 'compare_by' => 'group']);
 
         $this->assertSame('Score, Quality, deleted group', $sentence->parts($question)['projects']);
         $this->assertSame('Group', $sentence->parts($question)['compare_by']);

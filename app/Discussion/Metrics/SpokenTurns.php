@@ -27,7 +27,7 @@ use Illuminate\Support\Collection;
  * - **Only public contributions count.** Reasoning is measured apart in
  *   `thought_words`, and selector and judge calls never write `words` at all.
  * - **Words, not model tokens.** The tokenizers of the model families differ,
- *   so tokens would bias the model comparison the study exists to make.
+ *   so tokens would bias the contrast between models the study exists to draw.
  * - **Every contributing expert appears, including one that never spoke.** A
  *   zero is a finding, not a missing row — and it is what pulls the Gini
  *   coefficient up.

@@ -12,17 +12,17 @@ return [
     'none_open' => 'Wähle links eine Vorlage oder eine deiner Fragen, oder stelle eine neue.',
 
     'list' => [
-        'others' => 'Fragen',
-        'fix' => 'Vorlagen',
+        'questions' => 'Fragen',
+        'templates' => 'Vorlagen',
         'create' => 'Neue Frage',
         'empty' => 'Noch keine Frage.',
-        'no_fix' => 'Noch keine Vorlage. Speichere eine Frage als Vorlage, um sie zu teilen.',
+        'no_templates' => 'Noch keine Vorlage. Speichere eine Frage als Vorlage, um sie zu teilen.',
     ],
 
     'actions' => [
         'rename' => 'Umbenennen',
         'duplicate' => 'Duplizieren',
-        'save_as_fix_question' => 'Als Vorlage speichern',
+        'save_as_template' => 'Als Vorlage speichern',
         'copy_to_adjust' => 'Kopieren und anpassen',
         'delete' => 'Löschen',
     ],
@@ -53,7 +53,7 @@ return [
         ],
     ],
 
-    'fix' => [
+    'template' => [
         'without_groups' => 'Gruppen sind persönlich, deshalb nutzt die Vorlage sie nicht.',
         'view_only_notice' => 'Diese Vorlage ist nur zum Ansehen. Kopiere sie, um sie anzupassen.',
     ],

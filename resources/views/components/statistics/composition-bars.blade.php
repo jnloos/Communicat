@@ -7,7 +7,7 @@
 
 {{--
     One 100 % bar per panel, a segment per group: how the floor divides. Only
-    offered when the groups add up to everyone (Question::supports). A segment
+    offered when the groups add up to everyone (QuestionDefinition::supports). A segment
     is Panel::shareOf(), not the group's mean over the runs that have it: a
     group a run lacks counts as 0 there, so the segments fill the bar however
     unevenly the groups occur. Bars and not pies: several compositions are

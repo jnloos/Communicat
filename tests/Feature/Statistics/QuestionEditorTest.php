@@ -38,30 +38,30 @@ class QuestionEditorTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
-            ->set('question.metric', 'turn_gini')
-            ->set('question.compare_by', 'persona_tag:3')
-            ->assertSet('question.compare_by', '');
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set('definition.metric', 'turn_gini')
+            ->set('definition.compare_by', 'persona_tag:3')
+            ->assertSet('definition.compare_by', '');
 
-        $this->assertSame('turn_gini', $comparison->fresh()->question['metric']);
-        $this->assertSame('', $comparison->fresh()->question['compare_by']);
+        $this->assertSame('turn_gini', $question->fresh()->definition['metric']);
+        $this->assertSame('', $question->fresh()->definition['compare_by']);
     }
 
     public function test_a_saved_change_tells_the_page_and_a_template_does_not(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $own = $user->comparisons()->create([]);
-        $fix = User::factory()->create()->comparisons()->create(['question' => ['metric' => 'word_share'], 'is_template' => true]);
+        $own = $user->questions()->create([]);
+        $template = User::factory()->create()->questions()->create(['definition' => ['metric' => 'word_share'], 'is_template' => true]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $own->id])
-            ->set('question.metric', 'turn_gini')
+        Livewire::test(QuestionEditor::class, ['questionId' => $own->id])
+            ->set('definition.metric', 'turn_gini')
             ->assertDispatched('question-saved');
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $fix->id])
-            ->set('question.form', 'trajectory')
+        Livewire::test(QuestionEditor::class, ['questionId' => $template->id])
+            ->set('definition.form', 'trajectory')
             ->assertNotDispatched('question-saved');
     }
 
@@ -69,11 +69,11 @@ class QuestionEditorTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $own = $user->comparisons()->create([]);
-        $fix = User::factory()->create()->comparisons()->create(['question' => ['metric' => 'word_share'], 'is_template' => true]);
+        $own = $user->questions()->create([]);
+        $template = User::factory()->create()->questions()->create(['definition' => ['metric' => 'word_share'], 'is_template' => true]);
 
-        foreach ([$own, $fix] as $comparison) {
-            $html = Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])->html();
+        foreach ([$own, $template] as $question) {
+            $html = Livewire::test(QuestionEditor::class, ['questionId' => $question->id])->html();
 
             $this->assertMatchesRegularExpression('/<button[^>]*data-statistics-trigger[^>]*>/', $html);
             $this->assertMatchesRegularExpression('/<button(?=[^>]*title="Word share|[^>]*title="[^"]+")(?=[^>]*max-w-64)(?=[^>]*truncate)[^>]*data-statistics-trigger/', $html);
@@ -85,9 +85,9 @@ class QuestionEditorTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
         $this->spokenRun($user);
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSee('Turn share')
             ->assertSee('everyone')
             ->assertSee('all runs')
@@ -100,9 +100,9 @@ class QuestionEditorTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $comparison = $user->comparisons()->create(['name' => 'My title', 'question' => ['metric' => 'word_share']]);
+        $question = $user->questions()->create(['name' => 'My title', 'definition' => ['metric' => 'word_share']]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSee('My title');
     }
 
@@ -110,52 +110,52 @@ class QuestionEditorTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $comparison = $user->comparisons()->create(['question' => ['metric' => 'word_share']]);
+        $question = $user->questions()->create(['definition' => ['metric' => 'word_share']]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSee('Untitled question');
     }
 
     public function test_another_users_own_question_cannot_be_opened(): void
     {
         $this->actingAs(User::factory()->create());
-        $foreign = User::factory()->create()->comparisons()->create([]);
+        $foreign = User::factory()->create()->questions()->create([]);
 
         $this->expectException(ModelNotFoundException::class);
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $foreign->id]);
+        Livewire::test(QuestionEditor::class, ['questionId' => $foreign->id]);
     }
 
-    public function test_a_fix_question_loads_read_only_and_never_saves(): void
+    public function test_a_template_loads_read_only_and_never_saves(): void
     {
         $this->actingAs(User::factory()->create());
-        $fix = User::factory()->create()->comparisons()->create(['name' => 'Fixed', 'question' => ['metric' => 'word_share'], 'is_template' => true]);
+        $template = User::factory()->create()->questions()->create(['name' => 'Fixed', 'definition' => ['metric' => 'word_share'], 'is_template' => true]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $fix->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $template->id])
             ->assertSet('readOnly', true)
             ->assertSee('Fixed')
             ->assertSeeHtml('data-flux-callout')
             ->assertSee('This template is view only. Copy it to adjust.')
             ->assertSee('Copy to adjust')
             ->assertDontSee('Template, view only')
-            ->set('question.metric', 'turn_gini');
+            ->set('definition.metric', 'turn_gini');
 
-        $this->assertSame('word_share', $fix->fresh()->question['metric']);
+        $this->assertSame('word_share', $template->fresh()->definition['metric']);
     }
 
     public function test_a_template_shows_the_same_triggers_disabled_and_a_question_has_them_enabled(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $fix = User::factory()->create()->comparisons()->create(['question' => ['metric' => 'word_share'], 'is_template' => true]);
-        $own = $user->comparisons()->create([]);
+        $template = User::factory()->create()->questions()->create(['definition' => ['metric' => 'word_share'], 'is_template' => true]);
+        $own = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $fix->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $template->id])
             ->assertSee('Word share')
             ->assertSeeHtml('data-statistics-trigger')
             ->assertSeeHtml('disabled')
             ->assertDontSeeHtml('data-statistics-text-part');
 
-        $html = Livewire::test(QuestionEditor::class, ['comparisonId' => $own->id])
+        $html = Livewire::test(QuestionEditor::class, ['questionId' => $own->id])
             ->assertSeeHtml('data-statistics-trigger')
             ->assertDontSee('This template is view only')
             ->html();
@@ -167,46 +167,46 @@ class QuestionEditorTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $own = $user->comparisons()->create([]);
+        $own = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $own->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $own->id])
             ->assertDontSeeHtml('data-question-sentence');
     }
 
-    public function test_a_fix_question_may_be_viewed_as_a_curve_without_saving(): void
+    public function test_a_template_may_be_viewed_as_a_curve_without_saving(): void
     {
         $this->actingAs(User::factory()->create());
-        $fix = User::factory()->create()->comparisons()->create(['question' => ['metric' => 'word_share'], 'is_template' => true]);
+        $template = User::factory()->create()->questions()->create(['definition' => ['metric' => 'word_share'], 'is_template' => true]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $fix->id])
-            ->set('question.form', 'trajectory')
-            ->assertSet('question.form', 'trajectory')
-            ->assertSet('question.metric', 'word_share');
+        Livewire::test(QuestionEditor::class, ['questionId' => $template->id])
+            ->set('definition.form', 'trajectory')
+            ->assertSet('definition.form', 'trajectory')
+            ->assertSet('definition.metric', 'word_share');
 
-        $this->assertNotSame('trajectory', $fix->fresh()->question['form'] ?? null);
+        $this->assertNotSame('trajectory', $template->fresh()->definition['form'] ?? null);
     }
 
     public function test_an_own_question_stays_editable(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSet('readOnly', false)
             ->assertDontSee('Copy to adjust')
-            ->set('question.metric', 'word_share');
+            ->set('definition.metric', 'word_share');
 
-        $this->assertSame('word_share', $comparison->fresh()->question['metric']);
+        $this->assertSame('word_share', $question->fresh()->definition['metric']);
     }
 
     public function test_an_empty_answer_says_how_to_widen_it(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])->assertSee(__('questions.result.empty'));
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])->assertSee(__('questions.result.empty'));
     }
 
     public function test_a_deleted_tag_value_drops_out_and_the_user_is_told(): void
@@ -217,15 +217,15 @@ class QuestionEditorTest extends TestCase
         $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'rolle']);
         $kept = $category->values()->create(['name' => 'kept']);
         $gone = $category->values()->create(['name' => 'gone']);
-        $comparison = $user->comparisons()->create(['question' => ['people' => ['tags' => [$category->id => [$kept->id, $gone->id]]]]]);
+        $question = $user->questions()->create(['definition' => ['people' => ['tags' => [$category->id => [$kept->id, $gone->id]]]]]);
         $gone->delete();
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
-            ->assertSet('question.people.tags', [$category->id => [$kept->id]])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertSet('definition.people.tags', [$category->id => [$kept->id]])
             ->assertSet('droppedTagValues', 1)
             ->assertSee('no longer exists');
 
-        $this->assertSame([$kept->id], $comparison->fresh()->question['people']['tags'][$category->id]);
+        $this->assertSame([$kept->id], $question->fresh()->definition['people']['tags'][$category->id]);
     }
 
     public function test_a_category_left_without_values_still_filters_and_answers_nothing(): void
@@ -235,11 +235,11 @@ class QuestionEditorTest extends TestCase
         $this->spokenRun($user);
         $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'rolle']);
         $only = $category->values()->create(['name' => 'only']);
-        $comparison = $user->comparisons()->create(['question' => ['people' => ['tags' => [$category->id => [$only->id]]]]]);
+        $question = $user->questions()->create(['definition' => ['people' => ['tags' => [$category->id => [$only->id]]]]]);
         $only->delete();
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
-            ->assertSet('question.people.tags', [$category->id => [$only->id]])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertSet('definition.people.tags', [$category->id => [$only->id]])
             ->assertSee('deleted value')
             ->assertSee('No run answers this question');
     }
@@ -270,11 +270,11 @@ class QuestionEditorTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
         $category = $this->titledRun($user);
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
-            ->set('question.compare_by', "persona_tag:{$category->id}")
-            ->set('question.form', 'composition')
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set('definition.compare_by', "persona_tag:{$category->id}")
+            ->set('definition.form', 'composition')
             ->assertSee('ceo')
             ->assertSee('staff')
             ->assertSee('75.0 %')
@@ -286,12 +286,12 @@ class QuestionEditorTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
         $category = $this->titledRun($user);
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
-            ->set('question.compare_by', "persona_tag:{$category->id}")
-            ->set('question.form', 'trajectory')
-            ->assertSet('question.form', 'trajectory')
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set('definition.compare_by', "persona_tag:{$category->id}")
+            ->set('definition.form', 'trajectory')
+            ->assertSet('definition.form', 'trajectory')
             ->assertSee('ceo')
             ->assertSee('staff')
             ->assertDontSee('A curve needs at least two spoken turns.');
@@ -301,15 +301,15 @@ class QuestionEditorTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
-            ->set('question.turns.from', '5')
-            ->set('question.turns.to', '2')
-            ->assertSet('question.turns.from', 5)
-            ->assertSet('question.turns.to', 5);
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set('definition.turns.from', '5')
+            ->set('definition.turns.to', '2')
+            ->assertSet('definition.turns.from', 5)
+            ->assertSet('definition.turns.to', 5);
 
-        $this->assertSame(['from' => 5, 'to' => 5], $comparison->fresh()->question['turns']);
+        $this->assertSame(['from' => 5, 'to' => 5], $question->fresh()->definition['turns']);
     }
 
     public function test_the_sentence_shows_the_bound_the_shortest_run_sets(): void
@@ -317,9 +317,9 @@ class QuestionEditorTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
         $this->spokenRun($user);
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSee('over turns 1 to 1')
             ->assertSee('The upper bound is at most the shortest selected run, “', false)
             ->assertSee('School | with status | 60')
@@ -331,9 +331,9 @@ class QuestionEditorTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
         $run = $this->spokenRun($user);
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSeeHtml('href="'.route('project.show', $run->id).'"');
     }
 
@@ -348,9 +348,9 @@ class QuestionEditorTest extends TestCase
             JobLog::create(['job_class' => 'x', 'project_id' => $run->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => $turn, 'expert_id' => $expert->id, 'words' => 12]);
         }
 
-        $comparison = $user->comparisons()->create(['question' => ['turns' => ['from' => 2]]]);
+        $question = $user->questions()->create(['definition' => ['turns' => ['from' => 2]]]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSeeHtml('placeholder="2"')
             ->assertSeeHtml('placeholder="4"');
     }
@@ -361,9 +361,9 @@ class QuestionEditorTest extends TestCase
         $this->actingAs($user);
         TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
         TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
-        $comparison = $user->comparisons()->create(['name' => 'q']);
+        $question = $user->questions()->create(['name' => 'q']);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSee('Title-holder [Expert]')
             ->assertSee('Status condition [Project]')
             ->assertSee('Pipeline [Run]')
@@ -375,20 +375,20 @@ class QuestionEditorTest extends TestCase
             ->assertDontSeeHtml('data-flux-badge');
     }
 
-    public function test_the_menus_set_the_measure_the_comparison_and_the_split(): void
+    public function test_the_menus_set_the_measure_the_compare_dimension_and_the_split(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
         $category = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
-            ->set('question.metric', 'word_share')
-            ->set('question.compare_by', "project_tag:{$category->id}")
-            ->set('question.split_by', 'pipeline')
-            ->set('question.aggregate', 'per_head');
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set('definition.metric', 'word_share')
+            ->set('definition.compare_by', "project_tag:{$category->id}")
+            ->set('definition.split_by', 'pipeline')
+            ->set('definition.aggregate', 'per_head');
 
-        $saved = $comparison->fresh()->question;
+        $saved = $question->fresh()->definition;
         $this->assertSame('word_share', $saved['metric']);
         $this->assertSame("project_tag:{$category->id}", $saved['compare_by']);
         $this->assertSame('pipeline', $saved['split_by']);
@@ -404,15 +404,15 @@ class QuestionEditorTest extends TestCase
         $project = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
         $status = $project->values()->create(['name' => 'status']);
         Expert::factory()->create(['name' => 'Alex Brandt']);
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
-            ->set("question.people.tags.{$persona->id}", [(string) $yes->id])
-            ->set("question.projects.tags.{$project->id}", [(string) $status->id])
-            ->set('question.projects.pipelines', ['RoundRobinPipeline'])
-            ->set('question.people.expert_name', 'Alex Brandt');
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set("definition.people.tags.{$persona->id}", [(string) $yes->id])
+            ->set("definition.projects.tags.{$project->id}", [(string) $status->id])
+            ->set('definition.projects.pipelines', ['RoundRobinPipeline'])
+            ->set('definition.people.expert_name', 'Alex Brandt');
 
-        $saved = $comparison->fresh()->question;
+        $saved = $question->fresh()->definition;
         $this->assertSame([$yes->id], $saved['people']['tags'][$persona->id]);
         $this->assertSame([$status->id], $saved['projects']['tags'][$project->id]);
         $this->assertSame(['RoundRobinPipeline'], $saved['projects']['pipelines']);
@@ -427,17 +427,17 @@ class QuestionEditorTest extends TestCase
         $other = User::factory()->create();
         $other->projectGroups()->create(['name' => 'Secret drawer', 'position' => 0]);
         $group = $user->projectGroups()->first();
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSee('Groups [Group]')
             ->assertSee('Group [Group]')
             ->assertSee('Score')
             ->assertDontSee('Secret drawer')
-            ->set('question.projects.groups', [(string) $group->id])
-            ->set('question.compare_by', 'group');
+            ->set('definition.projects.groups', [(string) $group->id])
+            ->set('definition.compare_by', 'group');
 
-        $saved = $comparison->fresh()->question;
+        $saved = $question->fresh()->definition;
         $this->assertSame([$group->id], $saved['projects']['groups']);
         $this->assertSame('group', $saved['compare_by']);
     }
@@ -446,51 +446,51 @@ class QuestionEditorTest extends TestCase
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->set('notes', "  Why the CEO speaks more.  \n")
             ->assertDispatched('question-saved')
             ->assertSet('notes', 'Why the CEO speaks more.');
 
-        $this->assertSame('Why the CEO speaks more.', $comparison->fresh()->notes);
+        $this->assertSame('Why the CEO speaks more.', $question->fresh()->notes);
     }
 
     public function test_empty_notes_are_stored_as_null(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $comparison = $user->comparisons()->create(['notes' => 'Something']);
+        $question = $user->questions()->create(['notes' => 'Something']);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSet('notes', 'Something')
             ->set('notes', "   \n ");
 
-        $this->assertNull($comparison->fresh()->notes);
+        $this->assertNull($question->fresh()->notes);
     }
 
     public function test_a_template_shows_its_notes_as_text_and_never_saves_them(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $fix = User::factory()->create()->comparisons()->create(['notes' => 'Read the delta as no-status minus status.', 'is_template' => true]);
+        $template = User::factory()->create()->questions()->create(['notes' => 'Read the delta as no-status minus status.', 'is_template' => true]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $fix->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $template->id])
             ->assertSee('Read the delta as no-status minus status.')
             ->assertDontSeeHtml('<textarea')
             ->set('notes', 'Overwritten')
             ->assertNotDispatched('question-saved');
 
-        $this->assertSame('Read the delta as no-status minus status.', $fix->fresh()->notes);
+        $this->assertSame('Read the delta as no-status minus status.', $template->fresh()->notes);
     }
 
     public function test_an_own_question_shows_the_notes_field(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $comparison = $user->comparisons()->create([]);
+        $question = $user->questions()->create([]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSee('Question and notes')
             ->assertSeeHtml('<textarea');
     }

@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Statistics;
 
-use App\Discussion\Values\Question;
+use App\Discussion\Values\QuestionDefinition;
 use App\Livewire\Concerns\NeedsConfirmation;
-use App\Models\Comparison;
+use App\Models\Question;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Support\Str;
@@ -14,18 +14,18 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
- * The statistics page: everyone's fix questions and the user's other questions
- * on the left, the open question on the right. An own question is always
+ * The statistics page: everyone's templates and the user's own questions on
+ * the left, the open question on the right. An own question is always
  * resolved through the user's own rows; someone else's does not exist here.
- * A fix question (the rows with is_template) is opened by everyone to view,
- * copied to adjust, renamed or deleted only by its owner.
+ * A template (a row with is_template) is opened by everyone to view, copied
+ * to adjust, renamed or deleted only by its owner.
  */
 class StatisticsPage extends Component
 {
     use NeedsConfirmation;
 
-    #[Url(as: 'c')]
-    public ?int $comparisonId = null;
+    #[Url(as: 'q')]
+    public ?int $questionId = null;
 
     #[Locked]
     public ?int $renamingId = null;
@@ -38,131 +38,130 @@ class StatisticsPage extends Component
 
     public function mount(): void
     {
-        if ($this->comparisonId !== null && $this->openable($this->comparisonId) === null) {
-            $this->comparisonId = null;
+        if ($this->questionId !== null && $this->openable($this->questionId) === null) {
+            $this->questionId = null;
         }
     }
 
-    public function open(int $comparisonId): void
+    public function open(int $questionId): void
     {
         $this->templateNotice = null;
-        $this->comparisonId = ($this->openable($comparisonId) ?? abort(404))->id;
+        $this->questionId = ($this->openable($questionId) ?? abort(404))->id;
     }
 
-    /** An own question or any fix question; null for someone else's question. */
-    private function openable(int $comparisonId): ?Comparison
+    /** An own question or any template; null for someone else's question. */
+    private function openable(int $questionId): ?Question
     {
-        return $this->user()->comparisons()->questions()->find($comparisonId)
-            ?? Comparison::templates()->find($comparisonId);
+        return $this->user()->questions()->notTemplates()->find($questionId)
+            ?? Question::templates()->find($questionId);
     }
 
     public function create(): void
     {
-        $this->comparisonId = $this->user()->comparisons()->create(['question' => (new Question)->toArray()])->id;
+        $this->questionId = $this->user()->questions()->create(['definition' => (new QuestionDefinition)->toArray()])->id;
     }
 
     /**
-     * A fix question becomes the user's own question, to adjust; the fix
-     * question itself stays as it is. The form being viewed may come along.
+     * A template becomes the user's own question, to adjust; the template
+     * itself stays as it is. The form being viewed may come along.
      */
-    public function copyFixQuestion(int $fixQuestionId, ?string $form = null, ?string $curve = null): void
+    public function copyTemplate(int $templateId, ?string $form = null, ?string $curve = null): void
     {
-        $fix = Comparison::templates()->findOrFail($fixQuestionId);
-        $question = $fix->question ?? [];
+        $template = Question::templates()->findOrFail($templateId);
+        $definition = $template->definition()->toArray();
 
         if ($form !== null) {
-            $question['form'] = $form;
+            $definition['form'] = $form;
         }
 
         if ($curve !== null) {
-            $question['curve'] = $curve;
+            $definition['curve'] = $curve;
         }
 
-        $this->comparisonId = $this->user()->comparisons()->create([
-            'name' => $fix->name,
-            'notes' => $fix->notes,
-            'question' => Question::fromArray($question)->toArray(),
+        $this->questionId = $this->user()->questions()->create([
+            'name' => $template->name,
+            'notes' => $template->notes,
+            'definition' => QuestionDefinition::fromArray($definition)->toArray(),
         ])->id;
     }
 
-    /** A snapshot of the question as a fix question (without groups, which are personal), titled like it, or by its sentence when untitled; the question stays the user's own. */
-    public function saveAsTemplate(int $comparisonId): void
+    /** A snapshot of the question as a template (without groups, which are personal), titled like it, or by its sentence when untitled; the question stays the user's own. */
+    public function saveAsTemplate(int $questionId): void
     {
-        $question = $this->owned($comparisonId);
-        $asked = $question->toQuestion();
+        $question = $this->owned($questionId);
+        $asked = $question->definition();
         $template = $asked->withoutGroups();
 
-        $this->user()->comparisons()->create([
+        $this->user()->questions()->create([
             'name' => Str::limit($question->name ?? app(QuestionSentence::class)->of($asked), 100, ''),
             'notes' => $question->notes,
-            'question' => $template->toArray(),
+            'definition' => $template->toArray(),
             'is_template' => true,
         ]);
 
         // Groups are drawers in one person's sidebar: for anyone else the template would match nothing.
-        $this->templateNotice = $template == $asked ? null : __('questions.fix.without_groups');
+        $this->templateNotice = $template == $asked ? null : __('questions.template.without_groups');
     }
 
-    public function startRenaming(int $comparisonId): void
+    public function startRenaming(int $questionId): void
     {
-        $comparison = $this->owned($comparisonId);
-        $this->renamingId = $comparison->id;
-        $this->name = (string) $comparison->name;
+        $question = $this->owned($questionId);
+        $this->renamingId = $question->id;
+        $this->name = (string) $question->name;
         $this->resetValidation();
         Flux::modal('question-name')->show();
     }
 
     /**
-     * An empty title is allowed for a question: it is then listed as untitled
-     * (its sentence is always shown beside the title). A fix question is read
-     * by everyone and keeps a title.
+     * An empty title is allowed for a question: it is then listed as
+     * untitled. A template is read by everyone and keeps a title.
      */
     public function saveName(): void
     {
-        $comparison = $this->owned((int) $this->renamingId);
+        $question = $this->owned((int) $this->renamingId);
         $this->name = trim($this->name);
-        $this->validate(['name' => [$comparison->is_template ? 'required' : 'nullable', 'string', 'max:100']], [], ['name' => __('questions.name.field')]);
+        $this->validate(['name' => [$question->is_template ? 'required' : 'nullable', 'string', 'max:100']], [], ['name' => __('questions.name.field')]);
 
-        $comparison->update(['name' => $this->name === '' ? null : $this->name]);
-        $this->dispatch('comparison-renamed');
+        $question->update(['name' => $this->name === '' ? null : $this->name]);
+        $this->dispatch('question-renamed');
 
         $this->reset(['renamingId', 'name']);
         Flux::modal('question-name')->close();
     }
 
-    public function duplicate(int $comparisonId): void
+    public function duplicate(int $questionId): void
     {
-        $source = $this->user()->comparisons()->questions()->findOrFail($comparisonId);
+        $source = $this->user()->questions()->notTemplates()->findOrFail($questionId);
         $copy = $source->replicate();
         $copy->name = $source->name === null ? null : Str::limit(__('questions.copy_name', ['name' => $source->name]), 100, '');
         $copy->save();
 
-        $this->comparisonId = $copy->id;
+        $this->questionId = $copy->id;
     }
 
-    public function confirmDelete(int $comparisonId): void
+    public function confirmDelete(int $questionId): void
     {
-        $comparison = $this->owned($comparisonId);
-        $kind = $comparison->is_template ? 'delete_template' : 'delete';
+        $question = $this->owned($questionId);
+        $kind = $question->is_template ? 'delete_template' : 'delete';
 
         $this->confirmTitle = __("questions.confirm.{$kind}.title");
-        $this->confirmMessage = __("questions.confirm.{$kind}.message", ['name' => $comparison->name ?? __('questions.untitled')]);
-        $this->needsConfirmation('delete', $comparisonId);
+        $this->confirmMessage = __("questions.confirm.{$kind}.message", ['name' => $question->name ?? __('questions.untitled')]);
+        $this->needsConfirmation('delete', $questionId);
     }
 
-    public function delete(int $comparisonId): void
+    public function delete(int $questionId): void
     {
-        $this->owned($comparisonId)->delete();
+        $this->owned($questionId)->delete();
 
-        if ($this->comparisonId === $comparisonId) {
-            $this->comparisonId = null;
+        if ($this->questionId === $questionId) {
+            $this->questionId = null;
         }
     }
 
-    /** One of the user's own rows, question or fix question. */
-    private function owned(int $comparisonId): Comparison
+    /** One of the user's own rows, question or template. */
+    private function owned(int $questionId): Question
     {
-        return $this->user()->comparisons()->findOrFail($comparisonId);
+        return $this->user()->questions()->findOrFail($questionId);
     }
 
     private function user(): User
@@ -176,15 +175,15 @@ class StatisticsPage extends Component
 
     public function render(): mixed
     {
-        $questions = $this->user()->comparisons()->questions()->get();
+        $questions = $this->user()->questions()->notTemplates()->get();
 
-        $fixQuestions = Comparison::templates()->get();
+        $templates = Question::templates()->get();
 
         return view('livewire.statistics.statistics-page', [
             'questions' => $questions,
-            'fixQuestions' => $fixQuestions,
-            'sentences' => $questions->concat($fixQuestions)->mapWithKeys(fn (Comparison $comparison) => [$comparison->id => app(QuestionSentence::class)->of($comparison->toQuestion())]),
-            'current' => $this->comparisonId === null ? null : $questions->firstWhere('id', $this->comparisonId) ?? $fixQuestions->firstWhere('id', $this->comparisonId),
+            'templates' => $templates,
+            'sentences' => $questions->concat($templates)->mapWithKeys(fn (Question $question) => [$question->id => app(QuestionSentence::class)->of($question->definition())]),
+            'current' => $this->questionId === null ? null : $questions->firstWhere('id', $this->questionId) ?? $templates->firstWhere('id', $this->questionId),
         ])->title(__('questions.heading'));
     }
 }

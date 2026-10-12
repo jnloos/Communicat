@@ -17,13 +17,13 @@
             <flux:dropdown position="bottom" align="end" class="shrink-0">
                 <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')" />
                 <flux:menu>
-                    <flux:menu.item icon="pencil-square" wire:click="$parent.startRenaming({{ $comparisonId }})">{{ __('questions.actions.rename') }}</flux:menu.item>
+                    <flux:menu.item icon="pencil-square" wire:click="$parent.startRenaming({{ $questionId }})">{{ __('questions.actions.rename') }}</flux:menu.item>
                     @unless ($readOnly)
-                        <flux:menu.item icon="document-duplicate" wire:click="$parent.duplicate({{ $comparisonId }})">{{ __('questions.actions.duplicate') }}</flux:menu.item>
-                        <flux:menu.item icon="rectangle-stack" wire:click="$parent.saveAsTemplate({{ $comparisonId }})">{{ __('questions.actions.save_as_fix_question') }}</flux:menu.item>
+                        <flux:menu.item icon="document-duplicate" wire:click="$parent.duplicate({{ $questionId }})">{{ __('questions.actions.duplicate') }}</flux:menu.item>
+                        <flux:menu.item icon="rectangle-stack" wire:click="$parent.saveAsTemplate({{ $questionId }})">{{ __('questions.actions.save_as_template') }}</flux:menu.item>
                         <flux:menu.separator />
                     @endunless
-                    <flux:menu.item variant="danger" icon="trash" wire:click="$parent.confirmDelete({{ $comparisonId }})">{{ __('questions.actions.delete') }}</flux:menu.item>
+                    <flux:menu.item variant="danger" icon="trash" wire:click="$parent.confirmDelete({{ $questionId }})">{{ __('questions.actions.delete') }}</flux:menu.item>
                 </flux:menu>
             </flux:dropdown>
         @endif
@@ -41,10 +41,10 @@
 
     {{-- A template is only to look at; the way on is a copy. --}}
     @if ($readOnly)
-        <flux:callout icon="eye" inline :text="__('questions.fix.view_only_notice')">
+        <flux:callout icon="eye" inline :text="__('questions.template.view_only_notice')">
             <x-slot:actions>
                 <flux:button size="sm" variant="primary" icon="document-duplicate"
-                    wire:click="$parent.copyFixQuestion({{ $comparisonId }}, $wire.question.form, $wire.question.curve)">
+                    wire:click="$parent.copyTemplate({{ $questionId }}, $wire.definition.form, $wire.definition.curve)">
                     {{ __('questions.actions.copy_to_adjust') }}
                 </flux:button>
             </x-slot:actions>
@@ -62,7 +62,7 @@
         <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
         <x-statistics.chip :read-only="$readOnly" :label="$parts['metric']">
             <flux:menu>
-                <flux:menu.radio.group wire:model.live="question.metric">
+                <flux:menu.radio.group wire:model.live="definition.metric">
                     @foreach ($metrics as $metric)
                         <flux:menu.radio :value="$metric->value">{{ $metric->label() }}</flux:menu.radio>
                     @endforeach
@@ -78,7 +78,7 @@
                 <flux:menu keep-open>
                     @foreach ($personaCategories as $category)
                         <flux:menu.group :heading="$personaSource->named($category->label())" wire:key="people-{{ $category->id }}">
-                            <flux:menu.checkbox.group wire:model.live="question.people.tags.{{ $category->id }}">
+                            <flux:menu.checkbox.group wire:model.live="definition.people.tags.{{ $category->id }}">
                                 @foreach ($category->values as $value)
                                     <flux:menu.checkbox :value="(string) $value->id">{{ $value->name }}</flux:menu.checkbox>
                                 @endforeach
@@ -87,7 +87,7 @@
                     @endforeach
 
                     <flux:menu.submenu :heading="__('questions.controls.expert_name')" keep-open>
-                        <flux:menu.radio.group wire:model.live="question.people.expert_name">
+                        <flux:menu.radio.group wire:model.live="definition.people.expert_name">
                             <flux:menu.radio value="">{{ __('questions.controls.any_expert') }}</flux:menu.radio>
                             @foreach ($expertNames as $expertName)
                                 <flux:menu.radio :value="$expertName">{{ $expertName }}</flux:menu.radio>
@@ -103,7 +103,7 @@
         <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
             <x-statistics.chip :read-only="$readOnly" :label="$parts['aggregate']" :muted="true">
                 <flux:menu>
-                    <flux:menu.radio.group wire:model.live="question.aggregate">
+                    <flux:menu.radio.group wire:model.live="definition.aggregate">
                         @foreach ($aggregates as $aggregate)
                             <flux:menu.radio :value="$aggregate->value" :title="__('questions.aggregate_hints.'.$aggregate->value)">{{ $aggregate->label() }}</flux:menu.radio>
                         @endforeach
@@ -119,7 +119,7 @@
             <flux:menu keep-open>
                 @foreach ($projectCategories as $category)
                     <flux:menu.group :heading="$projectSource->named($category->label())" wire:key="projects-{{ $category->id }}">
-                        <flux:menu.checkbox.group wire:model.live="question.projects.tags.{{ $category->id }}">
+                        <flux:menu.checkbox.group wire:model.live="definition.projects.tags.{{ $category->id }}">
                             @foreach ($category->values as $value)
                                 <flux:menu.checkbox :value="(string) $value->id">{{ $value->name }}</flux:menu.checkbox>
                             @endforeach
@@ -128,7 +128,7 @@
                 @endforeach
 
                 <flux:menu.group :heading="$runSource->named(__('questions.controls.pipelines'))">
-                    <flux:menu.checkbox.group wire:model.live="question.projects.pipelines">
+                    <flux:menu.checkbox.group wire:model.live="definition.projects.pipelines">
                         @foreach ($pipelines as $pipelineName => $label)
                             <flux:menu.checkbox :value="$pipelineName">{{ $label }}</flux:menu.checkbox>
                         @endforeach
@@ -136,7 +136,7 @@
                 </flux:menu.group>
 
                 <flux:menu.group :heading="$runSource->named(__('questions.controls.models'))">
-                    <flux:menu.checkbox.group wire:model.live="question.projects.models">
+                    <flux:menu.checkbox.group wire:model.live="definition.projects.models">
                         @foreach ($models as $key => $label)
                             <flux:menu.checkbox :value="$key">{{ $label }}</flux:menu.checkbox>
                         @endforeach
@@ -145,7 +145,7 @@
 
                 @if ($groups->isNotEmpty())
                     <flux:menu.group :heading="$groupSource->named(__('questions.controls.groups'))">
-                        <flux:menu.checkbox.group wire:model.live="question.projects.groups">
+                        <flux:menu.checkbox.group wire:model.live="definition.projects.groups">
                             @foreach ($groups as $groupId => $groupName)
                                 <flux:menu.checkbox :value="(string) $groupId" wire:key="group-{{ $groupId }}">{{ $groupName }}</flux:menu.checkbox>
                             @endforeach
@@ -162,8 +162,8 @@
             <flux:popover class="w-80 max-w-[calc(100vw-2rem)] space-y-4">
                 <div class="grid grid-cols-2 gap-3">
                     {{-- Empty fields are not "nothing": the placeholders show the window the answer is read over. --}}
-                    <flux:input type="number" min="1" wire:model.live.debounce.500ms="question.turns.from" :label="__('questions.controls.turn_from')" :placeholder="$result->turns->from" />
-                    <flux:input type="number" min="1" wire:model.live.debounce.500ms="question.turns.to" :label="__('questions.controls.turn_to')" :placeholder="$result->turns->to" />
+                    <flux:input type="number" min="1" wire:model.live.debounce.500ms="definition.turns.from" :label="__('questions.controls.turn_from')" :placeholder="$result->turns->from" />
+                    <flux:input type="number" min="1" wire:model.live.debounce.500ms="definition.turns.to" :label="__('questions.controls.turn_to')" :placeholder="$result->turns->to" />
                 </div>
                 @if ($result->shortestRun !== null)
                     @php($run = e($result->shortestRunTitle))
@@ -180,7 +180,7 @@
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.compared_by') }}</span>
         <x-statistics.chip :read-only="$readOnly" :label="$parts['compare_by'] ?? __('questions.sentence.nothing')" :muted="$parts['compare_by'] === null">
             <flux:menu>
-                <flux:menu.radio.group wire:model.live="question.compare_by">
+                <flux:menu.radio.group wire:model.live="definition.compare_by">
                     <flux:menu.radio value="">{{ __('questions.controls.none') }}</flux:menu.radio>
                     @foreach ($compareOptions as $key => $label)
                         <flux:menu.radio :value="$key" wire:key="compare-{{ $key }}">{{ $label }}</flux:menu.radio>
@@ -198,10 +198,10 @@
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.split_by') }}</span>
         <x-statistics.chip :read-only="$readOnly" :label="$parts['split_by'] ?? __('questions.sentence.nothing')" :muted="$parts['split_by'] === null">
             <flux:menu>
-                <flux:menu.radio.group wire:model.live="question.split_by">
+                <flux:menu.radio.group wire:model.live="definition.split_by">
                     <flux:menu.radio value="">{{ __('questions.controls.none') }}</flux:menu.radio>
                     @foreach ($splitOptions as $key => $label)
-                        @unless ($key === ($question['compare_by'] ?? ''))
+                        @unless ($key === ($definition['compare_by'] ?? ''))
                             <flux:menu.radio :value="$key" wire:key="split-{{ $key }}">{{ $label }}</flux:menu.radio>
                         @endunless
                     @endforeach
@@ -221,13 +221,13 @@
 
         <div class="flex items-center gap-2">
             @if ($current->form === ResultForm::Trajectory)
-                <flux:radio.group wire:model.live="question.curve" variant="segmented" size="sm">
+                <flux:radio.group wire:model.live="definition.curve" variant="segmented" size="sm">
                     <flux:radio value="cumulative" :label="__('questions.curves.cumulative')" />
                     <flux:radio value="rolling" :label="__('questions.curves.rolling')" />
                 </flux:radio.group>
             @endif
 
-            <flux:radio.group wire:model.live="question.form" variant="segmented" size="sm">
+            <flux:radio.group wire:model.live="definition.form" variant="segmented" size="sm">
                 @foreach ($forms as $form)
                     @if ($current->supports($form))
                         <flux:radio :value="$form->value" :label="$form->label()" />

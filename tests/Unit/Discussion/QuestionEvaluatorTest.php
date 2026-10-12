@@ -5,7 +5,7 @@ namespace Tests\Unit\Discussion;
 use App\Discussion\Metrics\Questions\DimensionValues;
 use App\Discussion\Metrics\Questions\QuestionEvaluator;
 use App\Discussion\Pipelines\PipelineRegistry;
-use App\Discussion\Values\Question;
+use App\Discussion\Values\QuestionDefinition;
 use App\Discussion\Values\QuestionResult;
 use App\Discussion\Values\TurnRange;
 use App\Models\Expert;
@@ -69,7 +69,7 @@ class QuestionEvaluatorTest extends TestCase
     /** @param  array<string, mixed>  $question */
     private function answer(array $question): QuestionResult
     {
-        return app(QuestionEvaluator::class)->evaluate($this->user, Question::fromArray($question));
+        return app(QuestionEvaluator::class)->evaluate($this->user, QuestionDefinition::fromArray($question));
     }
 
     public function test_everyone_together_is_the_whole_run(): void

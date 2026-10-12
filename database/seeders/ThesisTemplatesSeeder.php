@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Discussion\Values\Question;
-use App\Models\Comparison;
+use App\Discussion\Values\QuestionDefinition;
+use App\Models\Question;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
@@ -26,7 +26,7 @@ class ThesisTemplatesSeeder extends Seeder
     /** What each template shows and how to read it, by template name. */
     private const NOTES = [
         'Status effect on turn share by pipeline' => 'Shows the turn share of the focus persona with and without the CEO title, per pipeline, over the first 60 turns. The delta is no-status minus status, so a negative delta means the title raised the share. A delta near zero means the title changed little.',
-        'Status effect on word share by pipeline' => 'The same comparison as for turn share, but measured in words. Read it next to the turn share: if the title raises words more than turns, the titled agent writes longer contributions rather than speaking more often. The delta is no-status minus status.',
+        'Status effect on word share by pipeline' => 'The same question as for turn share, but measured in words. Read it next to the turn share: if the title raises words more than turns, the titled agent writes longer contributions rather than speaking more often. The delta is no-status minus status.',
         'Title holder against the others by pipeline (per head)' => 'Compares the turn share of the title holder with the average share of one other agent, in the status runs only, per pipeline. Equal shares would be 25 percent for each of four agents. A title holder far above the others means the title buys floor time.',
         'How the floor divides between title holder and others' => 'Shows how the whole floor splits between the title holder and the three others taken together, in the status runs only, per pipeline. The two parts always add up to 100 percent. Compare the title holder part across pipelines to see where the mechanism lets status through.',
         'Speaking inequality with and without status by pipeline' => 'Shows the Gini coefficient of the turn shares per run, with and without status, per pipeline. Zero means everyone speaks equally and higher values mean fewer agents dominate. If status raises the Gini, it concentrates the floor on fewer speakers.',
@@ -43,18 +43,18 @@ class ThesisTemplatesSeeder extends Seeder
             return;
         }
 
-        foreach ($this->templates() as $name => $question) {
+        foreach ($this->templates() as $name => $definition) {
             $notes = self::NOTES[$name];
 
-            if ($question === null) {
+            if ($definition === null) {
                 $this->command?->warn("Skipped “{$name}”: a tag it names does not exist here.");
 
                 continue;
             }
 
-            Comparison::updateOrCreate(
+            Question::updateOrCreate(
                 ['user_id' => $owner->id, 'name' => $name, 'is_template' => true],
-                ['notes' => $notes, 'question' => Question::fromArray($question)->toArray()],
+                ['notes' => $notes, 'definition' => QuestionDefinition::fromArray($definition)->toArray()],
             );
         }
     }

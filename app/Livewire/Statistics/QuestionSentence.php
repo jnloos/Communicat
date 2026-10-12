@@ -9,7 +9,7 @@ use App\Discussion\Values\DimensionType;
 use App\Discussion\Values\ModelConfig;
 use App\Discussion\Values\PeopleFilter;
 use App\Discussion\Values\ProjectFilter;
-use App\Discussion\Values\Question;
+use App\Discussion\Values\QuestionDefinition;
 use App\Discussion\Values\QuestionResult;
 use App\Discussion\Values\TurnRange;
 use App\Models\ProjectGroup;
@@ -29,7 +29,7 @@ final class QuestionSentence
      *                                       shortest run set. Without it the window reads as asked.
      * @return array{metric: string, people: ?string, aggregate: ?string, projects: string, turns: string, compare_by: ?string, split_by: ?string}
      */
-    public function parts(Question $question, ?QuestionResult $result = null): array
+    public function parts(QuestionDefinition $question, ?QuestionResult $result = null): array
     {
         return [
             'metric' => $question->metric->label(),
@@ -42,7 +42,7 @@ final class QuestionSentence
         ];
     }
 
-    public function of(Question $question): string
+    public function of(QuestionDefinition $question): string
     {
         $parts = $this->parts($question);
 

@@ -10,7 +10,7 @@ use App\Discussion\Values\Dimension;
 use App\Discussion\Values\Metric;
 use App\Discussion\Values\Panel;
 use App\Discussion\Values\PeopleFilter;
-use App\Discussion\Values\Question;
+use App\Discussion\Values\QuestionDefinition;
 use App\Discussion\Values\QuestionResult;
 use App\Discussion\Values\ResultForm;
 use App\Discussion\Values\RunValue;
@@ -50,7 +50,7 @@ final class QuestionEvaluator
         private readonly SpokenTurns $spoken,
     ) {}
 
-    public function evaluate(User $user, Question $question): QuestionResult
+    public function evaluate(User $user, QuestionDefinition $question): QuestionResult
     {
         // Groups belong to the viewer, so the values are read for this user from here on.
         $this->dimensions = $this->dimensions->forUser($user);
@@ -118,7 +118,7 @@ final class QuestionEvaluator
      * panel and groups do not depend on the window, so the window can be
      * capped by the runs that contribute before it is applied to any of them.
      */
-    private function contributes(Question $question, Project $project): bool
+    private function contributes(QuestionDefinition $question, Project $project): bool
     {
         $report = $this->shares->forProject($project);
         $panel = $question->splitBy === null ? '' : $this->dimensions->ofProject($question->splitBy, $project);
@@ -149,7 +149,7 @@ final class QuestionEvaluator
     }
 
     /** @return array<int|string, non-empty-list<SpeakerShare>> group key => the group's agents in this run */
-    private function groupsOf(Question $question, Project $project, ShareReport $report): array
+    private function groupsOf(QuestionDefinition $question, Project $project, ShareReport $report): array
     {
         $people = $question->metric->isRunLevel() ? $report->speakers : $this->people($question->people, $report->speakers);
         $compareBy = $question->compareBy;
@@ -199,7 +199,7 @@ final class QuestionEvaluator
     }
 
     /** @param  non-empty-list<SpeakerShare>  $speakers */
-    private function runValue(Question $question, Project $project, ShareReport $report, array $speakers): RunValue
+    private function runValue(QuestionDefinition $question, Project $project, ShareReport $report, array $speakers): RunValue
     {
         $metric = $question->metric;
 
@@ -215,7 +215,7 @@ final class QuestionEvaluator
      * @param  non-empty-list<SpeakerShare>  $speakers
      * @return array<int, float> turn => the group's share after it
      */
-    private function curveOf(Question $question, Trajectory $trajectory, array $speakers): array
+    private function curveOf(QuestionDefinition $question, Trajectory $trajectory, array $speakers): array
     {
         $series = $question->metric->series($question->curve);
         $divisor = $question->aggregate === Aggregate::PerHead ? count($speakers) : 1;
@@ -240,7 +240,7 @@ final class QuestionEvaluator
      * @param  array<int|string, int>  $panelRuns
      * @return list<Panel>
      */
-    private function panels(Question $question, array $collected, array $groupLabels, array $panelRuns): array
+    private function panels(QuestionDefinition $question, array $collected, array $groupLabels, array $panelRuns): array
     {
         $panels = [];
 

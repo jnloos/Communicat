@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
  * Tags as they travel between instances: {category name: value name}, because
  * ids differ. Reading is sorted like the settings page; writing never creates a
  * category or a value, it reports what it could not place. Names match as
- * TagNames::same() reads them, like the comparison templates do.
+ * TagNames::same() reads them, like the statistics templates do.
  */
 class TagsByName
 {

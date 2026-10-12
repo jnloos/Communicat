@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Statistics;
 
-use App\Models\Comparison;
+use App\Models\Question;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\User;
@@ -31,9 +31,9 @@ class ThesisTemplatesSeederTest extends TestCase
         $this->seed(ThesisTemplatesSeeder::class);
         $this->seed(ThesisTemplatesSeeder::class);
 
-        $this->assertSame(6, Comparison::templates()->count());
-        $this->assertTrue(Comparison::templates()->get()->every(fn (Comparison $template) => $template->user_id === $admin->id));
-        $statusEffect = Comparison::templates()->where('name', 'Status effect on turn share by pipeline')->sole()->toQuestion();
+        $this->assertSame(6, Question::templates()->count());
+        $this->assertTrue(Question::templates()->get()->every(fn (Question $template) => $template->user_id === $admin->id));
+        $statusEffect = Question::templates()->where('name', 'Status effect on turn share by pipeline')->sole()->definition();
         $this->assertSame('pipeline', $statusEffect->splitBy->key());
         $this->assertSame(60, $statusEffect->turns->to);
     }
@@ -45,7 +45,7 @@ class ThesisTemplatesSeederTest extends TestCase
 
         $this->seed(ThesisTemplatesSeeder::class);
 
-        $this->assertSame(['Speaking inequality with and without status by pipeline'], Comparison::templates()->pluck('name')->all());
+        $this->assertSame(['Speaking inequality with and without status by pipeline'], Question::templates()->pluck('name')->all());
     }
 
     public function test_every_template_gets_a_note_and_a_rerun_restores_it(): void
@@ -54,10 +54,10 @@ class ThesisTemplatesSeederTest extends TestCase
         $this->studyTags();
 
         $this->seed(ThesisTemplatesSeeder::class);
-        Comparison::templates()->update(['notes' => null]);
+        Question::templates()->update(['notes' => null]);
         $this->seed(ThesisTemplatesSeeder::class);
 
-        $this->assertCount(6, Comparison::templates()->whereNotNull('notes')->get());
-        $this->assertStringContainsString('no-status minus status', Comparison::templates()->where('name', 'Status effect on turn share by pipeline')->sole()->notes);
+        $this->assertCount(6, Question::templates()->whereNotNull('notes')->get());
+        $this->assertStringContainsString('no-status minus status', Question::templates()->where('name', 'Status effect on turn share by pipeline')->sole()->notes);
     }
 }

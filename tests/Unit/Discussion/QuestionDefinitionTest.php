@@ -7,17 +7,17 @@ use App\Discussion\Values\Dimension;
 use App\Discussion\Values\DimensionType;
 use App\Discussion\Values\Metric;
 use App\Discussion\Values\ProjectFilter;
-use App\Discussion\Values\Question;
+use App\Discussion\Values\QuestionDefinition;
 use App\Discussion\Values\ResultForm;
 use App\Discussion\Values\TurnRange;
 use Tests\TestCase;
 
-/** Question normalises form input into a question that can be answered. */
-class QuestionTest extends TestCase
+/** QuestionDefinition normalises form input into a question that can be answered. */
+class QuestionDefinitionTest extends TestCase
 {
     public function test_an_empty_question_asks_for_everyones_turn_share_in_every_run(): void
     {
-        $question = Question::fromArray([]);
+        $question = QuestionDefinition::fromArray([]);
 
         $this->assertSame(Metric::TurnShare, $question->metric);
         $this->assertTrue($question->people->isEveryone());
@@ -42,7 +42,7 @@ class QuestionTest extends TestCase
             'curve' => 'rolling',
         ];
 
-        $this->assertSame($saved, Question::fromArray($saved)->toArray());
+        $this->assertSame($saved, QuestionDefinition::fromArray($saved)->toArray());
     }
 
     public function test_dimension_keys(): void
@@ -59,7 +59,7 @@ class QuestionTest extends TestCase
 
     public function test_gini_counts_everyone_and_cannot_compare_within_a_run(): void
     {
-        $question = Question::fromArray([
+        $question = QuestionDefinition::fromArray([
             'metric' => 'turn_gini',
             'people' => ['expert_name' => 'Alex Brandt'],
             'aggregate' => 'per_head',
@@ -71,28 +71,28 @@ class QuestionTest extends TestCase
         $this->assertNull($question->compareBy);
     }
 
-    public function test_panels_never_split_agents_nor_repeat_the_comparison(): void
+    public function test_panels_never_split_agents_nor_repeat_the_compare_dimension(): void
     {
-        $this->assertNull(Question::fromArray(['split_by' => 'persona_tag:3'])->splitBy);
-        $this->assertNull(Question::fromArray(['compare_by' => 'pipeline', 'split_by' => 'pipeline'])->splitBy);
-        $this->assertSame('model', Question::fromArray(['compare_by' => 'pipeline', 'split_by' => 'model'])->splitBy->key());
+        $this->assertNull(QuestionDefinition::fromArray(['split_by' => 'persona_tag:3'])->splitBy);
+        $this->assertNull(QuestionDefinition::fromArray(['compare_by' => 'pipeline', 'split_by' => 'pipeline'])->splitBy);
+        $this->assertSame('model', QuestionDefinition::fromArray(['compare_by' => 'pipeline', 'split_by' => 'model'])->splitBy->key());
     }
 
     public function test_shares_only_appear_when_the_groups_add_up_to_everyone(): void
     {
         $composition = ['compare_by' => 'persona_tag:3', 'form' => 'composition'];
 
-        $this->assertSame(ResultForm::Composition, Question::fromArray($composition)->form);
-        $this->assertSame(ResultForm::Points, Question::fromArray([...$composition, 'aggregate' => 'per_head'])->form);
-        $this->assertSame(ResultForm::Points, Question::fromArray([...$composition, 'people' => ['expert_name' => 'A']])->form);
-        $this->assertSame(ResultForm::Points, Question::fromArray([...$composition, 'compare_by' => 'project_tag:1'])->form);
-        $this->assertSame(ResultForm::Points, Question::fromArray([...$composition, 'metric' => 'words_per_turn'])->form);
+        $this->assertSame(ResultForm::Composition, QuestionDefinition::fromArray($composition)->form);
+        $this->assertSame(ResultForm::Points, QuestionDefinition::fromArray([...$composition, 'aggregate' => 'per_head'])->form);
+        $this->assertSame(ResultForm::Points, QuestionDefinition::fromArray([...$composition, 'people' => ['expert_name' => 'A']])->form);
+        $this->assertSame(ResultForm::Points, QuestionDefinition::fromArray([...$composition, 'compare_by' => 'project_tag:1'])->form);
+        $this->assertSame(ResultForm::Points, QuestionDefinition::fromArray([...$composition, 'metric' => 'words_per_turn'])->form);
     }
 
     public function test_a_curve_exists_for_shares_only(): void
     {
-        $this->assertSame(ResultForm::Trajectory, Question::fromArray(['form' => 'trajectory'])->form);
-        $this->assertSame(ResultForm::Points, Question::fromArray(['metric' => 'turn_gini', 'form' => 'trajectory'])->form);
+        $this->assertSame(ResultForm::Trajectory, QuestionDefinition::fromArray(['form' => 'trajectory'])->form);
+        $this->assertSame(ResultForm::Points, QuestionDefinition::fromArray(['metric' => 'turn_gini', 'form' => 'trajectory'])->form);
     }
 
     public function test_project_filter_drops_blank_input(): void
@@ -107,13 +107,13 @@ class QuestionTest extends TestCase
 
     public function test_aggregate_only_applies_to_shares(): void
     {
-        $this->assertSame(Aggregate::Together, Question::fromArray(['metric' => 'words_per_turn', 'aggregate' => 'per_head'])->aggregate);
+        $this->assertSame(Aggregate::Together, QuestionDefinition::fromArray(['metric' => 'words_per_turn', 'aggregate' => 'per_head'])->aggregate);
     }
 
     public function test_the_turn_window_is_normalised_like_every_other_input(): void
     {
-        $this->assertEquals(new TurnRange, Question::fromArray([])->turns);
-        $this->assertEquals(new TurnRange(2, 2), Question::fromArray(['turns' => ['from' => '2', 'to' => '1']])->turns);
+        $this->assertEquals(new TurnRange, QuestionDefinition::fromArray([])->turns);
+        $this->assertEquals(new TurnRange(2, 2), QuestionDefinition::fromArray(['turns' => ['from' => '2', 'to' => '1']])->turns);
     }
 
     public function test_a_group_is_a_dimension_to_compare_or_split_by_and_a_filter(): void
@@ -121,13 +121,13 @@ class QuestionTest extends TestCase
         $this->assertEquals(new Dimension(DimensionType::Group), Dimension::fromKey('group'));
         $this->assertSame('group', Dimension::fromKey('group')->key());
 
-        $question = Question::fromArray(['compare_by' => 'group', 'split_by' => 'pipeline', 'projects' => ['groups' => ['3', 3, 'x', 0, 7]]]);
+        $question = QuestionDefinition::fromArray(['compare_by' => 'group', 'split_by' => 'pipeline', 'projects' => ['groups' => ['3', 3, 'x', 0, 7]]]);
 
         $this->assertSame('group', $question->compareBy->key());
         $this->assertSame([3, 7], $question->projects->groups);
         $this->assertSame([3, 7], $question->toArray()['projects']['groups']);
-        $this->assertSame('group', Question::fromArray(['split_by' => 'group'])->splitBy->key());
-        $this->assertNull(Question::fromArray(['compare_by' => 'group', 'split_by' => 'group'])->splitBy);
-        $this->assertFalse(Question::fromArray(['projects' => ['groups' => [3]]])->projects->isEmpty());
+        $this->assertSame('group', QuestionDefinition::fromArray(['split_by' => 'group'])->splitBy->key());
+        $this->assertNull(QuestionDefinition::fromArray(['compare_by' => 'group', 'split_by' => 'group'])->splitBy);
+        $this->assertFalse(QuestionDefinition::fromArray(['projects' => ['groups' => [3]]])->projects->isEmpty());
     }
 }
