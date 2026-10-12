@@ -139,9 +139,9 @@ class QuestionEditor extends Component
             'forms' => ResultForm::cases(),
             'personaCategories' => TagCategory::ofScope(TagScope::Persona)->with('values')->get(),
             'projectCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
-            'projectSource' => TagScope::Project->source()->label(),
-            'personaSource' => TagScope::Persona->source()->label(),
-            'runSource' => DimensionSource::Run->label(),
+            'projectSource' => TagScope::Project->source(),
+            'personaSource' => TagScope::Persona->source(),
+            'runSource' => DimensionSource::Run,
             'pipelines' => app(PipelineRegistry::class)->options(),
             'models' => ModelConfig::options(),
             'expertNames' => Expert::query()->distinct()->orderBy('name')->pluck('name'),
@@ -151,7 +151,7 @@ class QuestionEditor extends Component
         ]);
     }
 
-    /** @return array<string, array{label: string, source: string}> dimension key => label and source: project tags, persona tags, pipeline, model */
+    /** @return array<string, string> dimension key => its name with the source in brackets: project tags, persona tags, pipeline, model */
     private function dimensionOptions(QuestionSentence $sentence, bool $withPersona): array
     {
         $dimensions = [
@@ -164,7 +164,7 @@ class QuestionEditor extends Component
         $options = [];
 
         foreach ($dimensions as $dimension) {
-            $options[$dimension->key()] = ['label' => $sentence->dimension($dimension), 'source' => $dimension->type->source()->label()];
+            $options[$dimension->key()] = $dimension->type->source()->named($sentence->dimension($dimension));
         }
 
         return $options;

@@ -111,7 +111,7 @@ class QuestionEditorTest extends TestCase
         $this->assertSame('word_share', $fix->fresh()->question['metric']);
     }
 
-    public function test_the_sentence_of_a_template_has_no_controls_and_a_question_has_them(): void
+    public function test_a_template_shows_the_same_triggers_disabled_and_a_question_has_them_enabled(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -120,11 +120,16 @@ class QuestionEditorTest extends TestCase
 
         Livewire::test(QuestionEditor::class, ['comparisonId' => $fix->id])
             ->assertSee('Word share')
-            ->assertDontSeeHtml('data-flux-dropdown');
+            ->assertSeeHtml('data-statistics-trigger')
+            ->assertSeeHtml('disabled')
+            ->assertDontSeeHtml('data-statistics-text-part');
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $own->id])
-            ->assertSeeHtml('data-flux-dropdown')
-            ->assertDontSee('This template is view only');
+        $html = Livewire::test(QuestionEditor::class, ['comparisonId' => $own->id])
+            ->assertSeeHtml('data-statistics-trigger')
+            ->assertDontSee('This template is view only')
+            ->html();
+
+        $this->assertDoesNotMatchRegularExpression('/<button[^>]*data-statistics-trigger[^>]*disabled/', $html);
     }
 
     public function test_the_editor_does_not_repeat_the_sentence_under_the_title(): void
@@ -319,21 +324,67 @@ class QuestionEditorTest extends TestCase
             ->assertSeeHtml('placeholder="4"');
     }
 
-    public function test_every_listed_category_names_its_source_as_a_badge_never_in_parentheses(): void
+    public function test_every_listed_category_names_its_source_in_square_brackets_never_as_a_badge(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
         TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
-        $persona = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
-        $comparison = $user->comparisons()->create(['name' => 'q', 'question' => ['compare_by' => "persona_tag:{$persona->id}"]]);
+        TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
+        $comparison = $user->comparisons()->create(['name' => 'q']);
 
         Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
-            ->assertSee('Project tag')
-            ->assertSee('Expert tag')
-            ->assertSee('Run setting')
-            ->assertSee('Title-holder')
-            ->assertDontSee('Persona title-holder')
-            ->assertDontSee('(Expert tag)')
-            ->assertDontSee('(Project tag)');
+            ->assertSee('Title-holder [Expert]')
+            ->assertSee('Status condition [Project]')
+            ->assertSee('Pipeline [Run]')
+            ->assertSee('Model [Run]')
+            ->assertDontSee('Project tag')
+            ->assertDontSee('Expert tag')
+            ->assertDontSee('Run setting')
+            ->assertDontSee('(Expert)')
+            ->assertDontSeeHtml('data-flux-badge');
+    }
+
+    public function test_the_menus_set_the_measure_the_comparison_and_the_split(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $category = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
+        $comparison = $user->comparisons()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->set('question.metric', 'word_share')
+            ->set('question.compare_by', "project_tag:{$category->id}")
+            ->set('question.split_by', 'pipeline')
+            ->set('question.aggregate', 'per_head');
+
+        $saved = $comparison->fresh()->question;
+        $this->assertSame('word_share', $saved['metric']);
+        $this->assertSame("project_tag:{$category->id}", $saved['compare_by']);
+        $this->assertSame('pipeline', $saved['split_by']);
+        $this->assertSame('per_head', $saved['aggregate']);
+    }
+
+    public function test_the_menu_checkboxes_save_tag_arrays_and_the_expert_name(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $persona = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
+        $yes = $persona->values()->create(['name' => 'true']);
+        $project = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
+        $status = $project->values()->create(['name' => 'status']);
+        Expert::factory()->create(['name' => 'Alex Brandt']);
+        $comparison = $user->comparisons()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->set("question.people.tags.{$persona->id}", [(string) $yes->id])
+            ->set("question.projects.tags.{$project->id}", [(string) $status->id])
+            ->set('question.projects.pipelines', ['RoundRobinPipeline'])
+            ->set('question.people.expert_name', 'Alex Brandt');
+
+        $saved = $comparison->fresh()->question;
+        $this->assertSame([$yes->id], $saved['people']['tags'][$persona->id]);
+        $this->assertSame([$status->id], $saved['projects']['tags'][$project->id]);
+        $this->assertSame(['RoundRobinPipeline'], $saved['projects']['pipelines']);
+        $this->assertSame('Alex Brandt', $saved['people']['expert_name']);
     }
 }

@@ -127,7 +127,7 @@ class QuestionSentenceTest extends TestCase
         $this->assertSame('from turn 4, beyond the shortest run of 3 turns', $this->turns(['from' => 4], $result));
     }
 
-    public function test_a_persona_tag_dimension_reads_as_its_category_and_names_its_source_apart(): void
+    public function test_a_persona_tag_dimension_reads_as_its_category_and_has_no_source_in_the_sentence(): void
     {
         $focus = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
 
@@ -137,8 +137,7 @@ class QuestionSentenceTest extends TestCase
         ]));
 
         $this->assertSame('Title-holder', $parts['compare_by']);
-        $this->assertSame('Expert tag', $parts['compare_by_source']);
         $this->assertSame('Pipeline', $parts['split_by']);
-        $this->assertSame('Run setting', $parts['split_by_source']);
+        $this->assertArrayNotHasKey('compare_by_source', $parts);
     }
 }

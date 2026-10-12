@@ -111,10 +111,13 @@ return [
     ],
 
     'sources' => [
-        'project_tag' => 'Project tag',
-        'persona_tag' => 'Expert tag',
-        'run' => 'Run setting',
+        'project_tag' => 'Project',
+        'persona_tag' => 'Expert',
+        'run' => 'Run',
     ],
+
+    /* A listed item names where it comes from in square brackets: "Pipeline [Run]". */
+    'source_label' => ':name [:source]',
 
     'metrics' => [
         'turn_share' => 'Turn share',

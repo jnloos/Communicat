@@ -13,4 +13,10 @@ enum DimensionSource: string
     {
         return __("questions.sources.{$this->value}");
     }
+
+    /** A listed name with its source in square brackets: "Pipeline [Run]". */
+    public function named(string $name): string
+    {
+        return __('questions.source_label', ['name' => $name, 'source' => $this->label()]);
+    }
 }
