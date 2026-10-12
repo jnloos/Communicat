@@ -5,6 +5,7 @@ namespace Tests\Feature\Statistics;
 use App\Models\Question;
 use App\Models\TagCategory;
 use App\Models\TagScope;
+use App\Models\TagValue;
 use App\Models\User;
 use Database\Seeders\ThesisTemplatesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,7 +20,9 @@ class ThesisTemplatesSeederTest extends TestCase
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
         $condition->values()->create(['name' => 'status']);
         $condition->values()->create(['name' => 'no-status']);
-        TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder'])->values()->create(['name' => 'true']);
+        $titleHolder = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
+        $titleHolder->values()->create(['name' => 'true']);
+        $titleHolder->values()->create(['name' => 'false']);
         TagCategory::create(['scope' => TagScope::Persona, 'name' => 'focus persona'])->values()->create(['name' => 'true']);
     }
 
@@ -41,7 +44,9 @@ class ThesisTemplatesSeederTest extends TestCase
     public function test_a_template_whose_tags_are_missing_is_skipped(): void
     {
         User::factory()->create(['is_admin' => true]);
-        TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition'])->values()->create(['name' => 'status']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
+        $condition->values()->create(['name' => 'status']);
+        $condition->values()->create(['name' => 'no-status']);
 
         $this->seed(ThesisTemplatesSeeder::class);
 
@@ -58,6 +63,24 @@ class ThesisTemplatesSeederTest extends TestCase
         $this->seed(ThesisTemplatesSeeder::class);
 
         $this->assertCount(6, Question::templates()->whereNotNull('notes')->get());
-        $this->assertStringContainsString('no-status minus status', Question::templates()->where('name', 'Status effect on turn share by pipeline')->sole()->notes);
+        $this->assertStringContainsString('with status minus without', Question::templates()->where('name', 'Status effect on turn share by pipeline')->sole()->notes);
+    }
+
+    public function test_every_comparing_template_names_the_side_without_the_title_as_baseline(): void
+    {
+        User::factory()->create(['is_admin' => true]);
+        $this->studyTags();
+        $noStatus = TagValue::where('name', 'no-status')->sole();
+        $notTitled = TagValue::where('name', 'false')->sole();
+
+        $this->seed(ThesisTemplatesSeeder::class);
+
+        $baselines = Question::templates()->get()->mapWithKeys(fn (Question $template) => [$template->name => $template->definition()->baseline])->all();
+        $this->assertSame((string) $noStatus->id, $baselines['Status effect on turn share by pipeline']);
+        $this->assertSame((string) $noStatus->id, $baselines['Status effect on word share by pipeline']);
+        $this->assertSame((string) $noStatus->id, $baselines['Speaking inequality with and without status by pipeline']);
+        $this->assertSame((string) $notTitled->id, $baselines['Title holder against the others by pipeline (per head)']);
+        $this->assertSame((string) $notTitled->id, $baselines['How the floor divides between title holder and others']);
+        $this->assertSame('QualityPipeline', $baselines['Seeing against blind judge']);
     }
 }

@@ -14,8 +14,10 @@ use App\Models\Project;
 use App\Models\ProjectGroup;
 use App\Models\TagCategory;
 use App\Models\TagScope;
+use App\Models\TagValue;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -395,5 +397,103 @@ class QuestionEvaluatorTest extends TestCase
 
         $this->assertSame([], $result->panels);
         $this->assertSame(1, $result->excluded);
+    }
+
+    /** @return array{0: TagCategory, 1: TagValue, 2: TagValue} the category, its "with" value and its "without" value */
+    private function conditionRuns(): array
+    {
+        $category = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $with = $category->values()->create(['name' => 'mit', 'position' => 1]);
+        $without = $category->values()->create(['name' => 'ohne', 'position' => 2]);
+        $this->makeRun(['A', 'B'], [['A', 10], ['B', 10], ['A', 10], ['B', 10]])->setTag($category, $without);
+        $this->makeRun(['A', 'B'], [['A', 10], ['A', 10], ['A', 10], ['B', 10]])->setTag($category, $with);
+
+        return [$category, $with, $without];
+    }
+
+    public function test_the_baseline_comes_first_and_the_delta_is_the_other_group_minus_it(): void
+    {
+        [$category, $with, $without] = $this->conditionRuns();
+
+        $result = $this->answer(['people' => ['expert_name' => 'A'], 'compare_by' => "project_tag:{$category->id}", 'baseline' => (string) $without->id]);
+        $panel = $result->panels[0];
+
+        $this->assertSame((string) $without->id, $result->baseline);
+        $this->assertSame([(string) $without->id, (string) $with->id], array_map('strval', array_keys($result->groups)));
+        $this->assertSame(['Bedingung: ohne', 'Bedingung: mit'], array_map(fn ($g) => $g->label, $panel->groups));
+        $this->assertSame(0.25, $panel->delta());
+    }
+
+    public function test_reordering_the_tag_values_does_not_flip_the_delta(): void
+    {
+        [$category, $with, $without] = $this->conditionRuns();
+        $question = ['people' => ['expert_name' => 'A'], 'compare_by' => "project_tag:{$category->id}", 'baseline' => (string) $without->id];
+        $before = $this->answer($question)->panels[0]->delta();
+
+        $with->update(['position' => 2]);
+        $without->update(['position' => 1]);
+        $after = $this->answer($question)->panels[0]->delta();
+
+        $with->update(['position' => 1]);
+        $without->update(['position' => 2]);
+        $this->assertSame($before, $this->answer($question)->panels[0]->delta());
+        $this->assertSame($before, $after);
+        $this->assertSame(0.25, $after);
+    }
+
+    public function test_without_a_valid_baseline_the_first_group_in_dimension_order_is_it(): void
+    {
+        [$category, $with] = $this->conditionRuns();
+
+        foreach ([null, '99999'] as $baseline) {
+            $result = $this->answer(['people' => ['expert_name' => 'A'], 'compare_by' => "project_tag:{$category->id}", 'baseline' => $baseline]);
+
+            $this->assertSame((string) $with->id, $result->baseline);
+            $this->assertSame(-0.25, $result->panels[0]->delta());
+        }
+
+        $this->assertNull($this->answer([])->baseline);
+    }
+
+    public function test_a_rolling_curve_from_a_later_turn_looks_back_over_its_window(): void
+    {
+        config(['discussion.share_window' => 2]);
+        $this->makeRun(['A', 'B'], [['A', 10], ['A', 10], ['B', 10], ['B', 10]]);
+
+        $curve = $this->answer(['people' => ['expert_name' => 'A'], 'form' => 'trajectory', 'curve' => 'rolling', 'turns' => ['from' => 3]])->panels[0]->groups[0]->curve;
+
+        $this->assertSame([3, 4], array_map(fn ($mean) => $mean->turn, $curve));
+        // Turn 3 rolls over turns 2 and 3: A once, B once. Turn 4 over 3 and 4: B twice.
+        $this->assertEqualsWithDelta([0.5, 0.0], array_map(fn ($mean) => $mean->mean, $curve), 1e-9);
+    }
+
+    public function test_a_cumulative_curve_from_a_later_turn_starts_counting_there(): void
+    {
+        $this->makeRun(['A', 'B'], [['A', 10], ['A', 10], ['B', 10], ['A', 10]]);
+
+        $curve = $this->answer(['people' => ['expert_name' => 'A'], 'form' => 'trajectory', 'turns' => ['from' => 3]])->panels[0]->groups[0]->curve;
+
+        $this->assertEqualsWithDelta([0.0, 0.5], array_map(fn ($mean) => $mean->mean, $curve), 1e-9);
+    }
+
+    public function test_the_queries_of_an_answer_grow_by_a_few_per_run_only(): void
+    {
+        $persona = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'rolle']);
+        $titled = $persona->values()->create(['name' => 'titel']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $with = $condition->values()->create(['name' => 'mit']);
+
+        foreach (range(1, 6) as $run) {
+            $this->makeRun(["A{$run}", "B{$run}"], [["A{$run}", 10], ["B{$run}", 10]])->setTag($condition, $with);
+            $this->experts["A{$run}"]->setTag($persona, $titled);
+        }
+
+        DB::enableQueryLog();
+        $this->answer(['people' => ['tags' => [$persona->id => [$titled->id]]], 'compare_by' => "persona_tag:{$persona->id}", 'split_by' => "project_tag:{$condition->id}", 'form' => 'trajectory']);
+        $queries = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        // Per run: participants, the whole-run and the window report (spoken turns and failed turns each), the curve.
+        $this->assertLessThanOrEqual(14 + 6 * 6, $queries, "{$queries} queries for 6 runs");
     }
 }

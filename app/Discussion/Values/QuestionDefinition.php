@@ -3,16 +3,20 @@
 namespace App\Discussion\Values;
 
 /**
- * A question to the study's runs, read as one sentence: [metric] of [people]
- * ([together | per head]) in [runs] over [turns], compared by [dimension], split by
- * [dimension]. fromArray() turns any form input into a question that can be
- * answered, so neither the editor nor the evaluator meets a contradiction:
+ * What a question asks the study's runs, read as one sentence: [metric] of
+ * [people] ([together | per head]) in [runs] over [turns], compared by
+ * [dimension], split by [dimension]. fromArray() turns any form input into a
+ * question that can be answered, so neither the editor nor the evaluator meets
+ * a contradiction:
  *
  * - Gini describes a whole run: it counts everyone and cannot compare agents
  *   within a run.
  * - The aggregate only applies to shares; words per turn is a ratio already.
  * - Panels sort runs, so splitBy is never a persona tag, nor the dimension
  *   compareBy already uses.
+ * - A baseline exists only with a compare dimension. Whether its key is one of
+ *   that dimension's values is the evaluator's call: it takes the first group
+ *   in dimension order when the key names none.
  * - A form the question cannot show falls back to points.
  */
 final readonly class QuestionDefinition
@@ -27,8 +31,13 @@ final readonly class QuestionDefinition
         public ?Dimension $compareBy = null,
         public ?Dimension $splitBy = null,
         public ResultForm $form = ResultForm::Points,
-        /** 'cumulative' or 'rolling', as Metric::series() reads it. */
-        public string $curve = 'cumulative',
+        public CurveMode $curve = CurveMode::Cumulative,
+        /**
+         * The group the others are measured against: a key of a compareBy value (a tag value id,
+         * DimensionValues::NONE, a pipeline name, a model key, a group id). The delta is the other
+         * group minus this one, whatever order the dimension lists its values in.
+         */
+        public ?string $baseline = null,
     ) {}
 
     /** @param  array<string, mixed>  $data */
@@ -46,6 +55,8 @@ final readonly class QuestionDefinition
             $splitBy = null;
         }
 
+        $baseline = $data['baseline'] ?? null;
+
         $question = new self(
             metric: $metric,
             people: $metric->isRunLevel() ? new PeopleFilter : PeopleFilter::fromArray($data['people'] ?? []),
@@ -55,7 +66,8 @@ final readonly class QuestionDefinition
             compareBy: $compareBy,
             splitBy: $splitBy,
             form: ResultForm::tryFrom((string) ($data['form'] ?? '')) ?? ResultForm::Points,
-            curve: ($data['curve'] ?? null) === 'rolling' ? 'rolling' : 'cumulative',
+            curve: CurveMode::tryFrom((string) ($data['curve'] ?? '')) ?? CurveMode::Cumulative,
+            baseline: $compareBy !== null && is_scalar($baseline) ? (string) $baseline : null,
         );
 
         return $question->supports($question->form) ? $question : $question->withForm(ResultForm::Points);
@@ -72,8 +84,9 @@ final readonly class QuestionDefinition
             'turns' => $this->turns->toArray(),
             'compare_by' => $this->compareBy?->key() ?? '',
             'split_by' => $this->splitBy?->key() ?? '',
+            'baseline' => $this->baseline,
             'form' => $this->form->value,
-            'curve' => $this->curve,
+            'curve' => $this->curve->value,
         ];
     }
 
@@ -94,17 +107,34 @@ final readonly class QuestionDefinition
         };
     }
 
-    /** The same question without what only its owner has: the group filter and a group dimension. */
+    /** The same question without what only its owner has: the group filter and a group dimension (with its baseline). */
     public function withoutGroups(): self
     {
-        $isGroup = fn (?Dimension $dimension) => $dimension?->type === DimensionType::Group;
+        $comparesGroups = $this->compareBy?->type === DimensionType::Group;
 
-        return new self($this->metric, $this->people, $this->aggregate, $this->projects->withoutGroups(), $this->turns,
-            $isGroup($this->compareBy) ? null : $this->compareBy, $isGroup($this->splitBy) ? null : $this->splitBy, $this->form, $this->curve);
+        return new self(
+            metric: $this->metric,
+            people: $this->people,
+            aggregate: $this->aggregate,
+            projects: $this->projects->withoutGroups(),
+            turns: $this->turns,
+            compareBy: $comparesGroups ? null : $this->compareBy,
+            splitBy: $this->splitBy?->type === DimensionType::Group ? null : $this->splitBy,
+            form: $this->form,
+            curve: $this->curve,
+            baseline: $comparesGroups ? null : $this->baseline,
+        );
+    }
+
+    public function withBaseline(?string $baseline): self
+    {
+        return new self($this->metric, $this->people, $this->aggregate, $this->projects, $this->turns,
+            $this->compareBy, $this->splitBy, $this->form, $this->curve, $this->compareBy === null ? null : $baseline);
     }
 
     public function withForm(ResultForm $form): self
     {
-        return new self($this->metric, $this->people, $this->aggregate, $this->projects, $this->turns, $this->compareBy, $this->splitBy, $form, $this->curve);
+        return new self($this->metric, $this->people, $this->aggregate, $this->projects, $this->turns,
+            $this->compareBy, $this->splitBy, $form, $this->curve, $this->baseline);
     }
 }

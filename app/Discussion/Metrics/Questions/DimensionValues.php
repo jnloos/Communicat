@@ -12,6 +12,7 @@ use App\Models\TagCategory;
 use App\Models\Taggable;
 use App\Models\TagValue;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use LogicException;
 
@@ -20,6 +21,10 @@ use LogicException;
  * run or an agent has. Keys are tag value ids, pipeline names, model keys or group ids.
  * An agent without a value in a persona category gets NONE, so the groups of
  * a run still add up to everyone.
+ *
+ * The shared instance knows no user and no runs. An answer works on a copy
+ * scoped with forUser() and withRuns(), which reads the user's filing and the
+ * tags of all its runs and agents once, not once per run.
  */
 final class DimensionValues
 {
@@ -30,12 +35,14 @@ final class DimensionValues
 
     private ?User $user = null;
 
+    /** @var array<string, array<int, array<int, int>>> morph class => model id => category id => value id */
+    private array $tags = [];
+
     public function __construct(private readonly PipelineRegistry $pipelines) {}
 
     /**
      * The same values read for one user: a group is a drawer in that person's
      * sidebar, so its labels and the runs filed in it exist for them alone.
-     * Their filing is read once here, not once per run.
      */
     public function forUser(User $user): self
     {
@@ -48,6 +55,31 @@ final class DimensionValues
             ->pluck('project_group_id', 'project_id')
             ->map(fn ($id) => (int) $id)
             ->all();
+
+        return $scoped;
+    }
+
+    /**
+     * The same values with the tags of these runs and of everyone seated in
+     * them read ahead, in two queries. A run or agent outside them is still
+     * answered, by a query of its own.
+     *
+     * @param  Collection<int, Project>  $projects
+     */
+    public function withRuns(Collection $projects): self
+    {
+        $expertMorph = (new Expert)->getMorphClass();
+        $expertIds = $projects->isEmpty() ? [] : DB::table('project_contributors')
+            ->where('contributor_type', $expertMorph)
+            ->whereIn('project_id', $projects->modelKeys())
+            ->distinct()
+            ->pluck('contributor_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $scoped = clone $this;
+        $scoped->tags[(new Project)->getMorphClass()] = $this->readTags((new Project)->getMorphClass(), $projects->modelKeys());
+        $scoped->tags[$expertMorph] = $this->readTags($expertMorph, $expertIds);
 
         return $scoped;
     }
@@ -115,15 +147,50 @@ final class DimensionValues
 
     /**
      * @param  list<int>  $ids
-     * @return array<int, int> model id => value id
+     * @return array<int, int> model id => value id in the dimension's category
      */
     private function tagValuesOf(Dimension $dimension, string $morphClass, array $ids): array
     {
-        return Taggable::where('taggable_type', $morphClass)
+        $known = $this->tags[$morphClass] ?? [];
+        $unread = array_values(array_diff($ids, array_keys($known)));
+
+        if ($unread !== []) {
+            $known += $this->readTags($morphClass, $unread);
+        }
+
+        $values = [];
+
+        foreach ($ids as $id) {
+            if (isset($known[$id][$dimension->categoryId])) {
+                $values[$id] = $known[$id][$dimension->categoryId];
+            }
+        }
+
+        return $values;
+    }
+
+    /**
+     * Every tag of these models, in one query; a model without tags reads as an empty list.
+     *
+     * @param  list<int>  $ids
+     * @return array<int, array<int, int>> model id => category id => value id
+     */
+    private function readTags(string $morphClass, array $ids): array
+    {
+        $tags = array_fill_keys($ids, []);
+
+        if ($ids === []) {
+            return $tags;
+        }
+
+        $rows = Taggable::where('taggable_type', $morphClass)
             ->whereIn('taggable_id', $ids)
-            ->where('tag_category_id', $dimension->categoryId)
-            ->pluck('tag_value_id', 'taggable_id')
-            ->map(fn ($id) => (int) $id)
-            ->all();
+            ->get(['taggable_id', 'tag_category_id', 'tag_value_id']);
+
+        foreach ($rows as $row) {
+            $tags[(int) $row->taggable_id][(int) $row->tag_category_id] = (int) $row->tag_value_id;
+        }
+
+        return $tags;
     }
 }

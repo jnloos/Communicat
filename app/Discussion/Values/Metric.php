@@ -29,12 +29,12 @@ enum Metric: string
         return $this === self::TurnShare || $this === self::WordShare;
     }
 
-    /** The trajectory series holding this metric's curve; $mode is 'cumulative' or 'rolling'. */
-    public function series(string $mode): ShareSeries
+    /** The trajectory series holding this metric's curve. */
+    public function series(CurveMode $mode): ShareSeries
     {
         $unit = $this === self::WordShare ? 'words' : 'turns';
 
-        return ShareSeries::from("{$mode}_{$unit}");
+        return ShareSeries::from("{$mode->value}_{$unit}");
     }
 
     /**

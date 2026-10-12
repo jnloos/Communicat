@@ -1,3 +1,4 @@
+@use('App\Discussion\Values\CurveMode')
 @use('App\Discussion\Values\ResultForm')
 @use('App\Livewire\Statistics\GroupColor')
 
@@ -186,6 +187,17 @@
                         <flux:menu.radio :value="$key" wire:key="compare-{{ $key }}">{{ $label }}</flux:menu.radio>
                     @endforeach
                 </flux:menu.radio.group>
+                {{-- The group the others are measured against: it comes first, and the delta is the other group minus it. --}}
+                @if ($baselineOptions !== [])
+                    <flux:menu.separator />
+                    <flux:menu.group :heading="__('questions.controls.baseline')">
+                        <flux:menu.radio.group wire:model.live="definition.baseline">
+                            @foreach ($baselineOptions as $key => $label)
+                                <flux:menu.radio :value="(string) $key" wire:key="baseline-{{ $key }}">{{ $label }}</flux:menu.radio>
+                            @endforeach
+                        </flux:menu.radio.group>
+                    </flux:menu.group>
+                @endif
                 @if ($current->metric->isRunLevel())
                     <flux:menu.separator />
                     <flux:text size="sm" class="px-2 py-1">{{ __('questions.controls.gini_hint') }}</flux:text>
@@ -222,8 +234,9 @@
         <div class="flex items-center gap-2">
             @if ($current->form === ResultForm::Trajectory)
                 <flux:radio.group wire:model.live="definition.curve" variant="segmented" size="sm">
-                    <flux:radio value="cumulative" :label="__('questions.curves.cumulative')" />
-                    <flux:radio value="rolling" :label="__('questions.curves.rolling')" />
+                    @foreach (CurveMode::cases() as $mode)
+                        <flux:radio :value="$mode->value" :label="$mode->label()" />
+                    @endforeach
                 </flux:radio.group>
             @endif
 
@@ -259,7 +272,7 @@
                 @break
             @case(ResultForm::Trajectory)
                 <x-statistics.curve-panels :result="$result" />
-                @if ($current->curve === 'rolling')
+                @if ($current->curve === CurveMode::Rolling)
                     <flux:text size="sm">{{ trans_choice('statistics.trajectory.rolling_hint', $rollingWindow, ['count' => $rollingWindow]) }}</flux:text>
                 @endif
                 @break

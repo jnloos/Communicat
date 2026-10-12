@@ -6,7 +6,7 @@ namespace App\Discussion\Values;
 final readonly class Panel
 {
     /**
-     * @param  list<GroupResult>  $groups  in the order of the compare dimension
+     * @param  list<GroupResult>  $groups  the baseline first, then in the order of the compare dimension
      * @param  int  $runs  runs that landed in this panel, whichever groups they had
      * @param  int  $compareCount  groups the whole answer compares, in all panels
      */
@@ -19,8 +19,9 @@ final readonly class Panel
     ) {}
 
     /**
-     * The second group's mean minus the first's. Only when the whole answer
-     * compares exactly two groups, so every panel offers it or none does.
+     * The other group's mean minus the baseline's (the baseline comes first).
+     * Only when the whole answer compares exactly two groups, so every panel
+     * offers it or none does.
      */
     public function delta(): ?float
     {

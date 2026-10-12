@@ -96,6 +96,7 @@ return [
         'turn_to' => 'Bis Turn',
         'turns_hint' => '{1}Die obere Grenze ist höchstens der kürzeste ausgewählte Lauf, „:run“, er hat :count Turn.|[0,*]Die obere Grenze ist höchstens der kürzeste ausgewählte Lauf, „:run“, er hat :count Turns.',
         'compare_by' => 'Verglichen nach',
+        'baseline' => 'Bezug',
         'split_by' => 'Aufgeteilt nach',
         'none' => 'Nichts',
         'people_hint' => 'Mehrere Tags: jede Kategorie muss passen, innerhalb einer genügt ein Wert.',

@@ -2,12 +2,14 @@
 
 namespace App\Discussion\Values;
 
+use LogicException;
+
 /** The answer to a question: its panels, the groups they compare, and how many runs it read. */
 final readonly class QuestionResult
 {
     /**
      * @param  list<Panel>  $panels
-     * @param  array<string, string>  $groups  every group that occurs, key => label, in dimension order
+     * @param  array<string, string>  $groups  every group that occurs, key => label: the baseline first, then dimension order
      * @param  int  $runs  runs the project filter matched
      * @param  int  $excluded  of those, runs without a value
      * @param  TurnRange  $turns  the window every run was read over, its upper bound already capped
@@ -15,6 +17,7 @@ final readonly class QuestionResult
      * @param  int|null  $shortestRun  that length, whether or not it set the bound
      * @param  int|null  $shortestRunId  the project that has it, so the hint can link to its chat
      * @param  string|null  $shortestRunTitle  and its title
+     * @param  string|null  $baseline  the key of the group the others are measured against; it heads $groups
      */
     public function __construct(
         public array $panels,
@@ -27,6 +30,7 @@ final readonly class QuestionResult
         public ?int $shortestRun = null,
         public ?int $shortestRunId = null,
         public ?string $shortestRunTitle = null,
+        public ?string $baseline = null,
     ) {}
 
     public function isEmpty(): bool
@@ -51,6 +55,12 @@ final readonly class QuestionResult
     /** A group's position among all groups: the same group keeps its colour in every panel. */
     public function groupIndex(string $key): int
     {
-        return (int) array_search($key, array_map('strval', array_keys($this->groups)), true);
+        $index = array_search($key, array_map('strval', array_keys($this->groups)), true);
+
+        if ($index === false) {
+            throw new LogicException("No group \"{$key}\" in this answer.");
+        }
+
+        return $index;
     }
 }

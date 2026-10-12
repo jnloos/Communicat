@@ -96,6 +96,7 @@ return [
         'turn_to' => 'To turn',
         'turns_hint' => '{1}The upper bound is at most the shortest selected run, “:run”, which has :count turn.|[0,*]The upper bound is at most the shortest selected run, “:run”, which has :count turns.',
         'compare_by' => 'Compare by',
+        'baseline' => 'Baseline',
         'split_by' => 'Split by',
         'none' => 'Nothing',
         'people_hint' => 'Several tags: every category must match, any value within one.',

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Statistics;
 
+use App\Discussion\Pipelines\PipelineRegistry;
 use App\Livewire\Statistics\QuestionEditor;
 use App\Models\Expert;
 use App\Models\JobLog;
@@ -493,5 +494,43 @@ class QuestionEditorTest extends TestCase
         Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSee('Question and notes')
             ->assertSeeHtml('<textarea');
+    }
+
+    public function test_choosing_a_compare_dimension_sets_its_first_value_as_baseline_and_the_menu_offers_the_others(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $category = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
+        $status = $category->values()->create(['name' => 'status', 'position' => 1]);
+        $noStatus = $category->values()->create(['name' => 'no-status', 'position' => 2]);
+        $question = $user->questions()->create([]);
+
+        $editor = Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set('definition.compare_by', "project_tag:{$category->id}")
+            ->assertSet('definition.baseline', (string) $status->id)
+            ->assertSee('Baseline')
+            ->set('definition.baseline', (string) $noStatus->id);
+
+        $this->assertSame((string) $noStatus->id, $question->fresh()->definition['baseline']);
+
+        $editor->set('definition.compare_by', 'pipeline')->assertSet('definition.baseline', array_key_first(app(PipelineRegistry::class)->options()));
+        $editor->set('definition.compare_by', '')->assertSet('definition.baseline', null)->assertDontSee('Baseline');
+    }
+
+    public function test_saving_the_notes_tells_the_list_but_does_not_answer_the_question_again(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $question = $user->questions()->create([]);
+
+        $editor = Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set('notes', '  A conclusion  ')
+            ->assertDispatched('question-saved');
+
+        $this->assertArrayNotHasKey('html', $editor->effects);
+        $this->assertSame('A conclusion', $question->fresh()->notes);
+
+        $editor->set('definition.metric', 'word_share');
+        $this->assertArrayHasKey('html', $editor->effects);
     }
 }

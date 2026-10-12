@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Statistics;
 
+use App\Discussion\Metrics\Questions\DimensionValues;
 use App\Discussion\Metrics\Questions\QuestionEvaluator;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Values\Aggregate;
@@ -82,10 +83,36 @@ class QuestionEditor extends Component
             return;
         }
 
-        $this->definition = QuestionDefinition::fromArray($this->definition)->toArray();
+        // A baseline names a value of one dimension; another dimension starts from its own first value.
+        if ($property === 'definition.compare_by') {
+            $this->definition['baseline'] = null;
+        }
+
+        $this->definition = $this->withBaseline(QuestionDefinition::fromArray($this->definition))->toArray();
         $this->question($this->questionId)->update(['definition' => $this->definition]);
 
         $this->dispatch('question-saved');
+    }
+
+    /**
+     * A compared question without a baseline gets the first value of its
+     * dimension, so the sign of its delta is stored, not left to the order in
+     * which the values happen to be listed later.
+     */
+    private function withBaseline(QuestionDefinition $definition): QuestionDefinition
+    {
+        if ($definition->compareBy === null || $definition->baseline !== null) {
+            return $definition;
+        }
+
+        $first = array_key_first($this->dimensionValues()->labels($definition->compareBy));
+
+        return $first === null ? $definition : $definition->withBaseline((string) $first);
+    }
+
+    private function dimensionValues(): DimensionValues
+    {
+        return app(DimensionValues::class)->forUser(auth()->user());
     }
 
     /** Trimmed; empty is no notes. A template's notes are only shown, so nothing is saved there. */
@@ -95,12 +122,16 @@ class QuestionEditor extends Component
         $this->notes = $this->readOnly ? (string) $question->notes : trim($this->notes);
 
         if ($this->readOnly) {
+            $this->skipRender();
+
             return;
         }
 
         $question->update(['notes' => $this->notes === '' ? null : $this->notes]);
 
+        // The notes change no number: the list re-renders for its first line, the answer stays as it is.
         $this->dispatch('question-saved');
+        $this->skipRender();
     }
 
     /** The stored question with the form and curve of this view: the only things a viewer may switch. */
@@ -176,6 +207,7 @@ class QuestionEditor extends Component
             'groups' => ProjectGroup::where('user_id', auth()->id())->orderBy('position')->orderBy('name')->pluck('name', 'id'),
             'expertNames' => Expert::query()->distinct()->orderBy('name')->pluck('name'),
             'compareOptions' => $this->dimensionOptions($sentence, withPersona: ! $definition->metric->isRunLevel()),
+            'baselineOptions' => $definition->compareBy === null ? [] : $this->dimensionValues()->labels($definition->compareBy),
             'splitOptions' => $this->dimensionOptions($sentence, withPersona: false),
             'rollingWindow' => (int) config('discussion.share_window'),
         ]);

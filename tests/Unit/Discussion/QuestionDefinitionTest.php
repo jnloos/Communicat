@@ -3,6 +3,7 @@
 namespace Tests\Unit\Discussion;
 
 use App\Discussion\Values\Aggregate;
+use App\Discussion\Values\CurveMode;
 use App\Discussion\Values\Dimension;
 use App\Discussion\Values\DimensionType;
 use App\Discussion\Values\Metric;
@@ -38,6 +39,7 @@ class QuestionDefinitionTest extends TestCase
             'turns' => ['from' => 5, 'to' => 60],
             'compare_by' => 'project_tag:1',
             'split_by' => 'pipeline',
+            'baseline' => '2',
             'form' => 'trajectory',
             'curve' => 'rolling',
         ];
@@ -129,5 +131,22 @@ class QuestionDefinitionTest extends TestCase
         $this->assertSame('group', QuestionDefinition::fromArray(['split_by' => 'group'])->splitBy->key());
         $this->assertNull(QuestionDefinition::fromArray(['compare_by' => 'group', 'split_by' => 'group'])->splitBy);
         $this->assertFalse(QuestionDefinition::fromArray(['projects' => ['groups' => [3]]])->projects->isEmpty());
+    }
+
+    public function test_a_baseline_belongs_to_a_compare_dimension(): void
+    {
+        $this->assertNull(QuestionDefinition::fromArray(['baseline' => '2'])->baseline);
+        $this->assertSame('2', QuestionDefinition::fromArray(['compare_by' => 'project_tag:1', 'baseline' => 2])->baseline);
+        $this->assertSame('', QuestionDefinition::fromArray(['compare_by' => 'persona_tag:1', 'baseline' => ''])->baseline, 'the agents without a value');
+        $this->assertNull(QuestionDefinition::fromArray(['compare_by' => 'pipeline'])->baseline);
+        $this->assertNull(QuestionDefinition::fromArray(['compare_by' => 'pipeline', 'baseline' => ['x']])->baseline);
+        $this->assertSame('ScorePipeline', QuestionDefinition::fromArray(['compare_by' => 'pipeline', 'baseline' => 'ScorePipeline'])->withForm(ResultForm::Points)->baseline);
+    }
+
+    public function test_the_curve_mode_is_an_enum_and_falls_back_to_cumulative(): void
+    {
+        $this->assertSame(CurveMode::Rolling, QuestionDefinition::fromArray(['curve' => 'rolling'])->curve);
+        $this->assertSame(CurveMode::Cumulative, QuestionDefinition::fromArray(['curve' => 'sideways'])->curve);
+        $this->assertSame('cumulative', QuestionDefinition::fromArray([])->toArray()['curve']);
     }
 }
