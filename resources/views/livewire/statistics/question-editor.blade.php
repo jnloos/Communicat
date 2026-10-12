@@ -161,9 +161,9 @@
         <x-statistics.chip :read-only="$readOnly" :label="$parts['turns']" :muted="$current->turns->isWholeRun() && ! $result->cappedByShortestRun">
             <flux:popover class="w-80 max-w-[calc(100vw-2rem)] space-y-4">
                 <div class="grid grid-cols-2 gap-3">
-                    {{-- Empty fields are not "nothing": the placeholders show the window the answer is read over. --}}
-                    <flux:input type="number" min="1" wire:model.live.debounce.500ms="definition.turns.from" :label="__('questions.controls.turn_from')" :placeholder="$result->turns->from" />
-                    <flux:input type="number" min="1" wire:model.live.debounce.500ms="definition.turns.to" :label="__('questions.controls.turn_to')" :placeholder="$result->turns->to" />
+                    {{-- Empty fields are not "nothing": the placeholders show the window the answer is read over; max stops the spinner at the shortest run. --}}
+                    <flux:input type="number" min="1" :max="$result->shortestRun" wire:model.live.debounce.500ms="definition.turns.from" :label="__('questions.controls.turn_from')" :placeholder="$result->turns->from" />
+                    <flux:input type="number" min="1" :max="$result->shortestRun" wire:model.live.debounce.500ms="definition.turns.to" :label="__('questions.controls.turn_to')" :placeholder="$result->turns->to" />
                 </div>
             </flux:popover>
         </x-statistics.chip>

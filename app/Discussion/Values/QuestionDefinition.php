@@ -137,4 +137,10 @@ final readonly class QuestionDefinition
         return new self($this->metric, $this->people, $this->aggregate, $this->projects, $this->turns,
             $this->compareBy, $this->splitBy, $form, $this->curve, $this->baseline);
     }
+
+    public function withTurns(TurnRange $turns): self
+    {
+        return new self($this->metric, $this->people, $this->aggregate, $this->projects, $turns,
+            $this->compareBy, $this->splitBy, $this->form, $this->curve, $this->baseline);
+    }
 }

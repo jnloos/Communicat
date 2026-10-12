@@ -14,6 +14,7 @@ use App\Discussion\Values\ModelConfig;
 use App\Discussion\Values\QuestionDefinition;
 use App\Discussion\Values\ResultForm;
 use App\Discussion\Values\TagFilter;
+use App\Discussion\Values\TurnRange;
 use App\Models\Expert;
 use App\Models\ProjectGroup;
 use App\Models\Question;
@@ -117,10 +118,33 @@ class QuestionEditor extends Component
         }
 
         $this->definition = $this->withBaseline(QuestionDefinition::fromArray($this->definition))->toArray();
+
+        if (str_starts_with($property, 'definition.turns')) {
+            $this->definition = $this->turnsWithinShortestRun(QuestionDefinition::fromArray($this->definition))->toArray();
+        }
+
         $this->question($this->questionId)->update(['definition' => $this->definition]);
         $this->syncBaselineChoice();
 
         $this->dispatch('question-saved');
+    }
+
+    /**
+     * A bound typed beyond the shortest run is stored as that run, so the field
+     * shows the maximum instead of a number the answer would silently cap.
+     * Costs one evaluation per turn edit; the render evaluates again.
+     */
+    private function turnsWithinShortestRun(QuestionDefinition $definition): QuestionDefinition
+    {
+        $shortest = app(QuestionEvaluator::class)->evaluate(auth()->user(), $definition)->shortestRun;
+
+        if ($shortest === null || ($definition->turns->from <= $shortest && ($definition->turns->to ?? 0) <= $shortest)) {
+            return $definition;
+        }
+
+        $from = min($definition->turns->from, $shortest);
+
+        return $definition->withTurns(new TurnRange($from, min($definition->turns->to ?? $shortest, $shortest)));
     }
 
     /** An own question shows the baseline the evaluator uses: store the fallback instead of leaving it implicit. */

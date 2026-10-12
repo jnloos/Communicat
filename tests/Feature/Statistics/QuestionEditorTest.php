@@ -314,6 +314,51 @@ class QuestionEditorTest extends TestCase
         $this->assertSame(['from' => 5, 'to' => 5], $question->fresh()->definition['turns']);
     }
 
+    public function test_a_turn_bound_beyond_the_shortest_run_is_stored_as_that_run(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $this->spokenRun($user);
+        $question = $user->questions()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set('definition.turns.to', '99')
+            ->assertSet('definition.turns.to', 1);
+
+        $this->assertSame(1, $question->fresh()->definition['turns']['to']);
+    }
+
+    public function test_a_first_turn_beyond_the_shortest_run_is_clamped_too(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $run = $this->spokenRun($user);
+        $expert = $run->contributingExperts()->first();
+        JobLog::create(['job_class' => 'x', 'project_id' => $run->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => 2, 'expert_id' => $expert->id, 'words' => 12]);
+        $question = $user->questions()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set('definition.turns.from', '50')
+            ->assertSet('definition.turns.from', 2)
+            ->assertSet('definition.turns.to', 2);
+
+        $this->assertSame(['from' => 2, 'to' => 2], $question->fresh()->definition['turns']);
+    }
+
+    public function test_a_template_never_saves_a_turn_bound(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $this->spokenRun($user);
+        $template = $user->questions()->create(['is_template' => true]);
+
+        $before = $template->fresh()->definition;
+        Livewire::test(QuestionEditor::class, ['questionId' => $template->id])
+            ->set('definition.turns.to', '99');
+
+        $this->assertSame($before, $template->fresh()->definition);
+    }
+
     public function test_the_sentence_shows_the_bound_the_shortest_run_sets(): void
     {
         $user = User::factory()->create();
