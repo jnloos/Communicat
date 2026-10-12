@@ -46,6 +46,12 @@ class QuestionEditor extends Component
     /** Free text under the title: what the question asks, what was concluded. Saved like the question. */
     public string $notes = '';
 
+    /** What the baseline radio group is bound to: the stored baseline, with NO_VALUE standing for the "no value" group (Flux reads '' as unset). */
+    public string $baselineChoice = '';
+
+    /** The radio value of the "no value" group; the stored baseline stays ''. */
+    public const NO_VALUE = 'none';
+
     /** A template: shown, never saved. */
     #[Locked]
     public bool $readOnly = false;
@@ -65,10 +71,28 @@ class QuestionEditor extends Component
         $this->definition = $question->definition()->toArray();
         $this->notes = (string) $question->notes;
         $this->dropDeletedTagValues();
+
+        if (! $this->readOnly) {
+            $this->saveEffectiveBaseline();
+        }
+
+        $this->syncBaselineChoice();
     }
 
     public function updated(string $property): void
     {
+        if ($property === 'baselineChoice') {
+            if ($this->readOnly) {
+                $this->syncBaselineChoice();
+                $this->skipRender();
+
+                return;
+            }
+
+            $this->definition['baseline'] = $this->baselineChoice === self::NO_VALUE ? DimensionValues::NONE : $this->baselineChoice;
+            $property = 'definition.baseline';
+        }
+
         if ($property === 'notes') {
             $this->saveNotes();
 
@@ -94,8 +118,27 @@ class QuestionEditor extends Component
 
         $this->definition = $this->withBaseline(QuestionDefinition::fromArray($this->definition))->toArray();
         $this->question($this->questionId)->update(['definition' => $this->definition]);
+        $this->syncBaselineChoice();
 
         $this->dispatch('question-saved');
+    }
+
+    /** An own question shows the baseline the evaluator uses: store the fallback instead of leaving it implicit. */
+    private function saveEffectiveBaseline(): void
+    {
+        $effective = $this->withBaseline(QuestionDefinition::fromArray($this->definition))->toArray();
+
+        if ($effective !== $this->definition) {
+            $this->definition = $effective;
+            $this->question($this->questionId)->update(['definition' => $this->definition]);
+        }
+    }
+
+    /** The radio value for the effective baseline; a template is shown with it but never saved. */
+    private function syncBaselineChoice(): void
+    {
+        $baseline = $this->withBaseline(QuestionDefinition::fromArray($this->definition))->baseline;
+        $this->baselineChoice = $baseline === DimensionValues::NONE ? self::NO_VALUE : (string) $baseline;
     }
 
     /**

@@ -20,7 +20,7 @@
                 <flux:heading size="sm" class="px-3">{{ __('questions.list.templates') }}</flux:heading>
 
                 @if ($templates->isEmpty())
-                    <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.no_templates') }}</flux:text>
+                    <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.no_templates') }}@if ($mayShare) {{ __('questions.list.no_templates_admin') }}@endif</flux:text>
                 @else
                     <div class="mt-2 space-y-0.5">
                         @foreach ($templates as $template)

@@ -16,7 +16,8 @@ return [
         'templates' => 'Vorlagen',
         'create' => 'Neue Frage',
         'empty' => 'Noch keine Frage.',
-        'no_templates' => 'Noch keine Vorlage. Speichere eine Frage als Vorlage, um sie zu teilen.',
+        'no_templates' => 'Noch keine Vorlage.',
+        'no_templates_admin' => 'Speichere eine Frage als Vorlage, um sie zu teilen.',
     ],
 
     'actions' => [

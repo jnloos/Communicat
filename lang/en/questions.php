@@ -16,7 +16,8 @@ return [
         'templates' => 'Templates',
         'create' => 'New question',
         'empty' => 'No question yet.',
-        'no_templates' => 'No template yet. Save a question as a template to share it.',
+        'no_templates' => 'No template yet.',
+        'no_templates_admin' => 'Save a question as a template to share it.',
     ],
 
     'actions' => [

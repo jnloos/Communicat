@@ -351,4 +351,14 @@ class StatisticsPageTest extends TestCase
             ->assertSee('Leave empty for no title.')
             ->assertDontSee('The sentence is always shown beside it');
     }
+
+    public function test_the_empty_templates_text_is_neutral_and_only_admins_get_the_call_to_action(): void
+    {
+        app()->setLocale('en');
+        $this->actingAs(User::factory()->create());
+        Livewire::test(StatisticsPage::class)->assertSee('No template yet.')->assertDontSee('Save a question as a template to share it.');
+
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+        Livewire::test(StatisticsPage::class)->assertSee('No template yet.')->assertSee('Save a question as a template to share it.');
+    }
 }

@@ -9,6 +9,7 @@ use App\Models\JobLog;
 use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\TagScope;
+use App\Models\TagValue;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -573,5 +574,55 @@ class QuestionEditorTest extends TestCase
         Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSeeHtml('stroke-dasharray="4 4"')
             ->assertSee('Dashed line: fair share');
+    }
+
+    public function test_the_no_value_radio_uses_a_sentinel_and_stores_the_empty_string(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
+        $value = TagValue::create(['tag_category_id' => $category->id, 'name' => 'yes']);
+        $question = $user->questions()->create(['definition' => ['metric' => 'turn_share', 'compare_by' => "persona_tag:{$category->id}"]]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertSet('baselineChoice', (string) $value->id)
+            ->set('baselineChoice', QuestionEditor::NO_VALUE)
+            ->assertSet('baselineChoice', QuestionEditor::NO_VALUE)
+            ->assertSet('definition.baseline', '');
+
+        $this->assertSame('', $question->fresh()->definition['baseline']);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertSet('baselineChoice', QuestionEditor::NO_VALUE);
+    }
+
+    public function test_an_own_question_without_baseline_gets_the_first_value_saved_on_mount(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
+        $value = TagValue::create(['tag_category_id' => $category->id, 'name' => 'yes']);
+        $question = $user->questions()->create(['definition' => ['metric' => 'turn_share', 'compare_by' => "persona_tag:{$category->id}"]]);
+        $this->assertNull($question->fresh()->definition['baseline'] ?? null);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id]);
+
+        $this->assertSame((string) $value->id, $question->fresh()->definition['baseline']);
+    }
+
+    public function test_a_template_shows_the_effective_baseline_but_is_not_saved_on_mount(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title holder']);
+        $value = TagValue::create(['tag_category_id' => $category->id, 'name' => 'yes']);
+        $template = User::factory()->create()->questions()->create(['definition' => ['metric' => 'turn_share', 'compare_by' => "persona_tag:{$category->id}"], 'is_template' => true]);
+        $before = $template->fresh()->definition;
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $template->id])
+            ->assertSet('baselineChoice', (string) $value->id)
+            ->set('baselineChoice', QuestionEditor::NO_VALUE)
+            ->assertSet('baselineChoice', (string) $value->id);
+
+        $this->assertSame($before, $template->fresh()->definition);
     }
 }

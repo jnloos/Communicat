@@ -189,9 +189,9 @@
                 @if ($baselineOptions !== [])
                     <flux:menu.separator />
                     <flux:menu.group :heading="__('questions.controls.baseline')">
-                        <flux:menu.radio.group wire:model.live="definition.baseline">
+                        <flux:menu.radio.group wire:model.live="baselineChoice">
                             @foreach ($baselineOptions as $key => $label)
-                                <flux:menu.radio :value="(string) $key" wire:key="baseline-{{ $key }}">{{ $label }}</flux:menu.radio>
+                                <flux:menu.radio :value="(string) $key === '' ? \App\Livewire\Statistics\QuestionEditor::NO_VALUE : (string) $key" wire:key="baseline-{{ $key }}">{{ $label }}</flux:menu.radio>
                             @endforeach
                         </flux:menu.radio.group>
                     </flux:menu.group>
