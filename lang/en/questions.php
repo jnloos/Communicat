@@ -87,7 +87,7 @@ return [
 
     'controls' => [
         'metric' => 'Measure',
-        'expert_name' => 'Expert by name',
+        'expert_names' => 'Experts by name',
         'any_expert' => 'Any expert',
         'aggregate' => 'Count the group',
         'pipelines' => 'Pipelines',

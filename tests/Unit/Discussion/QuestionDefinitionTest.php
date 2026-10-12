@@ -33,7 +33,7 @@ class QuestionDefinitionTest extends TestCase
     {
         $saved = [
             'metric' => 'word_share',
-            'people' => ['tags' => [3 => [7]], 'expert_name' => 'Alex Brandt'],
+            'people' => ['tags' => [3 => [7]], 'expert_names' => ['Alex Brandt', 'Kim Hofer']],
             'aggregate' => 'per_head',
             'projects' => ['tags' => [1 => [1, 2]], 'pipelines' => ['ScorePipeline'], 'models' => ['openai-gpt-5'], 'groups' => [4]],
             'turns' => ['from' => 5, 'to' => 60],
@@ -45,6 +45,24 @@ class QuestionDefinitionTest extends TestCase
         ];
 
         $this->assertSame($saved, QuestionDefinition::fromArray($saved)->toArray());
+    }
+
+    public function test_expert_names_are_trimmed_unique_and_non_empty(): void
+    {
+        $people = QuestionDefinition::fromArray(['people' => ['expert_names' => [' Alex Brandt ', 'Kim Hofer', 'Alex Brandt', '', '  ']]])->people;
+
+        $this->assertSame(['Alex Brandt', 'Kim Hofer'], $people->expertNames);
+        $this->assertFalse($people->isEveryone());
+        $this->assertTrue(QuestionDefinition::fromArray(['people' => ['expert_names' => ['', ' ']]])->people->isEveryone());
+    }
+
+    public function test_an_old_single_expert_name_reads_into_the_list(): void
+    {
+        $people = QuestionDefinition::fromArray(['people' => ['expert_name' => ' Alex Brandt ']])->people;
+
+        $this->assertSame(['Alex Brandt'], $people->expertNames);
+        $this->assertSame(['Alex Brandt'], $people->toArray()['expert_names']);
+        $this->assertSame([], QuestionDefinition::fromArray(['people' => ['expert_name' => null]])->people->expertNames);
     }
 
     public function test_dimension_keys(): void

@@ -63,6 +63,13 @@ class QuestionSentenceTest extends TestCase
         $this->assertSame('Focus persona: true, deleted value', $parts['people']);
     }
 
+    public function test_the_people_label_lists_the_expert_names(): void
+    {
+        $parts = app(QuestionSentence::class)->parts(QuestionDefinition::fromArray(['people' => ['expert_names' => ['Alex Brandt', 'Kim Hofer']]]));
+
+        $this->assertSame('Alex Brandt, Kim Hofer', $parts['people']);
+    }
+
     public function test_gini_names_no_people(): void
     {
         $this->assertNull(app(QuestionSentence::class)->parts(QuestionDefinition::fromArray(['metric' => 'turn_gini']))['people']);

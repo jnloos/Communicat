@@ -121,7 +121,7 @@ final class QuestionSentence
             return __('questions.sentence.everyone');
         }
 
-        return implode(', ', [...$this->tags($people->tags->valueIds()), ...array_filter([$people->expertName])]);
+        return implode(', ', [...$this->tags($people->tags->valueIds()), ...$people->expertNames]);
     }
 
     private function projects(ProjectFilter $projects): string

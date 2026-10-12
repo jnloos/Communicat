@@ -140,7 +140,7 @@ final class QuestionEvaluator
 
         return Expert::whereIn('id', $seated)
             ->whereTagFilter($filter->tags)
-            ->when($filter->expertName !== null, fn ($query) => $query->where('name', $filter->expertName))
+            ->when($filter->expertNames !== [], fn ($query) => $query->whereIn('name', $filter->expertNames))
             ->pluck('id')
             ->mapWithKeys(fn ($id) => [(int) $id => true])
             ->all();

@@ -87,7 +87,7 @@ return [
 
     'controls' => [
         'metric' => 'Messgröße',
-        'expert_name' => 'Experte nach Name',
+        'expert_names' => 'Experten nach Name',
         'any_expert' => 'Jeder Experte',
         'aggregate' => 'Gruppe zählen',
         'pipelines' => 'Pipelines',

@@ -444,35 +444,35 @@ class QuestionEditorTest extends TestCase
             ->set("definition.people.tags.{$persona->id}", [(string) $yes->id])
             ->set("definition.projects.tags.{$project->id}", [(string) $status->id])
             ->set('definition.projects.pipelines', ['RoundRobinPipeline'])
-            ->set('definition.people.expert_name', 'Alex Brandt');
+            ->set('definition.people.expert_names', ['Alex Brandt']);
 
         $saved = $question->fresh()->definition;
         $this->assertSame([$yes->id], $saved['people']['tags'][$persona->id]);
         $this->assertSame([$status->id], $saved['projects']['tags'][$project->id]);
         $this->assertSame(['RoundRobinPipeline'], $saved['projects']['pipelines']);
-        $this->assertSame('Alex Brandt', $saved['people']['expert_name']);
+        $this->assertSame(['Alex Brandt'], $saved['people']['expert_names']);
     }
 
-    public function test_clearing_the_expert_name_returns_to_any_expert_and_stores_null(): void
+    public function test_expert_names_are_added_removed_and_cleared(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
         Expert::factory()->create(['name' => 'Alex Brandt']);
+        Expert::factory()->create(['name' => 'Kim Hofer']);
         $question = $user->questions()->create([]);
 
         Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
-            ->set('definition.people.expert_name', 'Alex Brandt')
-            ->assertSet('definition.people.expert_name', 'Alex Brandt')
-            ->set('definition.people.expert_name', '')
-            ->assertSet('definition.people.expert_name', null)
-            ->set('definition.people.expert_name', '  Alex Brandt ')
-            ->set('definition.people.expert_name', null)
-            ->assertSet('definition.people.expert_name', null);
+            ->set('definition.people.expert_names', ['Alex Brandt', 'Kim Hofer'])
+            ->assertSet('definition.people.expert_names', ['Alex Brandt', 'Kim Hofer'])
+            ->set('definition.people.expert_names', ['Kim Hofer'])
+            ->assertSet('definition.people.expert_names', ['Kim Hofer'])
+            ->set('definition.people.expert_names', [])
+            ->assertSet('definition.people.expert_names', []);
 
-        $this->assertNull($question->fresh()->definition['people']['expert_name']);
+        $this->assertSame([], $question->fresh()->definition['people']['expert_names']);
     }
 
-    public function test_the_expert_name_is_a_searchable_clearable_select_and_a_template_has_none(): void
+    public function test_the_expert_names_are_a_searchable_clearable_multiple_select_and_a_template_has_none(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -486,8 +486,8 @@ class QuestionEditorTest extends TestCase
 
         $before = $template->fresh()->definition;
         Livewire::test(QuestionEditor::class, ['questionId' => $template->id])
-            ->set('definition.people.expert_name', 'Alex Brandt')
-            ->assertSet('definition.people.expert_name', null);
+            ->set('definition.people.expert_names', ['Alex Brandt'])
+            ->assertSet('definition.people.expert_names', []);
         $this->assertSame($before, $template->fresh()->definition);
     }
 

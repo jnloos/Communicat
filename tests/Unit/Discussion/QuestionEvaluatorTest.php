@@ -201,6 +201,18 @@ class QuestionEvaluatorTest extends TestCase
         $this->assertSame($expected, $keys);
     }
 
+    public function test_several_expert_names_pick_each_of_those_agents(): void
+    {
+        $this->makeRun(['A', 'B', 'C'], [['A', 10], ['B', 10], ['C', 10], ['C', 10]]);
+
+        $together = $this->answer(['people' => ['expert_names' => ['A', 'B']]])->panels[0]->groups[0];
+        $perHead = $this->answer(['people' => ['expert_names' => ['A', 'B']], 'aggregate' => 'per_head'])->panels[0]->groups[0];
+
+        $this->assertSame(0.5, $together->mean());
+        $this->assertEqualsWithDelta(2 / 3, $together->fairShare(), 1e-9);
+        $this->assertSame(0.25, $perHead->mean());
+    }
+
     public function test_runs_without_an_answer_drop_out_and_are_counted(): void
     {
         $this->makeRun(['A', 'B'], []);

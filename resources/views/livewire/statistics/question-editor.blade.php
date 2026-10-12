@@ -85,10 +85,10 @@
                         </flux:menu.group>
                     @endforeach
 
-                    {{-- A menu radio group cannot go back to "any" (Flux reads '' as unset) and cannot filter; a searchable, clearable listbox does both. Keys are stopped here so the menu's own type-ahead does not take them from the search field. --}}
+                    {{-- A menu radio group cannot go back to "any" (Flux reads '' as unset), cannot filter and takes one value; a searchable, clearable, multiple listbox does all three. Keys are stopped here so the menu's own type-ahead does not take them from the search field. --}}
                     <flux:menu.separator />
                     <div class="px-2 pb-1" x-on:keydown.stop>
-                        <flux:select variant="listbox" size="sm" searchable clearable wire:model.live="definition.people.expert_name" :label="__('questions.controls.expert_name')" :placeholder="__('questions.controls.any_expert')">
+                        <flux:select variant="listbox" size="sm" multiple searchable clearable wire:model.live="definition.people.expert_names" :label="__('questions.controls.expert_names')" :placeholder="__('questions.controls.any_expert')">
                             @foreach ($expertNames as $expertName)
                                 <flux:select.option :value="$expertName" wire:key="expert-{{ $expertName }}">{{ $expertName }}</flux:select.option>
                             @endforeach
