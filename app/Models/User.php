@@ -82,7 +82,7 @@ class User extends Authenticatable
     /** This user's saved comparisons on the statistics page. */
     public function comparisons(): HasMany
     {
-        return $this->hasMany(Comparison::class)->orderBy('name')->orderBy('id');
+        return $this->hasMany(Comparison::class);
     }
 
     public function initials(): string
