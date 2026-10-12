@@ -153,8 +153,8 @@ return [
     ],
 
     'result' => [
-        'runs' => '{0}No run matches.|{1}1 run|[2,*]:count runs',
-        'excluded' => '{1}1 run has no value here: no spoken turn, nobody matches, or no value in the compared or split category.|[2,*]:count runs have no value here: no spoken turn, nobody matches, or no value in the compared or split category.',
+        'excluded' => '{1}1 run is malformed|[2,*]:count runs are malformed',
+        'excluded_reasons' => 'A run is left out when it has no spoken turn, nobody matches, or it has no value in the compared or split category.',
         'dropped_tags' => '{1}1 tag value this question used no longer exists and was removed. A category left with no value still filters and matches no run: open its chip and choose other values.|[2,*]:count tag values this question used no longer exist and were removed. A category left with no value still filters and matches no run: open its chip and choose other values.',
         'n_of' => ':label, n',
         'fair_share_of' => ':label, fair share',

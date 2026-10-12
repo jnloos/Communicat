@@ -222,10 +222,11 @@
         </div>
     </flux:card>
 
-    {{-- How many runs answer, and in which form. --}}
+    {{-- The answer's form; a note only when runs had to be left out, the reasons in its tooltip. --}}
     <div class="flex flex-wrap items-center justify-between gap-3">
         <flux:text size="sm">
-            {{ trans_choice('questions.result.runs', $result->runs, ['count' => $result->runs]) }}@if ($result->excluded > 0), {{ trans_choice('questions.result.excluded', $result->excluded, ['count' => $result->excluded]) }}
+            @if ($result->excluded > 0)
+                <span title="{{ __('questions.result.excluded_reasons') }}">{{ trans_choice('questions.result.excluded', $result->excluded, ['count' => $result->excluded]) }}</span>
             @endif
         </flux:text>
 

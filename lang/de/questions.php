@@ -153,8 +153,8 @@ return [
     ],
 
     'result' => [
-        'runs' => '{0}Kein Lauf passt.|{1}1 Lauf|[2,*]:count Läufe',
-        'excluded' => '{1}1 Lauf hat hier keinen Wert: kein gesprochener Turn, niemand passt oder kein Wert in der verglichenen oder aufgeteilten Kategorie.|[2,*]:count Läufe haben hier keinen Wert: kein gesprochener Turn, niemand passt oder kein Wert in der verglichenen oder aufgeteilten Kategorie.',
+        'excluded' => '{1}1 Lauf ist fehlerhaft|[2,*]:count Läufe sind fehlerhaft',
+        'excluded_reasons' => 'Ein Lauf fällt heraus, wenn er keinen gesprochenen Turn hat, niemand passt oder er keinen Wert in der verglichenen oder aufgeteilten Kategorie hat.',
         'dropped_tags' => '{1}1 Tag-Wert, den diese Frage nutzte, existiert nicht mehr und wurde entfernt. Eine Kategorie ohne verbleibenden Wert filtert weiter und trifft keinen Lauf: Chip öffnen und andere Werte wählen.|[2,*]:count Tag-Werte, die diese Frage nutzte, existieren nicht mehr und wurden entfernt. Eine Kategorie ohne verbleibenden Wert filtert weiter und trifft keinen Lauf: Chip öffnen und andere Werte wählen.',
         'n_of' => ':label, n',
         'fair_share_of' => ':label, faire Erwartung',
