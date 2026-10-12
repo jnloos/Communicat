@@ -470,15 +470,16 @@ class QuestionEditorTest extends TestCase
         $this->assertNull($question->fresh()->notes);
     }
 
-    public function test_a_template_shows_its_notes_as_text_and_never_saves_them(): void
+    public function test_a_template_shows_its_notes_in_a_disabled_field_and_never_saves_them(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
         $template = User::factory()->create()->questions()->create(['notes' => 'Read the delta as no-status minus status.', 'is_template' => true]);
 
         Livewire::test(QuestionEditor::class, ['questionId' => $template->id])
-            ->assertSee('Read the delta as no-status minus status.')
-            ->assertDontSeeHtml('<textarea')
+            ->assertSee('Question and notes')
+            ->assertSet('notes', 'Read the delta as no-status minus status.')
+            ->assertSeeHtml('disabled')
             ->set('notes', 'Overwritten')
             ->assertNotDispatched('question-saved');
 

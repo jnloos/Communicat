@@ -33,14 +33,10 @@
     </div>
 
     {{-- The researcher's own words: what the question asks and what followed from it. --}}
-    @if ($readOnly)
-        @if (filled($notes))
-            <flux:text class="whitespace-pre-line">{{ $notes }}</flux:text>
-        @endif
-    @else
-        <flux:textarea wire:model.live.debounce.750ms="notes" rows="3" resize="vertical"
-            :label="__('questions.notes.label')" :placeholder="__('questions.notes.placeholder')" />
-    @endif
+    {{-- A template shows the same field, disabled: same place, same label, nothing to save. --}}
+    <flux:textarea wire:model.live.debounce.750ms="notes" rows="3" resize="vertical" :disabled="$readOnly"
+        :label="__('questions.notes.label')" :placeholder="$readOnly ? '' : __('questions.notes.placeholder')"
+        @class(['disabled:opacity-100! disabled:cursor-default' => $readOnly]) />
 
     {{-- A template is only to look at; the way on is a copy. --}}
     @if ($readOnly)
