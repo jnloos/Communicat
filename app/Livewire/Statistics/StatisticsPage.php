@@ -78,7 +78,7 @@ class StatisticsPage extends Component
         ])->id;
     }
 
-    /** A snapshot of the question as a fix question, named after it; the question stays the user's own. */
+    /** A snapshot of the question as a fix question, titled like it, or by its sentence when untitled; the question stays the user's own. */
     public function saveAsTemplate(int $comparisonId): void
     {
         $question = $this->owned($comparisonId);
@@ -100,9 +100,9 @@ class StatisticsPage extends Component
     }
 
     /**
-     * An empty name is allowed for a question: it is then called by its
-     * sentence again. A fix question has no sentence to fall back on in the list
-     * everyone reads, so a fix question keeps a name.
+     * An empty title is allowed for a question: it is then listed as untitled
+     * (its sentence is always shown beside the title). A fix question is read
+     * by everyone and keeps a title.
      */
     public function saveName(): void
     {
@@ -133,7 +133,7 @@ class StatisticsPage extends Component
         $kind = $comparison->is_template ? 'delete_template' : 'delete';
 
         $this->confirmTitle = __("questions.confirm.{$kind}.title");
-        $this->confirmMessage = __("questions.confirm.{$kind}.message", ['name' => $this->nameOf($comparison)]);
+        $this->confirmMessage = __("questions.confirm.{$kind}.message", ['name' => $comparison->name ?? __('questions.untitled')]);
         $this->needsConfirmation('delete', $comparisonId);
     }
 
@@ -152,11 +152,6 @@ class StatisticsPage extends Component
         return $this->user()->comparisons()->findOrFail($comparisonId);
     }
 
-    private function nameOf(Comparison $comparison): string
-    {
-        return $comparison->name ?? app(QuestionSentence::class)->of($comparison->toQuestion());
-    }
-
     private function user(): User
     {
         return auth()->user();
@@ -171,7 +166,7 @@ class StatisticsPage extends Component
         return view('livewire.statistics.statistics-page', [
             'questions' => $questions,
             'fixQuestions' => $fixQuestions,
-            'names' => $questions->mapWithKeys(fn (Comparison $comparison) => [$comparison->id => $this->nameOf($comparison)]),
+            'sentences' => $questions->concat($fixQuestions)->mapWithKeys(fn (Comparison $comparison) => [$comparison->id => app(QuestionSentence::class)->of($comparison->toQuestion())]),
             'current' => $this->comparisonId === null ? null : $questions->firstWhere('id', $this->comparisonId) ?? $fixQuestions->firstWhere('id', $this->comparisonId),
         ])->title(__('questions.heading'));
     }

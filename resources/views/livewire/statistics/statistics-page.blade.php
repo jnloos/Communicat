@@ -21,9 +21,9 @@
                     <flux:navlist class="mt-2">
                         @foreach ($fixQuestions as $template)
                             <div class="group/template relative" wire:key="template-{{ $template->id }}">
-                                <flux:navlist.item icon="rectangle-stack" wire:click="open({{ $template->id }})" :current="$comparisonId === $template->id" :title="$template->name"
+                                <flux:navlist.item icon="rectangle-stack" wire:click="open({{ $template->id }})" :current="$comparisonId === $template->id" :title="($template->name ?? __('questions.untitled')).' – '.$sentences[$template->id]"
                                     @class(['min-w-0 [&_[data-content]]:min-w-0', 'pe-9' => $template->user_id === auth()->id()])>
-                                    <span class="block truncate">{{ $template->name }}</span>
+                                    <x-statistics.entry-text :title="$template->name" :sentence="$sentences[$template->id]" />
                                 </flux:navlist.item>
 
                                 @if ($template->user_id === auth()->id())
@@ -54,9 +54,9 @@
                     <flux:navlist class="mt-2">
                         @foreach ($questions as $question)
                             <div class="relative" wire:key="question-{{ $question->id }}">
-                                <flux:navlist.item wire:click="open({{ $question->id }})" :current="$comparisonId === $question->id" :title="$names[$question->id]"
+                                <flux:navlist.item wire:click="open({{ $question->id }})" :current="$comparisonId === $question->id" :title="($question->name ?? __('questions.untitled')).' – '.$sentences[$question->id]"
                                     class="min-w-0 pe-9 [&_[data-content]]:min-w-0">
-                                    <span class="block truncate">{{ $names[$question->id] }}</span>
+                                    <x-statistics.entry-text :title="$question->name" :sentence="$sentences[$question->id]" />
                                 </flux:navlist.item>
 
                                 <div class="absolute end-1 top-0 flex h-10 items-center lg:h-8">

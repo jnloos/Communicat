@@ -30,8 +30,10 @@ return [
     'name' => [
         'rename' => 'Umbenennen',
         'field' => 'Name',
-        'hint' => 'Leer lassen, dann heißt sie wie ihr Satz.',
+        'hint' => 'Leer lassen für keinen Titel. Der Satz steht immer daneben.',
     ],
+
+    'untitled' => 'Unbenannte Frage',
 
     'copy_name' => 'Kopie von :name',
 

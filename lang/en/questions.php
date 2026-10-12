@@ -30,8 +30,10 @@ return [
     'name' => [
         'rename' => 'Rename',
         'field' => 'Name',
-        'hint' => 'Leave empty to name it after its sentence.',
+        'hint' => 'Leave empty for no title. The sentence is always shown beside it.',
     ],
+
+    'untitled' => 'Untitled question',
 
     'copy_name' => 'Copy of :name',
 

@@ -108,7 +108,7 @@ class StatisticsPageTest extends TestCase
         $this->assertFalse($question->fresh()->is_template);
     }
 
-    public function test_renaming_to_nothing_returns_to_the_sentence(): void
+    public function test_renaming_to_nothing_leaves_the_question_untitled(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -121,6 +121,45 @@ class StatisticsPageTest extends TestCase
             ->assertHasNoErrors();
 
         $this->assertNull($question->fresh()->name);
+    }
+
+    public function test_the_list_shows_title_and_sentence_of_a_named_entry(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $user->comparisons()->create(['name' => 'Mine', 'question' => ['metric' => 'word_share']]);
+        $user->comparisons()->create(['name' => 'Shared', 'question' => ['metric' => 'gini'], 'is_template' => true]);
+
+        Livewire::test(StatisticsPage::class)
+            ->assertSee('Mine')
+            ->assertSee('Word share · everyone')
+            ->assertSee('Shared')
+            ->assertDontSee('Untitled question');
+    }
+
+    public function test_an_unnamed_entry_shows_untitled_and_its_sentence(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $user->comparisons()->create(['question' => ['metric' => 'word_share']]);
+
+        Livewire::test(StatisticsPage::class)
+            ->assertSee('Untitled question')
+            ->assertSee('Word share · everyone');
+    }
+
+    public function test_renaming_to_empty_lists_the_question_as_untitled(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $question = $user->comparisons()->create(['name' => 'Mine']);
+
+        Livewire::test(StatisticsPage::class)
+            ->assertDontSee('Untitled question')
+            ->call('startRenaming', $question->id)
+            ->set('name', '')
+            ->call('saveName')
+            ->assertSee('Untitled question');
     }
 
     public function test_a_template_cannot_be_renamed_to_nothing(): void

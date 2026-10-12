@@ -2,9 +2,9 @@
 @use('App\Livewire\Statistics\GroupColor')
 
 <div class="space-y-6">
-    {{-- The question's name heads it, with the autosave state and the page's actions. --}}
+    {{-- The question's title heads it, with the autosave state and the page's actions. --}}
     <div class="flex items-center gap-3">
-        <flux:heading size="xl" level="2" class="min-w-0 truncate">{{ $name }}</flux:heading>
+        <flux:heading size="xl" level="2" @class(['min-w-0 truncate', 'italic text-zinc-400! dark:text-zinc-500!' => $title === null])>{{ $title ?? __('questions.untitled') }}</flux:heading>
 
         @if ($readOnly)
             <flux:text size="sm" class="shrink-0">{{ __('questions.fix.view_only') }}</flux:text>
@@ -39,6 +39,8 @@
     @if ($droppedTagValues > 0)
         <flux:callout variant="warning" icon="exclamation-triangle" :text="trans_choice('questions.result.dropped_tags', $droppedTagValues, ['count' => $droppedTagValues])" />
     @endif
+
+    <flux:text data-question-sentence>{{ $sentenceText }}</flux:text>
 
     {{-- The question as one sentence. Each chip opens the controls of its part. --}}
     <div class="rounded-lg border border-zinc-200 bg-white p-4 text-base leading-9 dark:border-white/10 dark:bg-white/5">

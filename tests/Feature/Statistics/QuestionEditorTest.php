@@ -65,13 +65,27 @@ class QuestionEditorTest extends TestCase
             ->assertSee(route('project.show', Project::sole()));
     }
 
-    public function test_an_unnamed_question_is_headed_by_its_sentence(): void
+    public function test_the_head_shows_the_title_and_the_full_sentence(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $comparison = $user->comparisons()->create(['name' => 'My title', 'question' => ['metric' => 'word_share']]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->assertSee('My title')
+            ->assertSeeHtml('data-question-sentence')
+            ->assertSee('Word share · everyone');
+    }
+
+    public function test_an_untitled_question_says_so_and_does_not_repeat_the_sentence_as_title(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
         $comparison = $user->comparisons()->create(['question' => ['metric' => 'word_share']]);
 
-        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])->assertSee('Word share · everyone');
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->assertSee('Untitled question')
+            ->assertSee('Word share · everyone');
     }
 
     public function test_another_users_own_question_cannot_be_opened(): void
