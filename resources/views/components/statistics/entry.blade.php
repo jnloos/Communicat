@@ -1,0 +1,18 @@
+@props([
+    'title',    {{-- the question's title; null while it has none --}}
+    'sentence', {{-- the question in words --}}
+    'current' => false,
+    'icon' => null,
+])
+
+{{-- A list entry of auto height: the title, then the sentence small and grey. --}}
+<button type="button" @if ($current) aria-current="page" @endif title="{{ ($title ?? __('questions.untitled')).' – '.$sentence }}"
+    {{ $attributes->class(['block w-full rounded-lg px-3 py-1.5 pe-8 text-start hover:bg-zinc-800/5 dark:hover:bg-white/[7%]', 'bg-zinc-800/5 dark:bg-white/[7%]' => $current]) }}>
+    <span @class(['flex items-center gap-2 text-sm font-medium', 'text-(--color-accent-content)' => $current, 'italic text-zinc-500 dark:text-zinc-400' => $title === null && ! $current])>
+        @if ($icon)
+            <flux:icon :name="$icon" class="size-4 shrink-0" />
+        @endif
+        <span class="truncate">{{ $title ?? __('questions.untitled') }}</span>
+    </span>
+    <span class="line-clamp-2 text-xs text-zinc-500 dark:text-zinc-400">{{ $sentence }}</span>
+</button>

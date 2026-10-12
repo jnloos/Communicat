@@ -18,16 +18,14 @@
                 @if ($fixQuestions->isEmpty())
                     <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.no_fix') }}</flux:text>
                 @else
-                    <flux:navlist class="mt-2">
+                    <div class="mt-2 space-y-0.5">
                         @foreach ($fixQuestions as $template)
                             <div class="group/template relative" wire:key="template-{{ $template->id }}">
-                                <flux:navlist.item icon="rectangle-stack" wire:click="open({{ $template->id }})" :current="$comparisonId === $template->id" :title="($template->name ?? __('questions.untitled')).' – '.$sentences[$template->id]"
-                                    @class(['min-w-0 [&_[data-content]]:min-w-0', 'pe-9' => $template->user_id === auth()->id()])>
-                                    <x-statistics.entry-text :title="$template->name" :sentence="$sentences[$template->id]" />
-                                </flux:navlist.item>
+                                <x-statistics.entry :title="$template->name" :sentence="$sentences[$template->id]" :current="$comparisonId === $template->id"
+                                    icon="rectangle-stack" wire:click="open({{ $template->id }})" />
 
                                 @if ($template->user_id === auth()->id())
-                                    <div class="absolute end-1 top-0 flex h-10 items-center lg:h-8">
+                                    <div class="absolute end-1 top-1.5">
                                         <flux:dropdown position="bottom" align="end">
                                             <flux:button variant="ghost" size="xs" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')"
                                                 class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!" />
@@ -41,7 +39,7 @@
                                 @endif
                             </div>
                         @endforeach
-                    </flux:navlist>
+                    </div>
                 @endif
             </div>
 
@@ -51,15 +49,13 @@
                 @if ($questions->isEmpty())
                     <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.empty') }}</flux:text>
                 @else
-                    <flux:navlist class="mt-2">
+                    <div class="mt-2 space-y-0.5">
                         @foreach ($questions as $question)
                             <div class="relative" wire:key="question-{{ $question->id }}">
-                                <flux:navlist.item wire:click="open({{ $question->id }})" :current="$comparisonId === $question->id" :title="($question->name ?? __('questions.untitled')).' – '.$sentences[$question->id]"
-                                    class="min-w-0 pe-9 [&_[data-content]]:min-w-0">
-                                    <x-statistics.entry-text :title="$question->name" :sentence="$sentences[$question->id]" />
-                                </flux:navlist.item>
+                                <x-statistics.entry :title="$question->name" :sentence="$sentences[$question->id]" :current="$comparisonId === $question->id"
+                                    wire:click="open({{ $question->id }})" />
 
-                                <div class="absolute end-1 top-0 flex h-10 items-center lg:h-8">
+                                <div class="absolute end-1 top-1.5">
                                     <flux:dropdown position="bottom" align="end">
                                         <flux:button variant="ghost" size="xs" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')"
                                             class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!" />
@@ -74,7 +70,7 @@
                                 </div>
                             </div>
                         @endforeach
-                    </flux:navlist>
+                    </div>
                 @endif
             </div>
         </aside>
