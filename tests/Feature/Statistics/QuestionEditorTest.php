@@ -553,14 +553,15 @@ class QuestionEditorTest extends TestCase
         $this->assertSame([$kept->id, $gone->id], $template->fresh()->definition['people']['tags'][$category->id]);
     }
 
-    public function test_a_templates_disabled_triggers_keep_full_text_colour(): void
+    public function test_a_templates_triggers_look_disabled(): void
     {
         $this->actingAs(User::factory()->create());
         $template = User::factory()->create()->questions()->create(['is_template' => true]);
 
         $html = Livewire::test(QuestionEditor::class, ['questionId' => $template->id])->html();
 
-        $this->assertMatchesRegularExpression('/<button(?=[^>]*disabled)(?=[^>]*disabled:opacity-100!)[^>]*data-statistics-trigger/', $html);
+        $this->assertMatchesRegularExpression('/<button(?=[^>]*disabled)[^>]*data-statistics-trigger/', $html);
+        $this->assertDoesNotMatchRegularExpression('/<button(?=[^>]*disabled:opacity-100!)[^>]*data-statistics-trigger/', $html);
     }
 
     public function test_a_curve_draws_the_fair_share_as_a_dashed_line_and_says_so(): void

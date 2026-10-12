@@ -15,7 +15,7 @@
 
 {{-- A template's trigger keeps full text colour: Flux dims a disabled button to half, which made the sentence hard to read. No hover and no pointer still say it does not open. --}}
 @if ($readOnly)
-    <flux:button size="sm" :variant="$variant" icon:trailing="chevron-down" disabled :title="$label" :class="$cut.' disabled:opacity-100!'" data-statistics-trigger>{{ $label }}</flux:button>
+    <flux:button size="sm" :variant="$variant" icon:trailing="chevron-down" disabled :title="$label" :class="$cut" data-statistics-trigger>{{ $label }}</flux:button>
 @else
     <flux:dropdown position="bottom" align="start">
         <flux:button size="sm" :variant="$variant" icon:trailing="chevron-down" :title="$label" :class="$cut" data-statistics-trigger>{{ $label }}</flux:button>

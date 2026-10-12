@@ -32,12 +32,6 @@
         @endif
     </div>
 
-    {{-- The researcher's own words: what the question asks and what followed from it. --}}
-    {{-- A template shows the same field, disabled: same place, same label, nothing to save. --}}
-    <flux:textarea wire:model.live.debounce.750ms="notes" rows="3" resize="vertical" :disabled="$readOnly"
-        :label="__('questions.notes.label')" :placeholder="$readOnly ? '' : __('questions.notes.placeholder')"
-        @class(['disabled:opacity-100! disabled:cursor-default' => $readOnly]) />
-
     {{-- A template is only to look at; the way on is a copy. --}}
     @if ($readOnly)
         <flux:callout icon="eye" inline :text="__('questions.template.view_only_notice')">
@@ -49,6 +43,12 @@
             </x-slot:actions>
         </flux:callout>
     @endif
+
+    {{-- The researcher's own words: what the question asks and what followed from it. --}}
+    {{-- A template shows the same field, disabled: same place, same label, nothing to save. --}}
+    <flux:textarea wire:model.live.debounce.750ms="notes" rows="3" resize="vertical" :disabled="$readOnly"
+        :label="__('questions.notes.label')" :placeholder="$readOnly ? '' : __('questions.notes.placeholder')"
+        @class(['disabled:opacity-100! disabled:cursor-default' => $readOnly]) />
 
     @if ($droppedTagValues > 0)
         <flux:callout variant="warning" icon="exclamation-triangle" :text="trans_choice('questions.result.dropped_tags', $droppedTagValues, ['count' => $droppedTagValues])" />
