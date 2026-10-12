@@ -44,9 +44,9 @@ class TurnRangeTest extends TestCase
         $this->assertEquals(new TurnRange(2, 2), (new TurnRange(2, 2))->cappedAt(3));
     }
 
-    public function test_a_lower_bound_beyond_the_cap_is_kept_and_the_window_is_empty(): void
+    public function test_a_lower_bound_beyond_the_cap_is_kept_and_the_upper_bound_never_falls_below_it(): void
     {
-        $this->assertEquals(new TurnRange(4, 3), (new TurnRange(4))->cappedAt(3));
+        $this->assertEquals(new TurnRange(4, 4), (new TurnRange(4))->cappedAt(3));
     }
 
     public function test_only_the_default_is_the_whole_run(): void

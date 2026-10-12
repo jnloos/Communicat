@@ -35,12 +35,14 @@ final readonly class TurnRange
     }
 
     /**
-     * The upper bound can only move down to $max. A lower bound beyond it stays
-     * and leaves the window empty, which is what the question asked for.
+     * The upper bound can only move down to $max, and never below the lower
+     * bound. A lower bound beyond $max stays, with the upper bound equal to it:
+     * the window is then empty for every run of at most $max turns, which is
+     * what the question asked for.
      */
     public function cappedAt(int $max): self
     {
-        return new self($this->from, min($this->to ?? $max, $max));
+        return new self($this->from, max($this->from, min($this->to ?? $max, $max)));
     }
 
     public function isWholeRun(): bool

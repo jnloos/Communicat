@@ -62,6 +62,7 @@ return [
         'turns' => 'turns :from to :to',
         'from_turn' => 'from turn :from',
         'shortest_run' => '(shortest run)',
+        'beyond_shortest_run' => 'from turn :from (beyond the shortest run, :count turns)',
         'over' => 'over',
         'name_compared_by' => 'by :dimension',
         'name_split_by' => 'per :dimension',

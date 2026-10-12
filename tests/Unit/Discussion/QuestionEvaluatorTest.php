@@ -285,6 +285,20 @@ class QuestionEvaluatorTest extends TestCase
         $this->assertTrue($result->isEmpty());
         $this->assertSame(2, $result->runs);
         $this->assertSame(2, $result->excluded);
+        $this->assertSame(3, $result->shortestRun);
+        $this->assertSame(4, $result->turns->to, 'never below the lower bound');
+    }
+
+    public function test_a_run_the_people_filter_drops_does_not_shorten_the_window_of_the_others(): void
+    {
+        $this->makeRun(['A'], [['A', 10], ['A', 10]]);
+        $this->makeRun(['B'], [['B', 10], ['B', 10], ['B', 10], ['B', 10]]);
+
+        $result = $this->answer(['people' => ['expert_name' => 'B']]);
+
+        $this->assertSame(4, $result->shortestRun);
+        $this->assertSame(4, $result->turns->to);
+        $this->assertSame(1, $result->excluded);
     }
 
     public function test_a_run_without_a_spoken_turn_does_not_set_the_shortest_length(): void

@@ -42,10 +42,33 @@ class SpokenTurns
      */
     public function of(Project $project): Builder
     {
-        return JobLog::query()
-            ->where('project_id', $project->id)
-            ->whereNotNull('words')
-            ->whereNotNull('expert_id');
+        return $this->spoken()->where('project_id', $project->id);
+    }
+
+    /**
+     * How many turns each run spoke, in one query. Runs without a spoken turn
+     * are absent from the result, not zero.
+     *
+     * @param  iterable<Project>  $projects
+     * @return array<int, int> project id => spoken turns
+     */
+    public function counts(iterable $projects): array
+    {
+        $ids = collect($projects)->map(fn (Project $project) => $project->id)->all();
+
+        return $this->spoken()
+            ->whereIn('project_id', $ids)
+            ->selectRaw('project_id, count(*) as turns')
+            ->groupBy('project_id')
+            ->pluck('turns', 'project_id')
+            ->map(fn ($turns) => (int) $turns)
+            ->all();
+    }
+
+    /** @return Builder<JobLog> the counting rule itself, for every run */
+    private function spoken(): Builder
+    {
+        return JobLog::query()->whereNotNull('words')->whereNotNull('expert_id');
     }
 
     /**
@@ -76,12 +99,6 @@ class SpokenTurns
         return $this->inOrder($project)
             ->offset($turns->from - 1)
             ->limit($turns->to === null ? PHP_INT_MAX : max(0, $turns->to - $turns->from + 1));
-    }
-
-    /** How many turns the run spoke: the length a window is capped by. */
-    public function count(Project $project): int
-    {
-        return $this->of($project)->count();
     }
 
     /**

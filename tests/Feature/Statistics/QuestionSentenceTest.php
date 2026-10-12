@@ -101,4 +101,11 @@ class QuestionSentenceTest extends TestCase
         $this->assertSame('Turn share · everyone', $sentence->of(new Question));
         $this->assertSame('Turn share · everyone · from turn 4', $sentence->of(Question::fromArray(['turns' => ['from' => 4]])));
     }
+
+    public function test_a_start_beyond_the_shortest_run_says_why_the_answer_is_empty(): void
+    {
+        $result = new QuestionResult([], [], 2, 2, new TurnRange(4, 4), true, 3);
+
+        $this->assertSame('from turn 4 (beyond the shortest run, 3 turns)', $this->turns(['from' => 4], $result));
+    }
 }

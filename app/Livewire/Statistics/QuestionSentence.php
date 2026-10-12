@@ -34,7 +34,7 @@ final class QuestionSentence
             'people' => $question->metric->isRunLevel() ? null : $this->people($question->people),
             'aggregate' => $question->metric->isShare() ? $question->aggregate->label() : null,
             'projects' => $this->projects($question->projects),
-            'turns' => $this->turns($result?->turns ?? $question->turns, $result?->cappedByShortestRun ?? false),
+            'turns' => $this->turns($result?->turns ?? $question->turns, $result),
             'compare_by' => $question->compareBy === null ? null : $this->dimension($question->compareBy),
             'split_by' => $question->splitBy === null ? null : $this->dimension($question->splitBy),
         ];
@@ -89,15 +89,20 @@ final class QuestionSentence
         ]);
     }
 
-    private function turns(TurnRange $turns, bool $cappedByShortestRun): string
+    private function turns(TurnRange $turns, ?QuestionResult $result): string
     {
+        // A start past the shortest run: no run has such a turn, so say why the answer is empty.
+        if ($result?->shortestRun !== null && $turns->from > $result->shortestRun) {
+            return __('questions.sentence.beyond_shortest_run', ['from' => $turns->from, 'count' => $result->shortestRun]);
+        }
+
         $text = match (true) {
             $turns->isWholeRun() => __('questions.sentence.all_turns'),
             $turns->to === null => __('questions.sentence.from_turn', ['from' => $turns->from]),
             default => __('questions.sentence.turns', ['from' => $turns->from, 'to' => $turns->to]),
         };
 
-        return $cappedByShortestRun ? $text.' '.__('questions.sentence.shortest_run') : $text;
+        return $result?->cappedByShortestRun ? $text.' '.__('questions.sentence.shortest_run') : $text;
     }
 
     /**

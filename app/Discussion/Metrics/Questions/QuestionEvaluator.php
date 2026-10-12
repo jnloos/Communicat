@@ -33,8 +33,12 @@ use Illuminate\Support\Collection;
  * - Panels and groups come in their dimension's order; one no run reached is
  *   left out.
  * - Every run is read over the same turns: the asked window, its upper bound
- *   capped at the shortest run that spoke.
- * - A curve point is the mean over the runs that reached that turn.
+ *   capped at the shortest run that contributes to the answer. A run that drops
+ *   out (no value in a dimension, nobody the people filter accepts) does not
+ *   shorten the window of the others.
+ * - A curve point is the mean over the runs that reached that turn. Every run
+ *   counted has at least as many turns as the window's upper bound, so n is the
+ *   same at each point, unless the window starts beyond the shortest run.
  */
 final class QuestionEvaluator
 {
@@ -54,11 +58,22 @@ final class QuestionEvaluator
         $panelRuns = [];
         $runs = $excluded = 0;
         $projects = $this->runs->for($user, $question->projects);
-        $shortest = $this->shortestRun($projects);
+        $shortest = $this->shortestRun($projects->filter(fn (Project $project) => $this->contributes($question, $project)));
         $turns = $shortest === null ? $question->turns : $question->turns->cappedAt($shortest);
+
+        // A start past the shortest run: the capped bound cannot make the window empty for the longer
+        // runs (it may not fall below the start), so no run is read and all are counted as excluded.
+        $beyondShortestRun = $shortest !== null && $question->turns->from > $shortest;
 
         foreach ($projects as $project) {
             $runs++;
+
+            if ($beyondShortestRun) {
+                $excluded++;
+
+                continue;
+            }
+
             $panel = $question->splitBy === null ? '' : $this->dimensions->ofProject($question->splitBy, $project);
             $report = $this->shares->forProject($project, $turns);
             $groups = $panel === null || $report->isEmpty() ? [] : $this->groupsOf($question, $project, $report);
@@ -88,22 +103,35 @@ final class QuestionEvaluator
             $runs,
             $excluded,
             $turns,
-            $turns->to !== $question->turns->to,
+            $shortest !== null && ($question->turns->to === null || $question->turns->to > $shortest),
             $shortest,
         );
     }
 
     /**
-     * The length of the shortest run that spoke at all: the most turns every
-     * run can be read over. A run that never spoke has no length to cap by.
+     * Whether a run takes part in the answer at all, judged over the whole run:
+     * panel and groups do not depend on the window, so the window can be
+     * capped by the runs that contribute before it is applied to any of them.
+     */
+    private function contributes(Question $question, Project $project): bool
+    {
+        $report = $this->shares->forProject($project);
+        $panel = $question->splitBy === null ? '' : $this->dimensions->ofProject($question->splitBy, $project);
+
+        return $panel !== null && ! $report->isEmpty() && $this->groupsOf($question, $project, $report) !== [];
+    }
+
+    /**
+     * The length of the shortest of these runs: the most turns every one can
+     * be read over. A run that never spoke has no length to cap by.
      *
      * @param  Collection<int, Project>  $projects
      */
     private function shortestRun(Collection $projects): ?int
     {
-        $lengths = $projects->map(fn (Project $project) => $this->spoken->count($project))->filter(fn (int $length) => $length > 0);
+        $lengths = array_filter($this->spoken->counts($projects), fn (int $length) => $length > 0);
 
-        return $lengths->isEmpty() ? null : $lengths->min();
+        return $lengths === [] ? null : min($lengths);
     }
 
     /** @return array<int|string, non-empty-list<SpeakerShare>> group key => the group's agents in this run */
