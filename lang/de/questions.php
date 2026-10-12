@@ -33,6 +33,11 @@ return [
         'hint' => 'Leer lassen für keinen Titel. Der Satz steht immer daneben.',
     ],
 
+    'notes' => [
+        'label' => 'Frage und Notizen',
+        'placeholder' => 'Was willst du herausfinden, und welche Schlüsse ziehst du?',
+    ],
+
     'untitled' => 'Unbenannte Frage',
 
     'copy_name' => 'Kopie von :name',

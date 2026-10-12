@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class Comparison extends Model
 {
-    protected $fillable = ['user_id', 'name', 'question', 'is_template'];
+    protected $fillable = ['user_id', 'name', 'notes', 'question', 'is_template'];
 
     protected $casts = [
         'question' => 'array',

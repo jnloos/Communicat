@@ -25,7 +25,7 @@
                     <div class="mt-2 space-y-0.5">
                         @foreach ($fixQuestions as $template)
                             <div class="group/template relative" wire:key="template-{{ $template->id }}">
-                                <x-statistics.entry :title="$template->name" :sentence="$sentences[$template->id]" :current="$comparisonId === $template->id"
+                                <x-statistics.entry :title="$template->name" :notes="$template->notes" :sentence="$sentences[$template->id]" :current="$comparisonId === $template->id"
                                     icon="rectangle-stack" :with-menu="$template->user_id === auth()->id()" wire:click="open({{ $template->id }})" />
 
                                 @if ($template->user_id === auth()->id())
@@ -56,7 +56,7 @@
                     <div class="mt-2 space-y-0.5">
                         @foreach ($questions as $question)
                             <div class="relative" wire:key="question-{{ $question->id }}">
-                                <x-statistics.entry :title="$question->name" :sentence="$sentences[$question->id]" :current="$comparisonId === $question->id"
+                                <x-statistics.entry :title="$question->name" :notes="$question->notes" :sentence="$sentences[$question->id]" :current="$comparisonId === $question->id"
                                     with-menu wire:click="open({{ $question->id }})" />
 
                                 <div class="absolute end-1 top-1.5">

@@ -33,6 +33,11 @@ return [
         'hint' => 'Leave empty for no title. The sentence is always shown beside it.',
     ],
 
+    'notes' => [
+        'label' => 'Question and notes',
+        'placeholder' => 'What do you want to find out, and what did you conclude?',
+    ],
+
     'untitled' => 'Untitled question',
 
     'copy_name' => 'Copy of :name',

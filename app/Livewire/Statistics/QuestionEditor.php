@@ -40,6 +40,9 @@ class QuestionEditor extends Component
     /** @var array<string, mixed> Question::toArray() */
     public array $question = [];
 
+    /** Free text under the title: what the question asks, what was concluded. Saved like the question. */
+    public string $notes = '';
+
     /** A fix question: shown, never saved. */
     #[Locked]
     public bool $readOnly = false;
@@ -57,11 +60,18 @@ class QuestionEditor extends Component
         $this->comparisonId = $comparison->id;
         $this->readOnly = $comparison->is_template;
         $this->question = $comparison->toQuestion()->toArray();
+        $this->notes = (string) $comparison->notes;
         $this->dropDeletedTagValues();
     }
 
     public function updated(string $property): void
     {
+        if ($property === 'notes') {
+            $this->saveNotes();
+
+            return;
+        }
+
         if (! str_starts_with($property, 'question')) {
             return;
         }
@@ -74,6 +84,21 @@ class QuestionEditor extends Component
 
         $this->question = Question::fromArray($this->question)->toArray();
         $this->comparison($this->comparisonId)->update(['question' => $this->question]);
+
+        $this->dispatch('question-saved');
+    }
+
+    /** Trimmed; empty is no notes. A fix question's notes are only shown, so nothing is saved there. */
+    private function saveNotes(): void
+    {
+        $comparison = $this->comparison($this->comparisonId);
+        $this->notes = $this->readOnly ? (string) $comparison->notes : trim($this->notes);
+
+        if ($this->readOnly) {
+            return;
+        }
+
+        $comparison->update(['notes' => $this->notes === '' ? null : $this->notes]);
 
         $this->dispatch('question-saved');
     }

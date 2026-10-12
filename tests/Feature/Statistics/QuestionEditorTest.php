@@ -441,4 +441,57 @@ class QuestionEditorTest extends TestCase
         $this->assertSame([$group->id], $saved['projects']['groups']);
         $this->assertSame('group', $saved['compare_by']);
     }
+
+    public function test_notes_are_trimmed_saved_and_tell_the_page(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $comparison = $user->comparisons()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->set('notes', "  Why the CEO speaks more.  \n")
+            ->assertDispatched('question-saved')
+            ->assertSet('notes', 'Why the CEO speaks more.');
+
+        $this->assertSame('Why the CEO speaks more.', $comparison->fresh()->notes);
+    }
+
+    public function test_empty_notes_are_stored_as_null(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $comparison = $user->comparisons()->create(['notes' => 'Something']);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->assertSet('notes', 'Something')
+            ->set('notes', "   \n ");
+
+        $this->assertNull($comparison->fresh()->notes);
+    }
+
+    public function test_a_template_shows_its_notes_as_text_and_never_saves_them(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $fix = User::factory()->create()->comparisons()->create(['notes' => 'Read the delta as no-status minus status.', 'is_template' => true]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $fix->id])
+            ->assertSee('Read the delta as no-status minus status.')
+            ->assertDontSeeHtml('<textarea')
+            ->set('notes', 'Overwritten')
+            ->assertNotDispatched('question-saved');
+
+        $this->assertSame('Read the delta as no-status minus status.', $fix->fresh()->notes);
+    }
+
+    public function test_an_own_question_shows_the_notes_field(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $comparison = $user->comparisons()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->assertSee('Question and notes')
+            ->assertSeeHtml('<textarea');
+    }
 }

@@ -80,6 +80,7 @@ class StatisticsPage extends Component
 
         $this->comparisonId = $this->user()->comparisons()->create([
             'name' => $fix->name,
+            'notes' => $fix->notes,
             'question' => Question::fromArray($question)->toArray(),
         ])->id;
     }
@@ -93,6 +94,7 @@ class StatisticsPage extends Component
 
         $this->user()->comparisons()->create([
             'name' => Str::limit($question->name ?? app(QuestionSentence::class)->of($asked), 100, ''),
+            'notes' => $question->notes,
             'question' => $template->toArray(),
             'is_template' => true,
         ]);

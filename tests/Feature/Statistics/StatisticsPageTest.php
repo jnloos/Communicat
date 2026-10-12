@@ -224,4 +224,34 @@ class StatisticsPageTest extends TestCase
             ->call('saveAsTemplate', $question->id)
             ->assertDontSee('Groups are personal');
     }
+
+    public function test_the_list_shows_the_first_line_of_the_notes_else_the_sentence(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $user->comparisons()->create(['name' => 'With notes', 'notes' => "First line of notes\nSecond line"]);
+        $user->comparisons()->create(['name' => 'Without notes']);
+
+        Livewire::test(StatisticsPage::class)
+            ->assertSee('First line of notes')
+            ->assertDontSee('Second line of')
+            ->assertSee('Turn share');
+    }
+
+    public function test_copying_duplicating_and_saving_as_template_keep_the_notes(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $fix = User::factory()->create()->comparisons()->create(['name' => 'Fix', 'notes' => 'From the template', 'is_template' => true]);
+        $own = $user->comparisons()->create(['name' => 'Own', 'notes' => 'My conclusion']);
+
+        $page = Livewire::test(StatisticsPage::class);
+        $page->call('copyFixQuestion', $fix->id);
+        $page->call('duplicate', $own->id);
+        $page->call('saveAsTemplate', $own->id);
+
+        $this->assertSame('From the template', $user->comparisons()->questions()->where('name', 'Fix')->sole()->notes);
+        $this->assertSame('My conclusion', $user->comparisons()->questions()->where('name', 'Copy of Own')->sole()->notes);
+        $this->assertSame('My conclusion', $user->comparisons()->where('is_template', true)->sole()->notes);
+    }
 }
