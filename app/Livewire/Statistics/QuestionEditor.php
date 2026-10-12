@@ -74,6 +74,8 @@ class QuestionEditor extends Component
 
         $this->question = Question::fromArray($this->question)->toArray();
         $this->comparison($this->comparisonId)->update(['question' => $this->question]);
+
+        $this->dispatch('question-saved');
     }
 
     /** The stored question with the form and curve of this view: the only things a viewer may switch. */

@@ -49,6 +49,37 @@ class QuestionEditorTest extends TestCase
         $this->assertSame('', $comparison->fresh()->question['compare_by']);
     }
 
+    public function test_a_saved_change_tells_the_page_and_a_template_does_not(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $own = $user->comparisons()->create([]);
+        $fix = User::factory()->create()->comparisons()->create(['question' => ['metric' => 'word_share'], 'is_template' => true]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $own->id])
+            ->set('question.metric', 'turn_gini')
+            ->assertDispatched('question-saved');
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $fix->id])
+            ->set('question.form', 'trajectory')
+            ->assertNotDispatched('question-saved');
+    }
+
+    public function test_a_trigger_is_cut_with_an_ellipsis_and_carries_its_full_label_as_title(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $own = $user->comparisons()->create([]);
+        $fix = User::factory()->create()->comparisons()->create(['question' => ['metric' => 'word_share'], 'is_template' => true]);
+
+        foreach ([$own, $fix] as $comparison) {
+            $html = Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])->html();
+
+            $this->assertMatchesRegularExpression('/<button[^>]*data-statistics-trigger[^>]*>/', $html);
+            $this->assertMatchesRegularExpression('/<button(?=[^>]*title="Word share|[^>]*title="[^"]+")(?=[^>]*max-w-64)(?=[^>]*truncate)[^>]*data-statistics-trigger/', $html);
+        }
+    }
+
     public function test_it_shows_the_sentence_the_answer_and_the_runs_behind_it(): void
     {
         $user = User::factory()->create();

@@ -9,6 +9,7 @@ use App\Models\User;
 use Flux\Flux;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -166,6 +167,10 @@ class StatisticsPage extends Component
     {
         return auth()->user();
     }
+
+    /** The editor saved a change: re-render so the list shows the new sentence. */
+    #[On('question-saved')]
+    public function refreshList(): void {}
 
     public function render(): mixed
     {
