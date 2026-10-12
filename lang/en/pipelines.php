@@ -2,9 +2,9 @@
 
 // Key is the short class name. Without an entry the UI shows the class name.
 return [
-    'RoundRobinPipeline' => 'Round robin (fixed order)',
-    'ScorePipeline' => 'Bidding (each agent bids 1–5)',
-    'OrchestratorPipeline' => 'Orchestrator (a model picks)',
-    'QualityPipeline' => 'Proposal quality (a judge picks)',
-    'BlindQualityPipeline' => 'Proposal quality, blind judge (anonymous drafts)',
+    'RoundRobinPipeline' => 'Round Robin',
+    'ScorePipeline' => 'Score',
+    'OrchestratorPipeline' => 'Orchestrator',
+    'QualityPipeline' => 'Quality',
+    'BlindQualityPipeline' => 'Blind Quality',
 ];
