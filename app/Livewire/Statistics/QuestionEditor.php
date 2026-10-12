@@ -130,7 +130,6 @@ class QuestionEditor extends Component
 
         return view('livewire.statistics.question-editor', [
             'title' => $this->comparison($this->comparisonId)->name,
-            'sentenceText' => $sentence->of($question),
             'current' => $question,
             'mayManage' => ! $this->readOnly || $this->comparison($this->comparisonId)->user_id === auth()->id(),
             'parts' => $sentence->parts($question, $result),

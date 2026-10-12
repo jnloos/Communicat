@@ -49,7 +49,7 @@ return [
     ],
 
     'fix' => [
-        'view_only' => 'Vorlage, nur ansehen',
+        'view_only_notice' => 'Diese Vorlage ist nur zum Ansehen. Kopiere sie, um sie anzupassen.',
     ],
 
     'autosave' => [

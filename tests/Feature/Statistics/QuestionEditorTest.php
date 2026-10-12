@@ -65,27 +65,24 @@ class QuestionEditorTest extends TestCase
             ->assertSee(route('project.show', Project::sole()));
     }
 
-    public function test_the_head_shows_the_title_and_the_full_sentence(): void
+    public function test_the_head_shows_the_title(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
         $comparison = $user->comparisons()->create(['name' => 'My title', 'question' => ['metric' => 'word_share']]);
 
         Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
-            ->assertSee('My title')
-            ->assertSeeHtml('data-question-sentence')
-            ->assertSee('Word share of everyone');
+            ->assertSee('My title');
     }
 
-    public function test_an_untitled_question_says_so_and_does_not_repeat_the_sentence_as_title(): void
+    public function test_an_untitled_question_says_so(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
         $comparison = $user->comparisons()->create(['question' => ['metric' => 'word_share']]);
 
         Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
-            ->assertSee('Untitled question')
-            ->assertSee('Word share of everyone');
+            ->assertSee('Untitled question');
     }
 
     public function test_another_users_own_question_cannot_be_opened(): void
@@ -105,11 +102,39 @@ class QuestionEditorTest extends TestCase
         Livewire::test(QuestionEditor::class, ['comparisonId' => $fix->id])
             ->assertSet('readOnly', true)
             ->assertSee('Fixed')
-            ->assertSee('Template, view only')
+            ->assertSeeHtml('data-flux-callout')
+            ->assertSee('This template is view only. Copy it to adjust.')
             ->assertSee('Copy to adjust')
+            ->assertDontSee('Template, view only')
             ->set('question.metric', 'turn_gini');
 
         $this->assertSame('word_share', $fix->fresh()->question['metric']);
+    }
+
+    public function test_the_sentence_of_a_template_has_no_controls_and_a_question_has_them(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $fix = User::factory()->create()->comparisons()->create(['question' => ['metric' => 'word_share'], 'is_template' => true]);
+        $own = $user->comparisons()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $fix->id])
+            ->assertSee('Word share')
+            ->assertDontSeeHtml('data-flux-dropdown');
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $own->id])
+            ->assertSeeHtml('data-flux-dropdown')
+            ->assertDontSee('This template is view only');
+    }
+
+    public function test_the_editor_does_not_repeat_the_sentence_under_the_title(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $own = $user->comparisons()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $own->id])
+            ->assertDontSeeHtml('data-question-sentence');
     }
 
     public function test_a_fix_question_may_be_viewed_as_a_curve_without_saving(): void

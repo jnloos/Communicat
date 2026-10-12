@@ -3,25 +3,18 @@
 
 <div class="space-y-6">
     {{-- The question's title heads it, with the autosave state and the page's actions. --}}
-    <div class="flex items-center gap-3">
-        <flux:heading size="xl" level="2" @class(['min-w-0 truncate', 'italic text-zinc-400! dark:text-zinc-500!' => $title === null])>{{ $title ?? __('questions.untitled') }}</flux:heading>
+    <div class="flex items-start gap-3">
+        <flux:heading size="xl" level="2" @class(['min-w-0 flex-1 break-words', 'italic text-zinc-400! dark:text-zinc-500!' => $title === null])>{{ $title ?? __('questions.untitled') }}</flux:heading>
 
-        @if ($readOnly)
-            <flux:text size="sm" class="shrink-0">{{ __('questions.fix.view_only') }}</flux:text>
-
-            <flux:button variant="primary" size="sm" icon="document-duplicate" class="ms-auto shrink-0"
-                wire:click="$parent.copyFixQuestion({{ $comparisonId }}, $wire.question.form, $wire.question.curve)">
-                {{ __('questions.actions.copy_to_adjust') }}
-            </flux:button>
-        @else
-            <flux:text size="sm" class="flex shrink-0 items-center gap-1" wire:loading.remove>
+        @unless ($readOnly)
+            <flux:text size="sm" class="flex shrink-0 items-center gap-1 pt-1.5" wire:loading.remove>
                 <flux:icon.check variant="micro" />{{ __('questions.autosave.saved') }}
             </flux:text>
-            <flux:text size="sm" class="shrink-0" wire:loading>{{ __('questions.autosave.saving') }}</flux:text>
-        @endif
+            <flux:text size="sm" class="shrink-0 pt-1.5" wire:loading>{{ __('questions.autosave.saving') }}</flux:text>
+        @endunless
 
         @if ($mayManage)
-            <flux:dropdown position="bottom" align="end" @class(['ms-auto' => ! $readOnly])>
+            <flux:dropdown position="bottom" align="end" class="shrink-0">
                 <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')" />
                 <flux:menu>
                     <flux:menu.item icon="pencil-square" wire:click="$parent.startRenaming({{ $comparisonId }})">{{ __('questions.actions.rename') }}</flux:menu.item>
@@ -36,14 +29,24 @@
         @endif
     </div>
 
+    {{-- A template is only to look at; the way on is a copy. --}}
+    @if ($readOnly)
+        <flux:callout icon="eye" inline :text="__('questions.fix.view_only_notice')">
+            <x-slot:actions>
+                <flux:button size="sm" variant="primary" icon="document-duplicate"
+                    wire:click="$parent.copyFixQuestion({{ $comparisonId }}, $wire.question.form, $wire.question.curve)">
+                    {{ __('questions.actions.copy_to_adjust') }}
+                </flux:button>
+            </x-slot:actions>
+        </flux:callout>
+    @endif
+
     @if ($droppedTagValues > 0)
         <flux:callout variant="warning" icon="exclamation-triangle" :text="trans_choice('questions.result.dropped_tags', $droppedTagValues, ['count' => $droppedTagValues])" />
     @endif
 
-    <flux:text data-question-sentence>{{ $sentenceText }}</flux:text>
-
     {{-- The question as one sentence. Each chip opens the controls of its part. --}}
-    <div class="rounded-lg border border-zinc-200 bg-white p-4 text-base leading-9 dark:border-white/10 dark:bg-white/5">
+    <flux:card size="sm" class="text-base leading-9">
         <x-statistics.chip :read-only="$readOnly" :label="$parts['metric']">
             <flux:radio.group wire:model.live="question.metric" :label="__('questions.controls.metric')">
                 @foreach ($metrics as $metric)
@@ -56,8 +59,7 @@
             <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.of') }}</span>
             <x-statistics.chip :read-only="$readOnly" :label="$parts['people']" :muted="$current->people->isEveryone()">
                 @foreach ($personaCategories as $category)
-                    <x-statistics.source-label :text="$category->label()" :source="$personaSource" />
-                    <flux:checkbox.group variant="pills" wire:key="people-{{ $category->id }}"
+                    <flux:checkbox.group variant="pills" wire:key="people-{{ $category->id }}" :label="$category->label()" :badge="$personaSource"
                         wire:model.live="question.people.tags.{{ $category->id }}" class="gap-1.5!">
                         @foreach ($category->values as $value)
                             <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" />
@@ -88,22 +90,21 @@
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.in') }}</span>
         <x-statistics.chip :read-only="$readOnly" :label="$parts['projects']" :muted="$current->projects->isEmpty()">
             @foreach ($projectCategories as $category)
-                <x-statistics.source-label :text="$category->label()" :source="$projectSource" />
-                <flux:checkbox.group variant="pills" wire:key="projects-{{ $category->id }}"
+                <flux:checkbox.group variant="pills" wire:key="projects-{{ $category->id }}" :label="$category->label()" :badge="$projectSource"
                     wire:model.live="question.projects.tags.{{ $category->id }}" class="gap-1.5!">
                     @foreach ($category->values as $value)
                         <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" />
                     @endforeach
                 </flux:checkbox.group>
             @endforeach
-            <x-statistics.source-label :text="__('questions.controls.pipelines')" :source="$runSource" />
-            <flux:checkbox.group variant="pills" wire:model.live="question.projects.pipelines" class="gap-1.5!">
+            <flux:checkbox.group variant="pills" wire:model.live="question.projects.pipelines" class="gap-1.5!"
+                :label="__('questions.controls.pipelines')" :badge="$runSource">
                 @foreach ($pipelines as $pipelineName => $label)
                     <flux:checkbox variant="pills" :value="$pipelineName" :label="$label" />
                 @endforeach
             </flux:checkbox.group>
-            <x-statistics.source-label :text="__('questions.controls.models')" :source="$runSource" />
-            <flux:checkbox.group variant="pills" wire:model.live="question.projects.models" class="gap-1.5!">
+            <flux:checkbox.group variant="pills" wire:model.live="question.projects.models" class="gap-1.5!"
+                :label="__('questions.controls.models')" :badge="$runSource">
                 @foreach ($models as $key => $label)
                     <flux:checkbox variant="pills" :value="$key" :label="$label" />
                 @endforeach
@@ -132,7 +133,7 @@
             <flux:radio.group wire:model.live="question.compare_by" :label="__('questions.controls.compare_by')">
                 <flux:radio value="" :label="__('questions.controls.none')" />
                 @foreach ($compareOptions as $key => $option)
-                    <x-statistics.source-radio :value="$key" :text="$option['label']" :source="$option['source']" wire:key="compare-{{ $key }}" />
+                    <flux:radio :value="$key" :label="$option['label']" :description="$option['source']" wire:key="compare-{{ $key }}" />
                 @endforeach
             </flux:radio.group>
             @if ($current->metric->isRunLevel())
@@ -146,12 +147,12 @@
                 <flux:radio value="" :label="__('questions.controls.none')" />
                 @foreach ($splitOptions as $key => $option)
                     @unless ($key === ($question['compare_by'] ?? ''))
-                        <x-statistics.source-radio :value="$key" :text="$option['label']" :source="$option['source']" wire:key="split-{{ $key }}" />
+                        <flux:radio :value="$key" :label="$option['label']" :description="$option['source']" wire:key="split-{{ $key }}" />
                     @endunless
                 @endforeach
             </flux:radio.group>
         </x-statistics.chip>
-    </div>
+    </flux:card>
 
     {{-- How many runs answer, and in which form. --}}
     <div class="flex flex-wrap items-center justify-between gap-3">

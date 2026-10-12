@@ -49,7 +49,7 @@ return [
     ],
 
     'fix' => [
-        'view_only' => 'Template, view only',
+        'view_only_notice' => 'This template is view only. Copy it to adjust.',
     ],
 
     'autosave' => [
