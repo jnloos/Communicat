@@ -24,7 +24,9 @@ use Livewire\Component;
 /**
  * One question, edited in place: its sentence on top, its answer below. Every
  * change is normalised through Question and saved at once; there is no draft.
- * Only the user's own questions open here; a template is copied, never edited.
+ * The user's own questions open for editing. A fix question opens read only:
+ * nothing it shows is saved, the form and curve switches change this view and
+ * nothing else, and the page copies it to adjust.
  */
 class QuestionEditor extends Component
 {
@@ -37,6 +39,10 @@ class QuestionEditor extends Component
     /** @var array<string, mixed> Question::toArray() */
     public array $question = [];
 
+    /** A fix question: shown, never saved. */
+    #[Locked]
+    public bool $readOnly = false;
+
     /** How many tag values the saved question named that no longer exist; dropped on opening. */
     #[Locked]
     public int $droppedTagValues = 0;
@@ -48,16 +54,34 @@ class QuestionEditor extends Component
     {
         $comparison = $this->comparison($comparisonId);
         $this->comparisonId = $comparison->id;
+        $this->readOnly = $comparison->is_template;
         $this->question = $comparison->toQuestion()->toArray();
         $this->dropDeletedTagValues();
     }
 
     public function updated(string $property): void
     {
-        if (str_starts_with($property, 'question')) {
-            $this->question = Question::fromArray($this->question)->toArray();
-            $this->comparison($this->comparisonId)->update(['question' => $this->question]);
+        if (! str_starts_with($property, 'question')) {
+            return;
         }
+
+        if ($this->readOnly) {
+            $this->question = $this->onlyTheViewChanged();
+
+            return;
+        }
+
+        $this->question = Question::fromArray($this->question)->toArray();
+        $this->comparison($this->comparisonId)->update(['question' => $this->question]);
+    }
+
+    /** The stored question with the form and curve of this view: the only things a viewer may switch. */
+    private function onlyTheViewChanged(): array
+    {
+        $stored = $this->comparison($this->comparisonId)->toQuestion()->toArray();
+        $viewed = Question::fromArray($this->question)->toArray();
+
+        return Question::fromArray(['form' => $viewed['form'], 'curve' => $viewed['curve']] + $stored)->toArray();
     }
 
     /**
@@ -82,13 +106,17 @@ class QuestionEditor extends Component
 
         $this->question = Question::fromArray($this->question)->toArray();
         $this->droppedTagValues = count($gone);
-        $this->comparison($this->comparisonId)->update(['question' => $this->question]);
+
+        if (! $this->readOnly) {
+            $this->comparison($this->comparisonId)->update(['question' => $this->question]);
+        }
     }
 
     private function comparison(int $comparisonId): Comparison
     {
         if ($this->loaded?->id !== $comparisonId) {
-            $this->loaded = auth()->user()->comparisons()->where('is_template', false)->findOrFail($comparisonId);
+            $this->loaded = Comparison::templates()->find($comparisonId)
+                ?? auth()->user()->comparisons()->where('is_template', false)->findOrFail($comparisonId);
         }
 
         return $this->loaded;
@@ -103,6 +131,7 @@ class QuestionEditor extends Component
         return view('livewire.statistics.question-editor', [
             'name' => $this->comparison($this->comparisonId)->name ?? $sentence->of($question),
             'current' => $question,
+            'mayManage' => ! $this->readOnly || $this->comparison($this->comparisonId)->user_id === auth()->id(),
             'parts' => $sentence->parts($question, $result),
             'result' => $result,
             'metrics' => Metric::cases(),

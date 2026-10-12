@@ -1,10 +1,23 @@
 @props([
     'label',          {{-- what the sentence says for this part --}}
     'muted' => false, {{-- the part filters nothing ("everyone", "all runs", "nothing") --}}
+    'readOnly' => false, {{-- a fix question: the words stay, the controls go --}}
     'source' => null, {{-- where the labelled item comes from; shown as a badge after the label --}}
 ])
 
 {{-- One part of the question's sentence: the words as a button, its controls in a popover. --}}
+@if ($readOnly)
+    <span @class([
+        'inline-flex max-w-full items-center gap-1 rounded-md border px-2 py-0.5 align-baseline text-sm',
+        'border-[var(--color-accent)] bg-[color-mix(in_oklab,var(--color-accent)_12%,transparent)] text-zinc-900 dark:text-white' => ! $muted,
+        'border-dashed border-zinc-300 text-zinc-600 dark:border-zinc-600 dark:text-zinc-300' => $muted,
+    ])>
+        <span class="truncate">{{ $label }}</span>
+        @if ($source !== null)
+            <x-statistics.source :label="$source" />
+        @endif
+    </span>
+@else
 <flux:dropdown position="bottom" align="start" class="inline-block">
     <button type="button" @class([
         'inline-flex max-w-full items-center gap-1 rounded-md border px-2 py-0.5 align-baseline text-sm',
@@ -22,3 +35,4 @@
         {{ $slot }}
     </flux:popover>
 </flux:dropdown>
+@endif

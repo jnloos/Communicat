@@ -13,15 +13,15 @@
     <div class="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
         <aside class="w-full shrink-0 space-y-6 lg:w-64">
             <div>
-                <x-statistics.section-label class="px-3">{{ __('questions.list.templates') }}</x-statistics.section-label>
+                <x-statistics.section-label class="px-3">{{ __('questions.list.fix') }}</x-statistics.section-label>
 
-                @if ($templates->isEmpty())
-                    <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.no_templates') }}</flux:text>
+                @if ($fixQuestions->isEmpty())
+                    <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.no_fix') }}</flux:text>
                 @else
                     <flux:navlist class="mt-2">
-                        @foreach ($templates as $template)
+                        @foreach ($fixQuestions as $template)
                             <div class="group/template relative" wire:key="template-{{ $template->id }}">
-                                <flux:navlist.item icon="rectangle-stack" wire:click="useTemplate({{ $template->id }})" :title="$template->name"
+                                <flux:navlist.item icon="rectangle-stack" wire:click="open({{ $template->id }})" :current="$comparisonId === $template->id" :title="$template->name"
                                     @class(['min-w-0 [&_[data-content]]:min-w-0', 'pe-9' => $template->user_id === auth()->id()])>
                                     <span class="block truncate">{{ $template->name }}</span>
                                 </flux:navlist.item>
@@ -46,7 +46,7 @@
             </div>
 
             <div>
-                <x-statistics.section-label class="px-3">{{ __('questions.list.questions') }}</x-statistics.section-label>
+                <x-statistics.section-label class="px-3">{{ __('questions.list.others') }}</x-statistics.section-label>
 
                 @if ($questions->isEmpty())
                     <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.empty') }}</flux:text>
@@ -66,7 +66,7 @@
                                         <flux:menu>
                                             <flux:menu.item icon="pencil-square" wire:click="startRenaming({{ $question->id }})">{{ __('questions.actions.rename') }}</flux:menu.item>
                                             <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $question->id }})">{{ __('questions.actions.duplicate') }}</flux:menu.item>
-                                            <flux:menu.item icon="rectangle-stack" wire:click="saveAsTemplate({{ $question->id }})">{{ __('questions.actions.save_as_template') }}</flux:menu.item>
+                                            <flux:menu.item icon="rectangle-stack" wire:click="saveAsTemplate({{ $question->id }})">{{ __('questions.actions.save_as_fix_question') }}</flux:menu.item>
                                             <flux:menu.separator />
                                             <flux:menu.item variant="danger" icon="trash" wire:click="confirmDelete({{ $question->id }})">{{ __('questions.actions.delete') }}</flux:menu.item>
                                         </flux:menu>

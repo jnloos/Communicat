@@ -74,21 +74,55 @@ class QuestionEditorTest extends TestCase
         Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])->assertSee('Word share · everyone');
     }
 
-    public function test_a_template_or_another_users_question_cannot_be_edited(): void
+    public function test_another_users_own_question_cannot_be_opened(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $foreign = User::factory()->create()->comparisons()->create([]);
+
+        $this->expectException(ModelNotFoundException::class);
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $foreign->id]);
+    }
+
+    public function test_a_fix_question_loads_read_only_and_never_saves(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $fix = User::factory()->create()->comparisons()->create(['name' => 'Fixed', 'question' => ['metric' => 'word_share'], 'is_template' => true]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $fix->id])
+            ->assertSet('readOnly', true)
+            ->assertSee('Fixed')
+            ->assertSee('Fixed question, view only')
+            ->assertSee('Copy to adjust')
+            ->set('question.metric', 'turn_gini');
+
+        $this->assertSame('word_share', $fix->fresh()->question['metric']);
+    }
+
+    public function test_a_fix_question_may_be_viewed_as_a_curve_without_saving(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $fix = User::factory()->create()->comparisons()->create(['question' => ['metric' => 'word_share'], 'is_template' => true]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $fix->id])
+            ->set('question.form', 'trajectory')
+            ->assertSet('question.form', 'trajectory')
+            ->assertSet('question.metric', 'word_share');
+
+        $this->assertNotSame('trajectory', $fix->fresh()->question['form'] ?? null);
+    }
+
+    public function test_an_own_question_stays_editable(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
-        $template = $user->comparisons()->create(['is_template' => true]);
-        $foreign = User::factory()->create()->comparisons()->create([]);
+        $comparison = $user->comparisons()->create([]);
 
-        foreach ([$template, $foreign] as $comparison) {
-            try {
-                Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id]);
-                $this->fail('Expected a 404.');
-            } catch (ModelNotFoundException) {
-                $this->addToAssertionCount(1);
-            }
-        }
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->assertSet('readOnly', false)
+            ->assertDontSee('Copy to adjust')
+            ->set('question.metric', 'word_share');
+
+        $this->assertSame('word_share', $comparison->fresh()->question['metric']);
     }
 
     public function test_an_empty_answer_says_how_to_widen_it(): void

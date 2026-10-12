@@ -41,21 +41,61 @@ class StatisticsPageTest extends TestCase
         $this->assertFalse(Comparison::sole()->is_template);
     }
 
-    public function test_anyone_copies_a_template_into_their_own_questions(): void
+    public function test_a_fix_question_opens_to_view_without_a_copy(): void
     {
-        $template = User::factory()->create()->comparisons()->create(['name' => 'Status effect', 'question' => ['metric' => 'word_share'], 'is_template' => true]);
+        $fix = User::factory()->create()->comparisons()->create(['name' => 'Status effect', 'question' => ['metric' => 'word_share'], 'is_template' => true]);
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        Livewire::test(StatisticsPage::class)->assertSee('Status effect')->call('useTemplate', $template->id);
+        Livewire::test(StatisticsPage::class)
+            ->assertSee('Fix questions')
+            ->assertSee('Other questions')
+            ->assertSee('Status effect')
+            ->call('open', $fix->id)
+            ->assertSet('comparisonId', $fix->id)
+            ->assertSee('Copy to adjust');
+
+        $this->assertSame(0, $user->comparisons()->count());
+        $this->assertSame(1, Comparison::count());
+    }
+
+    public function test_copying_a_fix_question_makes_an_own_question_and_opens_it(): void
+    {
+        $fix = User::factory()->create()->comparisons()->create(['name' => 'Status effect', 'question' => ['metric' => 'word_share'], 'is_template' => true]);
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $page = Livewire::test(StatisticsPage::class)->call('copyFixQuestion', $fix->id);
 
         $copy = $user->comparisons()->sole();
+        $page->assertSet('comparisonId', $copy->id);
         $this->assertFalse($copy->is_template);
         $this->assertSame('Status effect', $copy->name);
         $this->assertSame('word_share', $copy->question['metric']);
+        $this->assertTrue($fix->fresh()->is_template);
     }
 
-    public function test_saving_as_template_keeps_the_question_and_names_the_template(): void
+    public function test_the_copy_keeps_the_form_being_viewed(): void
+    {
+        $fix = User::factory()->create()->comparisons()->create(['name' => 'F', 'question' => ['metric' => 'word_share'], 'is_template' => true]);
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        Livewire::test(StatisticsPage::class)->call('copyFixQuestion', $fix->id, 'trajectory', 'rolling');
+
+        $this->assertSame('trajectory', $user->comparisons()->sole()->question['form']);
+        $this->assertSame('rolling', $user->comparisons()->sole()->question['curve']);
+    }
+
+    public function test_a_fix_question_opens_by_url_parameter(): void
+    {
+        $fix = User::factory()->create()->comparisons()->create(['name' => 'F', 'is_template' => true]);
+        $this->actingAs(User::factory()->create());
+
+        Livewire::withQueryParams(['c' => $fix->id])->test(StatisticsPage::class)->assertSet('comparisonId', $fix->id);
+    }
+
+    public function test_saving_as_fix_question_keeps_the_question_and_names_it(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);

@@ -6,21 +6,34 @@
     <div class="flex items-center gap-3">
         <flux:heading size="xl" level="2" class="min-w-0 truncate">{{ $name }}</flux:heading>
 
-        <flux:text size="sm" class="flex shrink-0 items-center gap-1" wire:loading.remove>
-            <flux:icon.check variant="micro" />{{ __('questions.autosave.saved') }}
-        </flux:text>
-        <flux:text size="sm" class="shrink-0" wire:loading>{{ __('questions.autosave.saving') }}</flux:text>
+        @if ($readOnly)
+            <flux:text size="sm" class="shrink-0">{{ __('questions.fix.view_only') }}</flux:text>
 
-        <flux:dropdown position="bottom" align="end" class="ms-auto">
-            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')" />
-            <flux:menu>
-                <flux:menu.item icon="pencil-square" wire:click="$parent.startRenaming({{ $comparisonId }})">{{ __('questions.actions.rename') }}</flux:menu.item>
-                <flux:menu.item icon="document-duplicate" wire:click="$parent.duplicate({{ $comparisonId }})">{{ __('questions.actions.duplicate') }}</flux:menu.item>
-                <flux:menu.item icon="rectangle-stack" wire:click="$parent.saveAsTemplate({{ $comparisonId }})">{{ __('questions.actions.save_as_template') }}</flux:menu.item>
-                <flux:menu.separator />
-                <flux:menu.item variant="danger" icon="trash" wire:click="$parent.confirmDelete({{ $comparisonId }})">{{ __('questions.actions.delete') }}</flux:menu.item>
-            </flux:menu>
-        </flux:dropdown>
+            <flux:button variant="primary" size="sm" icon="document-duplicate" class="ms-auto shrink-0"
+                wire:click="$parent.copyFixQuestion({{ $comparisonId }}, $wire.question.form, $wire.question.curve)">
+                {{ __('questions.actions.copy_to_adjust') }}
+            </flux:button>
+        @else
+            <flux:text size="sm" class="flex shrink-0 items-center gap-1" wire:loading.remove>
+                <flux:icon.check variant="micro" />{{ __('questions.autosave.saved') }}
+            </flux:text>
+            <flux:text size="sm" class="shrink-0" wire:loading>{{ __('questions.autosave.saving') }}</flux:text>
+        @endif
+
+        @if ($mayManage)
+            <flux:dropdown position="bottom" align="end" @class(['ms-auto' => ! $readOnly])>
+                <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')" />
+                <flux:menu>
+                    <flux:menu.item icon="pencil-square" wire:click="$parent.startRenaming({{ $comparisonId }})">{{ __('questions.actions.rename') }}</flux:menu.item>
+                    @unless ($readOnly)
+                        <flux:menu.item icon="document-duplicate" wire:click="$parent.duplicate({{ $comparisonId }})">{{ __('questions.actions.duplicate') }}</flux:menu.item>
+                        <flux:menu.item icon="rectangle-stack" wire:click="$parent.saveAsTemplate({{ $comparisonId }})">{{ __('questions.actions.save_as_fix_question') }}</flux:menu.item>
+                        <flux:menu.separator />
+                    @endunless
+                    <flux:menu.item variant="danger" icon="trash" wire:click="$parent.confirmDelete({{ $comparisonId }})">{{ __('questions.actions.delete') }}</flux:menu.item>
+                </flux:menu>
+            </flux:dropdown>
+        @endif
     </div>
 
     @if ($droppedTagValues > 0)
@@ -29,7 +42,7 @@
 
     {{-- The question as one sentence. Each chip opens the controls of its part. --}}
     <div class="rounded-lg border border-zinc-200 bg-white p-4 text-base leading-9 dark:border-white/10 dark:bg-white/5">
-        <x-statistics.chip :label="$parts['metric']">
+        <x-statistics.chip :read-only="$readOnly" :label="$parts['metric']">
             <flux:radio.group wire:model.live="question.metric" :label="__('questions.controls.metric')">
                 @foreach ($metrics as $metric)
                     <flux:radio :value="$metric->value" :label="$metric->label()" />
@@ -39,7 +52,7 @@
 
         @if ($parts['people'] !== null)
             <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.of') }}</span>
-            <x-statistics.chip :label="$parts['people']" :muted="$current->people->isEveryone()">
+            <x-statistics.chip :read-only="$readOnly" :label="$parts['people']" :muted="$current->people->isEveryone()">
                 @foreach ($personaCategories as $category)
                     <x-statistics.source-label :text="$category->label()" :source="$personaSource" />
                     <flux:checkbox.group variant="pills" wire:key="people-{{ $category->id }}"
@@ -61,7 +74,7 @@
         @endif
 
         @if ($parts['aggregate'] !== null)
-            <x-statistics.chip :label="$parts['aggregate']" :muted="true">
+            <x-statistics.chip :read-only="$readOnly" :label="$parts['aggregate']" :muted="true">
                 <flux:radio.group wire:model.live="question.aggregate" :label="__('questions.controls.aggregate')">
                     @foreach ($aggregates as $aggregate)
                         <flux:radio :value="$aggregate->value" :label="$aggregate->label()" :description="__('questions.aggregate_hints.'.$aggregate->value)" />
@@ -71,7 +84,7 @@
         @endif
 
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.in') }}</span>
-        <x-statistics.chip :label="$parts['projects']" :muted="$current->projects->isEmpty()">
+        <x-statistics.chip :read-only="$readOnly" :label="$parts['projects']" :muted="$current->projects->isEmpty()">
             @foreach ($projectCategories as $category)
                 <x-statistics.source-label :text="$category->label()" :source="$projectSource" />
                 <flux:checkbox.group variant="pills" wire:key="projects-{{ $category->id }}"
@@ -96,7 +109,7 @@
         </x-statistics.chip>
 
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.over') }}</span>
-        <x-statistics.chip :label="$parts['turns']" :muted="$current->turns->isWholeRun() && ! $result->cappedByShortestRun">
+        <x-statistics.chip :read-only="$readOnly" :label="$parts['turns']" :muted="$current->turns->isWholeRun() && ! $result->cappedByShortestRun">
             <div class="grid grid-cols-2 gap-3">
                 <flux:input type="number" min="1" wire:model.live.debounce.500ms="question.turns.from" :label="__('questions.controls.turn_from')" />
                 <flux:input type="number" min="1" wire:model.live.debounce.500ms="question.turns.to" :label="__('questions.controls.turn_to')" />
@@ -109,7 +122,7 @@
         <br class="max-sm:hidden">
 
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.compared_by') }}</span>
-        <x-statistics.chip :label="$parts['compare_by'] ?? __('questions.sentence.nothing')" :source="$parts['compare_by_source']" :muted="$parts['compare_by'] === null">
+        <x-statistics.chip :read-only="$readOnly" :label="$parts['compare_by'] ?? __('questions.sentence.nothing')" :source="$parts['compare_by_source']" :muted="$parts['compare_by'] === null">
             <flux:radio.group wire:model.live="question.compare_by" :label="__('questions.controls.compare_by')">
                 <flux:radio value="" :label="__('questions.controls.none')" />
                 @foreach ($compareOptions as $key => $option)
@@ -122,7 +135,7 @@
         </x-statistics.chip>
 
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.split_by') }}</span>
-        <x-statistics.chip :label="$parts['split_by'] ?? __('questions.sentence.nothing')" :source="$parts['split_by_source']" :muted="$parts['split_by'] === null">
+        <x-statistics.chip :read-only="$readOnly" :label="$parts['split_by'] ?? __('questions.sentence.nothing')" :source="$parts['split_by_source']" :muted="$parts['split_by'] === null">
             <flux:radio.group wire:model.live="question.split_by" :label="__('questions.controls.split_by')">
                 <flux:radio value="" :label="__('questions.controls.none')" />
                 @foreach ($splitOptions as $key => $option)
