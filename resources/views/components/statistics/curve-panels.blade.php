@@ -40,7 +40,9 @@
                     <flux:chart.tooltip>
                         <flux:chart.tooltip.heading field="turn" />
                         @foreach ($panel->groups as $index => $group)
-                            <flux:chart.tooltip.value :field="'g'.$index" :label="$group->label !== '' ? $group->label : __('questions.result.all')" suffix=" %" />
+                            @php($label = $group->label !== '' ? $group->label : __('questions.result.all'))
+                            <flux:chart.tooltip.value :field="'g'.$index" :label="$label" suffix=" %" />
+                            <flux:chart.tooltip.value :field="'n'.$index" :label="__('questions.result.n_of', ['label' => $label])" />
                         @endforeach
                     </flux:chart.tooltip>
                 </flux:chart>

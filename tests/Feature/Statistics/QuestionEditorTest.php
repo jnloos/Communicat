@@ -134,4 +134,57 @@ class QuestionEditorTest extends TestCase
             ->assertSee('deleted value')
             ->assertSee('No run answers this question');
     }
+
+    /** A run whose two titled/untitled agents split the floor 3 : 1, and the persona category that tells them apart. */
+    private function titledRun(User $user): TagCategory
+    {
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'titel']);
+        $project = Project::factory()->create(['user_id' => $user->id, 'title' => 'Run']);
+        $titled = Expert::factory()->create(['name' => 'Chief']);
+        $other = Expert::factory()->create(['name' => 'Peer']);
+        $titled->setTag($category, $category->values()->create(['name' => 'ceo']));
+        $other->setTag($category, $category->values()->create(['name' => 'staff']));
+
+        foreach ([$titled, $other] as $expert) {
+            $project->addContributingExpert($expert);
+        }
+
+        foreach ([$titled, $titled, $titled, $other] as $index => $expert) {
+            JobLog::create(['job_class' => 'x', 'project_id' => $project->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => $index + 1, 'expert_id' => $expert->id, 'words' => 10]);
+        }
+
+        return $category;
+    }
+
+    public function test_the_composition_form_shows_each_group_with_its_percentage(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $category = $this->titledRun($user);
+        $comparison = $user->comparisons()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->set('question.compare_by', "persona_tag:{$category->id}")
+            ->set('question.form', 'composition')
+            ->assertSee('ceo')
+            ->assertSee('staff')
+            ->assertSee('75.0 %')
+            ->assertSee('25.0 %');
+    }
+
+    public function test_the_trajectory_form_draws_a_curve_per_panel(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $category = $this->titledRun($user);
+        $comparison = $user->comparisons()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->set('question.compare_by', "persona_tag:{$category->id}")
+            ->set('question.form', 'trajectory')
+            ->assertSet('question.form', 'trajectory')
+            ->assertSee('ceo')
+            ->assertSee('staff')
+            ->assertDontSee('A curve needs at least two spoken turns.');
+    }
 }
