@@ -61,8 +61,7 @@ return [
         'all_turns' => 'all turns',
         'turns' => 'turns :from to :to',
         'from_turn' => 'from turn :from',
-        'shortest_run' => '(shortest run)',
-        'beyond_shortest_run' => 'from turn :from (beyond the shortest run, :count turns)',
+        'beyond_shortest_run' => 'from turn :from, beyond the shortest run of :count turns',
         'over' => 'over',
         'name_compared_by' => 'by :dimension',
         'name_split_by' => 'per :dimension',
@@ -79,7 +78,7 @@ return [
         'models' => 'Models',
         'turn_from' => 'From turn',
         'turn_to' => 'To turn',
-        'turns_hint' => '{1}The upper bound is at most the shortest selected run (:count turn).|[0,*]The upper bound is at most the shortest selected run (:count turns).',
+        'turns_hint' => '{1}The upper bound is at most the shortest selected run, which has :count turn.|[0,*]The upper bound is at most the shortest selected run, which has :count turns.',
         'compare_by' => 'Compare by',
         'split_by' => 'Split by',
         'none' => 'Nothing',
@@ -101,15 +100,15 @@ return [
     'dimensions' => [
         'pipeline' => 'Pipeline',
         'model' => 'Model',
-        'persona' => ':category (persona)',
+        'persona' => 'Persona :category',
     ],
 
     'metrics' => [
         'turn_share' => 'Turn share',
         'word_share' => 'Word share',
         'words_per_turn' => 'Words per turn',
-        'turn_gini' => 'Gini (turns)',
-        'word_gini' => 'Gini (words)',
+        'turn_gini' => 'Gini of turns',
+        'word_gini' => 'Gini of words',
     ],
 
     'forms' => [

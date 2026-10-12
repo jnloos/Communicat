@@ -61,8 +61,7 @@ return [
         'all_turns' => 'allen Turns',
         'turns' => 'Turns :from bis :to',
         'from_turn' => 'ab Turn :from',
-        'shortest_run' => '(kürzester Lauf)',
-        'beyond_shortest_run' => 'ab Turn :from (länger als der kürzeste Lauf, :count Turns)',
+        'beyond_shortest_run' => 'ab Turn :from, länger als der kürzeste Lauf mit :count Turns',
         'over' => 'über',
         'name_compared_by' => 'nach :dimension',
         'name_split_by' => 'je :dimension',
@@ -79,7 +78,7 @@ return [
         'models' => 'Modelle',
         'turn_from' => 'Ab Turn',
         'turn_to' => 'Bis Turn',
-        'turns_hint' => '{1}Die obere Grenze ist höchstens der kürzeste ausgewählte Lauf (:count Turn).|[0,*]Die obere Grenze ist höchstens der kürzeste ausgewählte Lauf (:count Turns).',
+        'turns_hint' => '{1}Die obere Grenze ist höchstens der kürzeste ausgewählte Lauf, er hat :count Turn.|[0,*]Die obere Grenze ist höchstens der kürzeste ausgewählte Lauf, er hat :count Turns.',
         'compare_by' => 'Verglichen nach',
         'split_by' => 'Aufgeteilt nach',
         'none' => 'Nichts',
@@ -101,15 +100,15 @@ return [
     'dimensions' => [
         'pipeline' => 'Pipeline',
         'model' => 'Modell',
-        'persona' => ':category (Persona)',
+        'persona' => 'Persona :category',
     ],
 
     'metrics' => [
         'turn_share' => 'Turn-Anteil',
         'word_share' => 'Wortanteil',
         'words_per_turn' => 'Wörter pro Turn',
-        'turn_gini' => 'Gini (Turns)',
-        'word_gini' => 'Gini (Wörter)',
+        'turn_gini' => 'Gini der Turns',
+        'word_gini' => 'Gini der Wörter',
     ],
 
     'forms' => [

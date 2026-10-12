@@ -211,7 +211,7 @@ class QuestionEditorTest extends TestCase
         $comparison = $user->comparisons()->create([]);
 
         Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
-            ->assertSee('turns 1 to 1 (shortest run)')
-            ->assertSee('The upper bound is at most the shortest selected run (1 turn).');
+            ->assertSee('turns 1 to 1')
+            ->assertSee('The upper bound is at most the shortest selected run, which has 1 turn.');
     }
 }

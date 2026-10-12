@@ -96,13 +96,11 @@ final class QuestionSentence
             return __('questions.sentence.beyond_shortest_run', ['from' => $turns->from, 'count' => $result->shortestRun]);
         }
 
-        $text = match (true) {
+        return match (true) {
             $turns->isWholeRun() => __('questions.sentence.all_turns'),
             $turns->to === null => __('questions.sentence.from_turn', ['from' => $turns->from]),
             default => __('questions.sentence.turns', ['from' => $turns->from, 'to' => $turns->to]),
         };
-
-        return $result?->cappedByShortestRun ? $text.' '.__('questions.sentence.shortest_run') : $text;
     }
 
     /**

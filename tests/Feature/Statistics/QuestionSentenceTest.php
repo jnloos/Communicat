@@ -88,9 +88,9 @@ class QuestionSentenceTest extends TestCase
         $this->assertSame('from turn 4', $this->turns(['from' => 4]));
     }
 
-    public function test_the_shortest_run_is_named_when_it_set_the_upper_bound(): void
+    public function test_a_bound_set_by_the_shortest_run_reads_like_any_other(): void
     {
-        $this->assertSame('turns 1 to 3 (shortest run)', $this->turns([], $this->resultOver(new TurnRange(1, 3), true)));
+        $this->assertSame('turns 1 to 3', $this->turns([], $this->resultOver(new TurnRange(1, 3), true)));
         $this->assertSame('turns 1 to 3', $this->turns(['to' => 3], $this->resultOver(new TurnRange(1, 3), false)));
     }
 
@@ -106,6 +106,6 @@ class QuestionSentenceTest extends TestCase
     {
         $result = new QuestionResult([], [], 2, 2, new TurnRange(4, 4), true, 3);
 
-        $this->assertSame('from turn 4 (beyond the shortest run, 3 turns)', $this->turns(['from' => 4], $result));
+        $this->assertSame('from turn 4, beyond the shortest run of 3 turns', $this->turns(['from' => 4], $result));
     }
 }
