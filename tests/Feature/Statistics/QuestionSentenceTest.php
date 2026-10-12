@@ -107,7 +107,7 @@ class QuestionSentenceTest extends TestCase
         $sentence = app(QuestionSentence::class);
 
         $this->assertSame('Turn share of everyone per head', $sentence->of(Question::fromArray(['aggregate' => 'per_head'])));
-        $this->assertStringNotContainsString(' of ', $sentence->of(Question::fromArray(['metric' => 'turn_gini'])));
+        $this->assertSame('Gini of turns', $sentence->of(Question::fromArray(['metric' => 'turn_gini'])));
     }
 
     public function test_a_start_beyond_the_shortest_run_says_why_the_answer_is_empty(): void
