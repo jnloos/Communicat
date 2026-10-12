@@ -408,6 +408,44 @@ class QuestionEditorTest extends TestCase
         $this->assertSame('Alex Brandt', $saved['people']['expert_name']);
     }
 
+    public function test_clearing_the_expert_name_returns_to_any_expert_and_stores_null(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        Expert::factory()->create(['name' => 'Alex Brandt']);
+        $question = $user->questions()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set('definition.people.expert_name', 'Alex Brandt')
+            ->assertSet('definition.people.expert_name', 'Alex Brandt')
+            ->set('definition.people.expert_name', '')
+            ->assertSet('definition.people.expert_name', null)
+            ->set('definition.people.expert_name', '  Alex Brandt ')
+            ->set('definition.people.expert_name', null)
+            ->assertSet('definition.people.expert_name', null);
+
+        $this->assertNull($question->fresh()->definition['people']['expert_name']);
+    }
+
+    public function test_the_expert_name_is_a_searchable_clearable_select_and_a_template_has_none(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        Expert::factory()->create(['name' => 'Alex Brandt']);
+        $own = $user->questions()->create([]);
+        $template = $user->questions()->create(['is_template' => true]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $own->id])
+            ->assertSeeHtml('data-flux-select')
+            ->assertSee('Alex Brandt');
+
+        $before = $template->fresh()->definition;
+        Livewire::test(QuestionEditor::class, ['questionId' => $template->id])
+            ->set('definition.people.expert_name', 'Alex Brandt')
+            ->assertSet('definition.people.expert_name', null);
+        $this->assertSame($before, $template->fresh()->definition);
+    }
+
     public function test_the_menus_offer_the_users_groups_as_filter_and_dimension_and_save_the_choice(): void
     {
         $user = User::factory()->create();
