@@ -11,7 +11,7 @@ class MetricTest extends TestCase
 {
     private function speaker(int $turns, int $words, float $turnShare, float $wordShare): SpeakerShare
     {
-        return new SpeakerShare(expertId: random_int(1, 1_000_000), name: 'X', seat: 1, turns: $turns, words: $words, turnShare: $turnShare, wordShare: $wordShare);
+        return new SpeakerShare(expertId: 1, name: 'X', seat: 1, turns: $turns, words: $words, turnShare: $turnShare, wordShare: $wordShare);
     }
 
     public function test_a_group_counts_together_or_per_head(): void
@@ -46,6 +46,8 @@ class MetricTest extends TestCase
         $this->assertSame('−5.0 pp', Metric::WordShare->formatDelta(-0.05));
         $this->assertSame('±0.0 pp', Metric::TurnShare->formatDelta(0.0));
         $this->assertSame('+0.12', Metric::TurnGini->formatDelta(0.12));
+        $this->assertSame('±0.0 pp', Metric::TurnShare->formatDelta(-0.0004));
+        $this->assertSame('±0.00', Metric::TurnGini->formatDelta(-0.004));
     }
 
     public function test_labels_come_from_the_question_texts(): void

@@ -130,6 +130,61 @@ class QuestionEvaluatorTest extends TestCase
         $this->assertSame(0.25, $panel->delta());
     }
 
+    public function test_a_group_missing_from_a_run_counts_as_zero_so_the_shares_fill_the_panel(): void
+    {
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'gender']);
+        $f = $category->values()->create(['name' => 'f']);
+        // Run 1: A is tagged, B is not. Run 2: nobody is tagged, so the tagged group is absent.
+        $this->makeRun(['A', 'B'], [['A', 10], ['B', 10]]);
+        $this->makeRun(['C', 'D'], [['C', 10], ['D', 10], ['D', 10]]);
+        $this->experts['A']->setTag($category, $f);
+
+        $panel = $this->answer(['compare_by' => "persona_tag:{$category->id}"])->panels[0];
+        $sum = array_sum(array_map(fn ($group) => $panel->shareOf($group), $panel->groups));
+
+        $this->assertSame(2, $panel->runs);
+        $this->assertEqualsWithDelta(0.25, $panel->shareOf($panel->groups[0]), 1e-9);
+        $this->assertEqualsWithDelta(1.0, $sum, 1e-9);
+    }
+
+    public function test_a_delta_needs_the_whole_answer_to_compare_two_groups(): void
+    {
+        $category = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
+        $a = $category->values()->create(['name' => 'a']);
+        $b = $category->values()->create(['name' => 'b']);
+        $c = $category->values()->create(['name' => 'c']);
+        $this->makeRun(['A'], [['A', 10]], ['pipeline' => 'ScorePipeline'])->setTag($category, $a);
+        $this->makeRun(['A'], [['A', 10]], ['pipeline' => 'ScorePipeline'])->setTag($category, $b);
+        $this->makeRun(['A'], [['A', 10]], ['pipeline' => 'RoundRobinPipeline'])->setTag($category, $c);
+
+        $panels = $this->answer(['compare_by' => "project_tag:{$category->id}", 'split_by' => 'pipeline'])->panels;
+        $score = collect($panels)->firstWhere('key', 'ScorePipeline');
+
+        $this->assertCount(2, $score->groups);
+        $this->assertNull($score->delta());
+    }
+
+    public function test_a_per_head_curve_is_the_group_curve_divided_by_its_size(): void
+    {
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'rolle']);
+        $x = $category->values()->create(['name' => 'x']);
+        $this->makeRun(['A', 'B', 'C'], [['A', 10], ['B', 10], ['C', 10], ['A', 10]]);
+        $this->experts['A']->setTag($category, $x);
+        $this->experts['B']->setTag($category, $x);
+
+        $base = ['compare_by' => "persona_tag:{$category->id}", 'form' => 'trajectory', 'curve' => 'cumulative'];
+        $together = $this->answer($base)->panels[0]->groups[0]->curve;
+        $perHead = $this->answer([...$base, 'aggregate' => 'per_head'])->panels[0]->groups[0]->curve;
+
+        $this->assertNotEmpty($together);
+        $this->assertCount(count($together), $perHead);
+
+        foreach ($together as $i => $point) {
+            $this->assertEqualsWithDelta($point->mean / 2, $perHead[$i]->mean, 1e-9);
+        }
+        $this->assertEqualsWithDelta(0.75, end($together)->mean, 1e-9);
+    }
+
     public function test_split_by_pipeline_gives_panels_in_registry_order(): void
     {
         $this->makeRun(['A'], [['A', 10]], ['pipeline' => 'ScorePipeline']);

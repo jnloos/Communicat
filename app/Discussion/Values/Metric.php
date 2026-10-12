@@ -6,9 +6,9 @@ use App\Discussion\Support\LocaleNumber;
 use LogicException;
 
 /**
- * What the statistics page measures. Two kinds: per-agent measures (shares and
- * words per turn) that a reference narrows down to some agents, and run-level
- * measures (Gini) that describe the whole group and ignore the reference.
+ * What a question measures. Two kinds: per-agent measures (shares and words
+ * per turn) that the question's people filter narrows down to some agents, and
+ * run-level measures (Gini) that describe the whole group and ignore that filter.
  */
 enum Metric: string
 {
@@ -113,16 +113,19 @@ enum Metric: string
     /** A difference of two values, always signed; percentage points for a share. */
     public function formatDelta(float $delta): string
     {
+        // Round to what is shown first: -0.0004 prints as 0.0 pp and must not carry a minus.
+        [$shown, $digits] = match (true) {
+            $this->isShare() => [round($delta * 100, 1), 1],
+            $this === self::WordsPerTurn => [round($delta, 1), 1],
+            default => [round($delta, 2), 2],
+        };
+
         $sign = match (true) {
-            $delta > 0 => '+',
-            $delta < 0 => '−',
+            $shown > 0 => '+',
+            $shown < 0 => '−',
             default => '±',
         };
 
-        return $sign.match (true) {
-            $this->isShare() => LocaleNumber::decimal(abs($delta) * 100, 1).' pp',
-            $this === self::WordsPerTurn => LocaleNumber::decimal(abs($delta), 1),
-            default => LocaleNumber::decimal(abs($delta), 2),
-        };
+        return $sign.LocaleNumber::decimal(abs($shown), $digits).($this->isShare() ? ' pp' : '');
     }
 }

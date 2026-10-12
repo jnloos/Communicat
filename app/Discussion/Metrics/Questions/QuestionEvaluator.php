@@ -45,6 +45,8 @@ final class QuestionEvaluator
     {
         /** @var array<int|string, array<int|string, GroupCollector>> $collected panel => group => collector */
         $collected = [];
+        /** @var array<int|string, int> $panelRuns panel => runs that counted in it */
+        $panelRuns = [];
         $runs = $excluded = 0;
 
         foreach ($this->runs->for($user, $question->projects) as $project) {
@@ -59,6 +61,7 @@ final class QuestionEvaluator
                 continue;
             }
 
+            $panelRuns[$panel] = ($panelRuns[$panel] ?? 0) + 1;
             $trajectory = $question->form === ResultForm::Trajectory ? $this->trajectories->forProject($project) : null;
 
             foreach ($groups as $group => $speakers) {
@@ -72,7 +75,7 @@ final class QuestionEvaluator
         $groupLabels = $this->labels($question->compareBy, array_merge([], ...array_map('array_keys', array_values($collected))));
 
         return new QuestionResult(
-            $this->panels($question, $collected, $groupLabels),
+            $this->panels($question, $collected, $groupLabels, $panelRuns),
             array_combine(array_map('strval', array_keys($groupLabels)), $groupLabels),
             $runs,
             $excluded,
@@ -168,9 +171,10 @@ final class QuestionEvaluator
     /**
      * @param  array<int|string, array<int|string, GroupCollector>>  $collected
      * @param  array<int|string, string>  $groupLabels
+     * @param  array<int|string, int>  $panelRuns
      * @return list<Panel>
      */
-    private function panels(Question $question, array $collected, array $groupLabels): array
+    private function panels(Question $question, array $collected, array $groupLabels, array $panelRuns): array
     {
         $panels = [];
 
@@ -183,7 +187,7 @@ final class QuestionEvaluator
                 }
             }
 
-            $panels[] = new Panel((string) $panelKey, $panelLabel, $groups);
+            $panels[] = new Panel((string) $panelKey, $panelLabel, $groups, $panelRuns[$panelKey], count($groupLabels));
         }
 
         return $panels;
