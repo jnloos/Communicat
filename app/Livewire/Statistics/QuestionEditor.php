@@ -11,11 +11,13 @@ use App\Discussion\Values\Metric;
 use App\Discussion\Values\ModelConfig;
 use App\Discussion\Values\Question;
 use App\Discussion\Values\ResultForm;
+use App\Discussion\Values\TagFilter;
 use App\Models\Comparison;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\TagScope;
+use App\Models\TagValue;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -35,6 +37,10 @@ class QuestionEditor extends Component
     /** @var array<string, mixed> Question::toArray() */
     public array $question = [];
 
+    /** How many tag values the saved question named that no longer exist; dropped on opening. */
+    #[Locked]
+    public int $droppedTagValues = 0;
+
     /** The comparison of this request; not a property Livewire keeps between requests. */
     private ?Comparison $loaded = null;
 
@@ -43,6 +49,7 @@ class QuestionEditor extends Component
         $comparison = $this->comparison($comparisonId);
         $this->comparisonId = $comparison->id;
         $this->question = $comparison->toQuestion()->toArray();
+        $this->dropDeletedTagValues();
     }
 
     public function updated(string $property): void
@@ -51,6 +58,31 @@ class QuestionEditor extends Component
             $this->question = Question::fromArray($this->question)->toArray();
             $this->comparison($this->comparisonId)->update(['question' => $this->question]);
         }
+    }
+
+    /**
+     * Tag values deleted since the question was saved have no checkbox, so the
+     * user could never remove them. Drop them and say so. TagFilter::without()
+     * keeps a category whose values are all gone, so a filter never widens
+     * silently; its chip reads "deleted value" until the user picks others.
+     */
+    private function dropDeletedTagValues(): void
+    {
+        $filters = ['people' => TagFilter::fromArray($this->question['people']['tags'] ?? []), 'projects' => TagFilter::fromArray($this->question['projects']['tags'] ?? [])];
+        $named = array_merge(...array_map(fn (TagFilter $filter) => $filter->valueIds(), array_values($filters)));
+        $gone = array_values(array_diff($named, TagValue::whereKey($named)->pluck('id')->all()));
+
+        if ($gone === []) {
+            return;
+        }
+
+        foreach ($filters as $part => $filter) {
+            $this->question[$part]['tags'] = $filter->without($gone)->toArray();
+        }
+
+        $this->question = Question::fromArray($this->question)->toArray();
+        $this->droppedTagValues = count($gone);
+        $this->comparison($this->comparisonId)->update(['question' => $this->question]);
     }
 
     private function comparison(int $comparisonId): Comparison

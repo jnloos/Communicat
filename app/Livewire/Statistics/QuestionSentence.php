@@ -87,9 +87,11 @@ final class QuestionSentence
      */
     private function tags(array $valueIds): array
     {
-        return TagValue::whereKey($valueIds)->with('category')->orderBy('tag_category_id')->orderBy('position')->get()
-            ->map(fn (TagValue $value) => $value->fullLabel())
-            ->all();
+        $values = TagValue::whereKey($valueIds)->with('category')->orderBy('tag_category_id')->orderBy('position')->get();
+        $deleted = array_fill(0, count($valueIds) - $values->count(), __('questions.sentence.deleted_value'));
+
+        // A chip is never empty: a value that was deleted still says so, and stays until the user removes it.
+        return [...$values->map(fn (TagValue $value) => $value->fullLabel())->all(), ...$deleted];
     }
 
     private function category(?int $id): string

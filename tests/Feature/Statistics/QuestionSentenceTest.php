@@ -47,6 +47,18 @@ class QuestionSentenceTest extends TestCase
         $this->assertSame('Turn share · Focus persona: true · runs of 60 turns · by Status condition · per Pipeline', $name);
     }
 
+    public function test_an_unknown_tag_value_reads_as_deleted_not_empty(): void
+    {
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'focus persona']);
+        $true = $category->values()->create(['name' => 'true']);
+
+        $parts = app(QuestionSentence::class)->parts(Question::fromArray([
+            'people' => ['tags' => [$category->id => [$true->id, 9999]]],
+        ]));
+
+        $this->assertSame('Focus persona: true, deleted value', $parts['people']);
+    }
+
     public function test_gini_names_no_people(): void
     {
         $this->assertNull(app(QuestionSentence::class)->parts(Question::fromArray(['metric' => 'turn_gini']))['people']);

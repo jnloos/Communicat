@@ -62,6 +62,7 @@ return [
         'name_compared_by' => 'nach :dimension',
         'name_split_by' => 'je :dimension',
         'deleted' => 'gelöschte Kategorie',
+        'deleted_value' => 'gelöschter Wert',
     ],
 
     'controls' => [
@@ -122,7 +123,9 @@ return [
 
     'result' => [
         'runs' => '{0}Kein Lauf passt.|{1}1 Lauf|[2,*]:count Läufe',
-        'excluded' => '{1}1 Lauf hat hier keinen Wert (kein gesprochener Turn oder niemand passt).|[2,*]:count Läufe haben hier keinen Wert (kein gesprochener Turn oder niemand passt).',
+        'excluded' => '{1}1 Lauf hat hier keinen Wert (kein gesprochener Turn, niemand passt oder kein Wert in der verglichenen oder aufgeteilten Kategorie).|[2,*]:count Läufe haben hier keinen Wert (kein gesprochener Turn, niemand passt oder kein Wert in der verglichenen oder aufgeteilten Kategorie).',
+        'dropped_tags' => '{1}1 Tag-Wert, den diese Frage nutzte, existiert nicht mehr und wurde entfernt. Eine Kategorie ohne verbleibenden Wert filtert weiter und trifft keinen Lauf: Chip öffnen und andere Werte wählen.|[2,*]:count Tag-Werte, die diese Frage nutzte, existieren nicht mehr und wurden entfernt. Eine Kategorie ohne verbleibenden Wert filtert weiter und trifft keinen Lauf: Chip öffnen und andere Werte wählen.',
+        'n_of' => ':label · n',
         'empty' => 'Kein Lauf beantwortet diese Frage. Erweitere die Läufe oder die Personen.',
         'all' => 'Alle',
         'no_value' => 'ohne Angabe',

@@ -23,6 +23,10 @@
         </flux:dropdown>
     </div>
 
+    @if ($droppedTagValues > 0)
+        <flux:callout variant="warning" icon="exclamation-triangle" :text="trans_choice('questions.result.dropped_tags', $droppedTagValues, ['count' => $droppedTagValues])" />
+    @endif
+
     {{-- The question as one sentence. Each chip opens the controls of its part. --}}
     <div class="rounded-lg border border-zinc-200 bg-white p-4 text-base leading-9 dark:border-white/10 dark:bg-white/5">
         <x-statistics.chip :label="$parts['metric']">

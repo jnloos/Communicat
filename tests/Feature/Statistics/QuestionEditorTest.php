@@ -6,6 +6,8 @@ use App\Livewire\Statistics\QuestionEditor;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
+use App\Models\TagCategory;
+use App\Models\TagScope;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -96,5 +98,40 @@ class QuestionEditorTest extends TestCase
         $comparison = $user->comparisons()->create([]);
 
         Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])->assertSee(__('questions.result.empty'));
+    }
+
+    public function test_a_deleted_tag_value_drops_out_and_the_user_is_told(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $this->spokenRun($user);
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'rolle']);
+        $kept = $category->values()->create(['name' => 'kept']);
+        $gone = $category->values()->create(['name' => 'gone']);
+        $comparison = $user->comparisons()->create(['question' => ['people' => ['tags' => [$category->id => [$kept->id, $gone->id]]]]]);
+        $gone->delete();
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->assertSet('question.people.tags', [$category->id => [$kept->id]])
+            ->assertSet('droppedTagValues', 1)
+            ->assertSee('no longer exists');
+
+        $this->assertSame([$kept->id], $comparison->fresh()->question['people']['tags'][$category->id]);
+    }
+
+    public function test_a_category_left_without_values_still_filters_and_answers_nothing(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $this->spokenRun($user);
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'rolle']);
+        $only = $category->values()->create(['name' => 'only']);
+        $comparison = $user->comparisons()->create(['question' => ['people' => ['tags' => [$category->id => [$only->id]]]]]);
+        $only->delete();
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->assertSet('question.people.tags', [$category->id => [$only->id]])
+            ->assertSee('deleted value')
+            ->assertSee('No run answers this question');
     }
 }
