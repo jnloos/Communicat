@@ -9,6 +9,7 @@ enum DimensionType: string
     case PersonaTag = 'persona_tag';
     case Pipeline = 'pipeline';
     case Model = 'model';
+    case Group = 'group';
 
     public function source(): DimensionSource
     {
@@ -16,6 +17,7 @@ enum DimensionType: string
             self::ProjectTag => DimensionSource::ProjectTag,
             self::PersonaTag => DimensionSource::PersonaTag,
             self::Pipeline, self::Model => DimensionSource::Run,
+            self::Group => DimensionSource::Group,
         };
     }
 

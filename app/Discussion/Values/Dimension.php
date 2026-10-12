@@ -3,8 +3,8 @@
 namespace App\Discussion\Values;
 
 /**
- * What a question compares or splits by: a tag category, the pipeline or the
- * model. Its key ("persona_tag:3", "pipeline") is what a select binds and what
+ * What a question compares or splits by: a tag category, the pipeline, the model or the
+ * user's sidebar group. Its key ("persona_tag:3", "pipeline") is what a select binds and what
  * a saved question stores, so the form needs no translation step.
  */
 final readonly class Dimension

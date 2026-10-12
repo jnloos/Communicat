@@ -11,11 +11,13 @@ use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\Taggable;
 use App\Models\TagValue;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use LogicException;
 
 /**
  * The values of a dimension: their labels in display order, and the value a
- * run or an agent has. Keys are tag value ids, pipeline names or model keys.
+ * run or an agent has. Keys are tag value ids, pipeline names, model keys or group ids.
  * An agent without a value in a persona category gets NONE, so the groups of
  * a run still add up to everyone.
  */
@@ -23,7 +25,32 @@ final class DimensionValues
 {
     public const NONE = '';
 
+    /** @var array<int, int>|null project id => the user's group id; null while no user is set */
+    private ?array $filing = null;
+
+    private ?User $user = null;
+
     public function __construct(private readonly PipelineRegistry $pipelines) {}
+
+    /**
+     * The same values read for one user: a group is a drawer in that person's
+     * sidebar, so its labels and the runs filed in it exist for them alone.
+     * Their filing is read once here, not once per run.
+     */
+    public function forUser(User $user): self
+    {
+        $scoped = clone $this;
+        $scoped->user = $user;
+        $scoped->filing = DB::table('project_contributors')
+            ->where('contributor_type', $user->getMorphClass())
+            ->where('contributor_id', $user->id)
+            ->whereNotNull('project_group_id')
+            ->pluck('project_group_id', 'project_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return $scoped;
+    }
 
     /** @return array<int|string, string> key => label */
     public function labels(Dimension $dimension): array
@@ -31,17 +58,19 @@ final class DimensionValues
         return match ($dimension->type) {
             DimensionType::Pipeline => $this->pipelines->options(),
             DimensionType::Model => ModelConfig::options(),
+            DimensionType::Group => $this->user?->projectGroups()->pluck('name', 'id')->all() ?? [],
             DimensionType::ProjectTag => $this->tagLabels($dimension),
             DimensionType::PersonaTag => $this->tagLabels($dimension) + [self::NONE => $this->category($dimension).': '.__('questions.result.no_value')],
         };
     }
 
-    /** Null when the run has no value in a project tag category. */
+    /** Null when the run has no value: no project tag in the category, or no group of this user. */
     public function ofProject(Dimension $dimension, Project $project): int|string|null
     {
         return match ($dimension->type) {
             DimensionType::Pipeline => $project->pipeline,
             DimensionType::Model => $project->model,
+            DimensionType::Group => $this->filing[$project->id] ?? null,
             DimensionType::ProjectTag => $this->tagValuesOf($dimension, $project->getMorphClass(), [$project->id])[$project->id] ?? null,
             DimensionType::PersonaTag => throw new LogicException('A persona tag describes agents, not runs.'),
         };

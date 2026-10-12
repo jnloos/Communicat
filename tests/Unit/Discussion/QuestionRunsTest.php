@@ -6,6 +6,7 @@ use App\Discussion\Metrics\Questions\QuestionRuns;
 use App\Discussion\Values\ProjectFilter;
 use App\Discussion\Values\TagFilter;
 use App\Models\Project;
+use App\Models\ProjectGroup;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\User;
@@ -44,5 +45,38 @@ class QuestionRunsTest extends TestCase
         Project::factory()->create();
 
         $this->assertCount(2, app(QuestionRuns::class)->for($user, new ProjectFilter));
+    }
+
+    public function test_a_group_filter_reads_only_what_this_user_filed_in_one_of_the_groups(): void
+    {
+        $user = User::factory()->create();
+        $other = User::factory()->create();
+        $score = $user->projectGroups()->create(['name' => 'Score', 'position' => 0]);
+        $quality = $user->projectGroups()->create(['name' => 'Quality', 'position' => 1]);
+        $theirs = $other->projectGroups()->create(['name' => 'Score', 'position' => 0]);
+
+        $inScore = $this->fileRun($user, $score);
+        $inQuality = $this->fileRun($user, $quality);
+        $this->fileRun($user, null);
+        $shared = $this->fileRun($user, null);
+        $shared->addContributingUser($other);
+        $shared->fileInGroupFor($other, $theirs->id);
+
+        $runs = app(QuestionRuns::class);
+
+        $this->assertSame([$inScore->id, $inQuality->id], $runs->for($user, new ProjectFilter(groups: [$score->id, $quality->id]))->pluck('id')->all());
+        $this->assertSame([$inScore->id], $runs->for($user, new ProjectFilter(groups: [$score->id]))->pluck('id')->all());
+        // Another user's group, and one that is gone, match nothing: never every run.
+        $this->assertCount(0, $runs->for($user, new ProjectFilter(groups: [$theirs->id])));
+        $this->assertCount(0, $runs->for($user, new ProjectFilter(groups: [9999])));
+    }
+
+    private function fileRun(User $user, ?ProjectGroup $group): Project
+    {
+        $project = Project::factory()->create(['user_id' => $user->id]);
+        $project->addContributingUser($user);
+        $project->fileInGroupFor($user, $group?->id);
+
+        return $project;
     }
 }

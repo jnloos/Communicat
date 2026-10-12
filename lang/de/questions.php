@@ -49,6 +49,7 @@ return [
     ],
 
     'fix' => [
+        'without_groups' => 'Gruppen sind persönlich, deshalb nutzt die Vorlage sie nicht.',
         'view_only_notice' => 'Diese Vorlage ist nur zum Ansehen. Kopiere sie, um sie anzupassen.',
     ],
 
@@ -75,6 +76,7 @@ return [
         'split_by_dimension' => 'aufgeteilt nach :dimension',
         'deleted' => 'gelöschte Kategorie',
         'deleted_value' => 'gelöschter Wert',
+        'deleted_group' => 'gelöschte Gruppe',
     ],
 
     'controls' => [
@@ -84,6 +86,7 @@ return [
         'aggregate' => 'Gruppe zählen',
         'pipelines' => 'Pipelines',
         'models' => 'Modelle',
+        'groups' => 'Gruppen',
         'turn_from' => 'Ab Turn',
         'turn_to' => 'Bis Turn',
         'turns_hint' => '{1}Die obere Grenze ist höchstens der kürzeste ausgewählte Lauf, „:run“, er hat :count Turn.|[0,*]Die obere Grenze ist höchstens der kürzeste ausgewählte Lauf, „:run“, er hat :count Turns.',
@@ -108,12 +111,14 @@ return [
     'dimensions' => [
         'pipeline' => 'Pipeline',
         'model' => 'Modell',
+        'group' => 'Gruppe',
     ],
 
     'sources' => [
         'project_tag' => 'Projekt',
         'persona_tag' => 'Experte',
         'run' => 'Lauf',
+        'group' => 'Gruppe',
     ],
 
     /* A listed item names where it comes from in square brackets: "Pipeline [Run]". */

@@ -34,7 +34,7 @@ class QuestionTest extends TestCase
             'metric' => 'word_share',
             'people' => ['tags' => [3 => [7]], 'expert_name' => 'Alex Brandt'],
             'aggregate' => 'per_head',
-            'projects' => ['tags' => [1 => [1, 2]], 'pipelines' => ['ScorePipeline'], 'models' => ['openai-gpt-5']],
+            'projects' => ['tags' => [1 => [1, 2]], 'pipelines' => ['ScorePipeline'], 'models' => ['openai-gpt-5'], 'groups' => [4]],
             'turns' => ['from' => 5, 'to' => 60],
             'compare_by' => 'project_tag:1',
             'split_by' => 'pipeline',
@@ -101,7 +101,7 @@ class QuestionTest extends TestCase
 
         $this->assertSame(['ScorePipeline'], $filter->pipelines);
         $this->assertSame([], $filter->models);
-        $this->assertSame(['tags', 'pipelines', 'models'], array_keys($filter->toArray()), 'the old turn budget key is ignored and no longer written');
+        $this->assertSame(['tags', 'pipelines', 'models', 'groups'], array_keys($filter->toArray()), 'the old turn budget key is ignored and no longer written');
         $this->assertTrue($filter->tags->isEmpty());
     }
 
@@ -114,5 +114,20 @@ class QuestionTest extends TestCase
     {
         $this->assertEquals(new TurnRange, Question::fromArray([])->turns);
         $this->assertEquals(new TurnRange(2, 2), Question::fromArray(['turns' => ['from' => '2', 'to' => '1']])->turns);
+    }
+
+    public function test_a_group_is_a_dimension_to_compare_or_split_by_and_a_filter(): void
+    {
+        $this->assertEquals(new Dimension(DimensionType::Group), Dimension::fromKey('group'));
+        $this->assertSame('group', Dimension::fromKey('group')->key());
+
+        $question = Question::fromArray(['compare_by' => 'group', 'split_by' => 'pipeline', 'projects' => ['groups' => ['3', 3, 'x', 0, 7]]]);
+
+        $this->assertSame('group', $question->compareBy->key());
+        $this->assertSame([3, 7], $question->projects->groups);
+        $this->assertSame([3, 7], $question->toArray()['projects']['groups']);
+        $this->assertSame('group', Question::fromArray(['split_by' => 'group'])->splitBy->key());
+        $this->assertNull(Question::fromArray(['compare_by' => 'group', 'split_by' => 'group'])->splitBy);
+        $this->assertFalse(Question::fromArray(['projects' => ['groups' => [3]]])->projects->isEmpty());
     }
 }

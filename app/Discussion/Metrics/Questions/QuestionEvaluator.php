@@ -44,7 +44,7 @@ final class QuestionEvaluator
 {
     public function __construct(
         private readonly QuestionRuns $runs,
-        private readonly DimensionValues $dimensions,
+        private DimensionValues $dimensions,
         private readonly SpeakingShares $shares,
         private readonly ShareTrajectory $trajectories,
         private readonly SpokenTurns $spoken,
@@ -52,6 +52,9 @@ final class QuestionEvaluator
 
     public function evaluate(User $user, Question $question): QuestionResult
     {
+        // Groups belong to the viewer, so the values are read for this user from here on.
+        $this->dimensions = $this->dimensions->forUser($user);
+
         /** @var array<int|string, array<int|string, GroupCollector>> $collected panel => group => collector */
         $collected = [];
         /** @var array<int|string, int> $panelRuns panel => runs that counted in it */

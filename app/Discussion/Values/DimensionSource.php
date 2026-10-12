@@ -8,6 +8,7 @@ enum DimensionSource: string
     case ProjectTag = 'project_tag';
     case PersonaTag = 'persona_tag';
     case Run = 'run';
+    case Group = 'group';
 
     public function label(): string
     {

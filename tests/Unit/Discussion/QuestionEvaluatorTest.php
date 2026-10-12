@@ -11,6 +11,7 @@ use App\Discussion\Values\TurnRange;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
+use App\Models\ProjectGroup;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\User;
@@ -340,5 +341,59 @@ class QuestionEvaluatorTest extends TestCase
         $group = $this->answer(['form' => 'trajectory', 'turns' => ['from' => 3]])->panels[0]->groups[0];
 
         $this->assertSame([3, 4], array_map(fn ($mean) => $mean->turn, $group->curve));
+    }
+
+    private function fileInGroup(Project $project, ?ProjectGroup $group): Project
+    {
+        $project->addContributingUser($this->user);
+        $project->fileInGroupFor($this->user, $group?->id);
+
+        return $project;
+    }
+
+    public function test_compare_by_group_uses_the_users_groups_in_sidebar_order_and_drops_unfiled_runs(): void
+    {
+        $quality = $this->user->projectGroups()->create(['name' => 'Quality', 'position' => 2]);
+        $score = $this->user->projectGroups()->create(['name' => 'Score', 'position' => 1]);
+        $this->user->projectGroups()->create(['name' => 'Empty', 'position' => 3]);
+        $this->fileInGroup($this->makeRun(['A', 'B'], [['A', 10], ['B', 10]]), $quality);
+        $this->fileInGroup($this->makeRun(['A', 'B'], [['A', 10], ['A', 10]]), $score);
+        $this->fileInGroup($this->makeRun(['A', 'B'], [['A', 10], ['B', 10]]), null);
+
+        $result = $this->answer(['people' => ['expert_name' => 'A'], 'compare_by' => 'group']);
+        $groups = $result->panels[0]->groups;
+
+        $this->assertSame([(string) $score->id, (string) $quality->id], array_map(fn ($g) => $g->key, $groups));
+        $this->assertSame(['Score', 'Quality'], array_map(fn ($g) => $g->label, $groups));
+        $this->assertSame([1.0, 0.5], array_map(fn ($g) => $g->mean(), $groups));
+        $this->assertSame(3, $result->runs);
+        $this->assertSame(1, $result->excluded);
+    }
+
+    public function test_split_by_group_gives_a_panel_per_group(): void
+    {
+        $score = $this->user->projectGroups()->create(['name' => 'Score', 'position' => 1]);
+        $quality = $this->user->projectGroups()->create(['name' => 'Quality', 'position' => 2]);
+        $this->fileInGroup($this->makeRun(['A'], [['A', 10]]), $quality);
+        $this->fileInGroup($this->makeRun(['A'], [['A', 10]]), $score);
+
+        $panels = $this->answer(['split_by' => 'group'])->panels;
+
+        $this->assertSame(['Score', 'Quality'], array_map(fn ($p) => $p->label, $panels));
+        $this->assertSame([1, 1], array_map(fn ($p) => $p->runs, $panels));
+    }
+
+    public function test_another_users_groups_do_not_count(): void
+    {
+        $other = User::factory()->create();
+        $theirs = $other->projectGroups()->create(['name' => 'Theirs', 'position' => 0]);
+        $run = $this->makeRun(['A'], [['A', 10]]);
+        $run->addContributingUser($other);
+        $run->fileInGroupFor($other, $theirs->id);
+
+        $result = $this->answer(['compare_by' => 'group']);
+
+        $this->assertSame([], $result->panels);
+        $this->assertSame(1, $result->excluded);
     }
 }

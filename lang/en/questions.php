@@ -49,6 +49,7 @@ return [
     ],
 
     'fix' => [
+        'without_groups' => 'Groups are personal, so the template does not use them.',
         'view_only_notice' => 'This template is view only. Copy it to adjust.',
     ],
 
@@ -75,6 +76,7 @@ return [
         'split_by_dimension' => 'split by :dimension',
         'deleted' => 'deleted category',
         'deleted_value' => 'deleted value',
+        'deleted_group' => 'deleted group',
     ],
 
     'controls' => [
@@ -84,6 +86,7 @@ return [
         'aggregate' => 'Count the group',
         'pipelines' => 'Pipelines',
         'models' => 'Models',
+        'groups' => 'Groups',
         'turn_from' => 'From turn',
         'turn_to' => 'To turn',
         'turns_hint' => '{1}The upper bound is at most the shortest selected run, “:run”, which has :count turn.|[0,*]The upper bound is at most the shortest selected run, “:run”, which has :count turns.',
@@ -108,12 +111,14 @@ return [
     'dimensions' => [
         'pipeline' => 'Pipeline',
         'model' => 'Model',
+        'group' => 'Group',
     ],
 
     'sources' => [
         'project_tag' => 'Project',
         'persona_tag' => 'Expert',
         'run' => 'Run',
+        'group' => 'Group',
     ],
 
     /* A listed item names where it comes from in square brackets: "Pipeline [Run]". */

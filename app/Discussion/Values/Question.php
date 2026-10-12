@@ -94,6 +94,15 @@ final readonly class Question
         };
     }
 
+    /** The same question without what only its owner has: the group filter and a group dimension. */
+    public function withoutGroups(): self
+    {
+        $isGroup = fn (?Dimension $dimension) => $dimension?->type === DimensionType::Group;
+
+        return new self($this->metric, $this->people, $this->aggregate, $this->projects->withoutGroups(), $this->turns,
+            $isGroup($this->compareBy) ? null : $this->compareBy, $isGroup($this->splitBy) ? null : $this->splitBy, $this->form, $this->curve);
+    }
+
     public function withForm(ResultForm $form): self
     {
         return new self($this->metric, $this->people, $this->aggregate, $this->projects, $this->turns, $this->compareBy, $this->splitBy, $form, $this->curve);
