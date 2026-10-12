@@ -214,4 +214,22 @@ class QuestionEditorTest extends TestCase
             ->assertSee('turns 1 to 1')
             ->assertSee('The upper bound is at most the shortest selected run, which has 1 turn.');
     }
+
+    public function test_every_listed_category_names_its_source_as_a_badge_never_in_parentheses(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
+        $persona = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
+        $comparison = $user->comparisons()->create(['name' => 'q', 'question' => ['compare_by' => "persona_tag:{$persona->id}"]]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->assertSee('Project tag')
+            ->assertSee('Expert tag')
+            ->assertSee('Run setting')
+            ->assertSee('Title-holder')
+            ->assertDontSee('Persona title-holder')
+            ->assertDontSee('(Expert tag)')
+            ->assertDontSee('(Project tag)');
+    }
 }

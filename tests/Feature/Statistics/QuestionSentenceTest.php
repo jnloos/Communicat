@@ -108,4 +108,19 @@ class QuestionSentenceTest extends TestCase
 
         $this->assertSame('from turn 4, beyond the shortest run of 3 turns', $this->turns(['from' => 4], $result));
     }
+
+    public function test_a_persona_tag_dimension_reads_as_its_category_and_names_its_source_apart(): void
+    {
+        $focus = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
+
+        $parts = app(QuestionSentence::class)->parts(Question::fromArray([
+            'compare_by' => "persona_tag:{$focus->id}",
+            'split_by' => 'pipeline',
+        ]));
+
+        $this->assertSame('Title-holder', $parts['compare_by']);
+        $this->assertSame('Expert tag', $parts['compare_by_source']);
+        $this->assertSame('Pipeline', $parts['split_by']);
+        $this->assertSame('Run setting', $parts['split_by_source']);
+    }
 }

@@ -25,7 +25,7 @@ final class QuestionSentence
     /**
      * @param  QuestionResult|null  $result  what the question was read over; its window carries the upper bound the
      *                                       shortest run set. Without it the window reads as asked.
-     * @return array{metric: string, people: ?string, aggregate: ?string, projects: string, turns: string, compare_by: ?string, split_by: ?string}
+     * @return array{metric: string, people: ?string, aggregate: ?string, projects: string, turns: string, compare_by: ?string, split_by: ?string, compare_by_source: ?string, split_by_source: ?string}
      */
     public function parts(Question $question, ?QuestionResult $result = null): array
     {
@@ -37,6 +37,8 @@ final class QuestionSentence
             'turns' => $this->turns($result?->turns ?? $question->turns, $result),
             'compare_by' => $question->compareBy === null ? null : $this->dimension($question->compareBy),
             'split_by' => $question->splitBy === null ? null : $this->dimension($question->splitBy),
+            'compare_by_source' => $question->compareBy?->type->source()->label(),
+            'split_by_source' => $question->splitBy?->type->source()->label(),
         ];
     }
 
@@ -60,8 +62,7 @@ final class QuestionSentence
         return match ($dimension->type) {
             DimensionType::Pipeline => __('questions.dimensions.pipeline'),
             DimensionType::Model => __('questions.dimensions.model'),
-            DimensionType::ProjectTag => $this->category($dimension->categoryId),
-            DimensionType::PersonaTag => __('questions.dimensions.persona', ['category' => $this->category($dimension->categoryId)]),
+            DimensionType::ProjectTag, DimensionType::PersonaTag => $this->category($dimension->categoryId),
         };
     }
 

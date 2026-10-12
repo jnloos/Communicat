@@ -1,6 +1,7 @@
 @props([
     'label',          {{-- what the sentence says for this part --}}
     'muted' => false, {{-- the part filters nothing ("everyone", "all runs", "nothing") --}}
+    'source' => null, {{-- where the labelled item comes from; shown as a badge after the label --}}
 ])
 
 {{-- One part of the question's sentence: the words as a button, its controls in a popover. --}}
@@ -11,6 +12,9 @@
         'border-dashed border-zinc-300 text-zinc-600 dark:border-zinc-600 dark:text-zinc-300' => $muted,
     ])>
         <span class="truncate">{{ $label }}</span>
+        @if ($source !== null)
+            <x-statistics.source :label="$source" />
+        @endif
         <flux:icon.chevron-down variant="micro" class="shrink-0" />
     </button>
 

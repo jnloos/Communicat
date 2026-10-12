@@ -41,8 +41,9 @@
             <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.of') }}</span>
             <x-statistics.chip :label="$parts['people']" :muted="$current->people->isEveryone()">
                 @foreach ($personaCategories as $category)
+                    <x-statistics.source-label :text="$category->label()" :source="$personaSource" />
                     <flux:checkbox.group variant="pills" wire:key="people-{{ $category->id }}"
-                        wire:model.live="question.people.tags.{{ $category->id }}" :label="$category->label()" class="gap-1.5!">
+                        wire:model.live="question.people.tags.{{ $category->id }}" class="gap-1.5!">
                         @foreach ($category->values as $value)
                             <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" />
                         @endforeach
@@ -72,19 +73,22 @@
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.in') }}</span>
         <x-statistics.chip :label="$parts['projects']" :muted="$current->projects->isEmpty()">
             @foreach ($projectCategories as $category)
+                <x-statistics.source-label :text="$category->label()" :source="$projectSource" />
                 <flux:checkbox.group variant="pills" wire:key="projects-{{ $category->id }}"
-                    wire:model.live="question.projects.tags.{{ $category->id }}" :label="$category->label()" class="gap-1.5!">
+                    wire:model.live="question.projects.tags.{{ $category->id }}" class="gap-1.5!">
                     @foreach ($category->values as $value)
                         <flux:checkbox variant="pills" :value="(string) $value->id" :label="$value->name" />
                     @endforeach
                 </flux:checkbox.group>
             @endforeach
-            <flux:checkbox.group variant="pills" wire:model.live="question.projects.pipelines" :label="__('questions.controls.pipelines')" class="gap-1.5!">
+            <x-statistics.source-label :text="__('questions.controls.pipelines')" :source="$runSource" />
+            <flux:checkbox.group variant="pills" wire:model.live="question.projects.pipelines" class="gap-1.5!">
                 @foreach ($pipelines as $pipelineName => $label)
                     <flux:checkbox variant="pills" :value="$pipelineName" :label="$label" />
                 @endforeach
             </flux:checkbox.group>
-            <flux:checkbox.group variant="pills" wire:model.live="question.projects.models" :label="__('questions.controls.models')" class="gap-1.5!">
+            <x-statistics.source-label :text="__('questions.controls.models')" :source="$runSource" />
+            <flux:checkbox.group variant="pills" wire:model.live="question.projects.models" class="gap-1.5!">
                 @foreach ($models as $key => $label)
                     <flux:checkbox variant="pills" :value="$key" :label="$label" />
                 @endforeach
@@ -105,28 +109,28 @@
         <br class="max-sm:hidden">
 
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.compared_by') }}</span>
-        <x-statistics.chip :label="$parts['compare_by'] ?? __('questions.sentence.nothing')" :muted="$parts['compare_by'] === null">
-            <flux:select variant="listbox" wire:model.live="question.compare_by" :label="__('questions.controls.compare_by')">
-                <flux:select.option value="">{{ __('questions.controls.none') }}</flux:select.option>
-                @foreach ($compareOptions as $key => $label)
-                    <flux:select.option :value="$key">{{ $label }}</flux:select.option>
+        <x-statistics.chip :label="$parts['compare_by'] ?? __('questions.sentence.nothing')" :source="$parts['compare_by_source']" :muted="$parts['compare_by'] === null">
+            <flux:radio.group wire:model.live="question.compare_by" :label="__('questions.controls.compare_by')">
+                <flux:radio value="" :label="__('questions.controls.none')" />
+                @foreach ($compareOptions as $key => $option)
+                    <x-statistics.source-radio :value="$key" :text="$option['label']" :source="$option['source']" wire:key="compare-{{ $key }}" />
                 @endforeach
-            </flux:select>
+            </flux:radio.group>
             @if ($current->metric->isRunLevel())
                 <flux:text size="sm">{{ __('questions.controls.gini_hint') }}</flux:text>
             @endif
         </x-statistics.chip>
 
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.split_by') }}</span>
-        <x-statistics.chip :label="$parts['split_by'] ?? __('questions.sentence.nothing')" :muted="$parts['split_by'] === null">
-            <flux:select variant="listbox" wire:model.live="question.split_by" :label="__('questions.controls.split_by')">
-                <flux:select.option value="">{{ __('questions.controls.none') }}</flux:select.option>
-                @foreach ($splitOptions as $key => $label)
+        <x-statistics.chip :label="$parts['split_by'] ?? __('questions.sentence.nothing')" :source="$parts['split_by_source']" :muted="$parts['split_by'] === null">
+            <flux:radio.group wire:model.live="question.split_by" :label="__('questions.controls.split_by')">
+                <flux:radio value="" :label="__('questions.controls.none')" />
+                @foreach ($splitOptions as $key => $option)
                     @unless ($key === ($question['compare_by'] ?? ''))
-                        <flux:select.option :value="$key">{{ $label }}</flux:select.option>
+                        <x-statistics.source-radio :value="$key" :text="$option['label']" :source="$option['source']" wire:key="split-{{ $key }}" />
                     @endunless
                 @endforeach
-            </flux:select>
+            </flux:radio.group>
         </x-statistics.chip>
     </div>
 

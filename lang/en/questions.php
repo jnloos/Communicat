@@ -100,7 +100,12 @@ return [
     'dimensions' => [
         'pipeline' => 'Pipeline',
         'model' => 'Model',
-        'persona' => 'Persona :category',
+    ],
+
+    'sources' => [
+        'project_tag' => 'Project tag',
+        'persona_tag' => 'Expert tag',
+        'run' => 'Run setting',
     ],
 
     'metrics' => [

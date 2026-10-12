@@ -6,6 +6,7 @@ use App\Discussion\Metrics\Questions\QuestionEvaluator;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Values\Aggregate;
 use App\Discussion\Values\Dimension;
+use App\Discussion\Values\DimensionSource;
 use App\Discussion\Values\DimensionType;
 use App\Discussion\Values\Metric;
 use App\Discussion\Values\ModelConfig;
@@ -109,6 +110,9 @@ class QuestionEditor extends Component
             'forms' => ResultForm::cases(),
             'personaCategories' => TagCategory::ofScope(TagScope::Persona)->with('values')->get(),
             'projectCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
+            'projectSource' => TagScope::Project->source()->label(),
+            'personaSource' => TagScope::Persona->source()->label(),
+            'runSource' => DimensionSource::Run->label(),
             'pipelines' => app(PipelineRegistry::class)->options(),
             'models' => ModelConfig::options(),
             'expertNames' => Expert::query()->distinct()->orderBy('name')->pluck('name'),
@@ -118,7 +122,7 @@ class QuestionEditor extends Component
         ]);
     }
 
-    /** @return array<string, string> dimension key => label: project tags, persona tags, pipeline, model */
+    /** @return array<string, array{label: string, source: string}> dimension key => label and source: project tags, persona tags, pipeline, model */
     private function dimensionOptions(QuestionSentence $sentence, bool $withPersona): array
     {
         $dimensions = [
@@ -131,7 +135,7 @@ class QuestionEditor extends Component
         $options = [];
 
         foreach ($dimensions as $dimension) {
-            $options[$dimension->key()] = $sentence->dimension($dimension);
+            $options[$dimension->key()] = ['label' => $sentence->dimension($dimension), 'source' => $dimension->type->source()->label()];
         }
 
         return $options;

@@ -10,6 +10,15 @@ enum DimensionType: string
     case Pipeline = 'pipeline';
     case Model = 'model';
 
+    public function source(): DimensionSource
+    {
+        return match ($this) {
+            self::ProjectTag => DimensionSource::ProjectTag,
+            self::PersonaTag => DimensionSource::PersonaTag,
+            self::Pipeline, self::Model => DimensionSource::Run,
+        };
+    }
+
     public function isTag(): bool
     {
         return $this === self::ProjectTag || $this === self::PersonaTag;

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Discussion\Values\DimensionSource;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 
@@ -35,6 +36,15 @@ enum TagScope: string
         }
 
         throw new InvalidArgumentException('No tag scope for '.$model::class.'.');
+    }
+
+    /** What the statistics page calls the tags of this scope next to a listed category. */
+    public function source(): DimensionSource
+    {
+        return match ($this) {
+            self::Persona => DimensionSource::PersonaTag,
+            self::Project => DimensionSource::ProjectTag,
+        };
     }
 
     public function label(): string
