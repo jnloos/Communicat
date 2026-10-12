@@ -9,7 +9,6 @@ use App\Livewire\Projects\ProjectChat;
 use App\Livewire\Projects\ProjectNavigation;
 use App\Livewire\Settings\Tags;
 use App\Livewire\Settings\Users;
-use App\Livewire\Statistics\ComparisonEditor;
 use App\Livewire\Statistics\StatisticsPage;
 use Livewire\Component;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
@@ -56,7 +55,6 @@ class NeedsConfirmationTest extends TestCase
             'expert editor: delete' => [ExpertEditor::class, 'delete'],
             'users: delete' => [Users::class, 'delete'],
             'statistics: delete' => [StatisticsPage::class, 'delete'],
-            'comparison: remove series' => [ComparisonEditor::class, 'removeSeries'],
         ];
     }
 

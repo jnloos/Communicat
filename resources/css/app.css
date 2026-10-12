@@ -249,23 +249,6 @@ select:focus[data-flux-control] {
     cursor: pointer;
 }
 
-/* Statistics page pies (components/statistics/pies.blade.php): Flux paints
-   every sector inline in the -500 of a palette name; the series' own colour
-   (a -300 control, say) arrives as --pie-fill and replaces it. The slices of
-   one series become tints of it through fill-opacity, keyed by the datum id
-   that Flux writes into data-key. "Others" is the rest of the group and drawn
-   in zinc; !important beats Flux's inline fill. */
-[data-pie-tints] [data-sector] { fill: var(--pie-fill) !important; }
-[data-pie-tints] [data-sector][data-key="tint-1"] { fill-opacity: 0.75; }
-[data-pie-tints] [data-sector][data-key="tint-2"] { fill-opacity: 0.55; }
-[data-pie-tints] [data-sector][data-key="tint-3"] { fill-opacity: 0.4; }
-[data-pie-tints] [data-sector][data-key="tint-4"] { fill-opacity: 0.3; }
-[data-pie-tints] [data-sector][data-key="tint-5"] { fill-opacity: 0.22; }
-[data-pie-tints] [data-sector][data-key="tint-6"] { fill-opacity: 0.16; }
-[data-pie-tints] [data-sector][data-key="tint-7"] { fill-opacity: 0.12; }
-[data-pie-tints] [data-sector][data-key="others"] { fill: var(--color-zinc-300) !important; }
-.dark [data-pie-tints] [data-sector][data-key="others"] { fill: var(--color-zinc-600) !important; }
-
 /* Sidebar project list (livewire/projects/project-navigation.blade.php): a
    thin scrollbar with a stable gutter, so the sticky label row never shifts.
    Chrome on Linux and Windows draws arrow buttons even on a standard
