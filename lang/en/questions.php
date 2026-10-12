@@ -32,7 +32,7 @@ return [
         'hint' => 'Leave empty to name it after its sentence.',
     ],
 
-    'copy_name' => ':name (copy)',
+    'copy_name' => 'Copy of :name',
 
     'confirm' => [
         'delete' => [
@@ -128,7 +128,7 @@ return [
 
     'result' => [
         'runs' => '{0}No run matches.|{1}1 run|[2,*]:count runs',
-        'excluded' => '{1}1 run has no value here (no spoken turn, nobody matches, or no value in the compared or split category).|[2,*]:count runs have no value here (no spoken turn, nobody matches, or no value in the compared or split category).',
+        'excluded' => '{1}1 run has no value here: no spoken turn, nobody matches, or no value in the compared or split category.|[2,*]:count runs have no value here: no spoken turn, nobody matches, or no value in the compared or split category.',
         'dropped_tags' => '{1}1 tag value this question used no longer exists and was removed. A category left with no value still filters and matches no run: open its chip and choose other values.|[2,*]:count tag values this question used no longer exist and were removed. A category left with no value still filters and matches no run: open its chip and choose other values.',
         'n_of' => ':label · n',
         'empty' => 'No run answers this question. Widen the runs or the people.',
