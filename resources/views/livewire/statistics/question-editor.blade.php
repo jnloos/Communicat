@@ -152,9 +152,7 @@
     {{-- How many runs answer, and in which form. --}}
     <div class="flex flex-wrap items-center justify-between gap-3">
         <flux:text size="sm">
-            {{ trans_choice('questions.result.runs', $result->runs, ['count' => $result->runs]) }}
-            @if ($result->excluded > 0)
-                · {{ trans_choice('questions.result.excluded', $result->excluded, ['count' => $result->excluded]) }}
+            {{ trans_choice('questions.result.runs', $result->runs, ['count' => $result->runs]) }}@if ($result->excluded > 0), {{ trans_choice('questions.result.excluded', $result->excluded, ['count' => $result->excluded]) }}
             @endif
         </flux:text>
 

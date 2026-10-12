@@ -74,7 +74,7 @@ class QuestionEditorTest extends TestCase
         Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
             ->assertSee('My title')
             ->assertSeeHtml('data-question-sentence')
-            ->assertSee('Word share · everyone');
+            ->assertSee('Word share of everyone');
     }
 
     public function test_an_untitled_question_says_so_and_does_not_repeat_the_sentence_as_title(): void
@@ -85,7 +85,7 @@ class QuestionEditorTest extends TestCase
 
         Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
             ->assertSee('Untitled question')
-            ->assertSee('Word share · everyone');
+            ->assertSee('Word share of everyone');
     }
 
     public function test_another_users_own_question_cannot_be_opened(): void

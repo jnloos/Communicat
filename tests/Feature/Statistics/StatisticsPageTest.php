@@ -104,7 +104,7 @@ class StatisticsPageTest extends TestCase
         Livewire::test(StatisticsPage::class)->call('saveAsTemplate', $question->id);
 
         $template = Comparison::templates()->sole();
-        $this->assertSame('Word share · everyone', $template->name);
+        $this->assertSame('Word share of everyone', $template->name);
         $this->assertFalse($question->fresh()->is_template);
     }
 
@@ -132,7 +132,7 @@ class StatisticsPageTest extends TestCase
 
         Livewire::test(StatisticsPage::class)
             ->assertSee('Mine')
-            ->assertSee('Word share · everyone')
+            ->assertSee('Word share of everyone')
             ->assertSee('Shared')
             ->assertDontSee('Untitled question');
     }
@@ -145,7 +145,7 @@ class StatisticsPageTest extends TestCase
 
         Livewire::test(StatisticsPage::class)
             ->assertSee('Untitled question')
-            ->assertSee('Word share · everyone');
+            ->assertSee('Word share of everyone');
     }
 
     public function test_renaming_to_empty_lists_the_question_as_untitled(): void

@@ -3,6 +3,7 @@
 namespace App\Livewire\Statistics;
 
 use App\Discussion\Pipelines\PipelineRegistry;
+use App\Discussion\Values\Aggregate;
 use App\Discussion\Values\Dimension;
 use App\Discussion\Values\DimensionType;
 use App\Discussion\Values\ModelConfig;
@@ -15,8 +16,8 @@ use App\Models\TagCategory;
 use App\Models\TagValue;
 
 /**
- * A question in words: part by part for the chips of the editor, joined for
- * the name of a question nobody named. Reads labels; decides nothing.
+ * A question in words: part by part for the chips of the editor, joined into
+ * the sentence shown beside every question's title. Reads labels; decides nothing.
  */
 final class QuestionSentence
 {
@@ -46,14 +47,19 @@ final class QuestionSentence
     {
         $parts = $this->parts($question);
 
-        return implode(' · ', array_filter([
+        $main = implode(' ', array_filter([
             $parts['metric'],
-            $parts['people'],
-            $question->projects->isEmpty() ? null : $parts['projects'],
+            $parts['people'] === null ? null : __('questions.sentence.of_people', ['people' => $parts['people']]),
+            $question->metric->isShare() && $question->aggregate === Aggregate::PerHead ? $parts['aggregate'] : null,
+            $question->projects->isEmpty() ? null : __('questions.sentence.in_projects', ['projects' => $parts['projects']]),
             // The window as asked, not as capped: the name must not change when runs are added.
-            $question->turns->isWholeRun() ? null : $parts['turns'],
-            $parts['compare_by'] === null ? null : __('questions.sentence.name_compared_by', ['dimension' => $parts['compare_by']]),
-            $parts['split_by'] === null ? null : __('questions.sentence.name_split_by', ['dimension' => $parts['split_by']]),
+            $question->turns->isWholeRun() ? null : __('questions.sentence.over_turns', ['turns' => $parts['turns']]),
+        ]));
+
+        return implode(', ', array_filter([
+            $main,
+            $parts['compare_by'] === null ? null : __('questions.sentence.compared_by_dimension', ['dimension' => $parts['compare_by']]),
+            $parts['split_by'] === null ? null : __('questions.sentence.split_by_dimension', ['dimension' => $parts['split_by']]),
         ]));
     }
 

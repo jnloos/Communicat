@@ -47,7 +47,7 @@ class QuestionSentenceTest extends TestCase
             'split_by' => 'pipeline',
         ]));
 
-        $this->assertSame('Turn share · Focus persona: true · turns 1 to 60 · by Status condition · per Pipeline', $name);
+        $this->assertSame('Turn share of Focus persona: true over turns 1 to 60, compared by Status condition, split by Pipeline', $name);
     }
 
     public function test_an_unknown_tag_value_reads_as_deleted_not_empty(): void
@@ -85,7 +85,7 @@ class QuestionSentenceTest extends TestCase
 
     public function test_an_open_window_names_only_where_it_starts(): void
     {
-        $this->assertSame('from turn 4', $this->turns(['from' => 4]));
+        $this->assertSame('turn 4 onwards', $this->turns(['from' => 4]));
     }
 
     public function test_a_bound_set_by_the_shortest_run_reads_like_any_other(): void
@@ -98,8 +98,16 @@ class QuestionSentenceTest extends TestCase
     {
         $sentence = app(QuestionSentence::class);
 
-        $this->assertSame('Turn share · everyone', $sentence->of(new Question));
-        $this->assertSame('Turn share · everyone · from turn 4', $sentence->of(Question::fromArray(['turns' => ['from' => 4]])));
+        $this->assertSame('Turn share of everyone', $sentence->of(new Question));
+        $this->assertSame('Turn share of everyone over turn 4 onwards', $sentence->of(Question::fromArray(['turns' => ['from' => 4]])));
+    }
+
+    public function test_the_sentence_names_per_head_and_leaves_gini_without_people(): void
+    {
+        $sentence = app(QuestionSentence::class);
+
+        $this->assertSame('Turn share of everyone per head', $sentence->of(Question::fromArray(['aggregate' => 'per_head'])));
+        $this->assertStringNotContainsString(' of ', $sentence->of(Question::fromArray(['metric' => 'turn_gini'])));
     }
 
     public function test_a_start_beyond_the_shortest_run_says_why_the_answer_is_empty(): void

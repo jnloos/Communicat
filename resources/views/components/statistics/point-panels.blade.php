@@ -28,8 +28,8 @@
                         <div class="flex items-baseline justify-between gap-2 text-xs text-zinc-500 dark:text-zinc-400">
                             <span class="truncate">{{ $group->label !== '' ? $group->label : __('questions.result.all') }}</span>
                             <span class="shrink-0 tabular-nums">
-                                <span class="font-medium text-zinc-800 dark:text-white">{{ $metric->format($group->mean()) }}</span>
-                                · n = {{ $group->n() }}
+                                <span class="font-medium text-zinc-800 dark:text-white">{{ $metric->format($group->mean()) }}</span>,
+                                n = {{ $group->n() }}
                             </span>
                         </div>
 
