@@ -15,7 +15,7 @@
 
 <div {{ $attributes->class('grid gap-4 sm:grid-cols-2 xl:grid-cols-3') }}>
     @foreach ($result->panels as $panel)
-        <div class="rounded-lg border border-zinc-200 p-3 dark:border-white/10" wire:key="points-{{ $panel->key }}">
+        <flux:card size="sm" class="p-3" wire:key="points-{{ $panel->key }}">
             @if ($panel->label !== '')
                 <flux:heading size="sm">{{ $panel->label }}</flux:heading>
             @endif
@@ -54,6 +54,6 @@
                     {{ __('questions.result.delta', ['to' => $panel->groups[1]->label, 'from' => $panel->groups[0]->label, 'delta' => $metric->formatDelta($panel->delta())]) }}
                 </flux:text>
             @endif
-        </div>
+        </flux:card>
     @endforeach
 </div>

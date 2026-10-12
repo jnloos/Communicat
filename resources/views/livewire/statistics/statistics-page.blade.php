@@ -13,7 +13,7 @@
     <div class="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
         <aside class="w-full shrink-0 space-y-6 lg:w-64">
             <div>
-                <x-statistics.section-label class="px-3">{{ __('questions.list.fix') }}</x-statistics.section-label>
+                <flux:heading size="sm" class="px-3">{{ __('questions.list.fix') }}</flux:heading>
 
                 @if ($fixQuestions->isEmpty())
                     <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.no_fix') }}</flux:text>
@@ -22,7 +22,7 @@
                         @foreach ($fixQuestions as $template)
                             <div class="group/template relative" wire:key="template-{{ $template->id }}">
                                 <x-statistics.entry :title="$template->name" :sentence="$sentences[$template->id]" :current="$comparisonId === $template->id"
-                                    icon="rectangle-stack" wire:click="open({{ $template->id }})" />
+                                    icon="rectangle-stack" :with-menu="$template->user_id === auth()->id()" wire:click="open({{ $template->id }})" />
 
                                 @if ($template->user_id === auth()->id())
                                     <div class="absolute end-1 top-1.5">
@@ -44,7 +44,7 @@
             </div>
 
             <div>
-                <x-statistics.section-label class="px-3">{{ __('questions.list.others') }}</x-statistics.section-label>
+                <flux:heading size="sm" class="px-3">{{ __('questions.list.others') }}</flux:heading>
 
                 @if ($questions->isEmpty())
                     <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.empty') }}</flux:text>
@@ -53,7 +53,7 @@
                         @foreach ($questions as $question)
                             <div class="relative" wire:key="question-{{ $question->id }}">
                                 <x-statistics.entry :title="$question->name" :sentence="$sentences[$question->id]" :current="$comparisonId === $question->id"
-                                    wire:click="open({{ $question->id }})" />
+                                    with-menu wire:click="open({{ $question->id }})" />
 
                                 <div class="absolute end-1 top-1.5">
                                     <flux:dropdown position="bottom" align="end">

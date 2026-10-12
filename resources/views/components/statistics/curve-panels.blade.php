@@ -10,7 +10,7 @@
     @foreach ($result->panels as $panel)
         @php($rows = CurveRows::of($panel))
 
-        <div class="rounded-lg border border-zinc-200 p-3 dark:border-white/10" wire:key="curve-{{ $panel->key }}">
+        <flux:card size="sm" class="p-3" wire:key="curve-{{ $panel->key }}">
             @if ($panel->label !== '')
                 <flux:heading size="sm">{{ $panel->label }}</flux:heading>
             @endif
@@ -47,6 +47,6 @@
                     </flux:chart.tooltip>
                 </flux:chart>
             @endif
-        </div>
+        </flux:card>
     @endforeach
 </div>

@@ -6,13 +6,11 @@
 {{-- The evidence under every number: each run's value, with the way back to its chat. --}}
 @php($rows = collect($result->panels)->flatMap(fn ($panel) => collect($panel->groups)->flatMap(fn ($group) => collect($group->runs)->map(fn ($run) => ['panel' => $panel, 'group' => $group, 'run' => $run]))))
 
-<details {{ $attributes->class('group') }}>
-    <summary class="flex cursor-pointer list-none items-center gap-1 text-sm text-zinc-600 dark:text-zinc-300 [&::-webkit-details-marker]:hidden">
-        <flux:icon.chevron-right variant="micro" class="transition-transform group-open:rotate-90" />
-        {{ trans_choice('questions.result.run_table', $rows->pluck('run.projectId')->unique()->count(), ['count' => $rows->pluck('run.projectId')->unique()->count()]) }}
-    </summary>
+@php($runCount = $rows->pluck('run.projectId')->unique()->count())
 
-    <flux:table class="mt-2">
+<flux:accordion {{ $attributes }}>
+    <flux:accordion.item :heading="trans_choice('questions.result.run_table', $runCount, ['count' => $runCount])">
+    <flux:table>
         <flux:table.columns>
             <flux:table.column>{{ __('questions.result.columns.run') }}</flux:table.column>
             <flux:table.column>{{ __('questions.result.columns.panel') }}</flux:table.column>
@@ -30,4 +28,5 @@
             @endforeach
         </flux:table.rows>
     </flux:table>
-</details>
+    </flux:accordion.item>
+</flux:accordion>
