@@ -23,4 +23,14 @@ final class GroupColor
     {
         return self::PALETTE[$index % count(self::PALETTE)];
     }
+
+    /**
+     * The text colour that stays readable on a group's colour (WCAG AA, 4.5:1).
+     * White fails on every 500 shade here (1.98:1 on lime to 4.23:1 on violet);
+     * near-black reaches 4.70:1 on violet and 5.4:1 or more on the rest.
+     */
+    public static function textOn(string $color): string
+    {
+        return 'text-zinc-950';
+    }
 }
