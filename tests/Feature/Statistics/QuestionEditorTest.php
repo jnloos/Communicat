@@ -91,7 +91,7 @@ class QuestionEditorTest extends TestCase
         Livewire::test(QuestionEditor::class, ['comparisonId' => $fix->id])
             ->assertSet('readOnly', true)
             ->assertSee('Fixed')
-            ->assertSee('Fixed question, view only')
+            ->assertSee('Template, view only')
             ->assertSee('Copy to adjust')
             ->set('question.metric', 'turn_gini');
 

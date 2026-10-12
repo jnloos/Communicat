@@ -9,20 +9,20 @@
 return [
     'heading' => 'Statistik',
     'subheading' => 'Stelle eine Frage über viele Läufe. Jeder Punkt ist ein Lauf.',
-    'none_open' => 'Wähle links eine feste Frage oder eine eigene, oder stelle eine neue.',
+    'none_open' => 'Wähle links eine Vorlage oder eine deiner Fragen, oder stelle eine neue.',
 
     'list' => [
-        'others' => 'Weitere Fragen',
-        'fix' => 'Feste Fragen',
+        'others' => 'Fragen',
+        'fix' => 'Vorlagen',
         'create' => 'Neue Frage',
         'empty' => 'Noch keine Frage.',
-        'no_fix' => 'Noch keine feste Frage. Speichere eine Frage als feste Frage, um sie zu teilen.',
+        'no_fix' => 'Noch keine Vorlage. Speichere eine Frage als Vorlage, um sie zu teilen.',
     ],
 
     'actions' => [
         'rename' => 'Umbenennen',
         'duplicate' => 'Duplizieren',
-        'save_as_fix_question' => 'Als feste Frage speichern',
+        'save_as_fix_question' => 'Als Vorlage speichern',
         'copy_to_adjust' => 'Kopieren und anpassen',
         'delete' => 'Löschen',
     ],
@@ -41,13 +41,13 @@ return [
             'message' => '„:name“ wird gelöscht. Projekte und Tags bleiben unverändert.',
         ],
         'delete_template' => [
-            'title' => 'Feste Frage löschen?',
-            'message' => 'Die feste Frage „:name“ wird für alle gelöscht. Fragen, die daraus entstanden sind, bleiben.',
+            'title' => 'Vorlage löschen?',
+            'message' => 'Die Vorlage „:name“ wird für alle gelöscht. Fragen, die daraus entstanden sind, bleiben.',
         ],
     ],
 
     'fix' => [
-        'view_only' => 'Feste Frage, nur ansehen',
+        'view_only' => 'Vorlage, nur ansehen',
     ],
 
     'autosave' => [

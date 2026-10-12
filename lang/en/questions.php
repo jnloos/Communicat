@@ -9,20 +9,20 @@
 return [
     'heading' => 'Statistics',
     'subheading' => 'Ask a question across many runs. Every dot is one run.',
-    'none_open' => 'Pick a fix question or one of your own on the left, or ask a new one.',
+    'none_open' => 'Pick a template or one of your questions on the left, or ask a new one.',
 
     'list' => [
-        'others' => 'Other questions',
-        'fix' => 'Fix questions',
+        'others' => 'Questions',
+        'fix' => 'Templates',
         'create' => 'New question',
         'empty' => 'No question yet.',
-        'no_fix' => 'No fix question yet. Save a question as a fix question to share it.',
+        'no_fix' => 'No template yet. Save a question as a template to share it.',
     ],
 
     'actions' => [
         'rename' => 'Rename',
         'duplicate' => 'Duplicate',
-        'save_as_fix_question' => 'Save as fix question',
+        'save_as_fix_question' => 'Save as template',
         'copy_to_adjust' => 'Copy to adjust',
         'delete' => 'Delete',
     ],
@@ -41,13 +41,13 @@ return [
             'message' => '“:name” will be deleted. Projects and tags stay untouched.',
         ],
         'delete_template' => [
-            'title' => 'Delete fix question?',
-            'message' => 'The fix question “:name” will be deleted for everyone. Questions made from it stay.',
+            'title' => 'Delete template?',
+            'message' => 'The template “:name” will be deleted for everyone. Questions made from it stay.',
         ],
     ],
 
     'fix' => [
-        'view_only' => 'Fixed question, view only',
+        'view_only' => 'Template, view only',
     ],
 
     'autosave' => [

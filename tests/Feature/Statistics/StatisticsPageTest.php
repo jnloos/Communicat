@@ -48,8 +48,8 @@ class StatisticsPageTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(StatisticsPage::class)
-            ->assertSee('Fix questions')
-            ->assertSee('Other questions')
+            ->assertSee('Templates')
+            ->assertSee('Questions')
             ->assertSee('Status effect')
             ->call('open', $fix->id)
             ->assertSet('comparisonId', $fix->id)
