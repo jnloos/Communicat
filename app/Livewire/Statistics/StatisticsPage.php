@@ -2,9 +2,7 @@
 
 namespace App\Livewire\Statistics;
 
-use App\Discussion\Metrics\Templates\ComparisonTemplates;
-use App\Discussion\Values\ComparisonView;
-use App\Discussion\Values\SeriesDefinition;
+use App\Discussion\Values\Question;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Comparison;
 use App\Models\User;
@@ -15,9 +13,11 @@ use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
- * The statistics page: the user's own comparisons on the left, the open one on
- * the right. Every comparison id from the request is resolved through the
- * user's own comparisons — someone else's does not exist here (404, not 403).
+ * The statistics page: the user's questions and everyone's templates on the
+ * left, the open question on the right. A question id is always resolved
+ * through the user's own rows; someone else's question does not exist here.
+ * Templates are read by everyone, copied to be used, renamed or deleted only
+ * by their owner.
  */
 class StatisticsPage extends Component
 {
@@ -26,101 +26,78 @@ class StatisticsPage extends Component
     #[Url(as: 'c')]
     public ?int $comparisonId = null;
 
-    /** The comparison being renamed; null while the name modal creates a new one. */
     #[Locked]
     public ?int $renamingId = null;
 
     public string $name = '';
 
-    /** Said once after a template named tags this database lacks; cleared on the next open. */
-    public ?string $templateNotice = null;
-
     public function mount(): void
     {
-        if ($this->comparisonId !== null && $this->user()->comparisons()->find($this->comparisonId) === null) {
+        if ($this->comparisonId !== null && $this->user()->comparisons()->questions()->find($this->comparisonId) === null) {
             $this->comparisonId = null;
         }
     }
 
     public function open(int $comparisonId): void
     {
-        $this->comparisonId = $this->own($comparisonId)->id;
-        $this->templateNotice = null;
+        $this->comparisonId = $this->user()->comparisons()->questions()->findOrFail($comparisonId)->id;
     }
 
-    public function startCreating(): void
+    public function create(): void
     {
-        $this->reset(['renamingId', 'name']);
-        $this->resetValidation();
-        Flux::modal('comparison-name')->show();
+        $this->comparisonId = $this->user()->comparisons()->create(['question' => (new Question)->toArray()])->id;
+    }
+
+    /** A template becomes the user's own question; the template itself stays as it is. */
+    public function useTemplate(int $templateId): void
+    {
+        $template = Comparison::templates()->findOrFail($templateId);
+
+        $this->comparisonId = $this->user()->comparisons()->create([
+            'name' => $template->name,
+            'question' => $template->question,
+        ])->id;
+    }
+
+    /** A snapshot of the question as a template, named after it; the question stays the user's own. */
+    public function saveAsTemplate(int $comparisonId): void
+    {
+        $question = $this->owned($comparisonId);
+
+        $this->user()->comparisons()->create([
+            'name' => Str::limit($question->name ?? app(QuestionSentence::class)->of($question->toQuestion()), 100, ''),
+            'question' => $question->question,
+            'is_template' => true,
+        ]);
     }
 
     public function startRenaming(int $comparisonId): void
     {
-        $comparison = $this->own($comparisonId);
+        $comparison = $this->owned($comparisonId);
         $this->renamingId = $comparison->id;
-        $this->name = $comparison->name;
+        $this->name = (string) $comparison->name;
         $this->resetValidation();
-        Flux::modal('comparison-name')->show();
+        Flux::modal('question-name')->show();
     }
 
+    /** An empty name is allowed: the question is then called by its sentence again. */
     public function saveName(): void
     {
         $this->name = trim($this->name);
-        $this->validate(['name' => ['required', 'string', 'max:100']], [], ['name' => __('comparisons.name.field')]);
+        $this->validate(['name' => ['nullable', 'string', 'max:100']], [], ['name' => __('questions.name.field')]);
 
-        if ($this->renamingId !== null) {
-            $this->own($this->renamingId)->update(['name' => $this->name]);
-            $this->dispatch('comparison-renamed');
-        } else {
-            $comparison = $this->user()->comparisons()->create([
-                'name' => $this->name,
-                'series' => [],
-                'view' => (new ComparisonView)->toArray(),
-            ]);
-            $this->comparisonId = $comparison->id;
-        }
+        $this->owned((int) $this->renamingId)->update(['name' => $this->name === '' ? null : $this->name]);
+        $this->dispatch('comparison-renamed');
 
         $this->reset(['renamingId', 'name']);
-        Flux::modal('comparison-name')->close();
-    }
-
-    /**
-     * A standard analysis as a new, normal comparison: editable and saved
-     * like any other, nothing ties it to its template afterwards.
-     */
-    public function createFromTemplate(string $key): void
-    {
-        $templates = app(ComparisonTemplates::class);
-        $template = $templates->find($key) ?? abort(404);
-
-        $series = $templates->seriesOf($template);
-        $comparison = $this->user()->comparisons()->create([
-            'name' => Str::limit($template->name(), 100, ''),
-            'series' => $series,
-            'view' => $template->view->toArray(),
-        ]);
-
-        $this->comparisonId = $comparison->id;
-        $this->templateNotice = $this->unresolvedNotice($series);
-    }
-
-    /** @param  list<array<string, mixed>>  $series */
-    private function unresolvedNotice(array $series): ?string
-    {
-        $labels = array_values(array_unique(array_merge([], ...array_map(
-            fn (SeriesDefinition $definition) => $definition->unresolvedLabels(),
-            SeriesDefinition::listFrom($series),
-        ))));
-
-        return $labels === [] ? null : __('comparisons.templates.unresolved', ['tags' => implode(', ', $labels)]);
+        Flux::modal('question-name')->close();
     }
 
     public function duplicate(int $comparisonId): void
     {
-        $source = $this->own($comparisonId);
+        $source = $this->user()->comparisons()->questions()->findOrFail($comparisonId);
         $copy = $source->replicate();
-        $copy->name = Str::limit(__('comparisons.copy_name', ['name' => $source->name]), 100, '');
+        $copy->name = $source->name === null ? null : Str::limit(__('questions.copy_name', ['name' => $source->name]), 100, '');
         $copy->save();
 
         $this->comparisonId = $copy->id;
@@ -128,25 +105,32 @@ class StatisticsPage extends Component
 
     public function confirmDelete(int $comparisonId): void
     {
-        $comparison = $this->own($comparisonId);
+        $comparison = $this->owned($comparisonId);
+        $kind = $comparison->is_template ? 'delete_template' : 'delete';
 
-        $this->confirmTitle = __('comparisons.confirm.delete.title');
-        $this->confirmMessage = __('comparisons.confirm.delete.message', ['name' => $comparison->name]);
+        $this->confirmTitle = __("questions.confirm.{$kind}.title");
+        $this->confirmMessage = __("questions.confirm.{$kind}.message", ['name' => $this->nameOf($comparison)]);
         $this->needsConfirmation('delete', $comparisonId);
     }
 
     public function delete(int $comparisonId): void
     {
-        $this->own($comparisonId)->delete();
+        $this->owned($comparisonId)->delete();
 
         if ($this->comparisonId === $comparisonId) {
             $this->comparisonId = null;
         }
     }
 
-    private function own(int $comparisonId): Comparison
+    /** One of the user's own rows, question or template. */
+    private function owned(int $comparisonId): Comparison
     {
         return $this->user()->comparisons()->findOrFail($comparisonId);
+    }
+
+    private function nameOf(Comparison $comparison): string
+    {
+        return $comparison->name ?? app(QuestionSentence::class)->of($comparison->toQuestion());
     }
 
     private function user(): User
@@ -156,10 +140,13 @@ class StatisticsPage extends Component
 
     public function render(): mixed
     {
+        $questions = $this->user()->comparisons()->questions()->get();
+
         return view('livewire.statistics.statistics-page', [
-            'comparisons' => $this->user()->comparisons()->get(),
-            'current' => $this->comparisonId === null ? null : $this->user()->comparisons()->find($this->comparisonId),
-            'templates' => app(ComparisonTemplates::class)->all(),
-        ])->title(__('comparisons.heading'));
+            'questions' => $questions,
+            'templates' => Comparison::templates()->get(),
+            'names' => $questions->mapWithKeys(fn (Comparison $comparison) => [$comparison->id => $this->nameOf($comparison)]),
+            'current' => $this->comparisonId === null ? null : $questions->firstWhere('id', $this->comparisonId),
+        ])->title(__('questions.heading'));
     }
 }

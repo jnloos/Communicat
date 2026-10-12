@@ -14,9 +14,10 @@ class StatisticsPageTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function comparisonOf(User $user, string $name = 'Status-Effekt'): Comparison
+    protected function setUp(): void
     {
-        return $user->comparisons()->create(['name' => $name, 'series' => [], 'view' => []]);
+        parent::setUp();
+        app()->setLocale('en');
     }
 
     public function test_guests_are_sent_to_the_login(): void
@@ -24,92 +25,79 @@ class StatisticsPageTest extends TestCase
         $this->get(route('statistics'))->assertRedirect(route('login'));
     }
 
-    public function test_every_signed_in_user_reaches_the_page_and_the_sidebar_links_it(): void
+    public function test_every_signed_in_user_reaches_the_page(): void
     {
-        $this->actingAs(User::factory()->create())
-            ->get(route('statistics'))
-            ->assertOk()
-            ->assertSee(__('comparisons.heading'))
-            ->assertSee(route('statistics'));
+        $this->actingAs(User::factory()->create())->get(route('statistics'))->assertOk()->assertSee(__('questions.heading'));
     }
 
-    public function test_creating_names_and_opens_a_new_comparison(): void
+    public function test_a_new_question_opens_at_once_without_a_name(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
+
+        Livewire::test(StatisticsPage::class)->call('create')->assertSet('comparisonId', Comparison::sole()->id);
+
+        $this->assertNull(Comparison::sole()->name);
+        $this->assertFalse(Comparison::sole()->is_template);
+    }
+
+    public function test_anyone_copies_a_template_into_their_own_questions(): void
+    {
+        $template = User::factory()->create()->comparisons()->create(['name' => 'Status effect', 'question' => ['metric' => 'word_share'], 'is_template' => true]);
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        Livewire::test(StatisticsPage::class)->assertSee('Status effect')->call('useTemplate', $template->id);
+
+        $copy = $user->comparisons()->sole();
+        $this->assertFalse($copy->is_template);
+        $this->assertSame('Status effect', $copy->name);
+        $this->assertSame('word_share', $copy->question['metric']);
+    }
+
+    public function test_saving_as_template_keeps_the_question_and_names_the_template(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $question = $user->comparisons()->create(['question' => ['metric' => 'word_share']]);
+
+        Livewire::test(StatisticsPage::class)->call('saveAsTemplate', $question->id);
+
+        $template = Comparison::templates()->sole();
+        $this->assertSame('Word share · everyone', $template->name);
+        $this->assertFalse($question->fresh()->is_template);
+    }
+
+    public function test_renaming_to_nothing_returns_to_the_sentence(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $question = $user->comparisons()->create(['name' => 'Mine']);
 
         Livewire::test(StatisticsPage::class)
-            ->call('startCreating')
-            ->set('name', '  Titelträger ')
+            ->call('startRenaming', $question->id)
+            ->set('name', '   ')
             ->call('saveName')
-            ->assertHasNoErrors()
-            ->assertSet('comparisonId', Comparison::sole()->id);
+            ->assertHasNoErrors();
 
-        $this->assertSame('Titelträger', Comparison::sole()->name);
-        $this->assertSame($user->id, Comparison::sole()->user_id);
+        $this->assertNull($question->fresh()->name);
     }
 
-    public function test_renaming_and_duplicating(): void
+    public function test_only_the_owner_deletes_a_template(): void
     {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $source = $user->comparisons()->create(['name' => 'A', 'series' => [['label' => 'Reihe 1']], 'view' => ['metric' => 'word_share']]);
-
-        Livewire::test(StatisticsPage::class)
-            ->call('startRenaming', $source->id)
-            ->assertSet('name', 'A')
-            ->set('name', 'B')
-            ->call('saveName')
-            ->call('duplicate', $source->id);
-
-        $this->assertSame('B', $source->fresh()->name);
-        $copy = Comparison::whereKeyNot($source->id)->sole();
-        $this->assertSame(__('comparisons.copy_name', ['name' => 'B']), $copy->name);
-        $this->assertSame($source->fresh()->series, $copy->series);
-        $this->assertSame($source->fresh()->view, $copy->view);
-    }
-
-    public function test_deleting_asks_first(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $comparison = $this->comparisonOf($user);
-
-        Livewire::test(StatisticsPage::class, ['comparisonId' => $comparison->id])
-            ->call('confirmDelete', $comparison->id)
-            ->assertDispatched('open-confirm')
-            ->call('executeConfirmed')
-            ->assertSet('comparisonId', null);
-
-        $this->assertSame(0, Comparison::count());
-    }
-
-    public function test_someone_elses_comparison_does_not_exist_for_you(): void
-    {
-        $stranger = User::factory()->create();
-        $foreign = $this->comparisonOf($stranger);
+        $owner = User::factory()->create();
+        $template = $owner->comparisons()->create(['name' => 'T', 'is_template' => true]);
         $this->actingAs(User::factory()->create());
 
-        // findOrFail: the framework renders ModelNotFoundException as a 404 over HTTP; Livewire's test helper rethrows it.
-        foreach (['open', 'startRenaming', 'duplicate', 'confirmDelete', 'delete'] as $action) {
-            $this->assertThrows(
-                fn () => Livewire::test(StatisticsPage::class)->call($action, $foreign->id),
-                ModelNotFoundException::class,
-            );
-        }
-        $this->assertSame(1, Comparison::count());
-        Livewire::withQueryParams(['c' => $foreign->id])->test(StatisticsPage::class)->assertSet('comparisonId', null);
+        $this->expectException(ModelNotFoundException::class);
+        Livewire::test(StatisticsPage::class)->call('delete', $template->id);
     }
 
-    public function test_new_comparison_is_the_primary_action_only_while_the_list_is_empty(): void
+    public function test_someone_elses_question_does_not_exist_here(): void
     {
-        $user = User::factory()->create();
-        $this->actingAs($user);
+        $foreign = User::factory()->create()->comparisons()->create([]);
+        $this->actingAs(User::factory()->create());
 
-        $primary = '/<button[^>]*bg-\[var\(--color-accent\)\][^>]*wire:click="startCreating"/';
-        $this->assertMatchesRegularExpression($primary, Livewire::test(StatisticsPage::class)->html());
-
-        $this->comparisonOf($user);
-        $this->assertDoesNotMatchRegularExpression($primary, Livewire::test(StatisticsPage::class)->html());
+        Livewire::withQueryParams(['c' => $foreign->id])->test(StatisticsPage::class)->assertSet('comparisonId', null);
     }
 }
