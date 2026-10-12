@@ -222,15 +222,9 @@
         </div>
     </flux:card>
 
-    {{-- The answer's form; a note only when runs had to be left out, the reasons in its tooltip. --}}
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <flux:text size="sm">
-            @if ($result->excluded > 0)
-                <span title="{{ __('questions.result.excluded_reasons') }}">{{ trans_choice('questions.result.excluded', $result->excluded, ['count' => $result->excluded]) }}</span>
-            @endif
-        </flux:text>
-
-        <div class="flex items-center gap-2">
+    {{-- The answer's form, centred above the answer. --}}
+    <div class="flex justify-center">
+        <div class="flex flex-wrap items-center justify-center gap-2">
             @if ($current->form === ResultForm::Trajectory)
                 <flux:radio.group wire:model.live="definition.curve" variant="segmented" size="sm">
                     @foreach (CurveMode::cases() as $mode)
