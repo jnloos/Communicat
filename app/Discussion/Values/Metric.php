@@ -66,9 +66,38 @@ enum Metric: string
         };
     }
 
+    /**
+     * The value of one group of a run. Per head divides a share by the group's
+     * size, the share of its average member; words per turn is a ratio
+     * already and ignores the aggregate.
+     *
+     * @param  non-empty-list<SpeakerShare>  $speakers
+     */
+    public function ofGroup(array $speakers, Aggregate $aggregate): float
+    {
+        $value = $this->ofAgents($speakers);
+
+        return $aggregate === Aggregate::PerHead && $this->isShare() ? $value / count($speakers) : $value;
+    }
+
+    /**
+     * What the group would get if every agent of the run took the floor (or
+     * wrote) equally: its size over the run's size, or 1/n per head. The
+     * reference of the redezeit-fairness studies (share against presence).
+     * Only shares have one.
+     */
+    public function fairShare(int $groupSize, int $runSize, Aggregate $aggregate): ?float
+    {
+        if (! $this->isShare() || $runSize === 0) {
+            return null;
+        }
+
+        return $aggregate === Aggregate::PerHead ? 1 / $runSize : $groupSize / $runSize;
+    }
+
     public function label(): string
     {
-        return __("comparisons.metrics.{$this->value}");
+        return __("questions.metrics.{$this->value}");
     }
 
     /** Separators follow the app locale, as in the statistics flyout (LocaleNumber). */
@@ -87,6 +116,22 @@ enum Metric: string
         return match (true) {
             $this->isShare() => LocaleNumber::decimal($min * 100, 1).'–'.LocaleNumber::percent($max),
             default => $this->format($min).'–'.$this->format($max),
+        };
+    }
+
+    /** A difference of two values, always signed; percentage points for a share. */
+    public function formatDelta(float $delta): string
+    {
+        $sign = match (true) {
+            $delta > 0 => '+',
+            $delta < 0 => '−',
+            default => '±',
+        };
+
+        return $sign.match (true) {
+            $this->isShare() => LocaleNumber::decimal(abs($delta) * 100, 1).' pp',
+            $this === self::WordsPerTurn => LocaleNumber::decimal(abs($delta), 1),
+            default => LocaleNumber::decimal(abs($delta), 2),
         };
     }
 }
