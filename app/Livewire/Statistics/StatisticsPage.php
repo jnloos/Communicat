@@ -80,13 +80,18 @@ class StatisticsPage extends Component
         Flux::modal('question-name')->show();
     }
 
-    /** An empty name is allowed: the question is then called by its sentence again. */
+    /**
+     * An empty name is allowed for a question: it is then called by its
+     * sentence again. A template has no sentence to fall back on in the list
+     * everyone reads, so it keeps a name.
+     */
     public function saveName(): void
     {
+        $comparison = $this->owned((int) $this->renamingId);
         $this->name = trim($this->name);
-        $this->validate(['name' => ['nullable', 'string', 'max:100']], [], ['name' => __('questions.name.field')]);
+        $this->validate(['name' => [$comparison->is_template ? 'required' : 'nullable', 'string', 'max:100']], [], ['name' => __('questions.name.field')]);
 
-        $this->owned((int) $this->renamingId)->update(['name' => $this->name === '' ? null : $this->name]);
+        $comparison->update(['name' => $this->name === '' ? null : $this->name]);
         $this->dispatch('comparison-renamed');
 
         $this->reset(['renamingId', 'name']);

@@ -83,6 +83,21 @@ class StatisticsPageTest extends TestCase
         $this->assertNull($question->fresh()->name);
     }
 
+    public function test_a_template_cannot_be_renamed_to_nothing(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $template = $user->comparisons()->create(['name' => 'Shared', 'is_template' => true]);
+
+        Livewire::test(StatisticsPage::class)
+            ->call('startRenaming', $template->id)
+            ->set('name', '   ')
+            ->call('saveName')
+            ->assertHasErrors(['name' => 'required']);
+
+        $this->assertSame('Shared', $template->fresh()->name);
+    }
+
     public function test_only_the_owner_deletes_a_template(): void
     {
         $owner = User::factory()->create();
