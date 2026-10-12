@@ -30,7 +30,7 @@ return [
     'name' => [
         'rename' => 'Umbenennen',
         'field' => 'Titel',
-        'hint' => 'Leer lassen für keinen Titel. Der Satz steht immer daneben.',
+        'hint' => 'Leer lassen für keinen Titel.',
     ],
 
     'notes' => [
@@ -156,6 +156,7 @@ return [
         'excluded' => '{1}1 Lauf hat hier keinen Wert: kein gesprochener Turn, niemand passt oder kein Wert in der verglichenen oder aufgeteilten Kategorie.|[2,*]:count Läufe haben hier keinen Wert: kein gesprochener Turn, niemand passt oder kein Wert in der verglichenen oder aufgeteilten Kategorie.',
         'dropped_tags' => '{1}1 Tag-Wert, den diese Frage nutzte, existiert nicht mehr und wurde entfernt. Eine Kategorie ohne verbleibenden Wert filtert weiter und trifft keinen Lauf: Chip öffnen und andere Werte wählen.|[2,*]:count Tag-Werte, die diese Frage nutzte, existieren nicht mehr und wurden entfernt. Eine Kategorie ohne verbleibenden Wert filtert weiter und trifft keinen Lauf: Chip öffnen und andere Werte wählen.',
         'n_of' => ':label, n',
+        'fair_share_of' => ':label, faire Erwartung',
         'empty' => 'Kein Lauf beantwortet diese Frage. Erweitere die Läufe oder die Personen.',
         'all' => 'Alle',
         'no_value' => 'ohne Angabe',

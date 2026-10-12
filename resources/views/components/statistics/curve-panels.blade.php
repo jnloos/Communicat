@@ -5,7 +5,7 @@
     'result', {{-- QuestionResult --}}
 ])
 
-{{-- A chart per panel, a line per group: the mean share after each turn over the runs that reached it. --}}
+{{-- A chart per panel, a line per group: the mean share after each turn over the runs that reached it, and a dashed line in the group's colour at its fair share. --}}
 <div {{ $attributes->class('grid gap-4 lg:grid-cols-2') }}>
     @foreach ($result->panels as $panel)
         @php($rows = CurveRows::of($panel))
@@ -23,6 +23,9 @@
                     <flux:chart.svg>
                         @foreach ($panel->groups as $index => $group)
                             <flux:chart.line :field="'g'.$index" curve="none" style="color: var(--color-{{ GroupColor::of($result, $group) }})" />
+                            @if ($group->fairShare() !== null)
+                                <flux:chart.line :field="'f'.$index" curve="none" stroke-width="1.5" stroke-dasharray="4 4" style="color: var(--color-{{ GroupColor::of($result, $group) }})" />
+                            @endif
                         @endforeach
 
                         <flux:chart.axis axis="x" field="turn" scale="linear">
@@ -43,6 +46,9 @@
                             @php($label = $group->label !== '' ? $group->label : __('questions.result.all'))
                             <flux:chart.tooltip.value :field="'g'.$index" :label="$label" suffix=" %" />
                             <flux:chart.tooltip.value :field="'n'.$index" :label="__('questions.result.n_of', ['label' => $label])" />
+                            @if ($group->fairShare() !== null)
+                                <flux:chart.tooltip.value :field="'f'.$index" :label="__('questions.result.fair_share_of', ['label' => $label])" suffix=" %" />
+                            @endif
                         @endforeach
                     </flux:chart.tooltip>
                 </flux:chart>

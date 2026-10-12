@@ -67,8 +67,9 @@ class StatisticsPage extends Component
     }
 
     /**
-     * A template becomes the user's own question, to adjust; the template
-     * itself stays as it is. The form being viewed may come along.
+     * A template becomes the user's own question, to adjust, titled as a copy
+     * so the two are told apart in the list; the template itself stays as it
+     * is. The form being viewed may come along.
      */
     public function copyTemplate(int $templateId, ?string $form = null, ?string $curve = null): void
     {
@@ -84,7 +85,7 @@ class StatisticsPage extends Component
         }
 
         $this->questionId = $this->user()->questions()->create([
-            'name' => $template->name,
+            'name' => Str::limit(__('questions.copy_name', ['name' => $template->name]), 100, ''),
             'notes' => $template->notes,
             'definition' => QuestionDefinition::fromArray($definition)->toArray(),
         ])->id;

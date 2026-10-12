@@ -274,6 +274,7 @@
                 @break
             @case(ResultForm::Trajectory)
                 <x-statistics.curve-panels :result="$result" />
+                <flux:text size="sm">{{ __('questions.result.fair_share') }}</flux:text>
                 @if ($current->curve === CurveMode::Rolling)
                     <flux:text size="sm">{{ trans_choice('statistics.trajectory.rolling_hint', $rollingWindow, ['count' => $rollingWindow]) }}</flux:text>
                 @endif

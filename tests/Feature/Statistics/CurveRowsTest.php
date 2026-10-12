@@ -34,4 +34,14 @@ class CurveRowsTest extends TestCase
     {
         $this->assertSame([], CurveRows::of(new Panel('', '', [$this->group('a', [])])));
     }
+
+    public function test_a_group_with_a_fair_share_carries_it_on_every_row_for_a_dashed_line(): void
+    {
+        $fair = new GroupResult('a', 'a', [new RunValue(1, 'r', 0.5, 0.25), new RunValue(2, 'r', 0.4, 0.25)], [new TrajectoryMean(1, 0.5, 2), new TrajectoryMean(2, 0.4, 2)]);
+
+        $this->assertSame([
+            ['turn' => 1, 'g0' => 50.0, 'n0' => 2, 'f0' => 25.0],
+            ['turn' => 2, 'g0' => 40.0, 'n0' => 2, 'f0' => 25.0],
+        ], CurveRows::of(new Panel('', '', [$fair])));
+    }
 }

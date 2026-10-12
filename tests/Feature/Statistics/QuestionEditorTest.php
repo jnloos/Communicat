@@ -550,4 +550,27 @@ class QuestionEditorTest extends TestCase
 
         $this->assertSame([$kept->id, $gone->id], $template->fresh()->definition['people']['tags'][$category->id]);
     }
+
+    public function test_a_templates_disabled_triggers_keep_full_text_colour(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $template = User::factory()->create()->questions()->create(['is_template' => true]);
+
+        $html = Livewire::test(QuestionEditor::class, ['questionId' => $template->id])->html();
+
+        $this->assertMatchesRegularExpression('/<button(?=[^>]*disabled)(?=[^>]*disabled:opacity-100!)[^>]*data-statistics-trigger/', $html);
+    }
+
+    public function test_a_curve_draws_the_fair_share_as_a_dashed_line_and_says_so(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $project = $this->spokenRun($user);
+        JobLog::create(['job_class' => 'x', 'project_id' => $project->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => 2, 'expert_id' => Expert::sole()->id, 'words' => 8]);
+        $question = $user->questions()->create(['definition' => ['form' => 'trajectory']]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertSeeHtml('stroke-dasharray="4 4"')
+            ->assertSee('Dashed line: fair share');
+    }
 }

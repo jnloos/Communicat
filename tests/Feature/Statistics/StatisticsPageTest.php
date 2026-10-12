@@ -73,7 +73,7 @@ class StatisticsPageTest extends TestCase
         $copy = $user->questions()->sole();
         $page->assertSet('questionId', $copy->id);
         $this->assertFalse($copy->is_template);
-        $this->assertSame('Status effect', $copy->name);
+        $this->assertSame('Copy of Status effect', $copy->name);
         $this->assertSame('word_share', $copy->definition['metric']);
         $this->assertTrue($template->fresh()->is_template);
     }
@@ -253,7 +253,7 @@ class StatisticsPageTest extends TestCase
         $page->call('duplicate', $own->id);
         $page->call('saveAsTemplate', $own->id);
 
-        $this->assertSame('From the template', $user->questions()->notTemplates()->where('name', 'Fix')->sole()->notes);
+        $this->assertSame('From the template', $user->questions()->notTemplates()->where('name', 'Copy of Fix')->sole()->notes);
         $this->assertSame('My conclusion', $user->questions()->notTemplates()->where('name', 'Copy of Own')->sole()->notes);
         $this->assertSame('My conclusion', $user->questions()->where('is_template', true)->sole()->notes);
     }
@@ -329,5 +329,26 @@ class StatisticsPageTest extends TestCase
             ->call('delete', $question->id);
 
         $this->assertNull($question->fresh());
+    }
+
+    public function test_a_list_title_may_take_two_lines_and_its_note_one(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $user->questions()->create(['name' => 'Status effect on turn share by pipeline, a long title', 'notes' => 'A note']);
+
+        $html = Livewire::test(StatisticsPage::class)->html();
+
+        $this->assertMatchesRegularExpression('/<span class="[^"]*line-clamp-2[^"]*">Status effect on turn share/', $html);
+        $this->assertMatchesRegularExpression('/<span class="[^"]*line-clamp-1[^"]*">A note/', $html);
+    }
+
+    public function test_the_rename_dialog_hint_says_only_how_to_clear_the_title(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(StatisticsPage::class)
+            ->assertSee('Leave empty for no title.')
+            ->assertDontSee('The sentence is always shown beside it');
     }
 }
