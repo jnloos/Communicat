@@ -15,6 +15,7 @@ use App\Discussion\Values\ResultForm;
 use App\Discussion\Values\TagFilter;
 use App\Models\Comparison;
 use App\Models\Expert;
+use App\Models\ProjectGroup;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
@@ -142,8 +143,10 @@ class QuestionEditor extends Component
             'projectSource' => TagScope::Project->source(),
             'personaSource' => TagScope::Persona->source(),
             'runSource' => DimensionSource::Run,
+            'groupSource' => DimensionSource::Group,
             'pipelines' => app(PipelineRegistry::class)->options(),
             'models' => ModelConfig::options(),
+            'groups' => ProjectGroup::where('user_id', auth()->id())->orderBy('position')->orderBy('name')->pluck('name', 'id'),
             'expertNames' => Expert::query()->distinct()->orderBy('name')->pluck('name'),
             'compareOptions' => $this->dimensionOptions($sentence, withPersona: ! $question->metric->isRunLevel()),
             'splitOptions' => $this->dimensionOptions($sentence, withPersona: false),
@@ -151,7 +154,7 @@ class QuestionEditor extends Component
         ]);
     }
 
-    /** @return array<string, string> dimension key => its name with the source in brackets: project tags, persona tags, pipeline, model */
+    /** @return array<string, string> dimension key => its name with the source in brackets: project tags, persona tags, pipeline, model, group */
     private function dimensionOptions(QuestionSentence $sentence, bool $withPersona): array
     {
         $dimensions = [
@@ -159,6 +162,7 @@ class QuestionEditor extends Component
             ...($withPersona ? TagCategory::ofScope(TagScope::Persona)->get()->map(fn (TagCategory $c) => new Dimension(DimensionType::PersonaTag, $c->id)) : []),
             new Dimension(DimensionType::Pipeline),
             new Dimension(DimensionType::Model),
+            new Dimension(DimensionType::Group),
         ];
 
         $options = [];

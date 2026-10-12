@@ -387,4 +387,27 @@ class QuestionEditorTest extends TestCase
         $this->assertSame(['RoundRobinPipeline'], $saved['projects']['pipelines']);
         $this->assertSame('Alex Brandt', $saved['people']['expert_name']);
     }
+
+    public function test_the_menus_offer_the_users_groups_as_filter_and_dimension_and_save_the_choice(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $user->projectGroups()->create(['name' => 'Score', 'position' => 0]);
+        $other = User::factory()->create();
+        $other->projectGroups()->create(['name' => 'Secret drawer', 'position' => 0]);
+        $group = $user->projectGroups()->first();
+        $comparison = $user->comparisons()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->assertSee('Groups [Group]')
+            ->assertSee('Group [Group]')
+            ->assertSee('Score')
+            ->assertDontSee('Secret drawer')
+            ->set('question.projects.groups', [(string) $group->id])
+            ->set('question.compare_by', 'group');
+
+        $saved = $comparison->fresh()->question;
+        $this->assertSame([$group->id], $saved['projects']['groups']);
+        $this->assertSame('group', $saved['compare_by']);
+    }
 }

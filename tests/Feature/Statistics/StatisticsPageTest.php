@@ -194,4 +194,34 @@ class StatisticsPageTest extends TestCase
 
         Livewire::withQueryParams(['c' => $foreign->id])->test(StatisticsPage::class)->assertSet('comparisonId', null);
     }
+
+    public function test_saving_as_a_template_drops_the_groups_and_says_so(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $group = $user->projectGroups()->create(['name' => 'Score', 'position' => 0]);
+        $question = $user->comparisons()->create(['question' => ['compare_by' => 'group', 'split_by' => 'pipeline', 'projects' => ['groups' => [$group->id], 'pipelines' => ['ScorePipeline']]]]);
+
+        Livewire::test(StatisticsPage::class)
+            ->call('saveAsTemplate', $question->id)
+            ->assertSee('Groups are personal, so the template does not use them.');
+
+        $template = Comparison::templates()->sole()->toQuestion();
+        $this->assertSame([], $template->projects->groups);
+        $this->assertSame(['ScorePipeline'], $template->projects->pipelines);
+        $this->assertNull($template->compareBy);
+        $this->assertSame('pipeline', $template->splitBy->key());
+        $this->assertSame([$group->id], $question->fresh()->toQuestion()->projects->groups);
+    }
+
+    public function test_a_template_without_groups_gives_no_notice(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $question = $user->comparisons()->create(['question' => ['metric' => 'word_share']]);
+
+        Livewire::test(StatisticsPage::class)
+            ->call('saveAsTemplate', $question->id)
+            ->assertDontSee('Groups are personal');
+    }
 }

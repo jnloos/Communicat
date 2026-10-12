@@ -8,6 +8,7 @@ use App\Discussion\Values\TurnRange;
 use App\Livewire\Statistics\QuestionSentence;
 use App\Models\TagCategory;
 use App\Models\TagScope;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -139,5 +140,20 @@ class QuestionSentenceTest extends TestCase
         $this->assertSame('Title-holder', $parts['compare_by']);
         $this->assertSame('Pipeline', $parts['split_by']);
         $this->assertArrayNotHasKey('compare_by_source', $parts);
+    }
+
+    public function test_the_sentence_names_the_groups_of_the_user_and_the_group_dimension(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $score = $user->projectGroups()->create(['name' => 'Score', 'position' => 0]);
+        $quality = $user->projectGroups()->create(['name' => 'Quality', 'position' => 1]);
+        $sentence = app(QuestionSentence::class);
+
+        $question = Question::fromArray(['projects' => ['groups' => [$score->id, $quality->id, 9999]], 'compare_by' => 'group']);
+
+        $this->assertSame('Score, Quality, deleted group', $sentence->parts($question)['projects']);
+        $this->assertSame('Group', $sentence->parts($question)['compare_by']);
+        $this->assertSame('Turn share of everyone in Score, Quality, deleted group, compared by Group', $sentence->of($question));
     }
 }

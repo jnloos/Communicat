@@ -31,6 +31,10 @@ class StatisticsPage extends Component
 
     public string $name = '';
 
+    /** Why a saved template differs from its question; shown until the user opens something else. */
+    #[Locked]
+    public ?string $templateNotice = null;
+
     public function mount(): void
     {
         if ($this->comparisonId !== null && $this->openable($this->comparisonId) === null) {
@@ -40,6 +44,7 @@ class StatisticsPage extends Component
 
     public function open(int $comparisonId): void
     {
+        $this->templateNotice = null;
         $this->comparisonId = ($this->openable($comparisonId) ?? abort(404))->id;
     }
 
@@ -78,16 +83,21 @@ class StatisticsPage extends Component
         ])->id;
     }
 
-    /** A snapshot of the question as a fix question, titled like it, or by its sentence when untitled; the question stays the user's own. */
+    /** A snapshot of the question as a fix question (without groups, which are personal), titled like it, or by its sentence when untitled; the question stays the user's own. */
     public function saveAsTemplate(int $comparisonId): void
     {
         $question = $this->owned($comparisonId);
+        $asked = $question->toQuestion();
+        $template = $asked->withoutGroups();
 
         $this->user()->comparisons()->create([
-            'name' => Str::limit($question->name ?? app(QuestionSentence::class)->of($question->toQuestion()), 100, ''),
-            'question' => $question->question,
+            'name' => Str::limit($question->name ?? app(QuestionSentence::class)->of($asked), 100, ''),
+            'question' => $template->toArray(),
             'is_template' => true,
         ]);
+
+        // Groups are drawers in one person's sidebar: for anyone else the template would match nothing.
+        $this->templateNotice = $template == $asked ? null : __('questions.fix.without_groups');
     }
 
     public function startRenaming(int $comparisonId): void

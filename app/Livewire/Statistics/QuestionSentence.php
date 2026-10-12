@@ -12,6 +12,7 @@ use App\Discussion\Values\ProjectFilter;
 use App\Discussion\Values\Question;
 use App\Discussion\Values\QuestionResult;
 use App\Discussion\Values\TurnRange;
+use App\Models\ProjectGroup;
 use App\Models\TagCategory;
 use App\Models\TagValue;
 
@@ -66,6 +67,7 @@ final class QuestionSentence
         return match ($dimension->type) {
             DimensionType::Pipeline => __('questions.dimensions.pipeline'),
             DimensionType::Model => __('questions.dimensions.model'),
+            DimensionType::Group => __('questions.dimensions.group'),
             DimensionType::ProjectTag, DimensionType::PersonaTag => $this->category($dimension->categoryId),
         };
     }
@@ -91,6 +93,7 @@ final class QuestionSentence
             ...$this->tags($projects->tags->valueIds()),
             ...array_map(fn (string $name) => $this->pipelines->label($name), $projects->pipelines),
             ...array_map(fn (string $key) => $models[$key] ?? $key, $projects->models),
+            ...$this->groups($projects->groups),
         ]);
     }
 
@@ -119,6 +122,20 @@ final class QuestionSentence
 
         // A chip is never empty: a value that was deleted still says so, and stays until the user removes it.
         return [...$values->map(fn (TagValue $value) => $value->fullLabel())->all(), ...$deleted];
+    }
+
+    /**
+     * The viewing user's own groups, in sidebar order. An id that is no longer
+     * theirs says so, and the filter keeps matching nothing for it.
+     *
+     * @param  list<int>  $ids
+     * @return list<string>
+     */
+    private function groups(array $ids): array
+    {
+        $names = ProjectGroup::where('user_id', auth()->id())->whereKey($ids)->orderBy('position')->orderBy('name')->pluck('name')->all();
+
+        return [...$names, ...array_fill(0, count($ids) - count($names), __('questions.sentence.deleted_group'))];
     }
 
     private function category(?int $id): string

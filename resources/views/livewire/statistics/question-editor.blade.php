@@ -123,6 +123,16 @@
                         @endforeach
                     </flux:menu.checkbox.group>
                 </flux:menu.group>
+
+                @if ($groups->isNotEmpty())
+                    <flux:menu.group :heading="$groupSource->named(__('questions.controls.groups'))">
+                        <flux:menu.checkbox.group wire:model.live="question.projects.groups">
+                            @foreach ($groups as $groupId => $groupName)
+                                <flux:menu.checkbox :value="(string) $groupId" wire:key="group-{{ $groupId }}">{{ $groupName }}</flux:menu.checkbox>
+                            @endforeach
+                        </flux:menu.checkbox.group>
+                    </flux:menu.group>
+                @endif
             </flux:menu>
         </x-statistics.chip>
 
