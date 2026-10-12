@@ -7,14 +7,21 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Global tags: categories with fixed values, one set for personas and one
-     * for projects. They describe a run after the fact and never reach a model.
+     * Global tags and the statistics page's saved questions.
      *
+     * Tags: categories with fixed values, one set for personas and one for
+     * projects. They describe a run after the fact and never reach a model.
      * taggables carries the category as well as the value, so the unique key
      * (taggable, category) lets the database itself enforce "at most one value
-     * per category". Deleting a value or a category cascades to its assignments.
-     * The tagged row itself has no foreign key (it is polymorphic); HasTags
-     * removes its assignments when the model is deleted.
+     * per category". Deleting a value or a category cascades to its
+     * assignments. The tagged row itself has no foreign key (it is
+     * polymorphic); HasTags removes its assignments when the model is deleted.
+     *
+     * comparisons: one saved question per row (Question::toArray() in
+     * `question`), with an optional title (`name`; null reads as "Untitled
+     * question") and the researcher's free text (`notes`). A template is the
+     * same row with `is_template` set: everyone may open and copy it, only its
+     * owner renames or deletes it.
      */
     public function up(): void
     {
@@ -45,10 +52,21 @@ return new class extends Migration
             $table->timestamps();
             $table->unique(['taggable_type', 'taggable_id', 'tag_category_id']);
         });
+
+        Schema::create('comparisons', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->string('name', 100)->nullable();
+            $table->text('notes')->nullable();
+            $table->json('question')->nullable();
+            $table->boolean('is_template')->default(false)->index();
+            $table->timestamps();
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('comparisons');
         Schema::dropIfExists('taggables');
         Schema::dropIfExists('tag_values');
         Schema::dropIfExists('tag_categories');
