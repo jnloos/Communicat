@@ -13,6 +13,8 @@ final readonly class QuestionResult
      * @param  TurnRange  $turns  the window every run was read over, its upper bound already capped
      * @param  bool  $cappedByShortestRun  the upper bound is the shortest run's length, not what was asked
      * @param  int|null  $shortestRun  that length, whether or not it set the bound
+     * @param  int|null  $shortestRunId  the project that has it, so the hint can link to its chat
+     * @param  string|null  $shortestRunTitle  and its title
      */
     public function __construct(
         public array $panels,
@@ -23,6 +25,8 @@ final readonly class QuestionResult
         public bool $cappedByShortestRun = false,
         /** Turns the shortest run that spoke has; null when no run did. */
         public ?int $shortestRun = null,
+        public ?int $shortestRunId = null,
+        public ?string $shortestRunTitle = null,
     ) {}
 
     public function isEmpty(): bool

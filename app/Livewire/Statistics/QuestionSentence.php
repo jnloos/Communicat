@@ -53,7 +53,7 @@ final class QuestionSentence
             $question->metric->isShare() && $question->aggregate === Aggregate::PerHead ? $parts['aggregate'] : null,
             $question->projects->isEmpty() ? null : __('questions.sentence.in_projects', ['projects' => $parts['projects']]),
             // The window as asked, not as capped: the name must not change when runs are added.
-            $question->turns->isWholeRun() ? null : __('questions.sentence.over_turns', ['turns' => $parts['turns']]),
+            $question->turns->isWholeRun() ? null : $parts['turns'],
         ]));
 
         return implode(', ', array_filter([

@@ -259,8 +259,39 @@ class QuestionEditorTest extends TestCase
         $comparison = $user->comparisons()->create([]);
 
         Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
-            ->assertSee('turns 1 to 1')
-            ->assertSee('The upper bound is at most the shortest selected run, which has 1 turn.');
+            ->assertSee('over turns 1 to 1')
+            ->assertSee('The upper bound is at most the shortest selected run, “', false)
+            ->assertSee('School | with status | 60')
+            ->assertSee('”, which has 1 turn.', false);
+    }
+
+    public function test_the_shortest_run_in_the_hint_links_to_its_chat(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $run = $this->spokenRun($user);
+        $comparison = $user->comparisons()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->assertSeeHtml('href="'.route('project.show', $run->id).'"');
+    }
+
+    public function test_the_turn_fields_show_the_effective_window_as_placeholders(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $run = $this->spokenRun($user);
+        $expert = $run->contributingExperts()->first();
+
+        foreach ([2, 3, 4] as $turn) {
+            JobLog::create(['job_class' => 'x', 'project_id' => $run->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => $turn, 'expert_id' => $expert->id, 'words' => 12]);
+        }
+
+        $comparison = $user->comparisons()->create(['question' => ['turns' => ['from' => 2]]]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->assertSeeHtml('placeholder="2"')
+            ->assertSeeHtml('placeholder="4"');
     }
 
     public function test_every_listed_category_names_its_source_as_a_badge_never_in_parentheses(): void

@@ -29,7 +29,7 @@ class QuestionSentenceTest extends TestCase
         $this->assertSame('everyone', $parts['people']);
         $this->assertSame('together', $parts['aggregate']);
         $this->assertSame('all runs', $parts['projects']);
-        $this->assertSame('all turns', $parts['turns']);
+        $this->assertSame('over all turns', $parts['turns']);
         $this->assertNull($parts['compare_by']);
         $this->assertNull($parts['split_by']);
     }
@@ -79,19 +79,29 @@ class QuestionSentenceTest extends TestCase
 
     public function test_the_window_reads_as_a_range(): void
     {
-        $this->assertSame('turns 3 to 9', $this->turns(['from' => 3, 'to' => 9]));
-        $this->assertSame('turns 1 to 60', $this->turns(['to' => 60]));
+        $this->assertSame('over turns 3 to 9', $this->turns(['from' => 3, 'to' => 9]));
+        $this->assertSame('over turns 1 to 60', $this->turns(['to' => 60]));
     }
 
     public function test_an_open_window_names_only_where_it_starts(): void
     {
-        $this->assertSame('turn 4 onwards', $this->turns(['from' => 4]));
+        $this->assertSame('from turn 4 onwards', $this->turns(['from' => 4]));
+    }
+
+    public function test_the_german_window_reads_in_den_turns_and_ab(): void
+    {
+        app()->setLocale('de');
+
+        $this->assertSame('in den Turns 1 bis 60', $this->turns(['to' => 60]));
+        $this->assertSame('ab Turn 5', $this->turns(['from' => 5]));
+        $this->assertSame('in allen Turns', $this->turns([]));
+        $this->assertSame('Turn-Anteil von allen ab Turn 5', app(QuestionSentence::class)->of(Question::fromArray(['turns' => ['from' => 5]])));
     }
 
     public function test_a_bound_set_by_the_shortest_run_reads_like_any_other(): void
     {
-        $this->assertSame('turns 1 to 3', $this->turns([], $this->resultOver(new TurnRange(1, 3), true)));
-        $this->assertSame('turns 1 to 3', $this->turns(['to' => 3], $this->resultOver(new TurnRange(1, 3), false)));
+        $this->assertSame('over turns 1 to 3', $this->turns([], $this->resultOver(new TurnRange(1, 3), true)));
+        $this->assertSame('over turns 1 to 3', $this->turns(['to' => 3], $this->resultOver(new TurnRange(1, 3), false)));
     }
 
     public function test_a_name_stays_put_when_runs_come_and_go(): void
@@ -99,7 +109,7 @@ class QuestionSentenceTest extends TestCase
         $sentence = app(QuestionSentence::class);
 
         $this->assertSame('Turn share of everyone', $sentence->of(new Question));
-        $this->assertSame('Turn share of everyone over turn 4 onwards', $sentence->of(Question::fromArray(['turns' => ['from' => 4]])));
+        $this->assertSame('Turn share of everyone from turn 4 onwards', $sentence->of(Question::fromArray(['turns' => ['from' => 4]])));
     }
 
     public function test_the_sentence_names_per_head_and_leaves_gini_without_people(): void

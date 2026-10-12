@@ -58,7 +58,7 @@ final class QuestionEvaluator
         $panelRuns = [];
         $runs = $excluded = 0;
         $projects = $this->runs->for($user, $question->projects);
-        $shortest = $this->shortestRun($projects->filter(fn (Project $project) => $this->contributes($question, $project)));
+        [$shortestRun, $shortest] = $this->shortestRun($projects->filter(fn (Project $project) => $this->contributes($question, $project)));
         $turns = $shortest === null ? $question->turns : $question->turns->cappedAt($shortest);
 
         // A start past the shortest run: the capped bound cannot make the window empty for the longer
@@ -105,6 +105,8 @@ final class QuestionEvaluator
             $turns,
             $shortest !== null && ($question->turns->to === null || $question->turns->to > $shortest),
             $shortest,
+            $shortestRun?->id,
+            $shortestRun?->title,
         );
     }
 
@@ -122,16 +124,25 @@ final class QuestionEvaluator
     }
 
     /**
-     * The length of the shortest of these runs: the most turns every one can
-     * be read over. A run that never spoke has no length to cap by.
+     * The shortest of these runs: its length is the most turns every one can
+     * be read over. A run that never spoke has no length to cap by. Of equal
+     * runs the one with the lowest id is named.
      *
      * @param  Collection<int, Project>  $projects
+     * @return array{0: ?Project, 1: ?int} the run and its length, both null when no run spoke
      */
-    private function shortestRun(Collection $projects): ?int
+    private function shortestRun(Collection $projects): array
     {
         $lengths = array_filter($this->spoken->counts($projects), fn (int $length) => $length > 0);
 
-        return $lengths === [] ? null : min($lengths);
+        if ($lengths === []) {
+            return [null, null];
+        }
+
+        ksort($lengths);
+        $length = min($lengths);
+
+        return [$projects->firstWhere('id', array_search($length, $lengths, true)), $length];
     }
 
     /** @return array<int|string, non-empty-list<SpeakerShare>> group key => the group's agents in this run */

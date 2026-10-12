@@ -110,14 +110,18 @@
             </flux:checkbox.group>
         </x-statistics.chip>
 
-        <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.over') }}</span>
         <x-statistics.chip :read-only="$readOnly" :label="$parts['turns']" :muted="$current->turns->isWholeRun() && ! $result->cappedByShortestRun">
             <div class="grid grid-cols-2 gap-3">
-                <flux:input type="number" min="1" wire:model.live.debounce.500ms="question.turns.from" :label="__('questions.controls.turn_from')" />
-                <flux:input type="number" min="1" wire:model.live.debounce.500ms="question.turns.to" :label="__('questions.controls.turn_to')" />
+                {{-- Empty fields are not "nothing": the placeholders show the window the answer is read over. --}}
+                <flux:input type="number" min="1" wire:model.live.debounce.500ms="question.turns.from" :label="__('questions.controls.turn_from')" :placeholder="$result->turns->from" />
+                <flux:input type="number" min="1" wire:model.live.debounce.500ms="question.turns.to" :label="__('questions.controls.turn_to')" :placeholder="$result->turns->to" />
             </div>
             @if ($result->shortestRun !== null)
-                <flux:text size="sm">{{ trans_choice('questions.controls.turns_hint', $result->shortestRun, ['count' => $result->shortestRun]) }}</flux:text>
+                @php($run = e($result->shortestRunTitle))
+                <flux:text size="sm">{!! trans_choice('questions.controls.turns_hint', $result->shortestRun, [
+                    'count' => $result->shortestRun,
+                    'run' => '<a href="'.route('project.show', $result->shortestRunId).'" class="underline">'.$run.'</a>',
+                ]) !!}</flux:text>
             @endif
         </x-statistics.chip>
 

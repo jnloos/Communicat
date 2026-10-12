@@ -276,6 +276,18 @@ class QuestionEvaluatorTest extends TestCase
         $this->assertTrue($result->cappedByShortestRun);
     }
 
+    public function test_the_result_names_the_shortest_run(): void
+    {
+        $this->makeRun(['A'], [['A', 10], ['A', 10], ['A', 10]], ['title' => 'Long run']);
+        $short = $this->makeRun(['A'], [['A', 10], ['A', 10]], ['title' => 'Short run']);
+
+        $result = $this->answer([]);
+
+        $this->assertSame($short->id, $result->shortestRunId);
+        $this->assertSame('Short run', $result->shortestRunTitle);
+        $this->assertSame(2, $result->shortestRun);
+    }
+
     public function test_a_window_that_starts_after_the_shortest_run_excludes_every_run(): void
     {
         $this->makeRun(['A'], [['A', 10], ['A', 10], ['A', 10]]);
