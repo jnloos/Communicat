@@ -8,6 +8,7 @@ use App\Discussion\Values\DimensionType;
 use App\Discussion\Values\ModelConfig;
 use App\Models\Expert;
 use App\Models\Project;
+use App\Models\TagCategory;
 use App\Models\Taggable;
 use App\Models\TagValue;
 use LogicException;
@@ -31,7 +32,7 @@ final class DimensionValues
             DimensionType::Pipeline => $this->pipelines->options(),
             DimensionType::Model => ModelConfig::options(),
             DimensionType::ProjectTag => $this->tagLabels($dimension),
-            DimensionType::PersonaTag => $this->tagLabels($dimension) + [self::NONE => __('questions.result.no_value')],
+            DimensionType::PersonaTag => $this->tagLabels($dimension) + [self::NONE => $this->category($dimension).': '.__('questions.result.no_value')],
         };
     }
 
@@ -61,14 +62,26 @@ final class DimensionValues
         return array_combine($expertIds, array_map(fn (int $id) => $values[$id] ?? self::NONE, $expertIds));
     }
 
-    /** @return array<int, string> */
+    /**
+     * A group of a tag dimension reads "Category: value", as a tag does everywhere else.
+     *
+     * @return array<int, string>
+     */
     private function tagLabels(Dimension $dimension): array
     {
+        $category = $this->category($dimension);
+
         return TagValue::where('tag_category_id', $dimension->categoryId)
             ->orderBy('position')
             ->orderBy('id')
             ->pluck('name', 'id')
+            ->map(fn (string $name) => "{$category}: {$name}")
             ->all();
+    }
+
+    private function category(Dimension $dimension): string
+    {
+        return TagCategory::find($dimension->categoryId)?->label() ?? __('questions.sentence.deleted');
     }
 
     /**

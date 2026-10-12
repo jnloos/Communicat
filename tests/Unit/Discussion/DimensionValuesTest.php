@@ -33,7 +33,8 @@ class DimensionValuesTest extends TestCase
         $labels = $this->values()->labels(new Dimension(DimensionType::PersonaTag, $category->id));
 
         $this->assertSame([$m->id, $f->id, DimensionValues::NONE], array_keys($labels));
-        $this->assertSame(__('questions.result.no_value'), $labels[DimensionValues::NONE]);
+        $this->assertSame('Gender: m', $labels[$m->id]);
+        $this->assertSame('Gender: '.__('questions.result.no_value'), $labels[DimensionValues::NONE]);
     }
 
     public function test_pipeline_labels_come_from_the_registry(): void

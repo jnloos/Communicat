@@ -97,7 +97,7 @@ class QuestionEvaluatorTest extends TestCase
         $together = $this->answer(['compare_by' => "persona_tag:{$category->id}"])->panels[0];
         $perHead = $this->answer(['compare_by' => "persona_tag:{$category->id}", 'aggregate' => 'per_head'])->panels[0];
 
-        $this->assertSame(['titel', 'rest'], array_map(fn ($g) => $g->label, $together->groups));
+        $this->assertSame(['Rolle: titel', 'Rolle: rest'], array_map(fn ($g) => $g->label, $together->groups));
         $this->assertSame([0.5, 0.5], array_map(fn ($g) => $g->mean(), $together->groups));
         $this->assertSame([0.25, 0.75], array_map(fn ($g) => $g->fairShare(), $together->groups));
         $this->assertEqualsWithDelta(0.5 / 3, $perHead->groups[1]->mean(), 1e-9);
@@ -114,6 +114,7 @@ class QuestionEvaluatorTest extends TestCase
         $groups = $this->answer(['compare_by' => "persona_tag:{$category->id}"])->panels[0]->groups;
 
         $this->assertSame([(string) $f->id, DimensionValues::NONE], array_map(fn ($g) => $g->key, $groups));
+        $this->assertSame(['Gender: f', 'Gender: '.__('questions.result.no_value')], array_map(fn ($g) => $g->label, $groups));
         $this->assertEqualsWithDelta(1.0, $groups[0]->mean() + $groups[1]->mean(), 1e-9);
     }
 
@@ -127,7 +128,7 @@ class QuestionEvaluatorTest extends TestCase
 
         $panel = $this->answer(['people' => ['expert_name' => 'A'], 'compare_by' => "project_tag:{$category->id}"])->panels[0];
 
-        $this->assertSame(['ohne', 'mit'], array_map(fn ($g) => $g->label, $panel->groups));
+        $this->assertSame(['Bedingung: ohne', 'Bedingung: mit'], array_map(fn ($g) => $g->label, $panel->groups));
         $this->assertSame(0.25, $panel->delta());
     }
 
