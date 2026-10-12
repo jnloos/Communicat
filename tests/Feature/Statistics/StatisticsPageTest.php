@@ -331,7 +331,7 @@ class StatisticsPageTest extends TestCase
         $this->assertNull($question->fresh());
     }
 
-    public function test_a_list_title_may_take_two_lines_and_its_note_one(): void
+    public function test_a_list_title_takes_one_line_and_its_note_two(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -339,8 +339,8 @@ class StatisticsPageTest extends TestCase
 
         $html = Livewire::test(StatisticsPage::class)->html();
 
-        $this->assertMatchesRegularExpression('/<span class="[^"]*line-clamp-2[^"]*">Status effect on turn share/', $html);
-        $this->assertMatchesRegularExpression('/<span class="[^"]*line-clamp-1[^"]*">A note/', $html);
+        $this->assertMatchesRegularExpression('/<span class="[^"]*truncate[^"]*">Status effect on turn share/', $html);
+        $this->assertMatchesRegularExpression('/<span class="[^"]*line-clamp-2[^"]*">A note/', $html);
     }
 
     public function test_the_rename_dialog_hint_says_only_how_to_clear_the_title(): void
