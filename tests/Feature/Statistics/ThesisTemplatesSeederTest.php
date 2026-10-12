@@ -47,4 +47,17 @@ class ThesisTemplatesSeederTest extends TestCase
 
         $this->assertSame(['Speaking inequality with and without status by pipeline'], Comparison::templates()->pluck('name')->all());
     }
+
+    public function test_every_template_gets_a_note_and_a_rerun_restores_it(): void
+    {
+        User::factory()->create(['is_admin' => true]);
+        $this->studyTags();
+
+        $this->seed(ThesisTemplatesSeeder::class);
+        Comparison::templates()->update(['notes' => null]);
+        $this->seed(ThesisTemplatesSeeder::class);
+
+        $this->assertCount(6, Comparison::templates()->whereNotNull('notes')->get());
+        $this->assertStringContainsString('no-status minus status', Comparison::templates()->where('name', 'Status effect on turn share by pipeline')->sole()->notes);
+    }
 }
