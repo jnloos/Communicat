@@ -9,6 +9,8 @@ use App\Discussion\Values\ModelConfig;
 use App\Discussion\Values\PeopleFilter;
 use App\Discussion\Values\ProjectFilter;
 use App\Discussion\Values\Question;
+use App\Discussion\Values\QuestionResult;
+use App\Discussion\Values\TurnRange;
 use App\Models\TagCategory;
 use App\Models\TagValue;
 
@@ -20,14 +22,19 @@ final class QuestionSentence
 {
     public function __construct(private readonly PipelineRegistry $pipelines) {}
 
-    /** @return array{metric: string, people: ?string, aggregate: ?string, projects: string, compare_by: ?string, split_by: ?string} */
-    public function parts(Question $question): array
+    /**
+     * @param  QuestionResult|null  $result  what the question was read over; its window carries the upper bound the
+     *                                       shortest run set. Without it the window reads as asked.
+     * @return array{metric: string, people: ?string, aggregate: ?string, projects: string, turns: string, compare_by: ?string, split_by: ?string}
+     */
+    public function parts(Question $question, ?QuestionResult $result = null): array
     {
         return [
             'metric' => $question->metric->label(),
             'people' => $question->metric->isRunLevel() ? null : $this->people($question->people),
             'aggregate' => $question->metric->isShare() ? $question->aggregate->label() : null,
             'projects' => $this->projects($question->projects),
+            'turns' => $this->turns($result?->turns ?? $question->turns, $result?->cappedByShortestRun ?? false),
             'compare_by' => $question->compareBy === null ? null : $this->dimension($question->compareBy),
             'split_by' => $question->splitBy === null ? null : $this->dimension($question->splitBy),
         ];
@@ -41,6 +48,8 @@ final class QuestionSentence
             $parts['metric'],
             $parts['people'],
             $question->projects->isEmpty() ? null : $parts['projects'],
+            // The window as asked, not as capped: the name must not change when runs are added.
+            $question->turns->isWholeRun() ? null : $parts['turns'],
             $parts['compare_by'] === null ? null : __('questions.sentence.name_compared_by', ['dimension' => $parts['compare_by']]),
             $parts['split_by'] === null ? null : __('questions.sentence.name_split_by', ['dimension' => $parts['split_by']]),
         ]));
@@ -77,8 +86,18 @@ final class QuestionSentence
             ...$this->tags($projects->tags->valueIds()),
             ...array_map(fn (string $name) => $this->pipelines->label($name), $projects->pipelines),
             ...array_map(fn (string $key) => $models[$key] ?? $key, $projects->models),
-            ...($projects->turnBudget === null ? [] : [trans_choice('questions.sentence.turn_budget', $projects->turnBudget, ['count' => $projects->turnBudget])]),
         ]);
+    }
+
+    private function turns(TurnRange $turns, bool $cappedByShortestRun): string
+    {
+        $text = match (true) {
+            $turns->isWholeRun() => __('questions.sentence.all_turns'),
+            $turns->to === null => __('questions.sentence.from_turn', ['from' => $turns->from]),
+            default => __('questions.sentence.turns', ['from' => $turns->from, 'to' => $turns->to]),
+        };
+
+        return $cappedByShortestRun ? $text.' '.__('questions.sentence.shortest_run') : $text;
     }
 
     /**

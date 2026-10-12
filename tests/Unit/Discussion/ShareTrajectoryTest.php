@@ -6,6 +6,7 @@ use App\Discussion\Metrics\ShareTrajectory;
 use App\Discussion\Metrics\SpeakingShares;
 use App\Discussion\Values\ShareSeries;
 use App\Discussion\Values\Trajectory;
+use App\Discussion\Values\TurnRange;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
@@ -238,18 +239,39 @@ class ShareTrajectoryTest extends TestCase
         $this->trajectory(window: 0);
     }
 
-    public function test_a_turn_limit_cuts_the_curve_where_the_totals_stop(): void
+    public function test_a_window_cuts_the_curve_where_the_totals_stop(): void
     {
         $this->turn('Alice', 10);
         $this->turn('Alice', 10);
         $this->turn('Bob', 10);
         $this->turn('Bob', 10);
 
-        $trajectory = app(ShareTrajectory::class)->forProject($this->project->fresh(), turnLimit: 2);
-        $report = app(SpeakingShares::class)->forProject($this->project->fresh(), turnLimit: 2);
+        $trajectory = app(ShareTrajectory::class)->forProject($this->project->fresh(), turns: new TurnRange(1, 2));
+        $report = app(SpeakingShares::class)->forProject($this->project->fresh(), new TurnRange(1, 2));
 
         $this->assertCount(2, $trajectory->points);
         $this->assertSame(1.0, $trajectory->points[1]->share(ShareSeries::CumulativeTurns, $this->id('Alice')));
         $this->assertSame($report->speakers[0]->turnShare, $trajectory->points[1]->share(ShareSeries::CumulativeTurns, $this->id('Alice')));
+    }
+
+    public function test_a_window_starts_at_its_own_turn_with_the_real_turn_numbers(): void
+    {
+        $this->turn('Alice', 10);
+        $this->turn('Alice', 10);
+        $this->turn('Bob', 10);
+        $this->turn('Bob', 10);
+
+        $trajectory = app(ShareTrajectory::class)->forProject($this->project->fresh(), turns: new TurnRange(3, 4));
+
+        $this->assertSame([3, 4], array_map(fn ($point) => $point->turn, $trajectory->points));
+        $this->assertSame(1.0, $trajectory->points[0]->share(ShareSeries::CumulativeTurns, $this->id('Bob')));
+        $this->assertSame(0.0, $trajectory->points[1]->share(ShareSeries::CumulativeTurns, $this->id('Alice')));
+    }
+
+    public function test_a_window_beyond_the_run_has_no_points(): void
+    {
+        $this->turn('Alice', 10);
+
+        $this->assertSame([], app(ShareTrajectory::class)->forProject($this->project->fresh(), turns: new TurnRange(5, 8))->points);
     }
 }

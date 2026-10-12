@@ -4,6 +4,7 @@ namespace App\Discussion\Metrics;
 
 use App\Discussion\Values\ShareReport;
 use App\Discussion\Values\SpeakerShare;
+use App\Discussion\Values\TurnRange;
 use App\Models\Expert;
 use App\Models\Project;
 use Illuminate\Support\Facades\DB;
@@ -21,15 +22,15 @@ class SpeakingShares
     public function __construct(private SpokenTurns $spoken) {}
 
     /**
-     * @param  int|null  $turnLimit  count only the first N spoken turns; null counts the whole run.
-     *                               failedTurns stays the run's total either way.
+     * @param  TurnRange|null  $turns  count only the spoken turns inside this window; null counts the whole run.
+     *                                 failedTurns stays the run's total either way.
      */
-    public function forProject(Project $project, ?int $turnLimit = null): ShareReport
+    public function forProject(Project $project, ?TurnRange $turns = null): ShareReport
     {
-        // Aggregated over a subquery, so a limit cuts the turns before they are
+        // Aggregated over a subquery, so a window cuts the turns before they are
         // added up rather than the groups after.
         $counted = DB::query()
-            ->fromSub($this->spoken->firstTurns($project, $turnLimit)->select(['expert_id', 'words']), 'spoken')
+            ->fromSub($this->spoken->window($project, $turns)->select(['expert_id', 'words']), 'spoken')
             ->selectRaw('expert_id, count(*) as turns, sum(words) as words')
             ->groupBy('expert_id')
             ->get()

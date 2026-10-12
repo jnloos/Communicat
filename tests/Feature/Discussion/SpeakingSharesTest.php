@@ -5,11 +5,11 @@ namespace Tests\Feature\Discussion;
 use App\Discussion\Metrics\SpeakingShares;
 use App\Discussion\Values\ShareReport;
 use App\Discussion\Values\SpeakerShare;
+use App\Discussion\Values\TurnRange;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use InvalidArgumentException;
 use Tests\TestCase;
 
 class SpeakingSharesTest extends TestCase
@@ -213,14 +213,14 @@ class SpeakingSharesTest extends TestCase
         $this->assertSame(['Alice', 'Bob', 'Carol', 'Dave'], $names);
     }
 
-    public function test_a_turn_limit_counts_only_the_first_spoken_turns(): void
+    public function test_a_window_counts_only_the_turns_inside_it(): void
     {
         $this->turn('Alice', 10);
         $this->turn('Dave', null, status: 'failed');
         $this->turn('Bob', 20);
         $this->turn('Carol', 30);
 
-        $report = app(SpeakingShares::class)->forProject($this->project->fresh(), turnLimit: 2);
+        $report = app(SpeakingShares::class)->forProject($this->project->fresh(), new TurnRange(1, 2));
 
         $this->assertSame(2, $report->spokenTurns);
         $this->assertSame(30, $report->totalWords);
@@ -228,10 +228,39 @@ class SpeakingSharesTest extends TestCase
         $this->assertSame(0, $report->speakers[2]->turns);
     }
 
-    public function test_a_turn_limit_below_one_is_refused(): void
+    public function test_a_window_can_start_after_the_first_turn(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->turn('Alice', 10);
+        $this->turn('Bob', 20);
+        $this->turn('Carol', 30);
+        $this->turn('Dave', 40);
 
-        app(SpeakingShares::class)->forProject($this->project->fresh(), turnLimit: 0);
+        $report = app(SpeakingShares::class)->forProject($this->project->fresh(), new TurnRange(2, 3));
+
+        $this->assertSame(2, $report->spokenTurns);
+        $this->assertSame(50, $report->totalWords);
+        $this->assertSame(0, $report->speakers[0]->turns);
+        $this->assertSame(0.5, $report->speakers[1]->turnShare);
+    }
+
+    public function test_an_open_window_runs_to_the_end(): void
+    {
+        $this->turn('Alice', 10);
+        $this->turn('Bob', 20);
+        $this->turn('Carol', 30);
+
+        $report = app(SpeakingShares::class)->forProject($this->project->fresh(), new TurnRange(2));
+
+        $this->assertSame(2, $report->spokenTurns);
+        $this->assertSame(50, $report->totalWords);
+    }
+
+    public function test_a_window_beyond_the_run_is_empty(): void
+    {
+        $this->turn('Alice', 10);
+
+        $report = app(SpeakingShares::class)->forProject($this->project->fresh(), new TurnRange(4, 6));
+
+        $this->assertTrue($report->isEmpty());
     }
 }

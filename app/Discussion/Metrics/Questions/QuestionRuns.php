@@ -18,7 +18,6 @@ final class QuestionRuns
             ->whereTagFilter($filter->tags)
             ->when($filter->pipelines !== [], fn ($query) => $query->whereIn('pipeline', $filter->pipelines))
             ->when($filter->models !== [], fn ($query) => $query->whereIn('model', $filter->models))
-            ->when($filter->turnBudget !== null, fn ($query) => $query->where('turn_budget', $filter->turnBudget))
             ->orderBy('id')
             ->get();
     }

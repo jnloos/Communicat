@@ -22,19 +22,16 @@ class QuestionRunsTest extends TestCase
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
         $status = $condition->values()->create(['name' => 'status']);
 
-        $match = Project::factory()->create(['user_id' => $user->id, 'pipeline' => 'ScorePipeline', 'turn_budget' => 60]);
+        $match = Project::factory()->create(['user_id' => $user->id, 'pipeline' => 'ScorePipeline', 'turn_budget' => 100]);
         $match->setTag($condition, $status);
-        $otherBudget = Project::factory()->create(['user_id' => $user->id, 'pipeline' => 'ScorePipeline', 'turn_budget' => 100]);
-        $otherBudget->setTag($condition, $status);
-        Project::factory()->create(['user_id' => $user->id, 'pipeline' => 'ScorePipeline', 'turn_budget' => 60]);
-        $foreign = Project::factory()->create(['pipeline' => 'ScorePipeline', 'turn_budget' => 60]);
+        Project::factory()->create(['user_id' => $user->id, 'pipeline' => 'ScorePipeline', 'turn_budget' => 100]);
+        $foreign = Project::factory()->create(['pipeline' => 'ScorePipeline', 'turn_budget' => 100]);
         $foreign->setTag($condition, $status);
 
         $runs = app(QuestionRuns::class)->for($user, new ProjectFilter(
             tags: new TagFilter([$condition->id => [$status->id]]),
             pipelines: ['ScorePipeline', 'QualityPipeline'],
             models: ['openai-gpt-5'],
-            turnBudget: 60,
         ));
 
         $this->assertSame([$match->id], $runs->pluck('id')->all());

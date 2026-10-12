@@ -9,6 +9,7 @@ use App\Discussion\Values\Metric;
 use App\Discussion\Values\ProjectFilter;
 use App\Discussion\Values\Question;
 use App\Discussion\Values\ResultForm;
+use App\Discussion\Values\TurnRange;
 use Tests\TestCase;
 
 /** Question normalises form input into a question that can be answered. */
@@ -33,7 +34,8 @@ class QuestionTest extends TestCase
             'metric' => 'word_share',
             'people' => ['tags' => [3 => [7]], 'expert_name' => 'Alex Brandt'],
             'aggregate' => 'per_head',
-            'projects' => ['tags' => [1 => [1, 2]], 'pipelines' => ['ScorePipeline'], 'models' => ['openai-gpt-5'], 'turn_budget' => 60],
+            'projects' => ['tags' => [1 => [1, 2]], 'pipelines' => ['ScorePipeline'], 'models' => ['openai-gpt-5']],
+            'turns' => ['from' => 5, 'to' => 60],
             'compare_by' => 'project_tag:1',
             'split_by' => 'pipeline',
             'form' => 'trajectory',
@@ -95,16 +97,22 @@ class QuestionTest extends TestCase
 
     public function test_project_filter_drops_blank_input(): void
     {
-        $filter = ProjectFilter::fromArray(['tags' => [1 => ['']], 'pipelines' => ['', 'ScorePipeline', 'ScorePipeline'], 'models' => [null], 'turn_budget' => '0']);
+        $filter = ProjectFilter::fromArray(['tags' => [1 => ['']], 'pipelines' => ['', 'ScorePipeline', 'ScorePipeline'], 'models' => [null], 'turn_budget' => '60']);
 
         $this->assertSame(['ScorePipeline'], $filter->pipelines);
         $this->assertSame([], $filter->models);
-        $this->assertNull($filter->turnBudget);
+        $this->assertSame(['tags', 'pipelines', 'models'], array_keys($filter->toArray()), 'the old turn budget key is ignored and no longer written');
         $this->assertTrue($filter->tags->isEmpty());
     }
 
     public function test_aggregate_only_applies_to_shares(): void
     {
         $this->assertSame(Aggregate::Together, Question::fromArray(['metric' => 'words_per_turn', 'aggregate' => 'per_head'])->aggregate);
+    }
+
+    public function test_the_turn_window_is_normalised_like_every_other_input(): void
+    {
+        $this->assertEquals(new TurnRange, Question::fromArray([])->turns);
+        $this->assertEquals(new TurnRange(2, 2), Question::fromArray(['turns' => ['from' => '2', 'to' => '1']])->turns);
     }
 }

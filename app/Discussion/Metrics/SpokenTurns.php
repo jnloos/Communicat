@@ -2,12 +2,12 @@
 
 namespace App\Discussion\Metrics;
 
+use App\Discussion\Values\TurnRange;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
-use InvalidArgumentException;
 
 /**
  * The study's counting rules, in one place: which job_logs rows are spoken
@@ -61,19 +61,27 @@ class SpokenTurns
     }
 
     /**
-     * The first $limit spoken turns in the order they were taken, or all of
-     * them for null. The one place a turn limit is applied, so the totals and
-     * the curve of a limited run stop at the same turn.
+     * The spoken turns inside a window, in the order they were taken; the whole
+     * run for null. The one place a window is applied, so the totals and the
+     * curve of a windowed run cover the same turns. The window counts spoken
+     * turns, so a failed turn that never spoke takes no place in it.
      *
      * @return Builder<JobLog>
      */
-    public function firstTurns(Project $project, ?int $limit = null): Builder
+    public function window(Project $project, ?TurnRange $turns = null): Builder
     {
-        if ($limit !== null && $limit < 1) {
-            throw new InvalidArgumentException("A turn limit must be at least 1, got {$limit}.");
-        }
+        $turns ??= new TurnRange;
 
-        return $this->inOrder($project)->when($limit !== null, fn (Builder $turns) => $turns->limit($limit));
+        // SQLite rejects an OFFSET without a LIMIT, so an open window gets the largest one.
+        return $this->inOrder($project)
+            ->offset($turns->from - 1)
+            ->limit($turns->to === null ? PHP_INT_MAX : max(0, $turns->to - $turns->from + 1));
+    }
+
+    /** How many turns the run spoke: the length a window is capped by. */
+    public function count(Project $project): int
+    {
+        return $this->of($project)->count();
     }
 
     /**

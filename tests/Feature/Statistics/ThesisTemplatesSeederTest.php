@@ -35,7 +35,7 @@ class ThesisTemplatesSeederTest extends TestCase
         $this->assertTrue(Comparison::templates()->get()->every(fn (Comparison $template) => $template->user_id === $admin->id));
         $statusEffect = Comparison::templates()->where('name', 'Status effect on turn share by pipeline')->sole()->toQuestion();
         $this->assertSame('pipeline', $statusEffect->splitBy->key());
-        $this->assertSame(60, $statusEffect->projects->turnBudget);
+        $this->assertSame(60, $statusEffect->turns->to);
     }
 
     public function test_a_template_whose_tags_are_missing_is_skipped(): void

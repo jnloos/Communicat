@@ -14,7 +14,6 @@ use App\Discussion\Values\ResultForm;
 use App\Discussion\Values\TagFilter;
 use App\Models\Comparison;
 use App\Models\Expert;
-use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
@@ -98,13 +97,13 @@ class QuestionEditor extends Component
     {
         $question = Question::fromArray($this->question);
         $sentence = app(QuestionSentence::class);
-        $user = auth()->user();
+        $result = app(QuestionEvaluator::class)->evaluate(auth()->user(), $question);
 
         return view('livewire.statistics.question-editor', [
             'name' => $this->comparison($this->comparisonId)->name ?? $sentence->of($question),
             'current' => $question,
-            'parts' => $sentence->parts($question),
-            'result' => app(QuestionEvaluator::class)->evaluate($user, $question),
+            'parts' => $sentence->parts($question, $result),
+            'result' => $result,
             'metrics' => Metric::cases(),
             'aggregates' => Aggregate::cases(),
             'forms' => ResultForm::cases(),
@@ -112,7 +111,6 @@ class QuestionEditor extends Component
             'projectCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
             'pipelines' => app(PipelineRegistry::class)->options(),
             'models' => ModelConfig::options(),
-            'turnBudgets' => Project::query()->accessibleBy($user)->whereNotNull('turn_budget')->distinct()->orderBy('turn_budget')->pluck('turn_budget'),
             'expertNames' => Expert::query()->distinct()->orderBy('name')->pluck('name'),
             'compareOptions' => $this->dimensionOptions($sentence, withPersona: ! $question->metric->isRunLevel()),
             'splitOptions' => $this->dimensionOptions($sentence, withPersona: false),

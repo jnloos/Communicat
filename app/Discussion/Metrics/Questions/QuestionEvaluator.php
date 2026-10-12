@@ -4,6 +4,7 @@ namespace App\Discussion\Metrics\Questions;
 
 use App\Discussion\Metrics\ShareTrajectory;
 use App\Discussion\Metrics\SpeakingShares;
+use App\Discussion\Metrics\SpokenTurns;
 use App\Discussion\Values\Aggregate;
 use App\Discussion\Values\Dimension;
 use App\Discussion\Values\Metric;
@@ -19,6 +20,7 @@ use App\Discussion\Values\Trajectory;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 /**
  * Answers a question over the runs a user may read. Every number comes from
@@ -30,6 +32,8 @@ use App\Models\User;
  *   without anyone the people filter accepts, drops out and is counted.
  * - Panels and groups come in their dimension's order; one no run reached is
  *   left out.
+ * - Every run is read over the same turns: the asked window, its upper bound
+ *   capped at the shortest run that spoke.
  * - A curve point is the mean over the runs that reached that turn.
  */
 final class QuestionEvaluator
@@ -39,6 +43,7 @@ final class QuestionEvaluator
         private readonly DimensionValues $dimensions,
         private readonly SpeakingShares $shares,
         private readonly ShareTrajectory $trajectories,
+        private readonly SpokenTurns $spoken,
     ) {}
 
     public function evaluate(User $user, Question $question): QuestionResult
@@ -48,11 +53,14 @@ final class QuestionEvaluator
         /** @var array<int|string, int> $panelRuns panel => runs that counted in it */
         $panelRuns = [];
         $runs = $excluded = 0;
+        $projects = $this->runs->for($user, $question->projects);
+        $shortest = $this->shortestRun($projects);
+        $turns = $shortest === null ? $question->turns : $question->turns->cappedAt($shortest);
 
-        foreach ($this->runs->for($user, $question->projects) as $project) {
+        foreach ($projects as $project) {
             $runs++;
             $panel = $question->splitBy === null ? '' : $this->dimensions->ofProject($question->splitBy, $project);
-            $report = $this->shares->forProject($project);
+            $report = $this->shares->forProject($project, $turns);
             $groups = $panel === null || $report->isEmpty() ? [] : $this->groupsOf($question, $project, $report);
 
             if ($groups === []) {
@@ -62,7 +70,7 @@ final class QuestionEvaluator
             }
 
             $panelRuns[$panel] = ($panelRuns[$panel] ?? 0) + 1;
-            $trajectory = $question->form === ResultForm::Trajectory ? $this->trajectories->forProject($project) : null;
+            $trajectory = $question->form === ResultForm::Trajectory ? $this->trajectories->forProject($project, turns: $turns) : null;
 
             foreach ($groups as $group => $speakers) {
                 ($collected[$panel][$group] ??= new GroupCollector)->add(
@@ -79,7 +87,23 @@ final class QuestionEvaluator
             array_combine(array_map('strval', array_keys($groupLabels)), $groupLabels),
             $runs,
             $excluded,
+            $turns,
+            $turns->to !== $question->turns->to,
+            $shortest,
         );
+    }
+
+    /**
+     * The length of the shortest run that spoke at all: the most turns every
+     * run can be read over. A run that never spoke has no length to cap by.
+     *
+     * @param  Collection<int, Project>  $projects
+     */
+    private function shortestRun(Collection $projects): ?int
+    {
+        $lengths = $projects->map(fn (Project $project) => $this->spoken->count($project))->filter(fn (int $length) => $length > 0);
+
+        return $lengths->isEmpty() ? null : $lengths->min();
     }
 
     /** @return array<int|string, non-empty-list<SpeakerShare>> group key => the group's agents in this run */

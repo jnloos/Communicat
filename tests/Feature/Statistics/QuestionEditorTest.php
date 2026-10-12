@@ -187,4 +187,31 @@ class QuestionEditorTest extends TestCase
             ->assertSee('staff')
             ->assertDontSee('A curve needs at least two spoken turns.');
     }
+
+    public function test_the_turn_window_is_normalised_and_saved(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $comparison = $user->comparisons()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->set('question.turns.from', '5')
+            ->set('question.turns.to', '2')
+            ->assertSet('question.turns.from', 5)
+            ->assertSet('question.turns.to', 5);
+
+        $this->assertSame(['from' => 5, 'to' => 5], $comparison->fresh()->question['turns']);
+    }
+
+    public function test_the_sentence_shows_the_bound_the_shortest_run_sets(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $this->spokenRun($user);
+        $comparison = $user->comparisons()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['comparisonId' => $comparison->id])
+            ->assertSee('turns 1 to 1 (shortest run)')
+            ->assertSee('The upper bound is at most the shortest selected run (1 turn).');
+    }
 }

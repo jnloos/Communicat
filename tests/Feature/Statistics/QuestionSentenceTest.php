@@ -3,6 +3,8 @@
 namespace Tests\Feature\Statistics;
 
 use App\Discussion\Values\Question;
+use App\Discussion\Values\QuestionResult;
+use App\Discussion\Values\TurnRange;
 use App\Livewire\Statistics\QuestionSentence;
 use App\Models\TagCategory;
 use App\Models\TagScope;
@@ -27,6 +29,7 @@ class QuestionSentenceTest extends TestCase
         $this->assertSame('everyone', $parts['people']);
         $this->assertSame('together', $parts['aggregate']);
         $this->assertSame('all runs', $parts['projects']);
+        $this->assertSame('all turns', $parts['turns']);
         $this->assertNull($parts['compare_by']);
         $this->assertNull($parts['split_by']);
     }
@@ -39,12 +42,12 @@ class QuestionSentenceTest extends TestCase
 
         $name = app(QuestionSentence::class)->of(Question::fromArray([
             'people' => ['tags' => [$focus->id => [$true->id]]],
-            'projects' => ['turn_budget' => 60],
+            'turns' => ['to' => 60],
             'compare_by' => "project_tag:{$condition->id}",
             'split_by' => 'pipeline',
         ]));
 
-        $this->assertSame('Turn share · Focus persona: true · runs of 60 turns · by Status condition · per Pipeline', $name);
+        $this->assertSame('Turn share · Focus persona: true · turns 1 to 60 · by Status condition · per Pipeline', $name);
     }
 
     public function test_an_unknown_tag_value_reads_as_deleted_not_empty(): void
@@ -62,5 +65,40 @@ class QuestionSentenceTest extends TestCase
     public function test_gini_names_no_people(): void
     {
         $this->assertNull(app(QuestionSentence::class)->parts(Question::fromArray(['metric' => 'turn_gini']))['people']);
+    }
+
+    private function turns(array $turns, ?QuestionResult $effective = null): string
+    {
+        return app(QuestionSentence::class)->parts(Question::fromArray(['turns' => $turns]), $effective)['turns'];
+    }
+
+    private function resultOver(TurnRange $turns, bool $capped): QuestionResult
+    {
+        return new QuestionResult([], [], 0, 0, $turns, $capped);
+    }
+
+    public function test_the_window_reads_as_a_range(): void
+    {
+        $this->assertSame('turns 3 to 9', $this->turns(['from' => 3, 'to' => 9]));
+        $this->assertSame('turns 1 to 60', $this->turns(['to' => 60]));
+    }
+
+    public function test_an_open_window_names_only_where_it_starts(): void
+    {
+        $this->assertSame('from turn 4', $this->turns(['from' => 4]));
+    }
+
+    public function test_the_shortest_run_is_named_when_it_set_the_upper_bound(): void
+    {
+        $this->assertSame('turns 1 to 3 (shortest run)', $this->turns([], $this->resultOver(new TurnRange(1, 3), true)));
+        $this->assertSame('turns 1 to 3', $this->turns(['to' => 3], $this->resultOver(new TurnRange(1, 3), false)));
+    }
+
+    public function test_a_name_stays_put_when_runs_come_and_go(): void
+    {
+        $sentence = app(QuestionSentence::class);
+
+        $this->assertSame('Turn share · everyone', $sentence->of(new Question));
+        $this->assertSame('Turn share · everyone · from turn 4', $sentence->of(Question::fromArray(['turns' => ['from' => 4]])));
     }
 }

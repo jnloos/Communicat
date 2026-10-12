@@ -6,6 +6,7 @@ use App\Discussion\Values\Participant;
 use App\Discussion\Values\ShareSeries;
 use App\Discussion\Values\Trajectory;
 use App\Discussion\Values\TrajectoryPoint;
+use App\Discussion\Values\TurnRange;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
@@ -33,7 +34,7 @@ class ShareTrajectory
      * @param  int|null  $window  spoken turns a rolling share spans; null reads
      *                            config('discussion.share_window')
      */
-    public function forProject(Project $project, ?int $window = null, ?int $turnLimit = null): Trajectory
+    public function forProject(Project $project, ?int $window = null, ?TurnRange $turns = null): Trajectory
     {
         $window ??= (int) config('discussion.share_window');
 
@@ -45,21 +46,22 @@ class ShareTrajectory
             ->map(fn (Expert $expert) => new Participant($expert->id, $expert->name, $expert->pivot?->seat))
             ->all();
 
-        $turns = $this->spoken->firstTurns($project, $turnLimit)->get(['expert_id', 'words'])->all();
+        $spoken = $this->spoken->window($project, $turns)->get(['expert_id', 'words'])->all();
 
         return new Trajectory(
             participants: $participants,
             window: $window,
-            points: $this->points($turns, $participants, $window),
+            points: $this->points($spoken, $participants, $window, ($turns ?? new TurnRange)->from),
         );
     }
 
     /**
      * @param  list<JobLog>  $turns
      * @param  list<Participant>  $participants
+     * @param  int  $firstTurn  the real number of $turns[0], so a point names its turn in the run, not in the window
      * @return list<TrajectoryPoint>
      */
-    private function points(array $turns, array $participants, int $window): array
+    private function points(array $turns, array $participants, int $window, int $firstTurn): array
     {
         $ids = array_map(fn (Participant $p) => $p->expertId, $participants);
         $allTurns = $allWords = $recentTurns = $recentWords = [];
@@ -75,7 +77,7 @@ class ShareTrajectory
             }
 
             $points[] = new TrajectoryPoint(
-                turn: $index + 1,
+                turn: $firstTurn + $index,
                 speakerId: (int) $turn->expert_id,
                 shares: [
                     ShareSeries::CumulativeTurns->value => $this->shares($allTurns, $ids),

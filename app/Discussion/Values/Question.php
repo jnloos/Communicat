@@ -4,7 +4,7 @@ namespace App\Discussion\Values;
 
 /**
  * A question to the study's runs, read as one sentence: [metric] of [people]
- * ([together | per head]) in [runs], compared by [dimension], split by
+ * ([together | per head]) in [runs] over [turns], compared by [dimension], split by
  * [dimension]. fromArray() turns any form input into a question that can be
  * answered, so neither the editor nor the evaluator meets a contradiction:
  *
@@ -22,6 +22,8 @@ final readonly class Question
         public PeopleFilter $people = new PeopleFilter,
         public Aggregate $aggregate = Aggregate::Together,
         public ProjectFilter $projects = new ProjectFilter,
+        /** The window inside every run; QuestionEvaluator caps its upper bound at the shortest run read. */
+        public TurnRange $turns = new TurnRange,
         public ?Dimension $compareBy = null,
         public ?Dimension $splitBy = null,
         public ResultForm $form = ResultForm::Points,
@@ -49,6 +51,7 @@ final readonly class Question
             people: $metric->isRunLevel() ? new PeopleFilter : PeopleFilter::fromArray($data['people'] ?? []),
             aggregate: $metric->isShare() ? (Aggregate::tryFrom((string) ($data['aggregate'] ?? '')) ?? Aggregate::Together) : Aggregate::Together,
             projects: ProjectFilter::fromArray($data['projects'] ?? []),
+            turns: TurnRange::fromArray($data['turns'] ?? []),
             compareBy: $compareBy,
             splitBy: $splitBy,
             form: ResultForm::tryFrom((string) ($data['form'] ?? '')) ?? ResultForm::Points,
@@ -66,6 +69,7 @@ final readonly class Question
             'people' => $this->people->toArray(),
             'aggregate' => $this->aggregate->value,
             'projects' => $this->projects->toArray(),
+            'turns' => $this->turns->toArray(),
             'compare_by' => $this->compareBy?->key() ?? '',
             'split_by' => $this->splitBy?->key() ?? '',
             'form' => $this->form->value,
@@ -92,6 +96,6 @@ final readonly class Question
 
     public function withForm(ResultForm $form): self
     {
-        return new self($this->metric, $this->people, $this->aggregate, $this->projects, $this->compareBy, $this->splitBy, $form, $this->curve);
+        return new self($this->metric, $this->people, $this->aggregate, $this->projects, $this->turns, $this->compareBy, $this->splitBy, $form, $this->curve);
     }
 }

@@ -89,13 +89,17 @@
                     <flux:checkbox variant="pills" :value="$key" :label="$label" />
                 @endforeach
             </flux:checkbox.group>
-            <flux:select variant="listbox" wire:model.live="question.projects.turn_budget"
-                :label="__('questions.controls.turn_budget')" :placeholder="__('questions.controls.any_budget')">
-                <flux:select.option value="">{{ __('questions.controls.any_budget') }}</flux:select.option>
-                @foreach ($turnBudgets as $budget)
-                    <flux:select.option :value="$budget">{{ $budget }}</flux:select.option>
-                @endforeach
-            </flux:select>
+        </x-statistics.chip>
+
+        <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.over') }}</span>
+        <x-statistics.chip :label="$parts['turns']" :muted="$current->turns->isWholeRun() && ! $result->cappedByShortestRun">
+            <div class="grid grid-cols-2 gap-3">
+                <flux:input type="number" min="1" wire:model.live.debounce.500ms="question.turns.from" :label="__('questions.controls.turn_from')" />
+                <flux:input type="number" min="1" wire:model.live.debounce.500ms="question.turns.to" :label="__('questions.controls.turn_to')" />
+            </div>
+            @if ($result->shortestRun !== null)
+                <flux:text size="sm">{{ trans_choice('questions.controls.turns_hint', $result->shortestRun, ['count' => $result->shortestRun]) }}</flux:text>
+            @endif
         </x-statistics.chip>
 
         <br class="max-sm:hidden">

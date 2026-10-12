@@ -58,7 +58,7 @@ class ThesisTemplatesSeeder extends Seeder
         $statusEffect = fn (string $metric) => $condition && $focus ? [
             'metric' => $metric,
             'people' => ['tags' => $focus],
-            'projects' => ['turn_budget' => 60],
+            'turns' => ['to' => 60],
             'compare_by' => "project_tag:{$condition}",
             'split_by' => 'pipeline',
         ] : null;
@@ -66,7 +66,8 @@ class ThesisTemplatesSeeder extends Seeder
         $titleAgainstOthers = fn (string $aggregate, string $form) => $status && $titleHolder ? [
             'metric' => 'turn_share',
             'aggregate' => $aggregate,
-            'projects' => ['tags' => $status, 'turn_budget' => 60],
+            'projects' => ['tags' => $status],
+            'turns' => ['to' => 60],
             'compare_by' => "persona_tag:{$titleHolder}",
             'split_by' => 'pipeline',
             'form' => $form,
@@ -79,14 +80,15 @@ class ThesisTemplatesSeeder extends Seeder
             'How the floor divides between title holder and others' => $titleAgainstOthers('together', 'composition'),
             'Speaking inequality with and without status by pipeline' => $condition ? [
                 'metric' => 'turn_gini',
-                'projects' => ['turn_budget' => 60],
+                'turns' => ['to' => 60],
                 'compare_by' => "project_tag:{$condition}",
                 'split_by' => 'pipeline',
             ] : null,
             'Seeing against blind judge' => $status && $focus ? [
                 'metric' => 'turn_share',
                 'people' => ['tags' => $focus],
-                'projects' => ['tags' => $status, 'pipelines' => self::PIPELINES_JUDGE, 'turn_budget' => 60],
+                'projects' => ['tags' => $status, 'pipelines' => self::PIPELINES_JUDGE],
+                'turns' => ['to' => 60],
                 'compare_by' => 'pipeline',
             ] : null,
         ];

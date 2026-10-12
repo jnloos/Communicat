@@ -7,6 +7,7 @@ use App\Discussion\Metrics\Questions\QuestionEvaluator;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Values\Question;
 use App\Discussion\Values\QuestionResult;
+use App\Discussion\Values\TurnRange;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
@@ -121,7 +122,7 @@ class QuestionEvaluatorTest extends TestCase
         $category = TagCategory::create(['scope' => TagScope::Project, 'name' => 'bedingung']);
         $without = $category->values()->create(['name' => 'ohne']);
         $with = $category->values()->create(['name' => 'mit']);
-        $this->makeRun(['A', 'B'], [['A', 10], ['B', 10]])->setTag($category, $without);
+        $this->makeRun(['A', 'B'], [['A', 10], ['B', 10], ['A', 10], ['B', 10]])->setTag($category, $without);
         $this->makeRun(['A', 'B'], [['A', 10], ['A', 10], ['A', 10], ['B', 10]])->setTag($category, $with);
 
         $panel = $this->answer(['people' => ['expert_name' => 'A'], 'compare_by' => "project_tag:{$category->id}"])->panels[0];
@@ -218,17 +219,17 @@ class QuestionEvaluatorTest extends TestCase
         $this->assertNull($group->fairShare());
     }
 
-    public function test_the_curve_is_the_mean_over_the_runs_that_reached_each_turn(): void
+    public function test_the_curve_is_the_mean_over_the_runs_at_each_turn_of_the_shared_window(): void
     {
-        $this->makeRun(['A', 'B'], [['A', 10], ['B', 10]]);
+        $this->makeRun(['A', 'B'], [['A', 10], ['B', 10], ['B', 10]]);
         $this->makeRun(['A', 'B'], [['B', 10], ['B', 10], ['A', 10]]);
 
         $curve = $this->answer(['people' => ['expert_name' => 'A'], 'form' => 'trajectory'])->panels[0]->groups[0]->curve;
 
         $this->assertSame([1, 2, 3], array_map(fn ($point) => $point->turn, $curve));
-        // Turn 1: A has 1 in the first run, 0 in the second. Turn 2: 1/2 and 0. Turn 3: only the second run, 1/3.
-        $this->assertSame([0.5, 0.25, 1 / 3], array_map(fn ($point) => $point->mean, $curve));
-        $this->assertSame([2, 2, 1], array_map(fn ($point) => $point->n, $curve));
+        // Turn 1: A has 1 in the first run, 0 in the second. Turn 2: 1/2 and 0. Turn 3: 1/3 and 1/3.
+        $this->assertEqualsWithDelta([0.5, 0.25, 1 / 3], array_map(fn ($point) => $point->mean, $curve), 1e-9);
+        $this->assertSame([2, 2, 2], array_map(fn ($point) => $point->n, $curve));
     }
 
     public function test_another_users_runs_are_never_read(): void
@@ -236,5 +237,81 @@ class QuestionEvaluatorTest extends TestCase
         Project::factory()->create();
 
         $this->assertSame(0, $this->answer([])->runs);
+    }
+
+    public function test_every_run_is_read_over_the_turns_of_the_shortest_one(): void
+    {
+        $this->makeRun(['A', 'B'], [['A', 10], ['A', 10], ['A', 10]]);
+        $this->makeRun(['A', 'B'], [['A', 10], ['A', 10], ['A', 10], ['B', 10], ['B', 10]]);
+
+        $result = $this->answer(['people' => ['expert_name' => 'B']]);
+
+        $this->assertSame(3, $result->turns->to);
+        $this->assertTrue($result->cappedByShortestRun);
+        $this->assertSame(0.0, $result->panels[0]->groups[0]->mean(), 'B speaks only after turn 3, outside the shared window');
+        $this->assertSame(2, $result->panels[0]->groups[0]->n());
+    }
+
+    public function test_a_given_upper_bound_below_the_shortest_run_is_kept_and_not_capped(): void
+    {
+        $this->makeRun(['A', 'B'], [['A', 10], ['B', 10], ['A', 10]]);
+        $this->makeRun(['A', 'B'], [['A', 10], ['B', 10], ['A', 10], ['A', 10], ['A', 10]]);
+
+        $result = $this->answer(['turns' => ['to' => 2], 'people' => ['expert_name' => 'A']]);
+
+        $this->assertEquals(new TurnRange(1, 2), $result->turns);
+        $this->assertFalse($result->cappedByShortestRun);
+        $this->assertSame(0.5, $result->panels[0]->groups[0]->mean());
+    }
+
+    public function test_an_upper_bound_above_the_shortest_run_is_pulled_down_to_it(): void
+    {
+        $this->makeRun(['A'], [['A', 10], ['A', 10]]);
+        $this->makeRun(['A'], [['A', 10], ['A', 10], ['A', 10], ['A', 10]]);
+
+        $result = $this->answer(['turns' => ['to' => 4]]);
+
+        $this->assertSame(2, $result->turns->to);
+        $this->assertTrue($result->cappedByShortestRun);
+    }
+
+    public function test_a_window_that_starts_after_the_shortest_run_excludes_every_run(): void
+    {
+        $this->makeRun(['A'], [['A', 10], ['A', 10], ['A', 10]]);
+        $this->makeRun(['A'], [['A', 10], ['A', 10], ['A', 10], ['A', 10], ['A', 10]]);
+
+        $result = $this->answer(['turns' => ['from' => 4]]);
+
+        $this->assertTrue($result->isEmpty());
+        $this->assertSame(2, $result->runs);
+        $this->assertSame(2, $result->excluded);
+    }
+
+    public function test_a_run_without_a_spoken_turn_does_not_set_the_shortest_length(): void
+    {
+        $this->makeRun(['A'], []);
+        $this->makeRun(['A'], [['A', 10], ['A', 10], ['A', 10]]);
+
+        $result = $this->answer([]);
+
+        $this->assertSame(3, $result->turns->to);
+        $this->assertSame(1, $result->excluded);
+    }
+
+    public function test_with_no_run_the_window_stays_as_asked_and_is_not_capped(): void
+    {
+        $result = $this->answer(['turns' => ['from' => 2]]);
+
+        $this->assertEquals(new TurnRange(2), $result->turns);
+        $this->assertFalse($result->cappedByShortestRun);
+    }
+
+    public function test_the_curve_runs_over_the_window_with_its_real_turn_numbers(): void
+    {
+        $this->makeRun(['A', 'B'], [['A', 10], ['A', 10], ['B', 10], ['B', 10]]);
+
+        $group = $this->answer(['form' => 'trajectory', 'turns' => ['from' => 3]])->panels[0]->groups[0];
+
+        $this->assertSame([3, 4], array_map(fn ($mean) => $mean->turn, $group->curve));
     }
 }

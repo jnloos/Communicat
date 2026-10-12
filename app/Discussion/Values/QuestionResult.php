@@ -10,12 +10,19 @@ final readonly class QuestionResult
      * @param  array<string, string>  $groups  every group that occurs, key => label, in dimension order
      * @param  int  $runs  runs the project filter matched
      * @param  int  $excluded  of those, runs without a value
+     * @param  TurnRange  $turns  the window every run was read over, its upper bound already capped
+     * @param  bool  $cappedByShortestRun  the upper bound is the shortest run's length, not what was asked
+     * @param  int|null  $shortestRun  that length, whether or not it set the bound
      */
     public function __construct(
         public array $panels,
         public array $groups,
         public int $runs,
         public int $excluded,
+        public TurnRange $turns = new TurnRange,
+        public bool $cappedByShortestRun = false,
+        /** Turns the shortest run that spoke has; null when no run did. */
+        public ?int $shortestRun = null,
     ) {}
 
     public function isEmpty(): bool
