@@ -4,8 +4,13 @@ namespace App\Console\Commands;
 
 use App\Models\PromptLog;
 use Illuminate\Console\Command;
+use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
 
-/** Replaces prompt texts older than the retention window with a note; runs hourly. */
+/**
+ * Replaces prompt texts older than the retention window with a note, and
+ * deletes uploads left behind for as long (an uploaded bundle holds prompt
+ * texts too, and Livewire only clears old uploads on the next upload). Hourly.
+ */
 class PrunePrompts extends Command
 {
     protected $signature = 'prompts:prune';
@@ -35,7 +40,28 @@ class PrunePrompts extends Command
             ->update(['prompt' => self::marker($hours)]);
 
         $this->info("{$removed} prompt texts removed.");
+        $this->info("{$this->pruneUploads($hours)} left-behind uploads deleted.");
 
         return self::SUCCESS;
+    }
+
+    private function pruneUploads(int $hours): int
+    {
+        if (FileUploadConfiguration::isUsingS3()) {
+            return 0;
+        }
+
+        $storage = FileUploadConfiguration::storage();
+        $cutoff = now()->subHours($hours)->timestamp;
+        $deleted = 0;
+
+        foreach ($storage->allFiles(FileUploadConfiguration::path()) as $file) {
+            // Another request may have cleared it in between.
+            if ($storage->exists($file) && $storage->lastModified($file) < $cutoff && $storage->delete($file)) {
+                $deleted++;
+            }
+        }
+
+        return $deleted;
     }
 }

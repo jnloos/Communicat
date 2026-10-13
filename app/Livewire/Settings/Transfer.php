@@ -89,7 +89,10 @@ class Transfer extends Component
         $this->reset(['stage', 'report', 'bundleName']);
     }
 
-    /** The upload may hold prompt texts: delete the temporary file as soon as it has served. */
+    /**
+     * The upload may hold prompt texts: delete the temporary file as soon as it
+     * has served. An upload left behind with the page goes with prompts:prune.
+     */
     private function discardBundle(): void
     {
         $this->bundle?->delete();
