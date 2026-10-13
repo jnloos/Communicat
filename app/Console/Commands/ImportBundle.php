@@ -2,13 +2,15 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
+use App\Console\Commands\Concerns\ResolvesBundleUser;
 use App\Services\Transfer\BundleImporter;
 use App\Services\Transfer\InvalidBundle;
 use Illuminate\Console\Command;
 
 class ImportBundle extends Command
 {
+    use ResolvesBundleUser;
+
     protected $signature = 'bundle:import
         {path : The .zip to read}
         {--user= : Who becomes owner; default the first admin}
@@ -18,7 +20,10 @@ class ImportBundle extends Command
 
     public function handle(BundleImporter $importer): int
     {
-        $user = $this->option('user') ? User::findOrFail($this->option('user')) : User::where('is_admin', true)->orderBy('id')->firstOrFail();
+        $user = $this->bundleUser();
+        if ($user === null) {
+            return self::FAILURE;
+        }
 
         try {
             $report = $this->option('dry-run')
@@ -33,6 +38,10 @@ class ImportBundle extends Command
         $this->table(['Section', 'Name', 'Outcome', 'Note'], collect($report->sections())
             ->flatMap(fn (string $section) => collect($report->entries($section))->map(fn (array $entry) => [$section, $entry['name'], $entry['outcome'], $entry['note'] ?? '']))
             ->all());
+
+        if ($this->option('dry-run')) {
+            $this->line('Preview only: nothing was written.');
+        }
 
         return $report->hasFailures() ? self::FAILURE : self::SUCCESS;
     }

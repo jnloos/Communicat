@@ -110,12 +110,15 @@ class BundleRoundTripTest extends TestCase
         $path = $this->path();
         app(BundleExporter::class)->everything($admin, $path);
         $this->wipe();
+        $tables = ['tag_categories', 'tag_values', 'taggables', 'experts', 'projects', 'job_logs', 'messages', 'prompt_logs', 'project_groups', 'questions'];
+        $counts = fn () => collect($tables)->mapWithKeys(fn ($table) => [$table => DB::table($table)->count()])->all();
+        $before = $counts();
 
-        $report = app(BundleImporter::class)->preview($path, $admin);
+        $preview = app(BundleImporter::class)->preview($path, $admin);
 
-        $this->assertSame(1, $report->count(ImportReport::PROJECTS, ImportReport::CREATED));
-        $this->assertSame(0, Project::count());
-        $this->assertSame(0, Expert::count());
+        $this->assertSame($before, $counts());
+        $this->assertSame(1, $preview->count(ImportReport::PROJECTS, ImportReport::CREATED));
+        $this->assertSame($preview->toArray(), app(BundleImporter::class)->import($path, $admin)->toArray());
     }
 
     public function test_the_console_commands_export_and_import(): void
