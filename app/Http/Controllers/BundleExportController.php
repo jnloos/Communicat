@@ -35,7 +35,14 @@ class BundleExportController extends Controller
     private function download(callable $write, string $filename): BinaryFileResponse
     {
         $path = tempnam(sys_get_temp_dir(), 'bundle');
-        $write($path);
+
+        try {
+            $write($path);
+        } catch (\Throwable $e) {
+            @unlink($path);
+
+            throw $e;
+        }
 
         return response()->download($path, $filename, ['Content-Type' => 'application/zip'])->deleteFileAfterSend();
     }
