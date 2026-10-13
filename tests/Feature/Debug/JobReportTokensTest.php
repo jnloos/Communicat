@@ -48,7 +48,8 @@ class JobReportTokensTest extends TestCase
         $total = $this->jobTotal($html);
         $this->assertStringContainsString('Tokens in 2,000', $total);
         $this->assertStringContainsString('Tokens out 400', $total);
-        $this->assertStringContainsString('Reasoning tokens 64', $total);
+        $this->assertStringContainsString('Reasoning tokens ≥ 64', $total, 'One call did not report reasoning: the sum is a lower bound.');
+        $this->assertStringContainsString('title="'.e(__('debug.detail.tokens_partial')).'"', $html);
         $this->assertStringNotContainsString('Reasoning tokens –', $total);
     }
 

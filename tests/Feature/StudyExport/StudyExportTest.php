@@ -13,12 +13,13 @@ use App\Models\TagScope;
 use App\Models\User;
 use App\Services\StudyExport\StudyExport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\TemporaryFiles;
 use Tests\TestCase;
 use ZipArchive;
 
 class StudyExportTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, TemporaryFiles;
 
     /** @return array<string, list<array<string, string>>> file => rows keyed by header */
     private function read(string $path): array
@@ -51,7 +52,7 @@ class StudyExportTest extends TestCase
 
     private function export(Project $run, User $viewer): array
     {
-        $path = tempnam(sys_get_temp_dir(), 'study');
+        $path = $this->temporaryPath();
         app(StudyExport::class)->write(collect([$run]), $viewer, $path);
 
         return $this->read($path);
@@ -163,10 +164,24 @@ class StudyExportTest extends TestCase
         $this->assertSame('', $files['runs.csv'][0]['untouched']);
     }
 
+    public function test_the_archive_explains_how_to_read_it(): void
+    {
+        [$viewer, $run] = $this->makeRun();
+        $path = $this->temporaryPath();
+        app(StudyExport::class)->write(collect([$run]), $viewer, $path);
+        $zip = new ZipArchive;
+        $zip->open($path);
+
+        $readme = $zip->getFromName('README.txt');
+
+        $this->assertStringContainsString('Data > From Text/CSV', $readme);
+        $this->assertStringContainsString('never 0', $readme);
+    }
+
     public function test_empty_files_still_carry_their_header(): void
     {
         $viewer = User::factory()->create();
-        $path = tempnam(sys_get_temp_dir(), 'study');
+        $path = $this->temporaryPath();
 
         app(StudyExport::class)->write(collect(), $viewer, $path);
 
@@ -229,7 +244,7 @@ class StudyExportTest extends TestCase
             'selection' => ['selector' => 'HighestBidSelector', 'speaker_id' => $alex->id, 'signals' => ['bids' => ["E{$alex->id}" => 5, "E{$kim->id}" => 2], 'fallbacks' => []], 'tie_broken' => false]]);
         PromptLog::create(['job_log_id' => $spoken->id, 'model' => 'm', 'prompt' => 'p', 'response' => 'r', 'tokens_in' => 100, 'tokens_out' => 20, 'tokens_reasoning' => null]);
         JobLog::create(['job_class' => 'x', 'project_id' => $run->id, 'status' => 'failed', 'started_at' => now(), 'turn_index' => 2, 'error' => 'HTTP 500']);
-        $path = tempnam(sys_get_temp_dir(), 'study');
+        $path = $this->temporaryPath();
 
         app(StudyExport::class)->write(collect([$run]), $viewer, $path);
         $files = $this->read($path);
@@ -265,15 +280,16 @@ class StudyExportTest extends TestCase
 
         $this->actingAs($viewer)->get(route('statistics.export', $question))->assertOk()->assertDownload();
         $this->actingAs(User::factory()->create())->get(route('statistics.export', $question))->assertNotFound();
+        $this->actingAs($viewer)->get('/statistics/abc/export')->assertNotFound();
 
-        $path = tempnam(sys_get_temp_dir(), 'study');
+        $path = $this->temporaryPath();
         $this->artisan('study:export-turns', ['path' => $path, '--user' => $viewer->id])->assertSuccessful();
         $this->assertCount(1, $this->read($path)['runs.csv']);
     }
 
     public function test_the_command_refuses_an_unknown_user_or_a_missing_admin(): void
     {
-        $path = tempnam(sys_get_temp_dir(), 'study');
+        $path = $this->temporaryPath();
 
         $this->artisan('study:export-turns', ['path' => $path, '--user' => 999])
             ->expectsOutput('No user with id 999.')
@@ -289,7 +305,7 @@ class StudyExportTest extends TestCase
         $run = Project::factory()->create(['user_id' => $viewer->id]);
         $run->addContributingUser($viewer);
         $foreign = Project::factory()->create();
-        $path = tempnam(sys_get_temp_dir(), 'study');
+        $path = $this->temporaryPath();
 
         $this->artisan('study:export-turns', ['path' => $path, '--user' => $viewer->id, '--project' => [$run->id, 999, $foreign->id]])
             ->expectsOutput("No project the user may export with id 999, {$foreign->id}.")

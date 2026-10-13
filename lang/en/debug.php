@@ -47,5 +47,6 @@ return [
         'tokens_in' => 'Tokens in :count',
         'tokens_out' => 'Tokens out :count',
         'tokens_reasoning' => 'Reasoning tokens :count',
+        'tokens_partial' => 'Not every call of this turn reported this figure, so the sum is a lower bound.',
     ],
 ];

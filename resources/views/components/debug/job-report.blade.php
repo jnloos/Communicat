@@ -107,12 +107,14 @@
 
             {{-- A count nobody reported shows as "–", never 0: 0 would claim the call spent none. --}}
             @php($tokens = fn (?int $count) => $count === null ? '–' : \App\Discussion\Support\LocaleNumber::decimal($count, 0))
-            {{-- Summed over the job's calls; null when no call reported the figure. --}}
-            @php($tokenSum = fn (string $column) => $selected->promptLogs->whereNotNull($column)->isEmpty() ? null : (int) $selected->promptLogs->sum($column))
+            {{-- Summed over the job's calls (TokenTotal): "–" when none reported, "≥ n" when only some did. --}}
             <div data-tokens-total class="mb-3 flex flex-wrap gap-2 text-xs">
-                <flux:badge size="sm">{{ __('debug.detail.tokens_in', ['count' => $tokens($tokenSum('tokens_in'))]) }}</flux:badge>
-                <flux:badge size="sm">{{ __('debug.detail.tokens_out', ['count' => $tokens($tokenSum('tokens_out'))]) }}</flux:badge>
-                <flux:badge size="sm">{{ __('debug.detail.tokens_reasoning', ['count' => $tokens($tokenSum('tokens_reasoning'))]) }}</flux:badge>
+                @foreach (['tokens_in', 'tokens_out', 'tokens_reasoning'] as $column)
+                    @php($total = \App\Discussion\Values\TokenTotal::of($selected->promptLogs->pluck($column)))
+                    <flux:badge size="sm" :title="$total->sum !== null && ! $total->complete ? __('debug.detail.tokens_partial') : null">
+                        {{ __("debug.detail.{$column}", ['count' => ($total->sum !== null && ! $total->complete ? '≥ ' : '').$tokens($total->sum)]) }}
+                    </flux:badge>
+                @endforeach
             </div>
 
             <flux:tab.group>

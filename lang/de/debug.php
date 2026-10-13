@@ -47,5 +47,6 @@ return [
         'tokens_in' => 'Tokens ein :count',
         'tokens_out' => 'Tokens aus :count',
         'tokens_reasoning' => 'Reasoning-Tokens :count',
+        'tokens_partial' => 'Nicht jeder Aufruf dieses Turns hat diese Zahl gemeldet, die Summe ist eine Untergrenze.',
     ],
 ];

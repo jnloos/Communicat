@@ -5,6 +5,7 @@ namespace App\Services\StudyExport;
 use App\Discussion\Metrics\SpeakingShares;
 use App\Discussion\Values\ShareReport;
 use App\Discussion\Values\SpeakerShare;
+use App\Discussion\Values\TokenTotal;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Message;
@@ -28,7 +29,8 @@ use ZipArchive;
  *
  * The files are meant for R or Python, not for a spreadsheet. Text cells
  * (titles, reasoning, errors) are written verbatim: no Excel formula escaping,
- * because a prefixed quote would alter the data the analysis reads.
+ * because a prefixed quote would alter the data the analysis reads. README.txt
+ * in the archive says so to whoever opens it.
  */
 final class StudyExport
 {
@@ -43,6 +45,24 @@ final class StudyExport
     private const PARTICIPANT_TAIL = ['turns', 'turn_share', 'words', 'word_share', 'words_per_turn'];
 
     private const TURN_COLUMNS = ['run_uuid', 'turn_index', 'status', 'spoken', 'expert_uuid', 'seat', 'addressee_expert_uuid', 'words', 'chars', 'thought_words', 'thought_chars', 'tokens_in', 'tokens_out', 'tokens_reasoning', 'selector', 'fallback', 'tie_broken', 'speaker_bid', 'speaker_bid_fallback', 'judge_label', 'selector_reasoning', 'selection_json', 'error'];
+
+    /** Shipped as README.txt, so whoever opens the ZIP reads how before a spreadsheet mangles a cell. */
+    private const README = <<<'TXT'
+        Communicat study export
+
+        runs.csv          one row per run
+        participants.csv  one row per agent of a run, joined to runs by run_uuid
+        turns.csv         one row per turn, joined by run_uuid and expert_uuid
+
+        Read the files with R (readr::read_csv) or Python (pandas.read_csv): UTF-8,
+        comma separated, quoted where needed. An empty cell means "not recorded",
+        never 0.
+
+        Spreadsheets: do not open the files with a double click. Excel reads a cell
+        that starts with =, +, - or @ (some model reasoning does) as a formula and
+        shows #NAME? or a wrong value. Import them instead (Data > From Text/CSV)
+        and set the text columns to type Text.
+        TXT;
 
     public function __construct(private readonly SpeakingShares $shares) {}
 
@@ -72,6 +92,7 @@ final class StudyExport
             [...self::PARTICIPANT_HEAD, ...array_values($personaTags), ...self::PARTICIPANT_TAIL],
             $this->participantRows($runs, $reports, $personaTags)));
         $zip->addFromString('turns.csv', $this->csv(self::TURN_COLUMNS, $this->turnRows($runs, $expertUuids)));
+        $zip->addFromString('README.txt', self::README."\n");
 
         if (! $zip->close()) {
             throw new RuntimeException("Could not finish the archive {$path}.");
@@ -186,54 +207,91 @@ final class StudyExport
     /** @return list<array<string, scalar|null>> */
     private function turnRows(Collection $runs, Collection $expertUuids): array
     {
-        $uuid = fn ($id) => $id === null ? null : ($expertUuids[(int) $id] ?? null);
-        // A sum only counts when every call of the turn reported the figure.
-        $sum = fn ($row, string $field, string $reported) => $row !== null && (int) $row->calls === (int) $row->{$reported} ? $row->{$field} : null;
-        $flag = fn ($value) => $value === null ? null : ($value ? 1 : 0);
+        return $runs->flatMap(fn (Project $run) => $this->turnRowsOf($run, $expertUuids))->values()->all();
+    }
 
-        return $runs->flatMap(function (Project $run) use ($uuid, $flag, $sum) {
-            $jobs = JobLog::where('project_id', $run->id)->orderBy('turn_index')->orderBy('id')->get();
-            $tokens = DB::table('prompt_logs')->whereIn('job_log_id', $jobs->pluck('id'))->groupBy('job_log_id')
-                ->selectRaw('job_log_id, count(*) as calls,
-                    count(tokens_in) as n_in, sum(tokens_in) as tokens_in,
-                    count(tokens_out) as n_out, sum(tokens_out) as tokens_out,
-                    count(tokens_reasoning) as n_reasoning, sum(tokens_reasoning) as tokens_reasoning')
-                ->get()->keyBy('job_log_id');
-            $addressees = Message::whereIn('job_log_id', $jobs->pluck('id'))->whereNotNull('expert_id')->pluck('addressee_expert_id', 'job_log_id');
+    /** @return Collection<int, array<string, scalar|null>> */
+    private function turnRowsOf(Project $run, Collection $expertUuids): Collection
+    {
+        $jobs = JobLog::where('project_id', $run->id)->orderBy('turn_index')->orderBy('id')->get();
+        $tokens = $this->exactTokenSums($jobs->pluck('id'));
+        $addressees = Message::whereIn('job_log_id', $jobs->pluck('id'))->whereNotNull('expert_id')->pluck('addressee_expert_id', 'job_log_id');
 
-            return $jobs->map(function (JobLog $job) use ($run, $tokens, $addressees, $uuid, $flag, $sum) {
-                $selection = $job->selection ?? [];
-                $signals = $selection['signals'] ?? [];
-                $speaker = $selection['speaker_id'] ?? $job->expert_id;
-                $bid = $this->speakerBid($signals, $speaker);
+        return $jobs->map(fn (JobLog $job) => $this->turnRow($run, $job, $tokens[$job->id] ?? [], $addressees[$job->id] ?? null, $expertUuids));
+    }
 
-                return [
-                    'run_uuid' => $run->uuid,
-                    'turn_index' => $job->turn_index,
-                    'status' => $job->status,
-                    'spoken' => $job->words === null ? 0 : 1,
-                    'expert_uuid' => $uuid($job->expert_id),
-                    'seat' => $job->seat,
-                    'addressee_expert_uuid' => $uuid($addressees[$job->id] ?? null),
-                    'words' => $job->words,
-                    'chars' => $job->chars,
-                    'thought_words' => $job->thought_words,
-                    'thought_chars' => $job->thought_chars,
-                    'tokens_in' => $sum($tokens[$job->id] ?? null, 'tokens_in', 'n_in'),
-                    'tokens_out' => $sum($tokens[$job->id] ?? null, 'tokens_out', 'n_out'),
-                    'tokens_reasoning' => $sum($tokens[$job->id] ?? null, 'tokens_reasoning', 'n_reasoning'),
-                    'selector' => $selection['selector'] ?? null,
-                    'fallback' => $flag($this->fallbackOf($signals)),
-                    'tie_broken' => $flag($selection['tie_broken'] ?? null),
-                    'speaker_bid' => $bid['bid'],
-                    'speaker_bid_fallback' => $flag($bid['imputed']),
-                    'judge_label' => $signals['label'] ?? null,
-                    'selector_reasoning' => $selection['reasoning'] ?? null,
-                    'selection_json' => $selection === [] ? null : json_encode($selection, JSON_UNESCAPED_UNICODE),
-                    'error' => $job->error,
-                ];
-            });
-        })->values()->all();
+    /**
+     * Per job, each token figure summed over its calls, or null unless every
+     * call reported it (TokenTotal::exact()).
+     *
+     * @param  Collection<int, int>  $jobIds
+     * @return array<int, array<string, ?int>>
+     */
+    private function exactTokenSums(Collection $jobIds): array
+    {
+        return DB::table('prompt_logs')->whereIn('job_log_id', $jobIds)->groupBy('job_log_id')
+            ->selectRaw('job_log_id, count(*) as calls,
+                count(tokens_in) as n_in, sum(tokens_in) as tokens_in,
+                count(tokens_out) as n_out, sum(tokens_out) as tokens_out,
+                count(tokens_reasoning) as n_reasoning, sum(tokens_reasoning) as tokens_reasoning')
+            ->get()
+            ->mapWithKeys(fn (object $row) => [$row->job_log_id => [
+                'tokens_in' => $this->exactSum($row, 'tokens_in', 'n_in'),
+                'tokens_out' => $this->exactSum($row, 'tokens_out', 'n_out'),
+                'tokens_reasoning' => $this->exactSum($row, 'tokens_reasoning', 'n_reasoning'),
+            ]])->all();
+    }
+
+    private function exactSum(object $row, string $sum, string $reported): ?int
+    {
+        return (new TokenTotal($row->{$sum} === null ? null : (int) $row->{$sum}, (int) $row->calls === (int) $row->{$reported}))->exact();
+    }
+
+    /**
+     * @param  array<string, ?int>  $tokens  this job's exact token sums
+     * @return array<string, scalar|null>
+     */
+    private function turnRow(Project $run, JobLog $job, array $tokens, mixed $addresseeId, Collection $expertUuids): array
+    {
+        $selection = $job->selection ?? [];
+        $signals = $selection['signals'] ?? [];
+        $bid = $this->speakerBid($signals, $selection['speaker_id'] ?? $job->expert_id);
+
+        return [
+            'run_uuid' => $run->uuid,
+            'turn_index' => $job->turn_index,
+            'status' => $job->status,
+            'spoken' => $job->words === null ? 0 : 1,
+            'expert_uuid' => $this->uuidOf($expertUuids, $job->expert_id),
+            'seat' => $job->seat,
+            'addressee_expert_uuid' => $this->uuidOf($expertUuids, $addresseeId),
+            'words' => $job->words,
+            'chars' => $job->chars,
+            'thought_words' => $job->thought_words,
+            'thought_chars' => $job->thought_chars,
+            'tokens_in' => $tokens['tokens_in'] ?? null,
+            'tokens_out' => $tokens['tokens_out'] ?? null,
+            'tokens_reasoning' => $tokens['tokens_reasoning'] ?? null,
+            'selector' => $selection['selector'] ?? null,
+            'fallback' => self::flag($this->fallbackOf($signals)),
+            'tie_broken' => self::flag($selection['tie_broken'] ?? null),
+            'speaker_bid' => $bid['bid'],
+            'speaker_bid_fallback' => self::flag($bid['imputed']),
+            'judge_label' => $signals['label'] ?? null,
+            'selector_reasoning' => $selection['reasoning'] ?? null,
+            'selection_json' => $selection === [] ? null : json_encode($selection, JSON_UNESCAPED_UNICODE),
+            'error' => $job->error,
+        ];
+    }
+
+    private function uuidOf(Collection $expertUuids, mixed $id): ?string
+    {
+        return $id === null ? null : ($expertUuids[(int) $id] ?? null);
+    }
+
+    private static function flag(mixed $value): ?int
+    {
+        return $value === null ? null : ($value ? 1 : 0);
     }
 
     /**
