@@ -5,11 +5,14 @@ namespace App\Livewire\Settings;
 use App\Services\Transfer\BundleImporter;
 use App\Services\Transfer\ImportReport;
 use App\Services\Transfer\InvalidBundle;
+use App\Services\Transfer\UploadLimit;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
+use Throwable;
 
 /**
  * Settings → Import/Export: export everything, or upload a bundle, see what
@@ -36,13 +39,22 @@ class Transfer extends Component
 
     public function updatedBundle(): void
     {
-        $this->validate(['bundle' => 'required|file|max:12288']);
+        $this->stage = 'upload';
+        $this->report = [];
 
         try {
+            $this->validate(['bundle' => 'required|file|max:'.UploadLimit::kilobytes()]);
+
             $this->report = app(BundleImporter::class)->preview($this->bundle->getRealPath(), auth()->user())->toArray();
             $this->stage = 'preview';
+        } catch (ValidationException $exception) {
+            $this->discardBundle();
+
+            throw $exception;
         } catch (InvalidBundle $exception) {
-            $this->addError('bundle', $exception->getMessage());
+            $this->rejectBundle($exception->getMessage());
+        } catch (Throwable $exception) {
+            $this->rejectBundle(__('transfer.import.failed', ['message' => $exception->getMessage()]));
         }
     }
 
@@ -54,16 +66,33 @@ class Transfer extends Component
 
         $this->report = app(BundleImporter::class)->import($this->bundle->getRealPath(), auth()->user())->toArray();
         $this->stage = 'done';
-        $this->bundle = null;
+        $this->discardBundle();
     }
 
     public function startOver(): void
     {
-        $this->reset(['bundle', 'stage', 'report']);
+        $this->discardBundle();
+        $this->reset(['stage', 'report']);
+    }
+
+    /** The upload may hold prompt texts: delete the temporary file as soon as it has served. */
+    private function discardBundle(): void
+    {
+        $this->bundle?->delete();
+        $this->bundle = null;
+    }
+
+    private function rejectBundle(string $message): void
+    {
+        $this->discardBundle();
+        $this->addError('bundle', $message);
     }
 
     public function render(): mixed
     {
-        return view('livewire.settings.transfer', ['importReport' => ImportReport::fromArray($this->report)]);
+        return view('livewire.settings.transfer', [
+            'importReport' => ImportReport::fromArray($this->report),
+            'maxMegabytes' => UploadLimit::megabytes(),
+        ])->title(__('transfer.heading'));
     }
 }

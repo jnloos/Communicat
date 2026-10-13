@@ -15,9 +15,9 @@
                 @if ($stage === 'upload')
                     <flux:text size="sm">{{ __('transfer.import.description') }}</flux:text>
                     <flux:file-upload wire:model="bundle" accept=".zip,application/zip">
-                        <flux:file-upload.dropzone inline :heading="__('transfer.import.dropzone_heading')" :text="__('transfer.import.dropzone_text')" />
+                        <flux:file-upload.dropzone inline :heading="__('transfer.import.dropzone_heading')" :text="__('transfer.import.dropzone_text', ['mb' => $maxMegabytes])" />
                     </flux:file-upload>
-                    <flux:text size="sm" wire:loading wire:target="bundle">{{ __('transfer.import.checking') }}</flux:text>
+                    <flux:text size="sm" aria-live="polite" wire:loading wire:target="bundle">{{ __('transfer.import.checking') }}</flux:text>
                     <flux:error name="bundle" />
                 @else
                     @if ($stage === 'done')
