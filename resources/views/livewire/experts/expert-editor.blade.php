@@ -16,6 +16,10 @@
                             :aria-label="__('common.actions.more')"
                             class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"/>
                         <flux:menu>
+                            <flux:menu.item icon="arrow-down-tray" href="{{ route('experts.export', $expertId) }}">
+                                {{ __('transfer.actions.export') }}
+                            </flux:menu.item>
+                            <flux:menu.separator/>
                             <flux:menu.item variant="danger" icon="trash" wire:click="needsConfirmation('delete')">
                                 {{ __('experts.editor.delete') }}
                             </flux:menu.item>

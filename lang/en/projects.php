@@ -2,7 +2,7 @@
 
 /*
 |--------------------------------------------------------------------------
-| Projects: create, edit, import/export, contributors dialog
+| Projects: create, edit, contributors dialog
 |--------------------------------------------------------------------------
 */
 
@@ -42,26 +42,10 @@ return [
         'submit' => 'Start Discussion',
     ],
 
-    'import' => [
-        'skipped_tags' => 'These tags do not exist here and were skipped: :tags',
-        'heading' => 'Create from File',
-        'description' => 'Upload a JSON export to create a full copy as a new project.',
-        'dropzone_heading' => 'Drop a JSON export here or click to browse',
-        'dropzone_text' => 'JSON, max. 20 MB',
-        'remove_file' => 'Remove file',
-        'submit' => 'Create from File',
-        'creating' => 'Creating…',
-        'invalid_file' => 'Invalid export file.',
-        'missing_experts' => 'Some experts no longer exist and were skipped.',
-        'untitled' => 'Untitled project',
-        'copy_suffix' => '(copy)',
-    ],
-
     'edit' => [
         'heading' => 'Edit Project',
         'subheading' => 'Changes apply to the next expert turn.',
         'submit' => 'Update Project',
-        'export_json' => 'Export as JSON',
         'delete' => 'Delete Project',
     ],
 

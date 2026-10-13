@@ -195,7 +195,6 @@ return [
         'current_password' => 'Aktuelles Passwort',
         'description' => 'Beschreibung',
         'email' => 'E-Mail-Adresse',
-        'importFile' => 'Importdatei',
         'is_admin' => 'Administrator',
         'msgContent' => 'Nachricht',
         'name' => 'Name',

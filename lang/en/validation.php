@@ -203,7 +203,6 @@ return [
         'current_password' => 'current password',
         'description' => 'description',
         'email' => 'email address',
-        'importFile' => 'import file',
         'is_admin' => 'administrator',
         'msgContent' => 'message',
         'name' => 'name',

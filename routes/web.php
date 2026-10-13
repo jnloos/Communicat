@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\ProjectExportController;
+use App\Http\Controllers\BundleExportController;
 use App\Livewire\Debug\JobDebugPanel;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
@@ -44,13 +44,15 @@ Route::middleware(['auth', 'verified'])
             return view('project', compact('project'));
         })->name('show');
 
-        Route::get('{project}/export/json', [ProjectExportController::class, 'json'])
-            ->name('export.json');
+        Route::get('{project}/export', [BundleExportController::class, 'project'])->name('export');
     });
 
 Route::get('experts', function () {
     return view('experts');
 })->middleware(['auth', 'verified'])->name('experts');
+
+Route::get('experts/{expert}/export', [BundleExportController::class, 'expert'])
+    ->middleware(['auth', 'verified'])->name('experts.export');
 
 Route::middleware(['auth'])->group(function () {
     Route::redirect('settings', 'settings/profile');
@@ -60,6 +62,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
     Route::get('settings/users', Users::class)->middleware('admin')->name('settings.users');
     Route::get('settings/tags', Tags::class)->middleware('admin')->name('settings.tags');
+    Route::get('settings/export', [BundleExportController::class, 'everything'])->middleware('admin')->name('settings.export');
     Route::get('statistics', StatisticsPage::class)->middleware('verified')->name('statistics');
 
     Route::get('debug/jobs', JobDebugPanel::class)->name('debug.jobs');

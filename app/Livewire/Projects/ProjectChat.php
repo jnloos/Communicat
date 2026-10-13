@@ -25,18 +25,8 @@ class ProjectChat extends Component
 
     protected Project $project;
 
-    /**
-     * What an import that led here had to skip. Read once from the flash on
-     * mount, so it stays until dismissed instead of vanishing with the flash
-     * on the next re-render.
-     *
-     * @var list<string>
-     */
-    public array $importNotices = [];
-
     public function mount(Project $project): void
     {
-        $this->importNotices = array_values(array_filter([session('import_warning'), session('import_tags_skipped')]));
         $this->projectId = $project->id;
         $this->project = $project;
         $this->updateHasMore();

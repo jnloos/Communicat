@@ -22,4 +22,8 @@ return [
         'projects_filed' => '{0}No project filed.|{1}1 project filed.|[2,*]:count projects filed.',
         'template_as_question' => 'Imported as your own question: only admins keep templates.',
     ],
+
+    'actions' => [
+        'export' => 'Export',
+    ],
 ];

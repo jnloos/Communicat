@@ -42,26 +42,10 @@ return [
         'submit' => 'Diskussion starten',
     ],
 
-    'import' => [
-        'skipped_tags' => 'Diese Tags gibt es hier nicht; sie wurden übersprungen: :tags',
-        'heading' => 'Aus Datei erstellen',
-        'description' => 'Laden Sie einen JSON-Export hoch, um eine vollständige Kopie als neues Projekt anzulegen.',
-        'dropzone_heading' => 'JSON-Export hierher ziehen oder zum Auswählen klicken',
-        'dropzone_text' => 'JSON, max. 20 MB',
-        'remove_file' => 'Datei entfernen',
-        'submit' => 'Aus Datei erstellen',
-        'creating' => 'Wird erstellt…',
-        'invalid_file' => 'Ungültige Exportdatei.',
-        'missing_experts' => 'Einige Experten existieren nicht mehr und wurden übersprungen.',
-        'untitled' => 'Unbenanntes Projekt',
-        'copy_suffix' => '(Kopie)',
-    ],
-
     'edit' => [
         'heading' => 'Projekt bearbeiten',
         'subheading' => 'Änderungen gelten ab dem nächsten Expertenbeitrag.',
         'submit' => 'Projekt aktualisieren',
-        'export_json' => 'Als JSON exportieren',
         'delete' => 'Projekt löschen',
     ],
 

@@ -8,17 +8,13 @@ use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
-use App\Services\ProjectTransfer\ProjectImporter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
-use Livewire\WithFileUploads;
 
 class CreateProject extends Component
 {
-    use WithFileUploads;
-
     #[Validate('required|string|max:255')]
     public string $title = '';
 
@@ -39,9 +35,6 @@ class CreateProject extends Component
 
     /** @var array<int|string, int|string|null> bound by x-tags.fields; category id => value id */
     public array $tagSelection = [];
-
-    #[Validate('nullable|file|max:20480')]
-    public $importFile = null;
 
     public function mount(PipelineRegistry $pipelines): void
     {
@@ -95,31 +88,6 @@ class CreateProject extends Component
         $project->addMessage(view('components.projects.welcome-message', ['project' => $project])->render());
 
         $this->redirect(route('project.show', $project), navigate: true);
-    }
-
-    /** Alternative to save(): create a full project copy from an uploaded JSON export. */
-    public function createFromFile(): void
-    {
-        $this->validate(['importFile' => 'required|file|max:20480']);
-
-        $data = json_decode(file_get_contents($this->importFile->getRealPath()), true);
-        if (! is_array($data) || ! isset($data['project'])) {
-            $this->addError('importFile', __('projects.import.invalid_file'));
-
-            return;
-        }
-
-        $result = app(ProjectImporter::class)->import($data, auth()->user());
-
-        if (! empty($result['missing_experts'])) {
-            session()->flash('import_warning', __('projects.import.missing_experts'));
-        }
-
-        if (! empty($result['skipped_tags'])) {
-            session()->flash('import_tags_skipped', __('projects.import.skipped_tags', ['tags' => implode(', ', $result['skipped_tags'])]));
-        }
-
-        $this->redirect(route('project.show', $result['project']), navigate: true);
     }
 
     public function render(): mixed
