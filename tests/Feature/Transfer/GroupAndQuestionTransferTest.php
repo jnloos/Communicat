@@ -102,4 +102,136 @@ class GroupAndQuestionTransferTest extends TestCase
         $this->assertSame('project_tag:', $named['compare_by']);
         $this->assertNull($named['baseline']);
     }
+
+    public function test_an_admin_importer_keeps_a_template_as_a_template(): void
+    {
+        $exported = [['name' => 'T', 'notes' => null, 'is_template' => true, 'definition' => ['metric' => 'word_share']]];
+        $admin = User::factory()->create(['is_admin' => true]);
+        $report = new ImportReport;
+
+        (new QuestionTransfer)->import($exported, $admin, $report);
+
+        $this->assertTrue((bool) $admin->questions()->sole()->is_template);
+        $this->assertNull($report->entries(ImportReport::QUESTIONS)[0]['note']);
+    }
+
+    public function test_a_project_the_importer_does_not_contribute_to_is_not_filed(): void
+    {
+        $owner = User::factory()->create();
+        $reader = User::factory()->create();
+        $mine = Project::factory()->create(['user_id' => $owner->id]);
+        $mine->addContributingUser($owner);
+        $mine->addContributingUser($reader);
+        $foreign = Project::factory()->create(['user_id' => $owner->id]);
+        $foreign->addContributingUser($owner);
+        $exported = [['name' => 'G', 'projects' => [$mine->uuid, $foreign->uuid]]];
+        $report = new ImportReport;
+
+        (new GroupTransfer)->import($exported, $reader, $report);
+
+        $group = ProjectGroup::where('user_id', $reader->id)->sole();
+        $this->assertSame($group->id, $mine->groupIdFor($reader));
+        $this->assertNull($foreign->groupIdFor($reader));
+        $this->assertSame(trans_choice('transfer.notes.projects_filed', 1, ['count' => 1]), $report->entries(ImportReport::GROUPS)[0]['note']);
+    }
+
+    public function test_an_existing_group_of_the_same_name_is_reused_and_its_projects_filed(): void
+    {
+        $reader = User::factory()->create();
+        $existing = ProjectGroup::create(['user_id' => $reader->id, 'name' => 'Quality', 'position' => 1]);
+        $project = Project::factory()->create(['user_id' => $reader->id]);
+        $project->addContributingUser($reader);
+        $report = new ImportReport;
+
+        (new GroupTransfer)->import([['name' => 'Quality', 'projects' => [$project->uuid]]], $reader, $report);
+
+        $this->assertSame(1, ProjectGroup::where('user_id', $reader->id)->count());
+        $this->assertSame($existing->id, $project->groupIdFor($reader));
+        $this->assertSame(1, $report->count(ImportReport::GROUPS, ImportReport::SKIPPED));
+    }
+
+    public function test_names_resolve_to_the_new_ids_after_every_id_changed(): void
+    {
+        $user = User::factory()->create();
+        $make = function (bool $reverse) use ($user): array {
+            $projectCat = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
+            $personaCat = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'focus persona']);
+            foreach ($reverse ? ['b', 'a'] : ['a', 'b'] as $name) {
+                $projectCat->values()->create(['name' => $name]);
+            }
+            $personaCat->values()->create(['name' => 'true']);
+            $group = ProjectGroup::create(['user_id' => $user->id, 'name' => 'Quality', 'position' => 1]);
+
+            return [$projectCat, $personaCat, $group];
+        };
+        [$projectCat, $personaCat, $group] = $make(false);
+        $a = $projectCat->values()->where('name', 'a')->value('id');
+        $definition = [
+            'metric' => 'turn_share',
+            'people' => ['tags' => [$personaCat->id => [$personaCat->values()->value('id')]]],
+            'projects' => ['tags' => [$projectCat->id => [$a]], 'groups' => [$group->id]],
+            'compare_by' => "project_tag:{$projectCat->id}",
+            'baseline' => (string) $a,
+        ];
+        $named = DefinitionNames::toNames($definition, $user);
+
+        TagCategory::all()->each->delete();
+        ProjectGroup::query()->delete();
+        [$newProject, $newPersona, $newGroup] = $make(true);
+        $newA = $newProject->values()->where('name', 'a')->value('id');
+        $ids = DefinitionNames::toIds($named, $user);
+
+        $this->assertNotSame($projectCat->id, $newProject->id);
+        $this->assertSame([$newPersona->id => [$newPersona->values()->value('id')]], $ids['people']['tags']);
+        $this->assertSame([$newProject->id => [$newA]], $ids['projects']['tags']);
+        $this->assertSame([$newGroup->id], $ids['projects']['groups']);
+        $this->assertSame("project_tag:{$newProject->id}", $ids['compare_by']);
+        $this->assertSame((string) $newA, $ids['baseline']);
+    }
+
+    public function test_a_persona_and_a_project_category_of_the_same_name_stay_apart(): void
+    {
+        $user = User::factory()->create();
+        $project = TagCategory::create(['scope' => TagScope::Project, 'name' => 'kind']);
+        $persona = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'kind']);
+        $pv = $project->values()->create(['name' => 'x']);
+        $ev = $persona->values()->create(['name' => 'x']);
+        $named = [
+            'people' => ['tags' => ['kind' => ['x']]],
+            'projects' => ['tags' => ['kind' => ['x']]],
+            'compare_by' => 'project_tag:kind',
+        ];
+
+        $ids = DefinitionNames::toIds($named, $user);
+
+        $this->assertSame([$persona->id => [$ev->id]], $ids['people']['tags']);
+        $this->assertSame([$project->id => [$pv->id]], $ids['projects']['tags']);
+        $this->assertSame("project_tag:{$project->id}", $ids['compare_by']);
+    }
+
+    public function test_split_by_and_the_other_baseline_kinds_round_trip(): void
+    {
+        $user = User::factory()->create();
+        $persona = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'focus persona']);
+        $project = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
+        $project->values()->create(['name' => 'a']);
+        $group = ProjectGroup::create(['user_id' => $user->id, 'name' => 'Quality', 'position' => 1]);
+
+        $tagged = DefinitionNames::toNames(['split_by' => "persona_tag:{$persona->id}", 'compare_by' => "project_tag:{$project->id}", 'baseline' => ''], $user);
+        $this->assertSame('persona_tag:focus persona', $tagged['split_by']);
+        $this->assertSame('', $tagged['baseline']);
+        $back = DefinitionNames::toIds($tagged, $user);
+        $this->assertSame("persona_tag:{$persona->id}", $back['split_by']);
+        $this->assertSame('', $back['baseline']);
+
+        $pipeline = DefinitionNames::toNames(['compare_by' => 'pipeline', 'baseline' => 'QualityPipeline'], $user);
+        $this->assertSame('QualityPipeline', $pipeline['baseline']);
+        $this->assertSame('QualityPipeline', DefinitionNames::toIds($pipeline, $user)['baseline']);
+
+        $grouped = DefinitionNames::toNames(['compare_by' => 'group', 'baseline' => (string) $group->id], $user);
+        $this->assertSame('Quality', $grouped['baseline']);
+        $group->delete();
+        $newGroup = ProjectGroup::create(['user_id' => $user->id, 'name' => 'Quality', 'position' => 1]);
+        $this->assertSame((string) $newGroup->id, DefinitionNames::toIds($grouped, $user)['baseline']);
+    }
 }
