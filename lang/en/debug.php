@@ -34,8 +34,11 @@ return [
     'empty' => 'No jobs have run yet.',
 
     'detail' => [
-        'heading' => 'Job #:id · :class',
-        'close' => '✕ close',
+        'toggle' => 'Open or close the job',
+        'toggle_job' => 'Job #:id',
+        'turn' => 'Turn :index',
+        'speaker_seat' => ':name, seat :seat',
+        'prompt_removed' => 'Prompt text removed after the retention window (PROMPT_RETENTION_HOURS).',
         'tab_prompts' => 'Prompts (:count)',
         'tab_messages' => 'Messages (:count)',
         'prompt' => 'Prompt',
@@ -46,11 +49,10 @@ return [
         'system_sender' => 'System',
         'calls' => [
             'call' => 'Call',
-            'model' => 'Model',
             'latency' => 'Duration',
             'tokens_in' => 'Tokens in',
             'tokens_out' => 'Tokens out',
-            'tokens_reasoning' => 'Reasoning tokens',
+            'tokens_reasoning' => 'Reasoning',
             'time' => 'Time',
             'total' => 'Turn total',
             'toggle' => 'Show prompt and response',

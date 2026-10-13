@@ -24,6 +24,12 @@ class PrunePrompts extends Command
         return self::MARKER_PREFIX."{$hours} h retention]";
     }
 
+    /** Whether a stored prompt is the note this command left in place of the text. */
+    public static function removed(string $prompt): bool
+    {
+        return str_starts_with($prompt, self::MARKER_PREFIX);
+    }
+
     public function handle(): int
     {
         $hours = (int) config('discussion.prompt_retention_hours');

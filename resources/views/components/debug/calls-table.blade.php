@@ -1,3 +1,4 @@
+@use('App\Console\Commands\PrunePrompts')
 @use('App\Discussion\Support\LocaleNumber')
 @use('App\Discussion\Values\TokenTotal')
 
@@ -9,13 +10,14 @@
      A count nobody reported is "–", never 0: 0 would claim the call spent none. --}}
 @php($columns = ['tokens_in', 'tokens_out', 'tokens_reasoning'])
 @php($number = fn (?int $value) => $value === null ? null : LocaleNumber::decimal($value, 0))
+{{-- Structured output arrives as one line of JSON; indent it so its fields can be read. --}}
+@php($readable = fn (?string $text) => is_array($decoded = json_decode((string) $text, true)) ? json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : $text)
 
 <div x-data="{ open: null }">
-    <flux:table>
+    <flux:table class="[&_[data-flux-cell]]:py-1.5 [&_[data-flux-column]]:py-2">
         <flux:table.columns>
             <flux:table.column class="w-8"><span class="sr-only">{{ __('debug.detail.calls.toggle') }}</span></flux:table.column>
             <flux:table.column>{{ __('debug.detail.calls.call') }}</flux:table.column>
-            <flux:table.column>{{ __('debug.detail.calls.model') }}</flux:table.column>
             <flux:table.column align="end">{{ __('debug.detail.calls.latency') }}</flux:table.column>
             @foreach ($columns as $column)
                 <flux:table.column align="end">{{ __("debug.detail.calls.{$column}") }}</flux:table.column>
@@ -40,7 +42,6 @@
                             @endif
                         </span>
                     </flux:table.cell>
-                    <flux:table.cell class="font-mono">{{ $call->model }}</flux:table.cell>
                     <flux:table.cell align="end" class="tabular-nums">{{ $call->latency_ms === null ? '–' : $number($call->latency_ms).' ms' }}</flux:table.cell>
                     @foreach ($columns as $column)
                         <flux:table.cell align="end" class="tabular-nums">
@@ -55,11 +56,15 @@
                 </flux:table.row>
 
                 <flux:table.row wire:key="call-detail-{{ $call->id }}" x-show="open === {{ $call->id }}" x-cloak>
-                    <flux:table.cell colspan="8" class="whitespace-normal">
+                    <flux:table.cell colspan="7" class="whitespace-normal">
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
                                 <flux:heading size="sm" class="mb-1">{{ __('debug.detail.prompt') }}</flux:heading>
-                                <pre class="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-xs text-zinc-700 dark:text-zinc-300">{{ $call->prompt }}</pre>
+                                @if (PrunePrompts::removed((string) $call->prompt))
+                                    <flux:text size="sm" class="italic">{{ __('debug.detail.prompt_removed') }}</flux:text>
+                                @else
+                                    <pre class="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-xs text-zinc-700 dark:text-zinc-300">{{ $readable($call->prompt) }}</pre>
+                                @endif
                             </div>
                             <div>
                                 @if ($call->status === 'failed')
@@ -67,7 +72,7 @@
                                     <pre class="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-xs text-red-700 dark:text-red-300">{{ $call->error }}</pre>
                                 @else
                                     <flux:heading size="sm" class="mb-1">{{ __('debug.detail.response') }}</flux:heading>
-                                    <pre class="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-xs text-zinc-700 dark:text-zinc-300">{{ $call->response }}</pre>
+                                    <pre class="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-xs text-zinc-700 dark:text-zinc-300">{{ $readable($call->response) }}</pre>
                                 @endif
                             </div>
                         </div>
@@ -78,7 +83,7 @@
             {{-- The turn's sum (TokenTotal): "–" when no call reported, "≥ n" when only some did. --}}
             <flux:table.row data-tokens-total>
                 <flux:table.cell></flux:table.cell>
-                <flux:table.cell variant="strong" colspan="3">{{ __('debug.detail.calls.total') }}</flux:table.cell>
+                <flux:table.cell variant="strong" colspan="2">{{ __('debug.detail.calls.total') }}</flux:table.cell>
                 @foreach ($columns as $column)
                     @php($total = TokenTotal::of($calls->pluck($column)))
                     <flux:table.cell variant="strong" align="end" class="tabular-nums" data-total="{{ $column }}">
