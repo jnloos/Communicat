@@ -29,6 +29,11 @@ class BundleReaderTest extends TestCase
         return $path;
     }
 
+    private function manifest(): string
+    {
+        return json_encode(['schema_version' => Bundle::SCHEMA_VERSION]);
+    }
+
     public function test_what_the_writer_puts_the_reader_reads(): void
     {
         $path = $this->path();
@@ -52,32 +57,82 @@ class BundleReaderTest extends TestCase
         file_put_contents($path, '{"project": {}}');
 
         $this->expectException(InvalidBundle::class);
+        $this->expectExceptionMessage(__('transfer.errors.not_a_zip'));
         BundleReader::open($path);
     }
 
-    public function test_a_bundle_without_manifest_is_refused(): void
+    public function test_a_bundle_without_manifest_says_so(): void
     {
         $this->expectException(InvalidBundle::class);
+        $this->expectExceptionMessage(__('transfer.errors.no_manifest'));
         BundleReader::open($this->zip(['experts.json' => '[]']));
     }
 
     public function test_an_unknown_schema_version_is_refused(): void
     {
         $this->expectException(InvalidBundle::class);
+        $this->expectExceptionMessage(__('transfer.errors.unknown_schema'));
         BundleReader::open($this->zip(['manifest.json' => '{"schema_version": 99}']));
     }
 
     public function test_an_unexpected_or_escaping_path_is_refused(): void
     {
-        $manifest = json_encode(['schema_version' => Bundle::SCHEMA_VERSION]);
-
-        foreach (['../evil.json', '/etc/passwd', 'projects/../x.json', 'notes.txt'] as $name) {
+        foreach (['../evil.json', '/etc/passwd', 'projects/../x.json', 'notes.txt', "manifest.json\n"] as $name) {
             try {
-                BundleReader::open($this->zip(['manifest.json' => $manifest, $name => '{}']));
+                BundleReader::open($this->zip(['manifest.json' => $this->manifest(), $name => '{}']));
                 $this->fail("{$name} was accepted");
             } catch (InvalidBundle) {
                 $this->addToAssertionCount(1);
             }
         }
+    }
+
+    public function test_an_entry_that_is_not_a_json_object_or_list_is_refused(): void
+    {
+        foreach (['"x"', '5'] as $content) {
+            $reader = BundleReader::open($this->zip(['manifest.json' => $this->manifest(), 'experts.json' => $content]));
+
+            try {
+                $reader->json('experts.json');
+                $this->fail("{$content} was accepted");
+            } catch (InvalidBundle $exception) {
+                $this->assertSame(__('transfer.errors.broken_entry', ['name' => 'experts.json']), $exception->getMessage());
+            }
+        }
+    }
+
+    public function test_an_entry_that_exists_but_cannot_be_read_is_refused(): void
+    {
+        $path = $this->path();
+        $zip = new ZipArchive;
+        $zip->open($path, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        $zip->addFromString('manifest.json', $this->manifest());
+        $zip->addFromString('experts.json', '[]');
+        $zip->setEncryptionName('experts.json', ZipArchive::EM_AES_256, 'secret');
+        $zip->close();
+
+        $reader = BundleReader::open($path);
+
+        $this->expectException(InvalidBundle::class);
+        $this->expectExceptionMessage(__('transfer.errors.broken_entry', ['name' => 'experts.json']));
+        $reader->json('experts.json');
+    }
+
+    public function test_a_bundle_over_the_total_size_limit_is_refused(): void
+    {
+        $path = $this->zip(['manifest.json' => $this->manifest()]);
+
+        $this->expectException(InvalidBundle::class);
+        $this->expectExceptionMessage(__('transfer.errors.too_large'));
+        BundleReader::open($path, maxUnpackedBytes: 10);
+    }
+
+    public function test_an_entry_over_the_single_entry_limit_is_refused(): void
+    {
+        $path = $this->zip(['manifest.json' => $this->manifest()]);
+
+        $this->expectException(InvalidBundle::class);
+        $this->expectExceptionMessage(__('transfer.errors.too_large'));
+        BundleReader::open($path, maxEntryBytes: 10);
     }
 }

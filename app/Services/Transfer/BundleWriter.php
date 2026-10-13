@@ -21,11 +21,18 @@ final class BundleWriter
 
     public function put(string $entry, array $data): void
     {
-        $this->zip->addFromString($entry, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+        $content = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+
+        if ($this->zip->addFromString($entry, $content) === false) {
+            throw new RuntimeException("Cannot add {$entry} to the bundle");
+        }
     }
 
     public function close(): void
     {
-        $this->zip->close();
+        // ZipArchive reports a failed write as a warning first; the return value is the real answer.
+        if (@$this->zip->close() === false) {
+            throw new RuntimeException('Cannot finish the bundle');
+        }
     }
 }

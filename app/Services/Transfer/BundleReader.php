@@ -6,16 +6,19 @@ use JsonException;
 use ZipArchive;
 
 /**
- * Opens a bundle and checks it before anything reads it: a ZIP, a manifest of
- * this schema version, only the expected entry names (no paths that could
- * escape) and a bounded unpacked size.
+ * Opens a bundle and checks it before anything reads it: a ZIP, only the
+ * expected entry names (no paths that could escape), bounded sizes, a manifest
+ * of this schema version. Entries are checked again when they are read.
  */
 final class BundleReader
 {
     private function __construct(private readonly ZipArchive $zip, private readonly array $manifest) {}
 
-    public static function open(string $path): self
-    {
+    public static function open(
+        string $path,
+        int $maxUnpackedBytes = Bundle::MAX_UNPACKED_BYTES,
+        int $maxEntryBytes = Bundle::MAX_ENTRY_BYTES,
+    ): self {
         $zip = new ZipArchive;
 
         if ($zip->open($path, ZipArchive::RDONLY) !== true) {
@@ -31,15 +34,22 @@ final class BundleReader
                 throw new InvalidBundle(__('transfer.errors.unexpected_entry', ['name' => $stat['name']]));
             }
 
+            if ($stat['size'] > $maxEntryBytes) {
+                throw new InvalidBundle(__('transfer.errors.too_large'));
+            }
+
             $unpacked += $stat['size'];
         }
 
-        if ($unpacked > Bundle::MAX_UNPACKED_BYTES) {
+        if ($unpacked > $maxUnpackedBytes) {
             throw new InvalidBundle(__('transfer.errors.too_large'));
         }
 
-        $reader = new self($zip, []);
-        $manifest = $reader->json(Bundle::MANIFEST);
+        if ($zip->locateName(Bundle::MANIFEST) === false) {
+            throw new InvalidBundle(__('transfer.errors.no_manifest'));
+        }
+
+        $manifest = (new self($zip, []))->json(Bundle::MANIFEST);
 
         if (($manifest['schema_version'] ?? null) !== Bundle::SCHEMA_VERSION) {
             throw new InvalidBundle(__('transfer.errors.unknown_schema'));
@@ -53,13 +63,17 @@ final class BundleReader
         return $this->manifest;
     }
 
-    /** An entry's JSON; [] when the entry is absent. */
+    /** An entry's JSON; [] only when the entry is absent. */
     public function json(string $entry): array
     {
+        if ($this->zip->locateName($entry) === false) {
+            return [];
+        }
+
         $content = $this->zip->getFromName($entry);
 
         if ($content === false) {
-            return [];
+            throw new InvalidBundle(__('transfer.errors.broken_entry', ['name' => $entry]));
         }
 
         try {
@@ -68,7 +82,11 @@ final class BundleReader
             throw new InvalidBundle(__('transfer.errors.broken_entry', ['name' => $entry]));
         }
 
-        return is_array($data) ? $data : [];
+        if (! is_array($data)) {
+            throw new InvalidBundle(__('transfer.errors.broken_entry', ['name' => $entry]));
+        }
+
+        return $data;
     }
 
     /** @return list<string> */
