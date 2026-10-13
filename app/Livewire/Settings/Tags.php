@@ -6,6 +6,8 @@ use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
+use App\Services\Tags\TagNames;
+use Closure;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
@@ -159,7 +161,17 @@ class Tags extends Component
     /** @return array<int, mixed> */
     private function categoryNameRules(TagScope $scope, ?int $ignoreId = null): array
     {
-        return ['required', 'string', 'max:50', Rule::unique('tag_categories', 'name')->where('scope', $scope->value)->ignore($ignoreId)];
+        return ['required', 'string', 'max:50', Rule::unique('tag_categories', 'name')->where('scope', $scope->value)->ignore($ignoreId),
+            // Names match ignoring case and space (TagNames), so "Status" and "status " would be one category to an import or an export column.
+            function (string $attribute, mixed $value, Closure $fail) use ($scope, $ignoreId) {
+                $clash = TagCategory::ofScope($scope)->whereKeyNot($ignoreId)->pluck('name')
+                    ->contains(fn (string $name) => TagNames::same($name, (string) $value));
+
+                if ($clash) {
+                    $fail('validation.unique')->translate();
+                }
+            },
+        ];
     }
 
     /** @return array<int, mixed> */

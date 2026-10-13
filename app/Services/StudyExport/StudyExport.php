@@ -80,7 +80,9 @@ final class StudyExport
 
     /**
      * Header per category id. A category named like a fixed column of the file
-     * gets the prefix "tag ", so neither overwrites the other.
+     * gets the prefix "tag "; one named like an earlier category (ignoring case
+     * and surrounding space, as tag names match everywhere) gets its id as a
+     * suffix. No header overwrites another.
      *
      * @param  Collection<int, TagCategory>  $categories
      * @param  list<string>  $fixed
@@ -88,11 +90,23 @@ final class StudyExport
      */
     private function tagColumns(Collection $categories, array $fixed): array
     {
-        $taken = array_map(fn (string $name) => mb_strtolower($name), $fixed);
+        $normal = fn (string $name) => mb_strtolower(trim($name));
+        $fixed = array_map($normal, $fixed);
+        $taken = $fixed;
+        $headers = [];
 
-        return $categories->mapWithKeys(fn (TagCategory $category) => [
-            $category->id => in_array(mb_strtolower(trim($category->name)), $taken, true) ? 'tag '.$category->name : $category->name,
-        ])->all();
+        foreach ($categories as $category) {
+            $header = in_array($normal($category->name), $fixed, true) ? 'tag '.$category->name : $category->name;
+
+            if (in_array($normal($header), $taken, true)) {
+                $header = trim($category->name)." #{$category->id}";
+            }
+
+            $headers[$category->id] = $header;
+            $taken[] = $normal($header);
+        }
+
+        return $headers;
     }
 
     public function filename(string $label): string

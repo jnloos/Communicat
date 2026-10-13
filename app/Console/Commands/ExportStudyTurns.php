@@ -30,9 +30,19 @@ class ExportStudyTurns extends Command
         }
 
         $filter = ProjectFilter::fromArray(['groups' => $this->option('group'), 'pipelines' => $this->option('pipeline')]);
+        $requested = array_map('intval', $this->option('project'));
         $selected = $runs->for($user, $filter)
-            ->when($this->option('project') !== [], fn ($all) => $all->whereIn('id', array_map('intval', $this->option('project'))))
+            ->when($requested !== [], fn ($all) => $all->whereIn('id', $requested))
             ->values();
+
+        // A project that is missing or not the user's would otherwise drop out silently.
+        $missing = array_diff($requested, $runs->for($user, ProjectFilter::fromArray([]))->pluck('id')->all());
+
+        if ($missing !== []) {
+            $this->error('No project the user may export with id '.implode(', ', $missing).'.');
+
+            return self::FAILURE;
+        }
 
         $export->write($selected, $user, (string) $this->argument('path'));
         $this->info("{$selected->count()} runs written to {$this->argument('path')}.");

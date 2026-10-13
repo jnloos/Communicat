@@ -283,6 +283,33 @@ class StudyExportTest extends TestCase
             ->assertFailed();
     }
 
+    public function test_the_command_refuses_a_project_the_user_cannot_export(): void
+    {
+        $viewer = User::factory()->create();
+        $run = Project::factory()->create(['user_id' => $viewer->id]);
+        $run->addContributingUser($viewer);
+        $foreign = Project::factory()->create();
+        $path = tempnam(sys_get_temp_dir(), 'study');
+
+        $this->artisan('study:export-turns', ['path' => $path, '--user' => $viewer->id, '--project' => [$run->id, 999, $foreign->id]])
+            ->expectsOutput("No project the user may export with id 999, {$foreign->id}.")
+            ->assertFailed();
+    }
+
+    public function test_tag_categories_that_differ_only_in_case_get_separate_columns(): void
+    {
+        [$viewer, $run] = $this->makeRun();
+        $upper = TagCategory::create(['scope' => TagScope::Project, 'name' => 'Status']);
+        $lower = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status ']);
+        $run->setTag($upper, $upper->values()->create(['name' => 'title']));
+        $run->setTag($lower, $lower->values()->create(['name' => 'none']));
+
+        $row = $this->export($run, $viewer)['runs.csv'][0];
+
+        $this->assertSame('title', $row['Status']);
+        $this->assertSame('none', $row["status #{$lower->id}"]);
+    }
+
     public function test_an_imputed_bid_is_empty_and_flagged_and_a_read_bid_is_not(): void
     {
         [$viewer, $run, $alex, $kim] = $this->makeRun();

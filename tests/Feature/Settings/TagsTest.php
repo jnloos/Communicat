@@ -114,6 +114,19 @@ class TagsTest extends TestCase
         $this->assertSame(2, TagCategory::count());
     }
 
+    public function test_a_category_name_is_unique_regardless_of_case_and_space(): void
+    {
+        $this->actingAs($this->admin());
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'Geschlecht']);
+
+        Livewire::test(Tags::class)
+            ->set('newCategoryName', ' geschlecht')->call('createCategory')->assertHasErrors('newCategoryName')
+            ->call('startRenamingCategory', $category->id)
+            ->set('renameTo', 'GESCHLECHT')->call('saveCategoryName')->assertHasNoErrors();
+
+        $this->assertSame(['GESCHLECHT'], TagCategory::pluck('name')->all());
+    }
+
     public function test_renaming_inline_keeps_the_assignments(): void
     {
         $this->actingAs($this->admin());
