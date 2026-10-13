@@ -21,7 +21,13 @@ class Expert extends Model
      */
     protected function promptId(): Attribute
     {
-        return Attribute::get(fn () => 'E'.$this->id);
+        return Attribute::get(fn () => self::tokenFor($this->id));
+    }
+
+    /** The token for an expert id, the one format every prompt, selection signal and export uses. */
+    public static function tokenFor(int $id): string
+    {
+        return 'E'.$id;
     }
 
     protected $fillable = [

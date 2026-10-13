@@ -204,6 +204,11 @@ class ProjectTransferTest extends TestCase
             'selector' => 'BlindJudgeSelector', 'speaker_id' => $k,
             'signals' => ['label' => 'B', 'order' => ['A' => $a, 'B' => $k, 'C' => 999], 'fallback' => false, 'token' => "E{$k}"], 'tie_broken' => false,
         ])]);
+        $project->update(['run_config' => ['pipeline' => 'ScorePipeline', 'cast' => [
+            ['seat' => 1, 'expert_id' => $a, 'name' => 'Alex', 'role' => 'CEO'],
+            ['seat' => 2, 'expert_id' => $k, 'name' => 'Kim', 'role' => 'Lead'],
+            ['seat' => 3, 'expert_id' => 999, 'name' => 'Gone', 'role' => 'Lead'],
+        ]]]);
         $data = (new ProjectTransfer)->export($project->fresh());
         $experts = [(new ExpertTransfer)->export($alex), (new ExpertTransfer)->export($kim)];
         Project::query()->delete();
@@ -229,6 +234,9 @@ class ProjectTransferTest extends TestCase
         $this->assertSame(['A' => $newA, 'B' => $newK, 'C' => 999], $second['signals']['order']);
         $this->assertSame("E{$newK}", $second['signals']['token']);
         $this->assertSame('B', $second['signals']['label']);
+        $this->assertSame([$newA, $newK, 999], array_column($copy->run_config['cast'], 'expert_id'));
+        $this->assertSame(['Alex', 'Kim', 'Gone'], array_column($copy->run_config['cast'], 'name'));
+        $this->assertSame('ScorePipeline', $copy->run_config['pipeline']);
     }
 
     public function test_a_same_id_import_leaves_the_selection_byte_identical(): void
@@ -237,6 +245,8 @@ class ProjectTransferTest extends TestCase
         $project = $this->studyRun($owner);
         $before = JobLog::where('project_id', $project->id)->orderBy('turn_index')->pluck('selection')->all();
         $raw = DB::table('job_logs')->where('project_id', $project->id)->orderBy('turn_index')->pluck('selection')->all();
+        $project->update(['run_config' => ['pipeline' => 'ScorePipeline', 'cast' => [['seat' => 1, 'expert_id' => $project->experts()->first()->id, 'name' => 'Alex', 'role' => 'CEO']]]]);
+        $config = DB::table('projects')->where('id', $project->id)->value('run_config');
         $data = (new ProjectTransfer)->export($project);
         $project->delete();
 
@@ -244,6 +254,7 @@ class ProjectTransferTest extends TestCase
 
         $this->assertSame($before, JobLog::where('project_id', $copy->id)->orderBy('turn_index')->pluck('selection')->all());
         $this->assertSame($raw, DB::table('job_logs')->where('project_id', $copy->id)->orderBy('turn_index')->pluck('selection')->all());
+        $this->assertSame($config, DB::table('projects')->where('id', $copy->id)->value('run_config'));
     }
 
     public function test_a_project_without_a_valid_uuid_is_skipped(): void
