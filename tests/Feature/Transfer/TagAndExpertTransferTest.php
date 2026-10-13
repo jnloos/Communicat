@@ -1,0 +1,73 @@
+<?php
+
+namespace Tests\Feature\Transfer;
+
+use App\Models\Expert;
+use App\Models\TagCategory;
+use App\Models\TagScope;
+use App\Services\Transfer\ExpertTransfer;
+use App\Services\Transfer\ImportReport;
+use App\Services\Transfer\TagTransfer;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class TagAndExpertTransferTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_tags_are_exported_by_name_and_missing_ones_are_created_on_import(): void
+    {
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
+        $category->values()->create(['name' => 'true']);
+        $category->values()->create(['name' => 'false']);
+        $exported = (new TagTransfer)->export();
+
+        $this->assertSame([['scope' => 'persona', 'name' => 'title-holder', 'values' => ['true', 'false']]], $exported);
+
+        $exported[] = ['scope' => 'project', 'name' => 'status condition', 'values' => ['status']];
+        $report = new ImportReport;
+        (new TagTransfer)->import($exported, $report);
+
+        $this->assertSame(2, TagCategory::count());
+        $this->assertSame(['status'], TagCategory::where('name', 'status condition')->sole()->values()->pluck('name')->all());
+        $this->assertSame(1, $report->count(ImportReport::TAGS, ImportReport::CREATED));
+        $this->assertSame(1, $report->count(ImportReport::TAGS, ImportReport::SKIPPED));
+    }
+
+    public function test_an_expert_round_trips_with_its_tags_and_keeps_a_free_id(): void
+    {
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
+        $value = $category->values()->create(['name' => 'true']);
+        $expert = Expert::factory()->create(['name' => 'Alex Brandt', 'role' => 'CEO']);
+        $expert->setTag($category, $value);
+        $data = (new ExpertTransfer)->export($expert);
+        $expert->delete();
+
+        $report = new ImportReport;
+        (new ExpertTransfer)->import($data, $report);
+
+        $copy = Expert::where('uuid', $data['uuid'])->sole();
+        $this->assertSame($data['id'], $copy->id);
+        $this->assertSame('CEO', $copy->role);
+        $this->assertSame(['title-holder' => 'true'], $data['tags']);
+        $this->assertTrue($copy->tagValues()->whereKey($value->id)->exists());
+        $this->assertSame(1, $report->count(ImportReport::EXPERTS, ImportReport::CREATED));
+    }
+
+    public function test_an_existing_expert_is_skipped_and_a_taken_id_gets_a_new_one_with_a_note(): void
+    {
+        $expert = Expert::factory()->create();
+        $data = (new ExpertTransfer)->export($expert);
+        $report = new ImportReport;
+
+        (new ExpertTransfer)->import($data, $report);
+        $this->assertSame(1, $report->count(ImportReport::EXPERTS, ImportReport::SKIPPED));
+
+        $data['uuid'] = '0b9f2d4c-1a3e-4f5b-8c6d-7e8f9a0b1c2d';
+        (new ExpertTransfer)->import($data, $report);
+        $copy = Expert::where('uuid', $data['uuid'])->sole();
+
+        $this->assertNotSame($expert->id, $copy->id);
+        $this->assertNotNull($report->entries(ImportReport::EXPERTS)[1]['note']);
+    }
+}

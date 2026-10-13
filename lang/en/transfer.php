@@ -9,4 +9,12 @@ return [
         'unknown_schema' => 'The bundle was written by an incompatible version of this app.',
         'broken_entry' => 'The bundle file :name is not valid JSON.',
     ],
+    'notes' => [
+        'already_there' => 'Already in the database.',
+        'no_uuid' => 'The entry has no uuid.',
+        'tag_unreadable' => 'The tag category has no name or an unknown scope.',
+        'tag_values_added' => 'Values added: :values',
+        'tags_skipped' => 'Tags not set: :tags',
+        'new_expert_id' => 'Id :old was taken, so the expert got id :new. Selector signals and E-tokens in its logs still name :old.',
+    ],
 ];
