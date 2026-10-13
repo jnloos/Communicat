@@ -26,12 +26,6 @@ class JobLog extends Model
         return $this->belongsTo(Project::class);
     }
 
-    /** Who spoke this turn; null until the speaker is chosen, or when the turn failed before. */
-    public function expert(): BelongsTo
-    {
-        return $this->belongsTo(Expert::class);
-    }
-
     public function promptLogs(): HasMany
     {
         return $this->hasMany(PromptLog::class);

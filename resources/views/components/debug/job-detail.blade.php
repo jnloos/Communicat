@@ -1,19 +1,7 @@
 @props(['job'])
 
-{{-- One opened job: what the turn was, its error, its calls and the message it wrote. --}}
+{{-- One opened job: its error, its calls and the message it wrote. --}}
 <div class="space-y-4 py-2">
-    <div class="flex flex-wrap items-center gap-2">
-        @if ($job->turn_index !== null)
-            <flux:badge size="sm">{{ __('debug.detail.turn', ['index' => $job->turn_index]) }}</flux:badge>
-        @endif
-        @if ($job->expert)
-            <flux:badge size="sm" icon="user">{{ $job->seat !== null ? __('debug.detail.speaker_seat', ['name' => $job->expert->name, 'seat' => $job->seat]) : $job->expert->name }}</flux:badge>
-        @endif
-        @foreach ($job->promptLogs->pluck('model')->filter()->unique() as $model)
-            <flux:badge size="sm" icon="cpu-chip">{{ $model }}</flux:badge>
-        @endforeach
-    </div>
-
     @if ($job->status === 'failed' && filled($job->error))
         <flux:callout variant="danger" icon="exclamation-triangle" :heading="__('debug.detail.error')">
             <flux:callout.text class="max-h-48 overflow-auto whitespace-pre-wrap font-mono text-xs">{{ $job->error }}</flux:callout.text>

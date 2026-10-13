@@ -75,7 +75,6 @@ trait ShowsJobReport
             'logs' => JobLog::where('project_id', $projectId)->latest()->take(self::JOB_LIMIT)->get(),
             'selected' => $this->selectedJobId === null ? null : JobLog::with([
                 'project',
-                'expert',
                 'promptLogs:id,job_log_id,label,model,prompt,response,latency_ms,created_at,status,error,provider,checkpoint,purpose,reasoning,tokens_in,tokens_out,tokens_reasoning',
                 'messages.expert',
                 'messages.addressee',

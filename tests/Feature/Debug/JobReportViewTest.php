@@ -3,7 +3,6 @@
 namespace Tests\Feature\Debug;
 
 use App\Console\Commands\PrunePrompts;
-use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
 use App\Models\PromptLog;
@@ -24,7 +23,7 @@ class JobReportViewTest extends TestCase
     {
         return view('components.debug.job-report', [
             'logs' => collect([...$others, $selected]),
-            'selected' => $selected->load('project', 'expert', 'promptLogs', 'messages'),
+            'selected' => $selected->load('project', 'promptLogs', 'messages'),
             'selectedJobId' => $selected->id,
         ])->render();
     }
@@ -42,7 +41,7 @@ class JobReportViewTest extends TestCase
 
         $html = view('components.debug.job-report', [
             'logs' => collect([$above, $open, $below]),
-            'selected' => $open->load('project', 'expert', 'promptLogs', 'messages'),
+            'selected' => $open->load('project', 'promptLogs', 'messages'),
             'selectedJobId' => $open->id,
         ])->render();
 
@@ -61,19 +60,6 @@ class JobReportViewTest extends TestCase
 
         $this->assertMatchesRegularExpression('/aria-label="Job #'.$open->id.'"[^>]*aria-expanded="true"|aria-expanded="true"[^>]*aria-label="Job #'.$open->id.'"/', $html);
         $this->assertMatchesRegularExpression('/aria-label="Job #'.$closed->id.'"[^>]*aria-expanded="false"|aria-expanded="false"[^>]*aria-label="Job #'.$closed->id.'"/', $html);
-    }
-
-    public function test_the_detail_names_turn_speaker_and_model(): void
-    {
-        $expert = Expert::factory()->create(['name' => 'Robin']);
-        $job = $this->job(['turn_index' => 59, 'expert_id' => $expert->id, 'seat' => 3]);
-        PromptLog::create(['job_log_id' => $job->id, 'model' => 'gpt-5-mini', 'prompt' => 'p', 'response' => 'r']);
-
-        $html = $this->render($job);
-
-        $this->assertStringContainsString('Turn 59', $html);
-        $this->assertStringContainsString('Robin, seat 3', $html);
-        $this->assertStringContainsString('gpt-5-mini', $html);
     }
 
     public function test_a_json_answer_is_indented_and_a_removed_prompt_says_so(): void

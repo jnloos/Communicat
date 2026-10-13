@@ -36,8 +36,6 @@ return [
     'detail' => [
         'toggle' => 'Open or close the job',
         'toggle_job' => 'Job #:id',
-        'turn' => 'Turn :index',
-        'speaker_seat' => ':name, seat :seat',
         'prompt_removed' => 'Prompt text removed after the retention window (PROMPT_RETENTION_HOURS).',
         'tab_prompts' => 'Prompts (:count)',
         'tab_messages' => 'Messages (:count)',
