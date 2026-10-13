@@ -270,4 +270,36 @@ class StudyExportTest extends TestCase
         $this->artisan('study:export-turns', ['path' => $path, '--user' => $viewer->id])->assertSuccessful();
         $this->assertCount(1, $this->read($path)['runs.csv']);
     }
+
+    public function test_an_imputed_bid_is_empty_and_flagged_and_a_read_bid_is_not(): void
+    {
+        [$viewer, $run, $alex, $kim] = $this->makeRun();
+        $bids = ['bids' => ["E{$alex->id}" => 1, "E{$kim->id}" => 4], 'fallbacks' => ["E{$alex->id}"]];
+        $this->log($run, 1, ['expert_id' => $alex->id, 'words' => 5, 'chars' => 20, 'selection' => ['selector' => 'HighestBidSelector', 'speaker_id' => $alex->id, 'signals' => $bids, 'tie_broken' => false]]);
+        $this->log($run, 2, ['expert_id' => $kim->id, 'words' => 5, 'chars' => 20, 'selection' => ['selector' => 'HighestBidSelector', 'speaker_id' => $kim->id, 'signals' => $bids, 'tie_broken' => false]]);
+        $this->log($run, 3, ['expert_id' => $kim->id, 'words' => 5, 'chars' => 20, 'selection' => ['selector' => 'RoundRobinSelector', 'speaker_id' => $kim->id, 'signals' => ['seat' => 2], 'tie_broken' => false]]);
+
+        $files = $this->export($run, $viewer);
+        [$imputed, $read, $other] = $files['turns.csv'];
+        $header = array_keys($imputed);
+
+        $this->assertSame(array_search('speaker_bid', $header) + 1, array_search('speaker_bid_fallback', $header));
+        $this->assertSame('', $imputed['speaker_bid']);
+        $this->assertSame('1', $imputed['speaker_bid_fallback']);
+        $this->assertSame('4', $read['speaker_bid']);
+        $this->assertSame('0', $read['speaker_bid_fallback']);
+        $this->assertSame('', $other['speaker_bid']);
+        $this->assertSame('', $other['speaker_bid_fallback']);
+    }
+
+    public function test_participants_carry_the_expert_token_of_this_database(): void
+    {
+        [$viewer, $run, $alex, $kim] = $this->makeRun();
+
+        $participants = $this->export($run, $viewer)['participants.csv'];
+        $header = array_keys($participants[0]);
+
+        $this->assertSame(array_search('expert_uuid', $header) + 1, array_search('expert_token', $header));
+        $this->assertSame(["E{$alex->id}", "E{$kim->id}"], array_column($participants, 'expert_token'));
+    }
 }

@@ -28,9 +28,9 @@ final class StudyExport
 {
     private const RUN_COLUMNS = ['run_uuid', 'title', 'description', 'pipeline', 'model', 'seed', 'turn_budget', 'group', 'turns_spoken', 'turns_failed_without_speaking'];
 
-    private const PARTICIPANT_COLUMNS = ['run_uuid', 'expert_uuid', 'name', 'role', 'seat', 'turns', 'turn_share', 'words', 'word_share', 'words_per_turn'];
+    private const PARTICIPANT_COLUMNS = ['run_uuid', 'expert_uuid', 'expert_token', 'name', 'role', 'seat', 'turns', 'turn_share', 'words', 'word_share', 'words_per_turn'];
 
-    private const TURN_COLUMNS = ['run_uuid', 'turn_index', 'status', 'spoken', 'expert_uuid', 'seat', 'addressee_expert_uuid', 'words', 'chars', 'thought_words', 'thought_chars', 'tokens_in', 'tokens_out', 'tokens_reasoning', 'selector', 'fallback', 'tie_broken', 'speaker_bid', 'judge_label', 'selector_reasoning', 'selection_json', 'error'];
+    private const TURN_COLUMNS = ['run_uuid', 'turn_index', 'status', 'spoken', 'expert_uuid', 'seat', 'addressee_expert_uuid', 'words', 'chars', 'thought_words', 'thought_chars', 'tokens_in', 'tokens_out', 'tokens_reasoning', 'selector', 'fallback', 'tie_broken', 'speaker_bid', 'speaker_bid_fallback', 'judge_label', 'selector_reasoning', 'selection_json', 'error'];
 
     public function __construct(private readonly SpeakingShares $shares, private readonly SpokenTurns $spoken) {}
 
@@ -55,7 +55,7 @@ final class StudyExport
             [...array_slice(self::RUN_COLUMNS, 0, 8), ...array_values($runTags), ...array_slice(self::RUN_COLUMNS, 8)],
             $this->runRows($runs, $viewer, $groups, $runTags)));
         $zip->addFromString('participants.csv', $this->csv(
-            [...array_slice(self::PARTICIPANT_COLUMNS, 0, 5), ...array_values($personaTags), ...array_slice(self::PARTICIPANT_COLUMNS, 5)],
+            [...array_slice(self::PARTICIPANT_COLUMNS, 0, 6), ...array_values($personaTags), ...array_slice(self::PARTICIPANT_COLUMNS, 6)],
             $this->participantRows($runs, $personaTags)));
         $zip->addFromString('turns.csv', $this->csv(self::TURN_COLUMNS, $this->turnRows($runs, $expertUuids)));
 
@@ -136,6 +136,7 @@ final class StudyExport
                 $row = [
                     'run_uuid' => $run->uuid,
                     'expert_uuid' => $expert->uuid,
+                    'expert_token' => $expert->promptId,
                     'name' => $expert->name,
                     'role' => $expert->role,
                     'seat' => $expert->pivot?->seat,
@@ -179,6 +180,7 @@ final class StudyExport
                 $signals = $selection['signals'] ?? [];
                 $speaker = $selection['speaker_id'] ?? $job->expert_id;
                 $fallback = array_key_exists('fallback', $signals) ? $signals['fallback'] : (array_key_exists('fallbacks', $signals) ? $signals['fallbacks'] !== [] : null);
+                $bid = $this->speakerBid($signals, $speaker);
 
                 return [
                     'run_uuid' => $run->uuid,
@@ -198,7 +200,8 @@ final class StudyExport
                     'selector' => $selection['selector'] ?? null,
                     'fallback' => $flag($fallback),
                     'tie_broken' => $flag($selection['tie_broken'] ?? null),
-                    'speaker_bid' => $speaker === null ? null : ($signals['bids']["E{$speaker}"] ?? null),
+                    'speaker_bid' => $bid['bid'],
+                    'speaker_bid_fallback' => $flag($bid['imputed']),
                     'judge_label' => $signals['label'] ?? null,
                     'selector_reasoning' => $selection['reasoning'] ?? null,
                     'selection_json' => $selection === [] ? null : json_encode($selection, JSON_UNESCAPED_UNICODE),
@@ -206,6 +209,29 @@ final class StudyExport
                 ];
             });
         })->values()->all();
+    }
+
+    /**
+     * The speaker's bid in a Score turn. An unreadable bid is stored as the
+     * lowest priority and its token listed in fallbacks: that 1 was never
+     * said, so it stays empty and is flagged as imputed. Not a Score turn:
+     * both null.
+     *
+     * @return array{bid: int|null, imputed: bool|null}
+     */
+    private function speakerBid(array $signals, mixed $speaker): array
+    {
+        if (! is_array($signals['bids'] ?? null) || $speaker === null) {
+            return ['bid' => null, 'imputed' => null];
+        }
+
+        $token = "E{$speaker}";
+
+        if (in_array($token, $signals['fallbacks'] ?? [], true)) {
+            return ['bid' => null, 'imputed' => true];
+        }
+
+        return ['bid' => $signals['bids'][$token] ?? null, 'imputed' => false];
     }
 
     /**
