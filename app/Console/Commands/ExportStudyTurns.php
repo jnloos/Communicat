@@ -2,14 +2,16 @@
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\ResolvesActingUser;
 use App\Discussion\Metrics\Questions\QuestionRuns;
 use App\Discussion\Values\ProjectFilter;
-use App\Models\User;
 use App\Services\StudyExport\StudyExport;
 use Illuminate\Console\Command;
 
 class ExportStudyTurns extends Command
 {
+    use ResolvesActingUser;
+
     protected $signature = 'study:export-turns
         {path : Where to write the .zip with runs.csv, participants.csv and turns.csv}
         {--project=* : Only these projects}
@@ -21,7 +23,12 @@ class ExportStudyTurns extends Command
 
     public function handle(QuestionRuns $runs, StudyExport $export): int
     {
-        $user = $this->option('user') ? User::findOrFail($this->option('user')) : User::where('is_admin', true)->orderBy('id')->firstOrFail();
+        $user = $this->actingUser();
+
+        if ($user === null) {
+            return self::FAILURE;
+        }
+
         $filter = ProjectFilter::fromArray(['groups' => $this->option('group'), 'pipelines' => $this->option('pipeline')]);
         $selected = $runs->for($user, $filter)
             ->when($this->option('project') !== [], fn ($all) => $all->whereIn('id', array_map('intval', $this->option('project'))))

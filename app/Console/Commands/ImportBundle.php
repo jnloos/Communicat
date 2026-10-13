@@ -2,14 +2,14 @@
 
 namespace App\Console\Commands;
 
-use App\Console\Commands\Concerns\ResolvesBundleUser;
+use App\Console\Commands\Concerns\ResolvesActingUser;
 use App\Services\Transfer\BundleImporter;
 use App\Services\Transfer\InvalidBundle;
 use Illuminate\Console\Command;
 
 class ImportBundle extends Command
 {
-    use ResolvesBundleUser;
+    use ResolvesActingUser;
 
     protected $signature = 'bundle:import
         {path : The .zip to read}
@@ -20,7 +20,7 @@ class ImportBundle extends Command
 
     public function handle(BundleImporter $importer): int
     {
-        $user = $this->bundleUser();
+        $user = $this->actingUser();
         if ($user === null) {
             return self::FAILURE;
         }

@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Console\Commands\Concerns\ResolvesBundleUser;
+use App\Console\Commands\Concerns\ResolvesActingUser;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Services\Transfer\BundleExporter;
@@ -10,7 +10,7 @@ use Illuminate\Console\Command;
 
 class ExportBundle extends Command
 {
-    use ResolvesBundleUser;
+    use ResolvesActingUser;
 
     protected $signature = 'bundle:export
         {path : Where to write the .zip}
@@ -51,7 +51,7 @@ class ExportBundle extends Command
         }
 
         if ($requested === 0) {
-            $user = $this->bundleUser();
+            $user = $this->actingUser();
             if ($user === null) {
                 return self::FAILURE;
             }

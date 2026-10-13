@@ -4,10 +4,13 @@ namespace App\Console\Commands\Concerns;
 
 use App\Models\User;
 
-/** The user a bundle command acts for: --user, or the first admin. */
-trait ResolvesBundleUser
+/**
+ * The user a command acts for: --user, or the first admin. Null after an
+ * error message when there is none; the command then fails.
+ */
+trait ResolvesActingUser
 {
-    private function bundleUser(): ?User
+    private function actingUser(): ?User
     {
         $id = $this->option('user');
 

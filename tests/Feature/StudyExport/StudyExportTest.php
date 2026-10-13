@@ -271,6 +271,18 @@ class StudyExportTest extends TestCase
         $this->assertCount(1, $this->read($path)['runs.csv']);
     }
 
+    public function test_the_command_refuses_an_unknown_user_or_a_missing_admin(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'study');
+
+        $this->artisan('study:export-turns', ['path' => $path, '--user' => 999])
+            ->expectsOutput('No user with id 999.')
+            ->assertFailed();
+        $this->artisan('study:export-turns', ['path' => $path])
+            ->expectsOutput('No admin user; pass --user.')
+            ->assertFailed();
+    }
+
     public function test_an_imputed_bid_is_empty_and_flagged_and_a_read_bid_is_not(): void
     {
         [$viewer, $run, $alex, $kim] = $this->makeRun();
