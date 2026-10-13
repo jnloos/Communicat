@@ -19,5 +19,7 @@ return [
         'unknown_pipeline' => 'Unbekannte Pipeline :pipeline.',
         'unknown_model' => 'Unbekanntes Modell :model.',
         'missing_experts' => 'Experten fehlen in Bundle und Datenbank: :experts',
+        'projects_filed' => '{0}Kein Projekt einsortiert.|{1}1 Projekt einsortiert.|[2,*]:count Projekte einsortiert.',
+        'template_as_question' => 'Als eigene Frage importiert: Vorlagen behalten nur Admins.',
     ],
 ];
