@@ -69,7 +69,9 @@ class Transfer extends Component
             $this->stage = 'done';
             $this->discardBundle();
         } catch (Throwable $exception) {
-            // Back to the upload: the preview no longer says what happened.
+            // BundleImporter reports a failing file and goes on, so what still
+            // throws here is opening the bundle, before anything is written:
+            // back to the upload, the preview no longer says what happened.
             $this->stage = 'upload';
             $this->report = [];
             $this->rejectBundle(__('transfer.import.failed', ['message' => $exception->getMessage()]));

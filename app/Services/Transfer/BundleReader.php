@@ -53,7 +53,7 @@ final class BundleReader
             throw new InvalidBundle(__('transfer.errors.no_manifest'));
         }
 
-        $manifest = (new self($zip, [], $maxEntryBytes))->json(Bundle::MANIFEST);
+        $manifest = self::decode($zip, Bundle::MANIFEST, $maxEntryBytes);
 
         if (($manifest['schema_version'] ?? null) !== Bundle::SCHEMA_VERSION) {
             throw new InvalidBundle(__('transfer.errors.unknown_schema'));
@@ -74,13 +74,19 @@ final class BundleReader
             return [];
         }
 
-        $content = $this->read($entry);
+        return self::decode($this->zip, $entry, $this->maxEntryBytes);
+    }
+
+    /** A present entry's JSON object or list, read within the cap. */
+    private static function decode(ZipArchive $zip, string $entry, int $maxEntryBytes): array
+    {
+        $content = self::read($zip, $entry, $maxEntryBytes);
 
         if ($content === false) {
             throw new InvalidBundle(__('transfer.errors.broken_entry', ['name' => $entry]));
         }
 
-        if (strlen($content) > $this->maxEntryBytes) {
+        if (strlen($content) > $maxEntryBytes) {
             throw new InvalidBundle(__('transfer.errors.too_large'));
         }
 
@@ -102,16 +108,16 @@ final class BundleReader
      * refuse what reaches it. A stream, not getFromName($entry, $length):
      * that one allocates the whole length up front, 100 MB per entry.
      */
-    private function read(string $entry): string|false
+    private static function read(ZipArchive $zip, string $entry, int $maxEntryBytes): string|false
     {
-        $stream = $this->zip->getStream($entry);
+        $stream = $zip->getStream($entry);
 
         if ($stream === false) {
             return false;
         }
 
         try {
-            return stream_get_contents($stream, $this->maxEntryBytes + 1);
+            return stream_get_contents($stream, $maxEntryBytes + 1);
         } finally {
             fclose($stream);
         }

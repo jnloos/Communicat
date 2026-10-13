@@ -6,6 +6,7 @@ use App\Livewire\Settings\Transfer;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\Transfer\Bundle;
 use App\Services\Transfer\BundleExporter;
 use App\Services\Transfer\ImportReport;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -126,6 +127,27 @@ class TransferSettingsTest extends TestCase
             $component->errors()->first('bundle'),
         );
         $this->assertSame(0, Project::count());
+    }
+
+    public function test_an_import_with_a_failed_section_shows_what_was_written(): void
+    {
+        app()->setLocale('en');
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin);
+        $upload = $this->bundle($admin);
+        $zip = new \ZipArchive;
+        $zip->open($upload->getRealPath());
+        $zip->addFromString(Bundle::TAGS, '{broken');
+        $zip->close();
+
+        $component = Livewire::test(Transfer::class)->set('bundle', $upload)->assertSet('stage', 'preview');
+        $component->call('import')
+            ->assertSet('stage', 'done')
+            ->assertSee(__('transfer.import.done_with_failures'))
+            ->assertSee('School')
+            ->assertSee(__('transfer.errors.broken_entry', ['name' => Bundle::TAGS]));
+
+        $this->assertSame(1, Project::count());
     }
 
     public function test_failed_entries_are_listed_first_and_their_section_is_open(): void

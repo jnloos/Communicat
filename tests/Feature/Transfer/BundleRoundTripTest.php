@@ -10,6 +10,7 @@ use App\Models\Question;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\User;
+use App\Services\Transfer\Bundle;
 use App\Services\Transfer\BundleExporter;
 use App\Services\Transfer\BundleImporter;
 use App\Services\Transfer\ImportReport;
@@ -142,5 +143,27 @@ class BundleRoundTripTest extends TestCase
 
         $this->expectException(InvalidBundle::class);
         app(BundleImporter::class)->import($path, $admin);
+    }
+
+    public function test_a_broken_section_fails_alone_and_the_rest_is_imported_and_reported(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $project = $this->study($admin);
+        $path = $this->path();
+        app(BundleExporter::class)->everything($admin, $path);
+        $zip = new \ZipArchive;
+        $zip->open($path);
+        $zip->addFromString(Bundle::QUESTIONS, '{broken');
+        $zip->close();
+        $this->wipe();
+
+        $report = app(BundleImporter::class)->import($path, $admin);
+
+        $this->assertTrue($report->hasFailures());
+        $this->assertSame([['name' => Bundle::QUESTIONS, 'outcome' => ImportReport::FAILED, 'note' => __('transfer.errors.broken_entry', ['name' => Bundle::QUESTIONS])]], $report->entries(ImportReport::QUESTIONS));
+        $this->assertSame(1, $report->count(ImportReport::PROJECTS, ImportReport::CREATED));
+        $this->assertSame(1, $report->count(ImportReport::GROUPS, ImportReport::CREATED));
+        $this->assertTrue(Project::where('uuid', $project->uuid)->exists());
+        $this->assertSame(0, Question::count());
     }
 }
