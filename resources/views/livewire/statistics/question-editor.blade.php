@@ -14,22 +14,24 @@
             <flux:text size="sm" class="shrink-0 pt-1.5" wire:loading>{{ __('questions.autosave.saving') }}</flux:text>
         @endunless
 
-        @if ($mayManage)
-            <flux:dropdown position="bottom" align="end" class="shrink-0">
-                <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')" />
-                <flux:menu>
+        <flux:dropdown position="bottom" align="end" class="shrink-0">
+            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')" />
+            <flux:menu>
+                <flux:menu.item icon="arrow-down-tray" href="{{ route('statistics.export', $questionId) }}">{{ __('questions.actions.export_raw') }}</flux:menu.item>
+                @if ($mayManage)
+                    <flux:menu.separator />
                     <flux:menu.item icon="pencil-square" wire:click="$parent.startRenaming({{ $questionId }})">{{ __('questions.actions.rename') }}</flux:menu.item>
                     @unless ($readOnly)
                         <flux:menu.item icon="document-duplicate" wire:click="$parent.duplicate({{ $questionId }})">{{ __('questions.actions.duplicate') }}</flux:menu.item>
                         @if ($mayShare)
                             <flux:menu.item icon="rectangle-stack" wire:click="$parent.saveAsTemplate({{ $questionId }})">{{ __('questions.actions.save_as_template') }}</flux:menu.item>
                         @endif
-                        <flux:menu.separator />
                     @endunless
+                    <flux:menu.separator />
                     <flux:menu.item variant="danger" icon="trash" wire:click="$parent.confirmDelete({{ $questionId }})">{{ __('questions.actions.delete') }}</flux:menu.item>
-                </flux:menu>
-            </flux:dropdown>
-        @endif
+                @endif
+            </flux:menu>
+        </flux:dropdown>
     </div>
 
     {{-- A template is only to look at; the way on is a copy. --}}

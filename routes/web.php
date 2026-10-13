@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BundleExportController;
+use App\Http\Controllers\StudyExportController;
 use App\Livewire\Debug\JobDebugPanel;
 use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
@@ -66,6 +67,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/transfer', Transfer::class)->middleware('admin')->name('settings.transfer');
     Route::get('settings/export', [BundleExportController::class, 'everything'])->middleware('admin')->name('settings.export');
     Route::get('statistics', StatisticsPage::class)->middleware('verified')->name('statistics');
+    Route::get('statistics/{question}/export', StudyExportController::class)->middleware('verified')->name('statistics.export');
 
     Route::get('debug/jobs', JobDebugPanel::class)->name('debug.jobs');
 });

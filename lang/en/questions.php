@@ -26,6 +26,7 @@ return [
         'rename' => 'Rename',
         'duplicate' => 'Duplicate',
         'save_as_template' => 'Save as template',
+        'export_raw' => 'Export raw data as CSV',
         'copy_to_adjust' => 'Copy to adjust',
         'delete' => 'Delete',
     ],

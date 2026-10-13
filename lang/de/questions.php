@@ -26,6 +26,7 @@ return [
         'rename' => 'Umbenennen',
         'duplicate' => 'Duplizieren',
         'save_as_template' => 'Als Vorlage speichern',
+        'export_raw' => 'Rohdaten als CSV exportieren',
         'copy_to_adjust' => 'Kopieren und anpassen',
         'delete' => 'Löschen',
     ],
