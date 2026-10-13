@@ -12,10 +12,11 @@ return [
     'notes' => [
         'already_there' => 'Already in the database.',
         'no_uuid' => 'The entry has no uuid.',
+        'bad_uuid' => 'The entry has no valid uuid.',
         'tag_unreadable' => 'The tag category has no name or an unknown scope.',
         'tag_values_added' => 'Values added: :values',
         'tags_skipped' => 'Tags not set: :tags',
-        'new_expert_id' => 'Id :old was taken, so the expert got id :new. Selector signals and E-tokens in its logs still name :old.',
+        'new_expert_id' => 'Id :old was taken, so the expert got id :new. The selector signals of its turns now name :new, E-tokens inside logged prompts and answers still name :old.',
         'unknown_pipeline' => 'Unknown pipeline :pipeline.',
         'unknown_model' => 'Unknown model :model.',
         'missing_experts' => 'Experts missing from the bundle and the database: :experts',

@@ -43,9 +43,7 @@ final class BundleImporter
         $report = new ImportReport;
         $this->tags->import($reader->json(Bundle::TAGS), $report);
 
-        foreach ($reader->json(Bundle::EXPERTS) as $expert) {
-            $this->experts->import($expert, $report);
-        }
+        $this->experts->importAll($reader->json(Bundle::EXPERTS), $report);
 
         foreach ($reader->projectEntries() as $entry) {
             // A broken project file fails alone; ProjectTransfer already rolls back a failed write.

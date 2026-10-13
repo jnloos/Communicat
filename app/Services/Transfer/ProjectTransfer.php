@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\Tags\TagsByName;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -20,6 +21,14 @@ use Throwable;
  * layers, the per-turn measurement and every logged call. Experts are named by
  * uuid; inside the file, messages and turns refer to each other by their
  * original ids, which are local keys and never written back as ids.
+ *
+ * An expert whose id was taken in the target database is renumbered on import
+ * (ExpertTransfer). expert_ids maps every original id to its uuid, so the ids
+ * inside each turn's selection follow it: speaker_id, the keys of
+ * signals.bids, the tokens in signals.fallbacks and signals.token, the values
+ * of signals.order. An id the file does not map stays as it is. Texts are
+ * never rewritten: E-tokens inside logged prompts, answers, the selector's
+ * reasoning and messages keep naming the source ids.
  */
 final class ProjectTransfer
 {
@@ -61,6 +70,7 @@ final class ProjectTransfer
             'summarized_until_message' => $project->summarized_until_message_id,
             'created_at' => $time($project->created_at),
             'tags' => $this->tags->export($project),
+            'expert_ids' => $uuids->mapWithKeys(fn ($uuid, $id) => [(string) $id => $uuid])->all(),
             'seats' => $project->experts()->get()
                 ->map(fn (Expert $expert) => ['expert' => $expert->uuid, 'seat' => $expert->pivot->seat === null ? null : (int) $expert->pivot->seat])
                 ->values()->all(),
@@ -161,6 +171,7 @@ final class ProjectTransfer
 
         return match (true) {
             $uuid === '' => __('transfer.notes.no_uuid'),
+            ! Str::isUuid($uuid) => __('transfer.notes.bad_uuid'),
             Project::where('uuid', $uuid)->exists() => __('transfer.notes.already_there'),
             ! app(PipelineRegistry::class)->has((string) ($data['pipeline'] ?? '')) => __('transfer.notes.unknown_pipeline', ['pipeline' => $data['pipeline'] ?? '']),
             ! isset(config('ai.models')[(string) ($data['model'] ?? '')]) => __('transfer.notes.unknown_model', ['model' => $data['model'] ?? '']),
@@ -212,6 +223,78 @@ final class ProjectTransfer
         return Expert::whereIn('uuid', $this->namedExperts($data))->pluck('id', 'uuid')->map(fn ($id) => (int) $id)->all();
     }
 
+    /** @return array<int, int> original id => id here, only for experts whose id changed */
+    private function renumberedIds(array $data): array
+    {
+        $original = collect($data['expert_ids'] ?? [])->filter(fn ($uuid) => is_string($uuid));
+        $here = Expert::whereIn('uuid', $original->values())->pluck('id', 'uuid');
+        $renumbered = [];
+
+        foreach ($original as $oldId => $uuid) {
+            $newId = isset($here[$uuid]) ? (int) $here[$uuid] : null;
+
+            if ($newId !== null && $newId !== (int) $oldId) {
+                $renumbered[(int) $oldId] = $newId;
+            }
+        }
+
+        return $renumbered;
+    }
+
+    /**
+     * The selection with every expert id the map knows replaced; built fresh,
+     * so a chain like 1 → 2, 2 → 3 cannot overwrite itself.
+     *
+     * @param  array<int, int>  $renumbered
+     */
+    private function rewriteSelection(?array $selection, array $renumbered): ?array
+    {
+        if ($selection === null || $renumbered === []) {
+            return $selection;
+        }
+
+        $id = fn ($old) => is_int($old) || (is_string($old) && ctype_digit($old)) ? ($renumbered[(int) $old] ?? $old) : $old;
+        $token = fn ($old) => is_string($old) && preg_match('/^E(\d+)$/D', $old, $match) && isset($renumbered[(int) $match[1]])
+            ? 'E'.$renumbered[(int) $match[1]]
+            : $old;
+
+        if (array_key_exists('speaker_id', $selection)) {
+            $selection['speaker_id'] = $id($selection['speaker_id']);
+        }
+
+        $signals = $selection['signals'] ?? null;
+
+        if (! is_array($signals)) {
+            return $selection;
+        }
+
+        if (is_array($signals['bids'] ?? null)) {
+            $bids = [];
+
+            foreach ($signals['bids'] as $bidder => $bid) {
+                $bids[$token((string) $bidder)] = $bid;
+            }
+
+            $signals['bids'] = $bids;
+        }
+
+        if (is_array($signals['fallbacks'] ?? null)) {
+            $signals['fallbacks'] = array_map($token, $signals['fallbacks']);
+        }
+
+        if (array_key_exists('token', $signals)) {
+            $signals['token'] = $token($signals['token']);
+        }
+
+        if (is_array($signals['order'] ?? null)) {
+            $signals['order'] = array_map($id, $signals['order']);
+        }
+
+        $selection['signals'] = $signals;
+
+        return $selection;
+    }
+
     /**
      * @param  array<string, int>  $experts  uuid => id
      * @param  list<string>  $skippedTags  filled with the tag pairs that could not be placed
@@ -219,6 +302,7 @@ final class ProjectTransfer
     private function write(array $data, User $owner, array $experts, array &$skippedTags): Project
     {
         $expert = fn (?string $uuid) => $uuid === null ? null : $experts[$uuid];
+        $renumbered = $this->renumberedIds($data);
         $time = fn ($value) => $value === null ? null : Carbon::parse($value);
 
         $project = new Project;
@@ -262,7 +346,7 @@ final class ProjectTransfer
                 'thought_words' => $job['thought_words'] ?? null,
                 'thought_chars' => $job['thought_chars'] ?? null,
                 'reasoning_tokens' => $job['reasoning_tokens'] ?? null,
-                'selection' => $job['selection'] ?? null,
+                'selection' => $this->rewriteSelection($job['selection'] ?? null, $renumbered),
                 'error' => $job['error'] ?? null,
                 'started_at' => $time($job['started_at'] ?? null) ?? now(),
                 'finished_at' => $time($job['finished_at'] ?? null),

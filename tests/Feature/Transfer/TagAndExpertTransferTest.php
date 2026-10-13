@@ -9,6 +9,7 @@ use App\Services\Transfer\ExpertTransfer;
 use App\Services\Transfer\ImportReport;
 use App\Services\Transfer\TagTransfer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class TagAndExpertTransferTest extends TestCase
@@ -149,5 +150,34 @@ class TagAndExpertTransferTest extends TestCase
         $this->assertSame('Decides fast.', $copy->description);
         $this->assertSame('https://example.test/a.png', $copy->avatar_url);
         $this->assertSame($expert->created_at->timestamp, $copy->created_at->timestamp);
+    }
+
+    public function test_a_taken_id_renumbers_only_its_own_expert_not_the_later_ones(): void
+    {
+        $exported = collect([1, 2, 3])->map(fn (int $id) => [
+            'uuid' => (string) Str::uuid(), 'id' => $id, 'name' => "Expert {$id}", 'role' => 'r', 'description' => 'd',
+        ])->all();
+        Expert::factory()->create(['id' => 1]);
+        $report = new ImportReport;
+
+        (new ExpertTransfer)->importAll($exported, $report);
+
+        $this->assertSame(2, Expert::where('uuid', $exported[1]['uuid'])->sole()->id);
+        $this->assertSame(3, Expert::where('uuid', $exported[2]['uuid'])->sole()->id);
+        $this->assertNotSame(1, Expert::where('uuid', $exported[0]['uuid'])->sole()->id);
+        $notes = array_values(array_filter(array_column($report->entries(ImportReport::EXPERTS), 'note')));
+        $this->assertCount(1, $notes);
+        $this->assertSame(3, $report->count(ImportReport::EXPERTS, ImportReport::CREATED));
+    }
+
+    public function test_an_entry_without_a_valid_uuid_is_not_imported(): void
+    {
+        $report = new ImportReport;
+
+        (new ExpertTransfer)->importAll([['uuid' => 'not-a-uuid', 'id' => 7, 'name' => 'Alex', 'role' => 'CEO']], $report);
+
+        $this->assertSame(0, Expert::count());
+        $this->assertSame(1, $report->count(ImportReport::EXPERTS, ImportReport::FAILED));
+        $this->assertSame(__('transfer.notes.bad_uuid'), $report->entries(ImportReport::EXPERTS)[0]['note']);
     }
 }

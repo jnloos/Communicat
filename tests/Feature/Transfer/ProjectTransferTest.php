@@ -13,9 +13,11 @@ use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
 use App\Models\User;
+use App\Services\Transfer\ExpertTransfer;
 use App\Services\Transfer\ImportReport;
 use App\Services\Transfer\ProjectTransfer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ProjectTransferTest extends TestCase
@@ -174,5 +176,85 @@ class ProjectTransferTest extends TestCase
         PromptLog::create(['job_log_id' => JobLog::where('turn_index', 1)->sole()->id, 'model' => 'm', 'prompt' => 'p', 'response' => 'r', 'expert_id' => $gone->id]);
 
         $this->assertContains($gone->id, (new ProjectTransfer)->expertIds($project));
+    }
+
+    public function test_the_export_maps_every_original_expert_id_to_its_uuid(): void
+    {
+        $owner = User::factory()->create();
+        $project = $this->studyRun($owner);
+        $data = (new ProjectTransfer)->export($project);
+
+        $expected = Expert::whereIn('id', (new ProjectTransfer)->expertIds($project))->pluck('uuid', 'id')
+            ->mapWithKeys(fn ($uuid, $id) => [(string) $id => $uuid])->all();
+        $this->assertSame($expected, $data['expert_ids']);
+    }
+
+    public function test_selection_ids_follow_experts_that_were_renumbered_on_import(): void
+    {
+        $owner = User::factory()->create();
+        $project = $this->studyRun($owner);
+        [$alex, $kim] = $project->experts()->orderBy('seat')->get()->all();
+        $a = $alex->id;
+        $k = $kim->id;
+        JobLog::where('project_id', $project->id)->where('turn_index', 1)->update(['selection' => json_encode([
+            'selector' => 'HighestBidSelector', 'speaker_id' => $a, 'reasoning' => "E{$a} bid highest",
+            'signals' => ['bids' => ["E{$a}" => 5, "E{$k}" => 1, 'E999' => 3], 'fallbacks' => ["E{$k}", 'E999']], 'tie_broken' => false,
+        ])]);
+        JobLog::where('project_id', $project->id)->where('turn_index', 2)->update(['selection' => json_encode([
+            'selector' => 'BlindJudgeSelector', 'speaker_id' => $k,
+            'signals' => ['label' => 'B', 'order' => ['A' => $a, 'B' => $k, 'C' => 999], 'fallback' => false, 'token' => "E{$k}"], 'tie_broken' => false,
+        ])]);
+        $data = (new ProjectTransfer)->export($project->fresh());
+        $experts = [(new ExpertTransfer)->export($alex), (new ExpertTransfer)->export($kim)];
+        Project::query()->delete();
+        Expert::query()->delete();
+        // Two other experts now hold the original ids, so both are renumbered.
+        Expert::factory()->create(['id' => $a]);
+        Expert::factory()->create(['id' => $k]);
+
+        (new ExpertTransfer)->importAll($experts, new ImportReport);
+        $copy = (new ProjectTransfer)->import($data, $owner, new ImportReport);
+
+        $newA = Expert::where('uuid', $alex->uuid)->sole()->id;
+        $newK = Expert::where('uuid', $kim->uuid)->sole()->id;
+        $this->assertNotSame($a, $newA);
+        $this->assertNotSame($k, $newK);
+        $first = JobLog::where('project_id', $copy->id)->where('turn_index', 1)->sole()->selection;
+        $this->assertSame($newA, $first['speaker_id']);
+        $this->assertSame(["E{$newA}" => 5, "E{$newK}" => 1, 'E999' => 3], $first['signals']['bids']);
+        $this->assertSame(["E{$newK}", 'E999'], $first['signals']['fallbacks']);
+        $this->assertSame("E{$a} bid highest", $first['reasoning']);
+        $second = JobLog::where('project_id', $copy->id)->where('turn_index', 2)->sole()->selection;
+        $this->assertSame($newK, $second['speaker_id']);
+        $this->assertSame(['A' => $newA, 'B' => $newK, 'C' => 999], $second['signals']['order']);
+        $this->assertSame("E{$newK}", $second['signals']['token']);
+        $this->assertSame('B', $second['signals']['label']);
+    }
+
+    public function test_a_same_id_import_leaves_the_selection_byte_identical(): void
+    {
+        $owner = User::factory()->create();
+        $project = $this->studyRun($owner);
+        $before = JobLog::where('project_id', $project->id)->orderBy('turn_index')->pluck('selection')->all();
+        $raw = DB::table('job_logs')->where('project_id', $project->id)->orderBy('turn_index')->pluck('selection')->all();
+        $data = (new ProjectTransfer)->export($project);
+        $project->delete();
+
+        $copy = (new ProjectTransfer)->import($data, $owner, new ImportReport);
+
+        $this->assertSame($before, JobLog::where('project_id', $copy->id)->orderBy('turn_index')->pluck('selection')->all());
+        $this->assertSame($raw, DB::table('job_logs')->where('project_id', $copy->id)->orderBy('turn_index')->pluck('selection')->all());
+    }
+
+    public function test_a_project_without_a_valid_uuid_is_skipped(): void
+    {
+        $owner = User::factory()->create();
+        $data = (new ProjectTransfer)->export($this->studyRun($owner));
+        Project::query()->delete();
+        $report = new ImportReport;
+
+        $this->assertNull((new ProjectTransfer)->import(['uuid' => 'x-1'] + $data, $owner, $report));
+        $this->assertSame(__('transfer.notes.bad_uuid'), $report->entries(ImportReport::PROJECTS)[0]['note']);
+        $this->assertSame(0, Project::count());
     }
 }

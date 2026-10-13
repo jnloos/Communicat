@@ -12,10 +12,11 @@ return [
     'notes' => [
         'already_there' => 'Schon in der Datenbank.',
         'no_uuid' => 'Der Eintrag hat keine UUID.',
+        'bad_uuid' => 'Der Eintrag hat keine gültige UUID.',
         'tag_unreadable' => 'Die Tag-Kategorie hat keinen Namen oder einen unbekannten Bereich.',
         'tag_values_added' => 'Werte ergänzt: :values',
         'tags_skipped' => 'Tags nicht gesetzt: :tags',
-        'new_expert_id' => 'ID :old war vergeben, der Experte hat jetzt ID :new. Selektor-Signale und E-Tokens in seinen Logs nennen weiter :old.',
+        'new_expert_id' => 'ID :old war vergeben, der Experte hat jetzt ID :new. Die Selektor-Signale seiner Turns nennen jetzt :new, E-Tokens in geloggten Prompts und Antworten weiter :old.',
         'unknown_pipeline' => 'Unbekannte Pipeline :pipeline.',
         'unknown_model' => 'Unbekanntes Modell :model.',
         'missing_experts' => 'Experten fehlen in Bundle und Datenbank: :experts',

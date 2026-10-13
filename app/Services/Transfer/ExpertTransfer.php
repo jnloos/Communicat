@@ -5,6 +5,7 @@ namespace App\Services\Transfer;
 use App\Models\Expert;
 use App\Services\Tags\TagsByName;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * One expert by uuid. An import keeps the original id where it is free: the
@@ -31,31 +32,79 @@ final class ExpertTransfer
 
     public function import(array $data, ImportReport $report): void
     {
-        $label = trim(($data['name'] ?? '').' '.($data['role'] ?? ''));
+        $this->importAll([$data], $report);
+    }
+
+    /**
+     * Two passes, so a taken id renumbers only its own expert: first every new
+     * expert whose original id is free keeps it, then the rest get fresh ids.
+     * One pass would hand the fresh id to whoever came first, which is usually
+     * a later expert's original id, and renumber every expert after it.
+     * The report keeps the order of the file.
+     *
+     * @param  list<array<string, mixed>>  $experts
+     */
+    public function importAll(array $experts, ImportReport $report): void
+    {
+        $outcomes = [];
+        $renumbered = [];
+
+        foreach ($experts as $index => $data) {
+            $refusal = $this->refusal($data);
+
+            if ($refusal !== null) {
+                $outcomes[$index] = $refusal;
+            } elseif ($this->originalIdIsFree($data)) {
+                $outcomes[$index] = $this->create($data, keepId: true);
+            } else {
+                $renumbered[] = $index;
+            }
+        }
+
+        foreach ($renumbered as $index) {
+            $outcomes[$index] = $this->refusal($experts[$index]) ?? $this->create($experts[$index], keepId: false);
+        }
+
+        ksort($outcomes);
+
+        foreach ($outcomes as $index => [$outcome, $note]) {
+            $data = $experts[$index];
+            $report->add(ImportReport::EXPERTS, trim(($data['name'] ?? '').' '.($data['role'] ?? '')), $outcome, $note);
+        }
+    }
+
+    /** @return array{string, string}|null outcome and note when the entry is not created */
+    private function refusal(array $data): ?array
+    {
         $uuid = (string) ($data['uuid'] ?? '');
 
-        if ($uuid === '') {
-            $report->add(ImportReport::EXPERTS, $label, ImportReport::FAILED, __('transfer.notes.no_uuid'));
+        return match (true) {
+            $uuid === '' => [ImportReport::FAILED, __('transfer.notes.no_uuid')],
+            ! Str::isUuid($uuid) => [ImportReport::FAILED, __('transfer.notes.bad_uuid')],
+            Expert::where('uuid', $uuid)->exists() => [ImportReport::SKIPPED, __('transfer.notes.already_there')],
+            default => null,
+        };
+    }
 
-            return;
-        }
+    private function originalIdIsFree(array $data): bool
+    {
+        $originalId = (int) ($data['id'] ?? 0);
 
-        if (Expert::where('uuid', $uuid)->exists()) {
-            $report->add(ImportReport::EXPERTS, $label, ImportReport::SKIPPED, __('transfer.notes.already_there'));
+        return $originalId > 0 && ! Expert::whereKey($originalId)->exists();
+    }
 
-            return;
-        }
-
+    /** @return array{string, string|null} */
+    private function create(array $data, bool $keepId): array
+    {
         $expert = new Expert;
         $originalId = (int) ($data['id'] ?? 0);
-        $keepsId = $originalId > 0 && ! Expert::whereKey($originalId)->exists();
 
-        if ($keepsId) {
+        if ($keepId) {
             $expert->id = $originalId;
         }
 
         $expert->forceFill([
-            'uuid' => $uuid,
+            'uuid' => (string) $data['uuid'],
             'name' => (string) ($data['name'] ?? ''),
             'role' => (string) ($data['role'] ?? ''),
             'description' => (string) ($data['description'] ?? ''),
@@ -65,10 +114,10 @@ final class ExpertTransfer
 
         $skippedTags = $this->tags->assign($expert, $data['tags'] ?? []);
         $notes = array_filter([
-            $keepsId || $originalId === 0 ? null : __('transfer.notes.new_expert_id', ['old' => $originalId, 'new' => $expert->id]),
+            $keepId || $originalId === 0 ? null : __('transfer.notes.new_expert_id', ['old' => $originalId, 'new' => $expert->id]),
             $skippedTags === [] ? null : __('transfer.notes.tags_skipped', ['tags' => implode(', ', $skippedTags)]),
         ]);
 
-        $report->add(ImportReport::EXPERTS, $label, ImportReport::CREATED, $notes === [] ? null : implode(' ', $notes));
+        return [ImportReport::CREATED, $notes === [] ? null : implode(' ', $notes)];
     }
 }
