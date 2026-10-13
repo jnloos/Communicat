@@ -22,6 +22,7 @@
             @if(auth()->user()?->is_admin)
                 <flux:navbar.item :href="route('settings.users')" :current="$isCurrent('settings.users')" wire:navigate>{{ __('settings.nav.users') }}</flux:navbar.item>
                 <flux:navbar.item :href="route('settings.tags')" :current="$isCurrent('settings.tags')" wire:navigate>{{ __('settings.nav.tags') }}</flux:navbar.item>
+                <flux:navbar.item :href="route('settings.transfer')" :current="$isCurrent('settings.transfer')" wire:navigate>{{ __('settings.nav.transfer') }}</flux:navbar.item>
             @endif
         </flux:navbar>
     </div>
@@ -34,6 +35,7 @@
             @if(auth()->user()?->is_admin)
                 <flux:navlist.item :href="route('settings.users')" :current="$isCurrent('settings.users')" wire:navigate>{{ __('settings.nav.users') }}</flux:navlist.item>
                 <flux:navlist.item :href="route('settings.tags')" :current="$isCurrent('settings.tags')" wire:navigate>{{ __('settings.nav.tags') }}</flux:navlist.item>
+                <flux:navlist.item :href="route('settings.transfer')" :current="$isCurrent('settings.transfer')" wire:navigate>{{ __('settings.nav.transfer') }}</flux:navlist.item>
             @endif
         </flux:navlist>
     </div>

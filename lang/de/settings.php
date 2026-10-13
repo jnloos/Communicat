@@ -16,6 +16,7 @@ return [
         'appearance' => 'Darstellung',
         'users' => 'Nutzer',
         'tags' => 'Tags',
+        'transfer' => 'Import/Export',
     ],
 
     'profile' => [

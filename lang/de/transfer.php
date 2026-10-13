@@ -23,6 +23,45 @@ return [
         'template_as_question' => 'Als eigene Frage importiert: Vorlagen behalten nur Admins.',
     ],
 
+    'heading' => 'Import/Export',
+    'subheading' => 'Sichere die Studie als Archiv oder hole Projekte und Experten aus einem herein.',
+    'export' => [
+        'heading' => 'Exportieren',
+        'description' => 'Alle Projekte mit Turns und protokollierten Aufrufen, alle Experten, die Tags, deine Sidebar-Gruppen und deine Fragen als eine .zip. Prompt-Texte älter als 24 Stunden sind nicht mehr gespeichert und deshalb nicht enthalten.',
+        'everything' => 'Alles exportieren',
+    ],
+    'import' => [
+        'heading' => 'Importieren',
+        'description' => 'Eine aus dieser App exportierte .zip: ein Projekt, ein Experte oder alles. Du siehst, was passieren würde, bevor etwas geschrieben wird. Projekte und Experten, die schon da sind, werden übersprungen.',
+        'dropzone_heading' => 'Bundle hierher ziehen oder klicken',
+        'dropzone_text' => 'Eine .zip bis 12 MB; größere mit php artisan bundle:import',
+        'checking' => 'Bundle wird geprüft …',
+        'preview_heading' => 'Das würde importiert',
+        'done_heading' => 'Importiert',
+        'done' => 'Import abgeschlossen.',
+        'done_with_failures' => 'Import abgeschlossen, aber einige Einträge sind fehlgeschlagen.',
+        'submit' => 'Importieren',
+        'again' => 'Weitere Datei importieren',
+        'empty' => 'Das Bundle ist leer.',
+    ],
+    'sections' => [
+        'tags' => 'Tags',
+        'experts' => 'Experten',
+        'projects' => 'Projekte',
+        'groups' => 'Gruppen',
+        'questions' => 'Fragen',
+    ],
+    'outcomes' => [
+        'created' => '{1}1 neu|[2,*]:count neu',
+        'skipped' => '{1}1 übersprungen|[2,*]:count übersprungen',
+        'failed' => '{1}1 fehlgeschlagen|[2,*]:count fehlgeschlagen',
+    ],
+    'outcome' => [
+        'created' => 'neu',
+        'skipped' => 'übersprungen',
+        'failed' => 'fehlgeschlagen',
+    ],
+
     'actions' => [
         'export' => 'Exportieren',
     ],

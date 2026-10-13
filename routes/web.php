@@ -6,6 +6,7 @@ use App\Livewire\Settings\Appearance;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Tags;
+use App\Livewire\Settings\Transfer;
 use App\Livewire\Settings\Users;
 use App\Livewire\Statistics\StatisticsPage;
 use App\Models\Project;
@@ -62,6 +63,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
     Route::get('settings/users', Users::class)->middleware('admin')->name('settings.users');
     Route::get('settings/tags', Tags::class)->middleware('admin')->name('settings.tags');
+    Route::get('settings/transfer', Transfer::class)->middleware('admin')->name('settings.transfer');
     Route::get('settings/export', [BundleExportController::class, 'everything'])->middleware('admin')->name('settings.export');
     Route::get('statistics', StatisticsPage::class)->middleware('verified')->name('statistics');
 

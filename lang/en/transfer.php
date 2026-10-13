@@ -23,6 +23,45 @@ return [
         'template_as_question' => 'Imported as your own question: only admins keep templates.',
     ],
 
+    'heading' => 'Import/Export',
+    'subheading' => 'Save the study as an archive, or bring projects and experts in from one.',
+    'export' => [
+        'heading' => 'Export',
+        'description' => 'Every project with its turns and logged calls, every expert, the tags, your sidebar groups and your questions, as one .zip. Prompt texts older than 24 hours are no longer stored and so are not included.',
+        'everything' => 'Export everything',
+    ],
+    'import' => [
+        'heading' => 'Import',
+        'description' => 'A .zip exported from this app: one project, one expert or everything. You see what it would do before anything is written. Projects and experts that are already here are skipped.',
+        'dropzone_heading' => 'Drop a bundle here or click to choose',
+        'dropzone_text' => 'A .zip up to 12 MB; for larger ones use php artisan bundle:import',
+        'checking' => 'Checking the bundle …',
+        'preview_heading' => 'What would be imported',
+        'done_heading' => 'Imported',
+        'done' => 'Import finished.',
+        'done_with_failures' => 'Import finished, but some entries failed.',
+        'submit' => 'Import',
+        'again' => 'Import another file',
+        'empty' => 'The bundle is empty.',
+    ],
+    'sections' => [
+        'tags' => 'Tags',
+        'experts' => 'Experts',
+        'projects' => 'Projects',
+        'groups' => 'Groups',
+        'questions' => 'Questions',
+    ],
+    'outcomes' => [
+        'created' => '{1}1 new|[2,*]:count new',
+        'skipped' => '{1}1 skipped|[2,*]:count skipped',
+        'failed' => '{1}1 failed|[2,*]:count failed',
+    ],
+    'outcome' => [
+        'created' => 'new',
+        'skipped' => 'skipped',
+        'failed' => 'failed',
+    ],
+
     'actions' => [
         'export' => 'Export',
     ],
