@@ -3,6 +3,7 @@
 namespace App\Services\StudyExport;
 
 use App\Discussion\Metrics\SpeakingShares;
+use App\Discussion\Values\ShareReport;
 use App\Discussion\Values\SpeakerShare;
 use App\Models\Expert;
 use App\Models\JobLog;
@@ -12,6 +13,7 @@ use App\Models\ProjectGroup;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -23,12 +25,22 @@ use ZipArchive;
  * CSV files joined by uuid. Tags become one column per category. A turn
  * counts as spoken when words is set (SpokenTurns' rule); failed turns stay in
  * so the failure rate can be read; NULL stays empty and never becomes 0.
+ *
+ * The files are meant for R or Python, not for a spreadsheet. Text cells
+ * (titles, reasoning, errors) are written verbatim: no Excel formula escaping,
+ * because a prefixed quote would alter the data the analysis reads.
  */
 final class StudyExport
 {
-    private const RUN_COLUMNS = ['run_uuid', 'title', 'description', 'pipeline', 'model', 'seed', 'turn_budget', 'group', 'turns_spoken', 'turns_failed_without_speaking'];
+    /** runs.csv: the columns before the project tag columns, and those after them. */
+    private const RUN_HEAD = ['run_uuid', 'title', 'description', 'pipeline', 'model', 'seed', 'turn_budget', 'group'];
 
-    private const PARTICIPANT_COLUMNS = ['run_uuid', 'expert_uuid', 'expert_token', 'name', 'role', 'seat', 'turns', 'turn_share', 'words', 'word_share', 'words_per_turn'];
+    private const RUN_TAIL = ['turns_spoken', 'turns_failed_without_speaking'];
+
+    /** participants.csv: the columns before the persona tag columns, and those after them. */
+    private const PARTICIPANT_HEAD = ['run_uuid', 'expert_uuid', 'expert_token', 'name', 'role', 'seat'];
+
+    private const PARTICIPANT_TAIL = ['turns', 'turn_share', 'words', 'word_share', 'words_per_turn'];
 
     private const TURN_COLUMNS = ['run_uuid', 'turn_index', 'status', 'spoken', 'expert_uuid', 'seat', 'addressee_expert_uuid', 'words', 'chars', 'thought_words', 'thought_chars', 'tokens_in', 'tokens_out', 'tokens_reasoning', 'selector', 'fallback', 'tie_broken', 'speaker_bid', 'speaker_bid_fallback', 'judge_label', 'selector_reasoning', 'selection_json', 'error'];
 
@@ -42,8 +54,10 @@ final class StudyExport
         $expertUuids = Expert::pluck('uuid', 'id');
         $groups = ProjectGroup::where('user_id', $viewer->id)->pluck('name', 'id');
 
-        $runTags = $this->tagColumns($projectCategories, self::RUN_COLUMNS);
-        $personaTags = $this->tagColumns($personaCategories, self::PARTICIPANT_COLUMNS);
+        $runTags = $this->tagColumns($projectCategories, [...self::RUN_HEAD, ...self::RUN_TAIL]);
+        $personaTags = $this->tagColumns($personaCategories, [...self::PARTICIPANT_HEAD, ...self::PARTICIPANT_TAIL]);
+        $runs = (new EloquentCollection($runs->values()->all()))->loadMissing('tagValues');
+        $reports = $runs->mapWithKeys(fn (Project $run) => [$run->id => $this->shares->forProject($run)]);
 
         $zip = new ZipArchive;
 
@@ -52,11 +66,11 @@ final class StudyExport
         }
 
         $zip->addFromString('runs.csv', $this->csv(
-            [...array_slice(self::RUN_COLUMNS, 0, 8), ...array_values($runTags), ...array_slice(self::RUN_COLUMNS, 8)],
-            $this->runRows($runs, $viewer, $groups, $runTags)));
+            [...self::RUN_HEAD, ...array_values($runTags), ...self::RUN_TAIL],
+            $this->runRows($runs, $reports, $viewer, $groups, $runTags)));
         $zip->addFromString('participants.csv', $this->csv(
-            [...array_slice(self::PARTICIPANT_COLUMNS, 0, 6), ...array_values($personaTags), ...array_slice(self::PARTICIPANT_COLUMNS, 6)],
-            $this->participantRows($runs, $personaTags)));
+            [...self::PARTICIPANT_HEAD, ...array_values($personaTags), ...self::PARTICIPANT_TAIL],
+            $this->participantRows($runs, $reports, $personaTags)));
         $zip->addFromString('turns.csv', $this->csv(self::TURN_COLUMNS, $this->turnRows($runs, $expertUuids)));
 
         if (! $zip->close()) {
@@ -86,12 +100,15 @@ final class StudyExport
         return 'communicat-study-'.Str::slug($label).'-'.now()->format('Y-m-d').'.zip';
     }
 
-    /** @return list<array<string, scalar|null>> */
-    private function runRows(Collection $runs, User $viewer, Collection $groups, array $tagColumns): array
+    /**
+     * @param  Collection<int, ShareReport>  $reports  by project id
+     * @return list<array<string, scalar|null>>
+     */
+    private function runRows(Collection $runs, Collection $reports, User $viewer, Collection $groups, array $tagColumns): array
     {
-        return $runs->map(function (Project $run) use ($viewer, $groups, $tagColumns) {
-            $report = $this->shares->forProject($run);
-            $tags = $run->tagValues()->get()->keyBy('tag_category_id');
+        return $runs->map(function (Project $run) use ($reports, $viewer, $groups, $tagColumns) {
+            $report = $reports[$run->id];
+            $tags = $run->tagValues->keyBy('tag_category_id');
             $groupId = $run->groupIdFor($viewer);
             $row = [
                 'run_uuid' => $run->uuid,
@@ -116,12 +133,13 @@ final class StudyExport
      * One row per participant as SpeakingShares reports them: the seated in
      * seat order, then everyone who spoke and has left the run, seat empty.
      *
+     * @param  Collection<int, ShareReport>  $reports  by project id
      * @return list<array<string, scalar|null>>
      */
-    private function participantRows(Collection $runs, array $tagColumns): array
+    private function participantRows(Collection $runs, Collection $reports, array $tagColumns): array
     {
-        return $runs->flatMap(function (Project $run) use ($tagColumns) {
-            $report = $this->shares->forProject($run);
+        return $runs->flatMap(function (Project $run) use ($reports, $tagColumns) {
+            $report = $reports[$run->id];
             $experts = Expert::with('tagValues')->whereIn('id', array_map(fn (SpeakerShare $share) => $share->expertId, $report->speakers))->get()->keyBy('id');
 
             return array_map(function (SpeakerShare $share) use ($run, $experts, $tagColumns) {
@@ -173,7 +191,6 @@ final class StudyExport
                 $selection = $job->selection ?? [];
                 $signals = $selection['signals'] ?? [];
                 $speaker = $selection['speaker_id'] ?? $job->expert_id;
-                $fallback = array_key_exists('fallback', $signals) ? $signals['fallback'] : (array_key_exists('fallbacks', $signals) ? $signals['fallbacks'] !== [] : null);
                 $bid = $this->speakerBid($signals, $speaker);
 
                 return [
@@ -192,7 +209,7 @@ final class StudyExport
                     'tokens_out' => $sum($tokens[$job->id] ?? null, 'tokens_out', 'n_out'),
                     'tokens_reasoning' => $sum($tokens[$job->id] ?? null, 'tokens_reasoning', 'n_reasoning'),
                     'selector' => $selection['selector'] ?? null,
-                    'fallback' => $flag($fallback),
+                    'fallback' => $flag($this->fallbackOf($signals)),
                     'tie_broken' => $flag($selection['tie_broken'] ?? null),
                     'speaker_bid' => $bid['bid'],
                     'speaker_bid_fallback' => $flag($bid['imputed']),
@@ -203,6 +220,20 @@ final class StudyExport
                 ];
             });
         })->values()->all();
+    }
+
+    /**
+     * Whether the selector fell back: the flag of Orchestrator and the judges,
+     * or for Score whether any bid was unreadable. Null for a selector that
+     * records neither (round robin).
+     */
+    private function fallbackOf(array $signals): ?bool
+    {
+        if (array_key_exists('fallback', $signals)) {
+            return $signals['fallback'] === null ? null : (bool) $signals['fallback'];
+        }
+
+        return array_key_exists('fallbacks', $signals) ? $signals['fallbacks'] !== [] : null;
     }
 
     /**
@@ -219,7 +250,7 @@ final class StudyExport
             return ['bid' => null, 'imputed' => null];
         }
 
-        $token = "E{$speaker}";
+        $token = Expert::tokenFor((int) $speaker);
 
         if (in_array($token, $signals['fallbacks'] ?? [], true)) {
             return ['bid' => null, 'imputed' => true];
