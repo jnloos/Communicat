@@ -239,6 +239,30 @@ class ProjectTransferTest extends TestCase
         $this->assertSame('ScorePipeline', $copy->run_config['pipeline']);
     }
 
+    public function test_a_cast_member_who_left_without_speaking_is_renumbered_with_the_cast(): void
+    {
+        $owner = User::factory()->create();
+        $project = $this->studyRun($owner);
+        $robin = Expert::factory()->create(['name' => 'Robin']);
+        $r = $robin->id;
+        $project->update(['run_config' => ['pipeline' => 'ScorePipeline', 'cast' => [['seat' => 3, 'expert_id' => $r, 'name' => 'Robin', 'role' => 'Lead']]]]);
+
+        $this->assertContains($r, (new ProjectTransfer)->expertIds($project->fresh()));
+
+        $data = (new ProjectTransfer)->export($project->fresh());
+        $experts = $project->experts()->get()->push($robin)->map(fn (Expert $expert) => (new ExpertTransfer)->export($expert))->all();
+        Project::query()->delete();
+        Expert::query()->delete();
+        Expert::factory()->create(['id' => $r]);
+
+        (new ExpertTransfer)->importAll($experts, new ImportReport);
+        $copy = (new ProjectTransfer)->import($data, $owner, new ImportReport);
+
+        $newR = Expert::where('uuid', $robin->uuid)->sole()->id;
+        $this->assertNotSame($r, $newR);
+        $this->assertSame([$newR], array_column($copy->run_config['cast'], 'expert_id'));
+    }
+
     public function test_a_same_id_import_leaves_the_selection_byte_identical(): void
     {
         $owner = User::factory()->create();

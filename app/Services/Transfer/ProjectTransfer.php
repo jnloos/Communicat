@@ -45,7 +45,9 @@ final class ProjectTransfer
             ->merge(JobLog::where('project_id', $project->id)->pluck('expert_id'))
             ->merge(PromptLog::whereIn('job_log_id', $jobIds)->pluck('expert_id'))
             ->merge(Summary::where('project_id', $project->id)->pluck('expert_id'))
-            ->filter()->map(fn ($id) => (int) $id)->unique()->sort()->values()->all();
+            // The frozen cast names who sat where, including someone who left without speaking.
+            ->merge(collect($project->run_config['cast'] ?? [])->map(fn ($member) => is_array($member) ? ($member['expert_id'] ?? null) : null))
+            ->filter(fn ($id) => is_int($id) || (is_string($id) && ctype_digit($id)))->map(fn ($id) => (int) $id)->unique()->sort()->values()->all();
     }
 
     public function export(Project $project): array
