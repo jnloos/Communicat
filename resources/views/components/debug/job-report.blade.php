@@ -105,6 +105,16 @@
                 </div>
             @endif
 
+            {{-- A count nobody reported shows as "–", never 0: 0 would claim the call spent none. --}}
+            @php($tokens = fn (?int $count) => $count === null ? '–' : \Illuminate\Support\Number::format($count, locale: app()->getLocale()))
+            {{-- Summed over the job's calls; null when no call reported the figure. --}}
+            @php($tokenSum = fn (string $column) => $selected->promptLogs->whereNotNull($column)->isEmpty() ? null : (int) $selected->promptLogs->sum($column))
+            <div class="mb-3 flex flex-wrap gap-2 text-xs">
+                <flux:badge size="sm">{{ __('debug.detail.tokens_in', ['count' => $tokens($tokenSum('tokens_in'))]) }}</flux:badge>
+                <flux:badge size="sm">{{ __('debug.detail.tokens_out', ['count' => $tokens($tokenSum('tokens_out'))]) }}</flux:badge>
+                <flux:badge size="sm">{{ __('debug.detail.tokens_reasoning', ['count' => $tokens($tokenSum('tokens_reasoning'))]) }}</flux:badge>
+            </div>
+
             <flux:tab.group>
                 <flux:tabs variant="segmented">
                     <flux:tab name="prompts" selected>
@@ -136,6 +146,9 @@
                                 <span class="font-mono text-zinc-600 dark:text-zinc-400">{{ $plog->model }}</span>
                                 <span class="text-zinc-400">·</span>
                                 <span class="font-mono text-zinc-500">{{ $plog->latency_ms !== null ? $plog->latency_ms . ' ms' : '–' }}</span>
+                                <span class="font-mono text-zinc-500">{{ __('debug.detail.tokens_in', ['count' => $tokens($plog->tokens_in)]) }}</span>
+                                <span class="font-mono text-zinc-500">{{ __('debug.detail.tokens_out', ['count' => $tokens($plog->tokens_out)]) }}</span>
+                                <span class="font-mono text-zinc-500">{{ __('debug.detail.tokens_reasoning', ['count' => $tokens($plog->tokens_reasoning)]) }}</span>
                                 @if ($plog->status === 'failed')
                                     <span class="font-mono text-red-600 dark:text-red-400">{{ __('debug.status.failed') }}</span>
                                 @endif

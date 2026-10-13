@@ -44,5 +44,8 @@ return [
         'no_prompts' => 'Keine Prompts für diesen Job aufgezeichnet.',
         'no_messages' => 'Keine Nachrichten von diesem Job erzeugt.',
         'system_sender' => 'System',
+        'tokens_in' => 'Ein :count',
+        'tokens_out' => 'Aus :count',
+        'tokens_reasoning' => 'Reasoning :count',
     ],
 ];
