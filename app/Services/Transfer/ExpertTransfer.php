@@ -4,7 +4,6 @@ namespace App\Services\Transfer;
 
 use App\Models\Expert;
 use App\Services\Tags\TagsByName;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -68,14 +67,17 @@ final class ExpertTransfer
         ksort($outcomes);
 
         foreach ($outcomes as $index => [$outcome, $note]) {
-            $data = $experts[$index];
-            $report->add(ImportReport::EXPERTS, trim(($data['name'] ?? '').' '.($data['role'] ?? '')), $outcome, $note);
+            $report->add(ImportReport::EXPERTS, EntryFields::label($experts[$index], 'name', 'role'), $outcome, $note);
         }
     }
 
     /** @return array{string, string}|null outcome and note when the entry is not created */
-    private function refusal(array $data): ?array
+    private function refusal(mixed $data): ?array
     {
+        if (! $this->isReadable($data)) {
+            return [ImportReport::FAILED, __('transfer.notes.unreadable_entry')];
+        }
+
         $uuid = (string) ($data['uuid'] ?? '');
 
         return match (true) {
@@ -84,6 +86,24 @@ final class ExpertTransfer
             Expert::where('uuid', $uuid)->exists() => [ImportReport::SKIPPED, __('transfer.notes.already_there')],
             default => null,
         };
+    }
+
+    /** Every field the import reads has its type; tags are checked by TagsByName itself. */
+    private function isReadable(mixed $data): bool
+    {
+        try {
+            $entry = EntryFields::entry($data);
+
+            foreach (['uuid', 'id', 'name', 'role', 'description', 'avatar_url'] as $field) {
+                EntryFields::text($entry, $field);
+            }
+
+            EntryFields::time($entry, 'created_at');
+
+            return true;
+        } catch (UnreadableEntry) {
+            return false;
+        }
     }
 
     private function originalIdIsFree(array $data): bool
@@ -109,7 +129,7 @@ final class ExpertTransfer
             'role' => (string) ($data['role'] ?? ''),
             'description' => (string) ($data['description'] ?? ''),
             'avatar_url' => $data['avatar_url'] ?? null,
-            'created_at' => isset($data['created_at']) ? Carbon::parse($data['created_at']) : now(),
+            'created_at' => EntryFields::time($data, 'created_at') ?? now(),
         ])->save();
 
         $skippedTags = $this->tags->assign($expert, $data['tags'] ?? []);

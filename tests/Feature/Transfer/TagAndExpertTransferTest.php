@@ -180,4 +180,41 @@ class TagAndExpertTransferTest extends TestCase
         $this->assertSame(1, $report->count(ImportReport::EXPERTS, ImportReport::FAILED));
         $this->assertSame(__('transfer.notes.bad_uuid'), $report->entries(ImportReport::EXPERTS)[0]['note']);
     }
+
+    public function test_an_unreadable_tag_entry_fails_alone(): void
+    {
+        $report = new ImportReport;
+
+        (new TagTransfer)->import([
+            'not an object',
+            ['scope' => 'persona', 'name' => 'broken', 'values' => 'true'],
+            ['scope' => 'persona', 'name' => ['nested'], 'values' => []],
+            ['scope' => 'project', 'name' => 'status condition', 'values' => ['status']],
+        ], $report);
+
+        $this->assertSame(3, $report->count(ImportReport::TAGS, ImportReport::FAILED));
+        $this->assertSame(__('transfer.notes.unreadable_entry'), $report->entries(ImportReport::TAGS)[1]['note']);
+        $this->assertSame('broken', $report->entries(ImportReport::TAGS)[1]['name']);
+        $this->assertSame(1, $report->count(ImportReport::TAGS, ImportReport::CREATED));
+        $this->assertSame(['status condition'], TagCategory::pluck('name')->all());
+    }
+
+    public function test_an_unreadable_expert_entry_fails_alone(): void
+    {
+        $report = new ImportReport;
+        $good = ['uuid' => (string) Str::uuid(), 'id' => 40, 'name' => 'Alex', 'role' => 'CEO', 'description' => 'd'];
+
+        (new ExpertTransfer)->importAll([
+            'not an object',
+            ['uuid' => (string) Str::uuid(), 'name' => ['Kim'], 'role' => 'Lead'],
+            ['uuid' => (string) Str::uuid(), 'name' => 'Robin', 'created_at' => 'not a date'],
+            $good,
+        ], $report);
+
+        $entries = $report->entries(ImportReport::EXPERTS);
+        $this->assertSame([ImportReport::FAILED, ImportReport::FAILED, ImportReport::FAILED, ImportReport::CREATED], array_column($entries, 'outcome'));
+        $this->assertSame(__('transfer.notes.unreadable_entry'), $entries[1]['note']);
+        $this->assertSame('Robin', $entries[2]['name']);
+        $this->assertSame(['Alex'], Expert::pluck('name')->all());
+    }
 }

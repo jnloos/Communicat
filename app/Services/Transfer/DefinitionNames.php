@@ -15,6 +15,7 @@ use App\Services\Tags\TagNames;
  * groups by id. Ids differ between databases, so a definition travels by
  * names and is read back into this database's ids; a name that does not
  * resolve falls out, as a deleted tag value does on the statistics page.
+ * A field of the wrong type in a file's definition throws UnreadableEntry.
  */
 final class DefinitionNames
 {
@@ -67,9 +68,10 @@ final class DefinitionNames
             $ids = [];
 
             foreach ($tags as $categoryName => $valueNames) {
+                $valueNames = EntryFields::texts(['values' => is_array($valueNames) ? $valueNames : [$valueNames]], 'values');
                 $found = $category($scope, (string) $categoryName);
                 $valueIds = $found === null ? [] : $found->values
-                    ->filter(fn ($value) => collect((array) $valueNames)->contains(fn ($name) => TagNames::same($value->name, (string) $name)))
+                    ->filter(fn ($value) => collect($valueNames)->contains(fn ($name) => TagNames::same($value->name, (string) $name)))
                     ->pluck('id')->values()->all();
 
                 if ($valueIds !== []) {
@@ -96,12 +98,19 @@ final class DefinitionNames
             return $found === null ? '' : "{$type->value}:{$found->id}";
         };
 
+        $people = EntryFields::map($named, 'people');
+        $projects = EntryFields::map($named, 'projects');
+        $groupNames = EntryFields::texts($projects, 'groups');
+
         $definition = $named;
-        $definition['people']['tags'] = $tagsToIds($named['people']['tags'] ?? [], TagScope::Persona);
-        $definition['projects']['tags'] = $tagsToIds($named['projects']['tags'] ?? [], TagScope::Project);
-        $definition['projects']['groups'] = $groups->filter(fn (ProjectGroup $group) => in_array($group->name, $named['projects']['groups'] ?? [], true))->pluck('id')->values()->all();
-        $definition['compare_by'] = $dimensionToKey($named['compare_by'] ?? null);
-        $definition['split_by'] = $dimensionToKey($named['split_by'] ?? null);
+        $definition['people'] = $people;
+        $definition['projects'] = $projects;
+        $definition['people']['tags'] = $tagsToIds(EntryFields::map($people, 'tags'), TagScope::Persona);
+        $definition['projects']['tags'] = $tagsToIds(EntryFields::map($projects, 'tags'), TagScope::Project);
+        $definition['projects']['groups'] = $groups->filter(fn (ProjectGroup $group) => in_array($group->name, $groupNames, true))->pluck('id')->values()->all();
+        $definition['compare_by'] = $dimensionToKey(EntryFields::text($named, 'compare_by'));
+        $definition['split_by'] = $dimensionToKey(EntryFields::text($named, 'split_by'));
+        EntryFields::text($named, 'baseline');
         $definition['baseline'] = self::baselineToId($named, $definition['compare_by'], $categories, $groups);
 
         return $definition;

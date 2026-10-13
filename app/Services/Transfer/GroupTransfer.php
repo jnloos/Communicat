@@ -32,29 +32,41 @@ final class GroupTransfer
     public function import(array $groups, User $user, ImportReport $report): void
     {
         foreach ($groups as $data) {
-            $name = trim((string) ($data['name'] ?? ''));
+            try {
+                $entry = EntryFields::entry($data);
+                $name = trim((string) EntryFields::text($entry, 'name'));
+                $projects = EntryFields::texts($entry, 'projects');
+            } catch (UnreadableEntry) {
+                $report->add(ImportReport::GROUPS, EntryFields::label($data, 'name'), ImportReport::FAILED, __('transfer.notes.unreadable_entry'));
 
-            if ($name === '') {
                 continue;
             }
 
-            $group = ProjectGroup::where('user_id', $user->id)->where('name', $name)->first();
-            $created = $group === null;
-            $group ??= ProjectGroup::create([
-                'user_id' => $user->id,
-                'name' => $name,
-                'position' => (int) ProjectGroup::where('user_id', $user->id)->max('position') + 1,
-            ]);
-            $filed = 0;
-
-            foreach (Project::whereIn('uuid', $data['projects'] ?? [])->get() as $project) {
-                if ($project->hasContributor($user)) {
-                    $project->fileInGroupFor($user, $group->id);
-                    $filed++;
-                }
+            if ($name !== '') {
+                $this->importOne($name, $projects, $user, $report);
             }
-
-            $report->add(ImportReport::GROUPS, $name, $created ? ImportReport::CREATED : ImportReport::SKIPPED, trans_choice('transfer.notes.projects_filed', $filed, ['count' => $filed]));
         }
+    }
+
+    /** @param  list<string>  $projects  uuids */
+    private function importOne(string $name, array $projects, User $user, ImportReport $report): void
+    {
+        $group = ProjectGroup::where('user_id', $user->id)->where('name', $name)->first();
+        $created = $group === null;
+        $group ??= ProjectGroup::create([
+            'user_id' => $user->id,
+            'name' => $name,
+            'position' => (int) ProjectGroup::where('user_id', $user->id)->max('position') + 1,
+        ]);
+        $filed = 0;
+
+        foreach (Project::whereIn('uuid', $projects)->get() as $project) {
+            if ($project->hasContributor($user)) {
+                $project->fileInGroupFor($user, $group->id);
+                $filed++;
+            }
+        }
+
+        $report->add(ImportReport::GROUPS, $name, $created ? ImportReport::CREATED : ImportReport::SKIPPED, trans_choice('transfer.notes.projects_filed', $filed, ['count' => $filed]));
     }
 }

@@ -13,6 +13,7 @@ return [
         'already_there' => 'Schon in der Datenbank.',
         'no_uuid' => 'Der Eintrag hat keine UUID.',
         'bad_uuid' => 'Der Eintrag hat keine gültige UUID.',
+        'unreadable_entry' => 'Der Eintrag konnte nicht gelesen werden.',
         'tag_unreadable' => 'Die Tag-Kategorie hat keinen Namen oder einen unbekannten Bereich.',
         'tag_values_added' => 'Werte ergänzt: :values',
         'tags_skipped' => 'Tags nicht gesetzt: :tags',

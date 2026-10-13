@@ -261,4 +261,42 @@ class GroupAndQuestionTransferTest extends TestCase
         $this->assertSame(['Existing', 'Imported'], Question::templates()->pluck('name')->all());
         $this->assertSame(2, (int) Question::templates()->where('name', 'Imported')->sole()->position);
     }
+
+    public function test_an_unreadable_group_entry_fails_alone(): void
+    {
+        $user = User::factory()->create();
+        $report = new ImportReport;
+
+        (new GroupTransfer)->import([
+            'not an object',
+            ['name' => 'Broken', 'projects' => 'all'],
+            ['name' => 'Quality', 'projects' => []],
+        ], $user, $report);
+
+        $entries = $report->entries(ImportReport::GROUPS);
+        $this->assertSame([ImportReport::FAILED, ImportReport::FAILED, ImportReport::CREATED], array_column($entries, 'outcome'));
+        $this->assertSame(__('transfer.notes.unreadable_entry'), $entries[1]['note']);
+        $this->assertSame(['Quality'], ProjectGroup::pluck('name')->all());
+    }
+
+    public function test_an_unreadable_question_entry_fails_alone(): void
+    {
+        $user = User::factory()->create();
+        $report = new ImportReport;
+
+        (new QuestionTransfer)->import([
+            'not an object',
+            ['name' => 'Definition as text', 'definition' => 'turn_share'],
+            ['name' => 'People as text', 'definition' => ['metric' => 'turn_share', 'people' => 'everyone']],
+            ['name' => 'Tags as text', 'definition' => ['metric' => 'turn_share', 'projects' => ['tags' => 'x', 'groups' => 'y']]],
+            ['name' => ['nested'], 'definition' => []],
+            ['name' => 'Fine', 'definition' => ['metric' => 'turn_share']],
+        ], $user, $report);
+
+        $entries = $report->entries(ImportReport::QUESTIONS);
+        $this->assertSame([ImportReport::FAILED, ImportReport::FAILED, ImportReport::FAILED, ImportReport::FAILED, ImportReport::FAILED, ImportReport::CREATED], array_column($entries, 'outcome'));
+        $this->assertSame(__('transfer.notes.unreadable_entry'), $entries[1]['note']);
+        $this->assertSame('Definition as text', $entries[1]['name']);
+        $this->assertSame(['Fine'], Question::pluck('name')->all());
+    }
 }

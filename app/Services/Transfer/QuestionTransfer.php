@@ -5,6 +5,7 @@ namespace App\Services\Transfer;
 use App\Discussion\Values\QuestionDefinition;
 use App\Models\Question;
 use App\Models\User;
+use TypeError;
 
 /**
  * A user's own questions and all templates, by name. On import they become
@@ -34,35 +35,61 @@ final class QuestionTransfer
     public function import(array $questions, User $user, ImportReport $report): void
     {
         foreach ($questions as $data) {
-            $label = (string) ($data['name'] ?? __('questions.untitled'));
-            $isTemplate = ! empty($data['is_template']) && $user->is_admin;
-            $definition = QuestionDefinition::fromArray(DefinitionNames::toIds($data['definition'] ?? [], $user))->toArray();
-
-            $duplicate = $user->questions()
-                ->where('is_template', $isTemplate)
-                ->where('name', $data['name'] ?? null)
-                ->get()
-                ->contains(fn (Question $existing) => $existing->notes === ($data['notes'] ?? null) && $existing->definition()->toArray() == $definition);
-
-            if ($duplicate) {
-                $report->add(ImportReport::QUESTIONS, $label, ImportReport::SKIPPED, __('transfer.notes.already_there'));
+            try {
+                $entry = EntryFields::entry($data);
+                $name = EntryFields::text($entry, 'name');
+                $notes = EntryFields::text($entry, 'notes');
+                $definition = $this->definition(EntryFields::map($entry, 'definition'), $user);
+            } catch (UnreadableEntry) {
+                $report->add(ImportReport::QUESTIONS, EntryFields::label($data, 'name'), ImportReport::FAILED, __('transfer.notes.unreadable_entry'));
 
                 continue;
             }
 
-            $user->questions()->create([
-                'name' => $data['name'] ?? null,
-                'notes' => $data['notes'] ?? null,
-                'definition' => $definition,
-                'is_template' => $isTemplate,
-            ]);
-
-            $report->add(
-                ImportReport::QUESTIONS,
-                $label,
-                ImportReport::CREATED,
-                ! empty($data['is_template']) && ! $isTemplate ? __('transfer.notes.template_as_question') : null,
-            );
+            $this->importOne($name, $notes, ! empty($entry['is_template']), $definition, $user, $report);
         }
+    }
+
+    /** The definition as this database's ids, normalised the way the statistics page stores it. */
+    private function definition(array $named, User $user): array
+    {
+        try {
+            return QuestionDefinition::fromArray(DefinitionNames::toIds($named, $user))->toArray();
+        } catch (TypeError) {
+            // A nested part DefinitionNames does not read itself (turns, say) has the wrong type.
+            throw new UnreadableEntry('The definition could not be read.');
+        }
+    }
+
+    private function importOne(?string $name, ?string $notes, bool $wantsTemplate, array $definition, User $user, ImportReport $report): void
+    {
+        $label = $name ?? __('questions.untitled');
+        $isTemplate = $wantsTemplate && $user->is_admin;
+
+        $duplicate = $user->questions()
+            ->where('is_template', $isTemplate)
+            ->where('name', $name)
+            ->get()
+            ->contains(fn (Question $existing) => $existing->notes === $notes && $existing->definition()->toArray() == $definition);
+
+        if ($duplicate) {
+            $report->add(ImportReport::QUESTIONS, $label, ImportReport::SKIPPED, __('transfer.notes.already_there'));
+
+            return;
+        }
+
+        $user->questions()->create([
+            'name' => $name,
+            'notes' => $notes,
+            'definition' => $definition,
+            'is_template' => $isTemplate,
+        ]);
+
+        $report->add(
+            ImportReport::QUESTIONS,
+            $label,
+            ImportReport::CREATED,
+            $wantsTemplate && ! $isTemplate ? __('transfer.notes.template_as_question') : null,
+        );
     }
 }
