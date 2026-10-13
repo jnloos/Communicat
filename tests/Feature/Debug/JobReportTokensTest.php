@@ -24,7 +24,7 @@ class JobReportTokensTest extends TestCase
             'selectedJobId' => $job->id,
         ])->render();
 
-        $this->assertStringContainsString('Ein 1.200', $html);
+        $this->assertStringContainsString('Tokens ein 1.200', $html);
     }
 
     public function test_every_call_and_the_job_show_their_tokens(): void
@@ -40,16 +40,16 @@ class JobReportTokensTest extends TestCase
             'selectedJobId' => $job->id,
         ])->render();
 
-        $this->assertStringContainsString('In 1,200', $html);
-        $this->assertStringContainsString('Out 300', $html);
-        $this->assertStringContainsString('Reasoning 64', $html);
-        $this->assertStringContainsString('Reasoning –', $html);
+        $this->assertStringContainsString('Tokens in 1,200', $html);
+        $this->assertStringContainsString('Tokens out 300', $html);
+        $this->assertStringContainsString('Reasoning tokens 64', $html);
+        $this->assertStringContainsString('Reasoning tokens –', $html);
 
         $total = $this->jobTotal($html);
-        $this->assertStringContainsString('In 2,000', $total);
-        $this->assertStringContainsString('Out 400', $total);
-        $this->assertStringContainsString('Reasoning 64', $total);
-        $this->assertStringNotContainsString('Reasoning –', $total);
+        $this->assertStringContainsString('Tokens in 2,000', $total);
+        $this->assertStringContainsString('Tokens out 400', $total);
+        $this->assertStringContainsString('Reasoning tokens 64', $total);
+        $this->assertStringNotContainsString('Reasoning tokens –', $total);
     }
 
     public function test_job_total_shows_a_dash_when_no_call_reported_reasoning(): void
@@ -66,8 +66,8 @@ class JobReportTokensTest extends TestCase
         ])->render();
 
         $total = $this->jobTotal($html);
-        $this->assertStringContainsString('Reasoning –', $total);
-        $this->assertStringNotContainsString('Reasoning 0', $total);
+        $this->assertStringContainsString('Reasoning tokens –', $total);
+        $this->assertStringNotContainsString('Reasoning tokens 0', $total);
     }
 
     /** The job total is the one element marked data-tokens-total; per-call lines sit elsewhere. */
