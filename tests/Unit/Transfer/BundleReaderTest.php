@@ -147,6 +147,26 @@ class BundleReaderTest extends TestCase
         $reader->json('experts.json');
     }
 
+    public function test_what_is_read_in_total_is_held_to_the_unpacked_limit_whatever_the_sizes_declare(): void
+    {
+        $experts = json_encode(array_fill(0, 20, 'abcdefgh'));
+        $path = $this->zip(['manifest.json' => $this->manifest(), 'experts.json' => $experts, 'tags.json' => $experts]);
+        $this->declareSize($path, 'experts.json', 1);
+        $this->declareSize($path, 'tags.json', 1);
+        $reader = BundleReader::open($path, maxUnpackedBytes: 300, maxEntryBytes: 250);
+        $reader->json('experts.json');
+
+        $this->expectException(InvalidBundle::class);
+        $this->expectExceptionMessage(__('transfer.errors.too_large'));
+        $reader->json('tags.json');
+    }
+
+    public function test_one_entry_stays_well_below_the_memory_limit(): void
+    {
+        // json_decode holds the text and the decoded array at once, about twice the entry.
+        $this->assertLessThan(ini_parse_quantity('128M') / 3, Bundle::MAX_ENTRY_BYTES);
+    }
+
     /** Overwrites an entry's uncompressed size in its local and central header: a size that lies. */
     private function declareSize(string $path, string $entry, int $size): void
     {

@@ -30,6 +30,26 @@ final class EntryFields
         };
     }
 
+    public static function integer(array $entry, string $key): ?int
+    {
+        $value = $entry[$key] ?? null;
+
+        return match (true) {
+            $value === null => null,
+            is_int($value) => $value,
+            is_string($value) && preg_match('/^-?\d+$/D', $value) === 1 => (int) $value,
+            default => throw new UnreadableEntry("The field {$key} is not a whole number."),
+        };
+    }
+
+    /** A field the entry cannot do without: present and not null. */
+    public static function required(array $entry, string $key): void
+    {
+        if (($entry[$key] ?? null) === null) {
+            throw new UnreadableEntry("The field {$key} is missing.");
+        }
+    }
+
     /** Only checks: the field is absent, null or a text. */
     public static function assertText(array $entry, string $key): void
     {

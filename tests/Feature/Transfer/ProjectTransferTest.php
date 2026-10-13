@@ -16,8 +16,10 @@ use App\Models\User;
 use App\Services\Transfer\ExpertTransfer;
 use App\Services\Transfer\ImportReport;
 use App\Services\Transfer\ProjectTransfer;
+use Closure;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ProjectTransferTest extends TestCase
@@ -166,6 +168,54 @@ class ProjectTransferTest extends TestCase
 
         $this->assertSame(2, $report->count(ImportReport::PROJECTS, ImportReport::SKIPPED));
         $this->assertSame(0, Project::count());
+    }
+
+    /** @return iterable<string, array{Closure(array): array}> */
+    public static function brokenProjectFiles(): iterable
+    {
+        yield 'pipeline is a list' => [fn (array $data) => ['pipeline' => ['ScorePipeline']] + $data];
+        yield 'seats is a text' => [fn (array $data) => ['seats' => 'all'] + $data];
+        yield 'a seat without its expert' => [function (array $data) {
+            unset($data['seats'][0]['expert']);
+
+            return $data;
+        }];
+        yield 'a job without its key' => [function (array $data) {
+            unset($data['jobs'][0]['key']);
+
+            return $data;
+        }];
+        yield 'a message key that is no number' => [function (array $data) {
+            $data['messages'][0]['key'] = 'first';
+
+            return $data;
+        }];
+        yield 'a prompt that is no object' => [function (array $data) {
+            $data['jobs'][0]['prompts'][0] = 'p';
+
+            return $data;
+        }];
+        yield 'a time that is no time' => [function (array $data) {
+            $data['jobs'][0]['started_at'] = 'yesterday-ish';
+
+            return $data;
+        }];
+    }
+
+    #[DataProvider('brokenProjectFiles')]
+    public function test_a_project_file_of_the_wrong_shape_fails_alone_as_unreadable(Closure $break): void
+    {
+        $owner = User::factory()->create();
+        $data = $break((new ProjectTransfer)->export($this->studyRun($owner)));
+        Project::query()->delete();
+        $report = new ImportReport;
+
+        $this->assertNull((new ProjectTransfer)->import($data, $owner, $report));
+
+        $this->assertSame(0, Project::count());
+        $entry = $report->entries(ImportReport::PROJECTS)[0];
+        $this->assertSame(ImportReport::FAILED, $entry['outcome']);
+        $this->assertSame(__('transfer.notes.unreadable_entry'), $entry['note']);
     }
 
     public function test_it_names_every_expert_the_project_refers_to(): void

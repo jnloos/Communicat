@@ -13,8 +13,13 @@ final class Bundle
     /** Guard against zip bombs: what an import may unpack in total. */
     public const MAX_UNPACKED_BYTES = 524_288_000;
 
-    /** One entry is read into memory whole, so a single entry is capped on its own. */
-    public const MAX_ENTRY_BYTES = 104_857_600;
+    /**
+     * One entry is read into memory whole and json_decode holds text and array
+     * at once, about twice the entry, so a single entry stays well below a
+     * 128 MB memory_limit. A 100-turn run exported while its prompt texts are
+     * still kept (24 h) is about 25 MB; after that, a few MB.
+     */
+    public const MAX_ENTRY_BYTES = 33_554_432;
 
     public const KIND_PROJECT = 'project';
 

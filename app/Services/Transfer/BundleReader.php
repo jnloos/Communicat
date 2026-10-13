@@ -8,7 +8,8 @@ use ZipArchive;
 /**
  * Opens a bundle and checks it before anything reads it: a ZIP, only the
  * expected entry names (no paths that could escape), bounded sizes, a manifest
- * of this schema version. Entries are checked again when they are read.
+ * of this schema version. Declared sizes can lie, so what is actually read is
+ * held to the same limits again: per entry, and in total across all entries.
  */
 final class BundleReader
 {
@@ -16,6 +17,8 @@ final class BundleReader
         private readonly ZipArchive $zip,
         private readonly array $manifest,
         private readonly int $maxEntryBytes,
+        private readonly int $maxUnpackedBytes,
+        private int $bytesRead,
     ) {}
 
     public static function open(
@@ -53,13 +56,14 @@ final class BundleReader
             throw new InvalidBundle(__('transfer.errors.no_manifest'));
         }
 
-        $manifest = self::decode($zip, Bundle::MANIFEST, $maxEntryBytes);
+        $content = self::read($zip, Bundle::MANIFEST, $maxEntryBytes);
+        $manifest = self::decode($content, Bundle::MANIFEST);
 
         if (($manifest['schema_version'] ?? null) !== Bundle::SCHEMA_VERSION) {
             throw new InvalidBundle(__('transfer.errors.unknown_schema'));
         }
 
-        return new self($zip, $manifest, $maxEntryBytes);
+        return new self($zip, $manifest, $maxEntryBytes, $maxUnpackedBytes, strlen($content));
     }
 
     public function manifest(): array
@@ -74,53 +78,14 @@ final class BundleReader
             return [];
         }
 
-        return self::decode($this->zip, $entry, $this->maxEntryBytes);
-    }
+        $content = self::read($this->zip, $entry, $this->maxEntryBytes);
+        $this->bytesRead += strlen($content);
 
-    /** A present entry's JSON object or list, read within the cap. */
-    private static function decode(ZipArchive $zip, string $entry, int $maxEntryBytes): array
-    {
-        $content = self::read($zip, $entry, $maxEntryBytes);
-
-        if ($content === false) {
-            throw new InvalidBundle(__('transfer.errors.broken_entry', ['name' => $entry]));
-        }
-
-        if (strlen($content) > $maxEntryBytes) {
+        if ($this->bytesRead > $this->maxUnpackedBytes) {
             throw new InvalidBundle(__('transfer.errors.too_large'));
         }
 
-        try {
-            $data = json_decode($content, true, flags: JSON_THROW_ON_ERROR);
-        } catch (JsonException) {
-            throw new InvalidBundle(__('transfer.errors.broken_entry', ['name' => $entry]));
-        }
-
-        if (! is_array($data)) {
-            throw new InvalidBundle(__('transfer.errors.broken_entry', ['name' => $entry]));
-        }
-
-        return $data;
-    }
-
-    /**
-     * The declared size can lie, so read at most one byte past the cap and
-     * refuse what reaches it. A stream, not getFromName($entry, $length):
-     * that one allocates the whole length up front, 100 MB per entry.
-     */
-    private static function read(ZipArchive $zip, string $entry, int $maxEntryBytes): string|false
-    {
-        $stream = $zip->getStream($entry);
-
-        if ($stream === false) {
-            return false;
-        }
-
-        try {
-            return stream_get_contents($stream, $maxEntryBytes + 1);
-        } finally {
-            fclose($stream);
-        }
+        return self::decode($content, $entry);
     }
 
     /** @return list<string> */
@@ -139,5 +104,51 @@ final class BundleReader
         sort($entries);
 
         return $entries;
+    }
+
+    /** An entry's text as a JSON object or list. */
+    private static function decode(string $content, string $entry): array
+    {
+        try {
+            $data = json_decode($content, true, flags: JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            throw new InvalidBundle(__('transfer.errors.broken_entry', ['name' => $entry]));
+        }
+
+        if (! is_array($data)) {
+            throw new InvalidBundle(__('transfer.errors.broken_entry', ['name' => $entry]));
+        }
+
+        return $data;
+    }
+
+    /**
+     * The declared size can lie, so read at most one byte past the cap and
+     * refuse what reaches it. A stream, not getFromName($entry, $length):
+     * that one allocates the whole length up front.
+     */
+    private static function read(ZipArchive $zip, string $entry, int $maxEntryBytes): string
+    {
+        $stream = $zip->getStream($entry);
+
+        if ($stream === false) {
+            throw new InvalidBundle(__('transfer.errors.broken_entry', ['name' => $entry]));
+        }
+
+        try {
+            $content = stream_get_contents($stream, $maxEntryBytes + 1);
+        } finally {
+            fclose($stream);
+        }
+
+        if ($content === false) {
+            throw new InvalidBundle(__('transfer.errors.broken_entry', ['name' => $entry]));
+        }
+
+        if (strlen($content) > $maxEntryBytes) {
+            throw new InvalidBundle(__('transfer.errors.too_large'));
+        }
+
+        return $content;
     }
 }

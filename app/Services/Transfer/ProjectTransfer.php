@@ -100,7 +100,16 @@ final class ProjectTransfer
 
     public function import(array $data, User $owner, ImportReport $report): ?Project
     {
-        $title = (string) ($data['title'] ?? '');
+        $title = EntryFields::label($data, 'title');
+
+        try {
+            ProjectFileShape::check($data);
+        } catch (UnreadableEntry $exception) {
+            $report->add(ImportReport::PROJECTS, $title, ImportReport::FAILED, FailureNote::for($exception));
+
+            return null;
+        }
+
         $reason = $this->reasonToSkip($data);
 
         if ($reason !== null) {
