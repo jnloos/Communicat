@@ -29,4 +29,17 @@ class PublicUuidTest extends TestCase
 
         $this->assertSame($uuid, $expert->fresh()->uuid);
     }
+
+    public function test_the_uuid_is_not_mass_assignable(): void
+    {
+        $uuid = (string) Str::uuid();
+        $expert = Expert::create(['uuid' => $uuid, 'name' => 'Alex', 'role' => 'CEO', 'description' => 'd']);
+        $project = Project::factory()->create();
+        $before = $project->uuid;
+
+        $project->update(['uuid' => $uuid]);
+
+        $this->assertNotSame($uuid, $expert->fresh()->uuid);
+        $this->assertSame($before, $project->fresh()->uuid);
+    }
 }

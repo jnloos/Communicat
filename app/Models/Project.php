@@ -17,7 +17,7 @@ class Project extends Model
     use HasFactory, HasPublicUuid, HasTags;
 
     protected $fillable = [
-        'uuid', 'title', 'description', 'user_id',
+        'title', 'description', 'user_id',
         'model', 'pipeline', 'turn_budget', 'seed', 'run_config',
         'long_term_memory', 'summarized_until_message_id',
         'summarize_threshold', 'summarize_oldest',
