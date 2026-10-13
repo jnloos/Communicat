@@ -32,7 +32,10 @@
                     {{-- Nothing to create: import is pointless. Only an all-skipped bundle gets the line; failures and an empty bundle explain themselves. --}}
                     @php($nothingNew = $stage === 'preview' && $importReport->createsNothing())
 
-                    <flux:heading>{{ $stage === 'preview' ? __('transfer.import.preview_heading') : __('transfer.import.done_heading') }}</flux:heading>
+                    <div>
+                        <flux:heading>{{ $stage === 'preview' ? __('transfer.import.preview_heading') : __('transfer.import.done_heading') }}</flux:heading>
+                        <flux:text size="sm" class="mt-1 flex items-center gap-1.5"><flux:icon.archive-box variant="micro" />{{ $bundleName }}</flux:text>
+                    </div>
 
                     @if ($stage === 'preview' && $importReport->isAllSkipped())
                         <flux:text>{{ __('transfer.import.nothing_new') }}</flux:text>

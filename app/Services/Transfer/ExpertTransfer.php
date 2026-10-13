@@ -42,8 +42,9 @@ final class ExpertTransfer
      * The report keeps the order of the file.
      *
      * @param  list<array<string, mixed>>  $experts
+     * @param  bool  $withRuns  the bundle brings runs, so a renumbering note says what follows the new id
      */
-    public function importAll(array $experts, ImportReport $report): void
+    public function importAll(array $experts, ImportReport $report, bool $withRuns = false): void
     {
         $outcomes = [];
         $renumbered = [];
@@ -58,14 +59,14 @@ final class ExpertTransfer
                 if ($refusal !== null) {
                     $outcomes[$index] = $refusal;
                 } elseif ($this->originalIdIsFree($data)) {
-                    $outcomes[$index] = $this->create($data, keepId: true);
+                    $outcomes[$index] = $this->create($data, keepId: true, withRuns: $withRuns);
                 } else {
                     $renumbered[] = $index;
                 }
             }
 
             foreach ($renumbered as $index) {
-                $outcomes[$index] = $this->refusal($experts[$index]) ?? $this->create($experts[$index], keepId: false);
+                $outcomes[$index] = $this->refusal($experts[$index]) ?? $this->create($experts[$index], keepId: false, withRuns: $withRuns);
             }
         } finally {
             ksort($outcomes);
@@ -119,7 +120,7 @@ final class ExpertTransfer
     }
 
     /** @return array{string, string|null} */
-    private function create(array $data, bool $keepId): array
+    private function create(array $data, bool $keepId, bool $withRuns): array
     {
         $expert = new Expert;
         $originalId = (int) ($data['id'] ?? 0);
@@ -140,6 +141,7 @@ final class ExpertTransfer
         $skippedTags = $this->tags->assign($expert, $data['tags'] ?? []);
         $notes = array_filter([
             $keepId || $originalId === 0 ? null : __('transfer.notes.new_expert_id', ['old' => $originalId, 'new' => $expert->id]),
+            $keepId || $originalId === 0 || ! $withRuns ? null : __('transfer.notes.new_expert_id_runs', ['old' => $originalId]),
             $skippedTags === [] ? null : __('transfer.notes.tags_skipped', ['tags' => implode(', ', $skippedTags)]),
         ]);
 

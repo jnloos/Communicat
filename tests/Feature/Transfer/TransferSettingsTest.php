@@ -241,6 +241,7 @@ class TransferSettingsTest extends TestCase
 
         $this->assertDoesNotMatchRegularExpression(self::DISABLED_IMPORT, $html);
         $this->assertStringContainsString('wire:click="import"', $html);
+        $this->assertMatchesRegularExpression('#</svg>\s*school\.zip\s*</#', $html, 'The preview names the uploaded file.');
     }
 
     public function test_the_upload_has_an_accessible_name(): void

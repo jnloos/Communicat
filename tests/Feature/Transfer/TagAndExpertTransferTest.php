@@ -102,6 +102,22 @@ class TagAndExpertTransferTest extends TestCase
         $this->assertStringContainsString('false', $report->entries(ImportReport::TAGS)[0]['note']);
     }
 
+    public function test_with_runs_the_new_id_note_also_says_what_follows_it(): void
+    {
+        $expert = Expert::factory()->create();
+        $data = (new ExpertTransfer)->export($expert);
+        $data['uuid'] = '0b9f2d4c-1a3e-4f5b-8c6d-7e8f9a0b1c2d';
+        $report = new ImportReport;
+
+        (new ExpertTransfer)->importAll([$data], $report, withRuns: true);
+
+        $copy = Expert::where('uuid', $data['uuid'])->sole();
+        $this->assertSame(
+            __('transfer.notes.new_expert_id', ['old' => $expert->id, 'new' => $copy->id]).' '.__('transfer.notes.new_expert_id_runs', ['old' => $expert->id]),
+            $report->entries(ImportReport::EXPERTS)[0]['note'],
+        );
+    }
+
     public function test_the_new_id_note_names_both_ids(): void
     {
         $expert = Expert::factory()->create();

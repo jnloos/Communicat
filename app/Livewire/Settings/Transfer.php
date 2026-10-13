@@ -29,6 +29,10 @@ class Transfer extends Component
     #[Locked]
     public string $stage = 'upload';
 
+    /** The uploaded file's own name, shown with its preview and report. */
+    #[Locked]
+    public ?string $bundleName = null;
+
     /** ImportReport::toArray() of the preview or the import. */
     #[Locked]
     public array $report = [];
@@ -47,6 +51,7 @@ class Transfer extends Component
             $this->validate(['bundle' => 'required|file|max:'.UploadLimit::kilobytes()]);
 
             $this->report = app(BundleImporter::class)->preview($this->bundle->getRealPath(), auth()->user())->toArray();
+            $this->bundleName = $this->bundle->getClientOriginalName();
             $this->stage = 'preview';
         } catch (ValidationException $exception) {
             $this->discardBundle();
@@ -73,8 +78,7 @@ class Transfer extends Component
             // BundleImporter reports a failing file and goes on, so what still
             // throws here is opening the bundle, before anything is written:
             // back to the upload, the preview no longer says what happened.
-            $this->stage = 'upload';
-            $this->report = [];
+            $this->reset(['stage', 'report', 'bundleName']);
             $this->rejectBundle(__('transfer.import.failed', ['message' => FailureNote::for($exception)]));
         }
     }
@@ -82,7 +86,7 @@ class Transfer extends Component
     public function startOver(): void
     {
         $this->discardBundle();
-        $this->reset(['stage', 'report']);
+        $this->reset(['stage', 'report', 'bundleName']);
     }
 
     /** The upload may hold prompt texts: delete the temporary file as soon as it has served. */

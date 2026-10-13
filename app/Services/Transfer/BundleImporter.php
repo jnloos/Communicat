@@ -44,7 +44,7 @@ final class BundleImporter
         $report = new ImportReport;
 
         $this->section($report, ImportReport::TAGS, Bundle::TAGS, fn () => $this->tags->import($reader->json(Bundle::TAGS), $report));
-        $this->section($report, ImportReport::EXPERTS, Bundle::EXPERTS, fn () => $this->experts->importAll($reader->json(Bundle::EXPERTS), $report));
+        $this->section($report, ImportReport::EXPERTS, Bundle::EXPERTS, fn () => $this->experts->importAll($reader->json(Bundle::EXPERTS), $report, withRuns: $reader->projectEntries() !== []));
 
         foreach ($reader->projectEntries() as $entry) {
             // ProjectTransfer catches and rolls back a failure of its own write.
