@@ -9,6 +9,9 @@ use App\Models\Message;
 use App\Models\Project;
 use App\Models\PromptLog;
 use App\Models\Summary;
+use App\Models\TagCategory;
+use App\Models\TagScope;
+use App\Models\TagValue;
 use App\Models\User;
 use App\Services\Transfer\ImportReport;
 use App\Services\Transfer\ProjectTransfer;
@@ -23,6 +26,10 @@ class ProjectTransferTest extends TestCase
     {
         [$alex, $kim] = Expert::factory()->count(2)->create()->all();
         $project = Project::factory()->create(['user_id' => $owner->id, 'pipeline' => 'ScorePipeline', 'model' => 'openai-gpt-5-mini', 'seed' => 42, 'turn_budget' => 60, 'run_config' => ['pipeline' => 'ScorePipeline']]);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
+        $project->setTag($condition, TagValue::create(['tag_category_id' => $condition->id, 'name' => 'status']));
+        $holder = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
+        $alex->setTag($holder, TagValue::create(['tag_category_id' => $holder->id, 'name' => 'true']));
         $project->addContributingExpert($alex);
         $project->addContributingExpert($kim);
         $job = JobLog::create(['job_class' => 'x', 'project_id' => $project->id, 'status' => 'success', 'started_at' => now()->subMinute(), 'finished_at' => now(), 'turn_index' => 1, 'expert_id' => $alex->id, 'seat' => 1, 'words' => 3, 'chars' => 15, 'selection' => ['selector' => 'HighestBidSelector', 'speaker_id' => $alex->id, 'signals' => ['bids' => ["E{$alex->id}" => 5]]]]);
@@ -60,6 +67,7 @@ class ProjectTransferTest extends TestCase
         $this->assertSame('Kim thinks.', Summary::where('project_id', $copy->id)->sole()->content);
         $this->assertEquals($sharesBefore->speakers, app(SpeakingShares::class)->forProject($copy)->speakers);
         $this->assertTrue($copy->hasContributor($owner));
+        $this->assertSame(['status condition' => 'status'], $data['tags']);
         $this->assertSame($this->normalise($data), $this->normalise((new ProjectTransfer)->export($copy)));
         $this->assertSame(2, $sharesBefore->spokenTurns);
     }
@@ -102,9 +110,15 @@ class ProjectTransferTest extends TestCase
         Project::query()->delete();
         $report = new ImportReport;
 
+        JobLog::query()->delete();
+        Message::query()->delete();
+
         $this->assertNull((new ProjectTransfer)->import(['model' => 'nope-1'] + $data, $owner, $report));
         $this->assertSame(1, $report->count(ImportReport::PROJECTS, ImportReport::SKIPPED));
+        $this->assertSame(__('transfer.notes.unknown_model', ['model' => 'nope-1']), $report->entries(ImportReport::PROJECTS)[0]['note']);
         $this->assertSame(0, Project::count());
+        $this->assertSame(0, JobLog::count());
+        $this->assertSame(0, Message::count());
     }
 
     public function test_a_failing_write_rolls_the_whole_project_back(): void
