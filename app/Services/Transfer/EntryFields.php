@@ -30,6 +30,12 @@ final class EntryFields
         };
     }
 
+    /** Only checks: the field is absent, null or a text. */
+    public static function assertText(array $entry, string $key): void
+    {
+        self::text($entry, $key);
+    }
+
     /** @return list<string> */
     public static function texts(array $entry, string $key): array
     {

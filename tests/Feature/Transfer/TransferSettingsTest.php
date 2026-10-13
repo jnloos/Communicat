@@ -166,8 +166,7 @@ class TransferSettingsTest extends TestCase
         $html = Livewire::test(Transfer::class)
             ->set('bundle', UploadedFile::fake()->createWithContent('school.zip', file_get_contents($path)))
             ->assertSet('stage', 'preview')
-            ->assertSee('Nothing new: everything in this bundle is already here.')
-            ->assertDontSee('What would be imported')
+            ->assertSeeInOrder(['What would be imported', 'Nothing new: everything in this bundle is already here.'])
             ->html();
 
         $this->assertMatchesRegularExpression(self::DISABLED_IMPORT, $html);

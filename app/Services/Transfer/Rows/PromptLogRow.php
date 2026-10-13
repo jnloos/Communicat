@@ -8,7 +8,7 @@ use Closure;
 /**
  * One prompt_logs row inside a bundle's project file, nested under its turn,
  * in both directions. The one place the table's columns are listed for the
- * transfer; PromptLogRowTest fails when a new column is neither carried nor
+ * transfer; TransferredColumnsTest fails when a new column is neither carried nor
  * listed in NOT_CARRIED.
  */
 final class PromptLogRow

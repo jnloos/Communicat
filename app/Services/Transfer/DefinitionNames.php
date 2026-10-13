@@ -110,7 +110,7 @@ final class DefinitionNames
         $definition['projects']['groups'] = $groups->filter(fn (ProjectGroup $group) => in_array($group->name, $groupNames, true))->pluck('id')->values()->all();
         $definition['compare_by'] = $dimensionToKey(EntryFields::text($named, 'compare_by'));
         $definition['split_by'] = $dimensionToKey(EntryFields::text($named, 'split_by'));
-        EntryFields::text($named, 'baseline');
+        EntryFields::assertText($named, 'baseline');
         $definition['baseline'] = self::baselineToId($named, $definition['compare_by'], $categories, $groups);
 
         return $definition;

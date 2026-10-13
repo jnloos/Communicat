@@ -9,7 +9,7 @@ use Closure;
 /**
  * One job_logs row inside a bundle's project file, in both directions. The
  * one place the table's columns are listed for the transfer, so export and
- * import cannot drift apart; JobLogRowTest fails when a new column is neither
+ * import cannot drift apart; TransferredColumnsTest fails when a new column is neither
  * carried nor listed in NOT_CARRIED.
  */
 final class JobLogRow
