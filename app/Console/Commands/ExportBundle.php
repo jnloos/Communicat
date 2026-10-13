@@ -14,8 +14,8 @@ class ExportBundle extends Command
 
     protected $signature = 'bundle:export
         {path : Where to write the .zip}
-        {--project=* : Export only these projects}
-        {--expert=* : Export only these experts}
+        {--project=* : Export this one project}
+        {--expert=* : Export this one expert}
         {--user= : Whose groups and questions go into a global export; default the first admin}';
 
     protected $description = 'Export a project, an expert or everything as a bundle.';

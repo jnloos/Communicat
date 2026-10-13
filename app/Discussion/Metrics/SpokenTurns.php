@@ -141,7 +141,6 @@ class SpokenTurns
      * Leavers are found over the whole run, never per window: in a window
      * after their last turn they still appear, with zero turns, as a seated
      * participant who stays silent does.
-
      *
      * @return Collection<int, Expert>
      */
