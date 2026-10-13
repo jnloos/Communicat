@@ -64,9 +64,16 @@ class Transfer extends Component
             return;
         }
 
-        $this->report = app(BundleImporter::class)->import($this->bundle->getRealPath(), auth()->user())->toArray();
-        $this->stage = 'done';
-        $this->discardBundle();
+        try {
+            $this->report = app(BundleImporter::class)->import($this->bundle->getRealPath(), auth()->user())->toArray();
+            $this->stage = 'done';
+            $this->discardBundle();
+        } catch (Throwable $exception) {
+            // Back to the upload: the preview no longer says what happened.
+            $this->stage = 'upload';
+            $this->report = [];
+            $this->rejectBundle(__('transfer.import.failed', ['message' => $exception->getMessage()]));
+        }
     }
 
     public function startOver(): void

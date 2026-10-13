@@ -12,7 +12,11 @@ use ZipArchive;
  */
 final class BundleReader
 {
-    private function __construct(private readonly ZipArchive $zip, private readonly array $manifest) {}
+    private function __construct(
+        private readonly ZipArchive $zip,
+        private readonly array $manifest,
+        private readonly int $maxEntryBytes,
+    ) {}
 
     public static function open(
         string $path,
@@ -49,13 +53,13 @@ final class BundleReader
             throw new InvalidBundle(__('transfer.errors.no_manifest'));
         }
 
-        $manifest = (new self($zip, []))->json(Bundle::MANIFEST);
+        $manifest = (new self($zip, [], $maxEntryBytes))->json(Bundle::MANIFEST);
 
         if (($manifest['schema_version'] ?? null) !== Bundle::SCHEMA_VERSION) {
             throw new InvalidBundle(__('transfer.errors.unknown_schema'));
         }
 
-        return new self($zip, $manifest);
+        return new self($zip, $manifest, $maxEntryBytes);
     }
 
     public function manifest(): array
@@ -70,10 +74,14 @@ final class BundleReader
             return [];
         }
 
-        $content = $this->zip->getFromName($entry);
+        $content = $this->read($entry);
 
         if ($content === false) {
             throw new InvalidBundle(__('transfer.errors.broken_entry', ['name' => $entry]));
+        }
+
+        if (strlen($content) > $this->maxEntryBytes) {
+            throw new InvalidBundle(__('transfer.errors.too_large'));
         }
 
         try {
@@ -87,6 +95,26 @@ final class BundleReader
         }
 
         return $data;
+    }
+
+    /**
+     * The declared size can lie, so read at most one byte past the cap and
+     * refuse what reaches it. A stream, not getFromName($entry, $length):
+     * that one allocates the whole length up front, 100 MB per entry.
+     */
+    private function read(string $entry): string|false
+    {
+        $stream = $this->zip->getStream($entry);
+
+        if ($stream === false) {
+            return false;
+        }
+
+        try {
+            return stream_get_contents($stream, $this->maxEntryBytes + 1);
+        } finally {
+            fclose($stream);
+        }
     }
 
     /** @return list<string> */

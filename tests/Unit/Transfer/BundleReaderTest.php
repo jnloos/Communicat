@@ -135,4 +135,33 @@ class BundleReaderTest extends TestCase
         $this->expectExceptionMessage(__('transfer.errors.too_large'));
         BundleReader::open($path, maxEntryBytes: 10);
     }
+
+    public function test_an_entry_longer_than_its_declared_size_is_refused_when_read(): void
+    {
+        $path = $this->zip(['manifest.json' => $this->manifest(), 'experts.json' => json_encode(array_fill(0, 200, 'abcdefgh'))]);
+        $this->declareSize($path, 'experts.json', 10);
+        $reader = BundleReader::open($path, maxEntryBytes: 50);
+
+        $this->expectException(InvalidBundle::class);
+        $this->expectExceptionMessage(__('transfer.errors.too_large'));
+        $reader->json('experts.json');
+    }
+
+    /** Overwrites an entry's uncompressed size in its local and central header: a size that lies. */
+    private function declareSize(string $path, string $entry, int $size): void
+    {
+        $bytes = file_get_contents($path);
+
+        for ($at = strpos($bytes, $entry); $at !== false; $at = strpos($bytes, $entry, $at + strlen($entry))) {
+            if ($at >= 30 && substr($bytes, $at - 30, 4) === "PK\x03\x04") {
+                $bytes = substr_replace($bytes, pack('V', $size), $at - 30 + 22, 4);
+            }
+
+            if ($at >= 46 && substr($bytes, $at - 46, 4) === "PK\x01\x02") {
+                $bytes = substr_replace($bytes, pack('V', $size), $at - 46 + 24, 4);
+            }
+        }
+
+        file_put_contents($path, $bytes);
+    }
 }

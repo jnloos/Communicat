@@ -10,6 +10,9 @@ use App\Models\User;
  * A user's own questions and all templates, by name. On import they become
  * the importing user's questions; templates stay templates only for an admin.
  * A question with the same title, notes and definition is not added twice.
+ * The file lists them in their order (questions, then templates, each by
+ * position); an import appends them after the importer's last question or
+ * template in that order: HasPosition sets max(position) + 1 on create.
  */
 final class QuestionTransfer
 {

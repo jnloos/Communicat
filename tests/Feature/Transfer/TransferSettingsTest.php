@@ -105,6 +105,29 @@ class TransferSettingsTest extends TestCase
         $this->assertSame(0, Project::count());
     }
 
+    public function test_an_import_that_throws_shows_the_error_at_the_upload_and_drops_the_file(): void
+    {
+        app()->setLocale('en');
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin);
+        $component = Livewire::test(Transfer::class)->set('bundle', $this->bundle($admin))->assertSet('stage', 'preview');
+        $upload = $component->get('bundle');
+        // The temporary file vanishes between preview and import.
+        unlink($upload->getRealPath());
+
+        $component->call('import')
+            ->assertSet('stage', 'upload')
+            ->assertSet('report', [])
+            ->assertSet('bundle', null)
+            ->assertHasErrors('bundle');
+
+        $this->assertStringStartsWith(
+            __('transfer.import.failed', ['message' => '']),
+            $component->errors()->first('bundle'),
+        );
+        $this->assertSame(0, Project::count());
+    }
+
     public function test_failed_entries_are_listed_first_and_their_section_is_open(): void
     {
         $report = new ImportReport;

@@ -234,4 +234,31 @@ class GroupAndQuestionTransferTest extends TestCase
         $newGroup = ProjectGroup::create(['user_id' => $user->id, 'name' => 'Quality', 'position' => 1]);
         $this->assertSame((string) $newGroup->id, DefinitionNames::toIds($grouped, $user)['baseline']);
     }
+
+    public function test_imported_questions_join_the_end_of_the_importers_list(): void
+    {
+        $reader = User::factory()->create();
+        $reader->questions()->create(['name' => 'First', 'definition' => []]);
+        $reader->questions()->create(['name' => 'Second', 'definition' => []]);
+        $exported = [
+            ['name' => 'Imported A', 'notes' => null, 'is_template' => false, 'definition' => ['metric' => 'word_share']],
+            ['name' => 'Imported B', 'notes' => null, 'is_template' => false, 'definition' => ['metric' => 'turn_share']],
+        ];
+
+        (new QuestionTransfer)->import($exported, $reader, new ImportReport);
+
+        $this->assertSame(['First', 'Second', 'Imported A', 'Imported B'], $reader->questions()->notTemplates()->pluck('name')->all());
+        $this->assertSame([1, 2, 3, 4], $reader->questions()->notTemplates()->pluck('position')->map(fn ($p) => (int) $p)->all());
+    }
+
+    public function test_an_admins_imported_template_joins_the_end_of_the_templates(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $admin->questions()->create(['name' => 'Existing', 'definition' => [], 'is_template' => true]);
+
+        (new QuestionTransfer)->import([['name' => 'Imported', 'notes' => null, 'is_template' => true, 'definition' => []]], $admin, new ImportReport);
+
+        $this->assertSame(['Existing', 'Imported'], Question::templates()->pluck('name')->all());
+        $this->assertSame(2, (int) Question::templates()->where('name', 'Imported')->sole()->position);
+    }
 }
