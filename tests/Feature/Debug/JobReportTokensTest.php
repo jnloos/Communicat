@@ -12,76 +12,86 @@ class JobReportTokensTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_german_ui_groups_thousands_with_a_dot(): void
+    /** @param  list<array<string, ?int>>  $calls */
+    private function report(array $calls): string
     {
-        app()->setLocale('de');
         $job = JobLog::create(['job_class' => 'x', 'project_id' => Project::factory()->create()->id, 'status' => 'success', 'started_at' => now()]);
-        PromptLog::create(['job_log_id' => $job->id, 'model' => 'm', 'prompt' => 'p', 'response' => 'r', 'tokens_in' => 1200, 'tokens_out' => 300, 'tokens_reasoning' => 64]);
 
-        $html = view('components.debug.job-report', [
+        foreach ($calls as $tokens) {
+            PromptLog::create($tokens + ['job_log_id' => $job->id, 'model' => 'm', 'prompt' => 'p', 'response' => 'r', 'latency_ms' => 22427]);
+        }
+
+        return view('components.debug.job-report', [
             'logs' => collect([$job]),
             'selected' => $job->load('project', 'promptLogs', 'messages'),
             'selectedJobId' => $job->id,
         ])->render();
-
-        $this->assertStringContainsString('Tokens ein 1.200', $html);
     }
 
-    public function test_every_call_and_the_job_show_their_tokens(): void
-    {
-        app()->setLocale('en');
-        $job = JobLog::create(['job_class' => 'x', 'project_id' => Project::factory()->create()->id, 'status' => 'success', 'started_at' => now()]);
-        PromptLog::create(['job_log_id' => $job->id, 'model' => 'm', 'prompt' => 'p', 'response' => 'r', 'tokens_in' => 1200, 'tokens_out' => 300, 'tokens_reasoning' => 64]);
-        PromptLog::create(['job_log_id' => $job->id, 'model' => 'm', 'prompt' => 'p', 'response' => 'r', 'tokens_in' => 800, 'tokens_out' => 100, 'tokens_reasoning' => null]);
-
-        $html = view('components.debug.job-report', [
-            'logs' => collect([$job]),
-            'selected' => $job->load('project', 'promptLogs', 'messages'),
-            'selectedJobId' => $job->id,
-        ])->render();
-
-        $this->assertStringContainsString('Tokens in 1,200', $html);
-        $this->assertStringContainsString('Tokens out 300', $html);
-        $this->assertStringContainsString('Reasoning tokens 64', $html);
-        $this->assertStringContainsString('Reasoning tokens –', $html);
-
-        $total = $this->jobTotal($html);
-        $this->assertStringContainsString('Tokens in 2,000', $total);
-        $this->assertStringContainsString('Tokens out 400', $total);
-        $this->assertStringContainsString('Reasoning tokens ≥ 64', $total, 'One call did not report reasoning: the sum is a lower bound.');
-        $this->assertStringContainsString('title="'.e(__('debug.detail.tokens_partial')).'"', $html);
-        $this->assertStringNotContainsString('Reasoning tokens –', $total);
-    }
-
-    public function test_job_total_shows_a_dash_when_no_call_reported_reasoning(): void
-    {
-        app()->setLocale('en');
-        $job = JobLog::create(['job_class' => 'x', 'project_id' => Project::factory()->create()->id, 'status' => 'success', 'started_at' => now()]);
-        PromptLog::create(['job_log_id' => $job->id, 'model' => 'm', 'prompt' => 'p', 'response' => 'r', 'tokens_in' => 1200, 'tokens_out' => 300, 'tokens_reasoning' => null]);
-        PromptLog::create(['job_log_id' => $job->id, 'model' => 'm', 'prompt' => 'p', 'response' => 'r', 'tokens_in' => 800, 'tokens_out' => 100, 'tokens_reasoning' => null]);
-
-        $html = view('components.debug.job-report', [
-            'logs' => collect([$job]),
-            'selected' => $job->load('project', 'promptLogs', 'messages'),
-            'selectedJobId' => $job->id,
-        ])->render();
-
-        $total = $this->jobTotal($html);
-        $this->assertStringContainsString('Reasoning tokens –', $total);
-        $this->assertStringNotContainsString('Reasoning tokens 0', $total);
-    }
-
-    /** The job total is the one element marked data-tokens-total; per-call lines sit elsewhere. */
-    private function jobTotal(string $html): string
+    /** The text of the turn total's cell for one figure. */
+    private function total(string $html, string $column): string
     {
         $dom = new \DOMDocument;
         libxml_use_internal_errors(true);
         $dom->loadHTML('<?xml encoding="utf-8" ?>'.$html);
         libxml_clear_errors();
+        $cell = (new \DOMXPath($dom))->query("//*[@data-tokens-total]//*[@data-total='{$column}']")->item(0);
+        $this->assertNotNull($cell, "total cell {$column} not found");
 
-        $node = (new \DOMXPath($dom))->query('//*[@data-tokens-total]')->item(0);
-        $this->assertNotNull($node, 'job total block not found');
+        return trim(preg_replace('/\s+/', ' ', $cell->textContent));
+    }
 
-        return $node->textContent;
+    public function test_german_ui_groups_thousands_with_a_dot(): void
+    {
+        app()->setLocale('de');
+
+        $html = $this->report([['tokens_in' => 1200, 'tokens_out' => 300, 'tokens_reasoning' => 64]]);
+
+        $this->assertStringContainsString('Tokens ein', $html);
+        $this->assertSame('1.200', $this->total($html, 'tokens_in'));
+        $this->assertStringContainsString('22.427 ms', $html);
+    }
+
+    public function test_every_call_has_its_columns_and_the_turn_total_sums_them(): void
+    {
+        app()->setLocale('en');
+
+        $html = $this->report([
+            ['tokens_in' => 1200, 'tokens_out' => 300, 'tokens_reasoning' => 64],
+            ['tokens_in' => 800, 'tokens_out' => 100, 'tokens_reasoning' => 64],
+        ]);
+
+        $this->assertStringContainsString('Tokens in', $html);
+        $this->assertStringContainsString('1,200', $html);
+        $this->assertSame('2,000', $this->total($html, 'tokens_in'));
+        $this->assertSame('400', $this->total($html, 'tokens_out'));
+        $this->assertSame('128', $this->total($html, 'tokens_reasoning'));
+    }
+
+    public function test_a_figure_only_some_calls_reported_is_a_lower_bound_with_a_tooltip(): void
+    {
+        app()->setLocale('en');
+
+        $html = $this->report([
+            ['tokens_in' => 1200, 'tokens_out' => 300, 'tokens_reasoning' => 64],
+            ['tokens_in' => 800, 'tokens_out' => 100, 'tokens_reasoning' => null],
+        ]);
+
+        $total = $this->total($html, 'tokens_reasoning');
+        $this->assertStringStartsWith('≥ 64', $total);
+        $this->assertStringContainsString(__('debug.detail.tokens_partial'), $total, 'The tooltip sits in the total cell.');
+    }
+
+    public function test_a_figure_no_call_reported_is_a_dash_never_zero(): void
+    {
+        app()->setLocale('en');
+
+        $html = $this->report([
+            ['tokens_in' => 1200, 'tokens_out' => 300, 'tokens_reasoning' => null],
+            ['tokens_in' => 800, 'tokens_out' => 100, 'tokens_reasoning' => null],
+        ]);
+
+        $this->assertSame('–', $this->total($html, 'tokens_reasoning'));
+        $this->assertStringContainsString('aria-label="'.e(__('debug.detail.tokens_missing')).'"', $html);
     }
 }

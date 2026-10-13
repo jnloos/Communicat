@@ -105,18 +105,6 @@
                 </div>
             @endif
 
-            {{-- A count nobody reported shows as "–", never 0: 0 would claim the call spent none. --}}
-            @php($tokens = fn (?int $count) => $count === null ? '–' : \App\Discussion\Support\LocaleNumber::decimal($count, 0))
-            {{-- Summed over the job's calls (TokenTotal): "–" when none reported, "≥ n" when only some did. --}}
-            <div data-tokens-total class="mb-3 flex flex-wrap gap-2 text-xs">
-                @foreach (['tokens_in', 'tokens_out', 'tokens_reasoning'] as $column)
-                    @php($total = \App\Discussion\Values\TokenTotal::of($selected->promptLogs->pluck($column)))
-                    <flux:badge size="sm" :title="$total->sum !== null && ! $total->complete ? __('debug.detail.tokens_partial') : null">
-                        {{ __("debug.detail.{$column}", ['count' => ($total->sum !== null && ! $total->complete ? '≥ ' : '').$tokens($total->sum)]) }}
-                    </flux:badge>
-                @endforeach
-            </div>
-
             <flux:tab.group>
                 <flux:tabs variant="segmented">
                     <flux:tab name="prompts" selected>
@@ -128,53 +116,11 @@
                 </flux:tabs>
 
                 <flux:tab.panel name="prompts">
-                    @forelse ($selected->promptLogs as $plog)
-                        <div
-                            wire:key="plog-{{ $plog->id }}"
-                            x-data="{ open: false }"
-                            class="rounded border border-zinc-200 dark:border-zinc-700 mb-2 bg-zinc-50 dark:bg-zinc-900/40"
-                        >
-                            <button
-                                type="button"
-                                @click="open = !open"
-                                class="w-full px-3 py-2 text-xs flex items-center gap-2 flex-wrap text-left"
-                            >
-                                <svg class="h-3 w-3 shrink-0 text-zinc-400 transition-transform" :class="open && 'rotate-90'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-                                @if ($plog->status === 'failed')
-                                    <span class="h-2 w-2 shrink-0 rounded-full bg-red-500" title="{{ __('debug.status.failed') }}"></span>
-                                @endif
-                                <span class="font-mono text-amber-700 dark:text-amber-400">{{ $plog->label ?? '–' }}</span>
-                                <span class="text-zinc-400">·</span>
-                                <span class="font-mono text-zinc-600 dark:text-zinc-400">{{ $plog->model }}</span>
-                                <span class="text-zinc-400">·</span>
-                                <span class="font-mono text-zinc-500">{{ $plog->latency_ms !== null ? $plog->latency_ms . ' ms' : '–' }}</span>
-                                <span class="font-mono text-zinc-500">{{ __('debug.detail.tokens_in', ['count' => $tokens($plog->tokens_in)]) }}</span>
-                                <span class="font-mono text-zinc-500">{{ __('debug.detail.tokens_out', ['count' => $tokens($plog->tokens_out)]) }}</span>
-                                <span class="font-mono text-zinc-500">{{ __('debug.detail.tokens_reasoning', ['count' => $tokens($plog->tokens_reasoning)]) }}</span>
-                                @if ($plog->status === 'failed')
-                                    <span class="font-mono text-red-600 dark:text-red-400">{{ __('debug.status.failed') }}</span>
-                                @endif
-                                <span class="ml-auto font-mono text-zinc-400">{{ $plog->created_at?->format('H:i:s') }}</span>
-                            </button>
-                            <div x-show="open" x-cloak class="grid grid-cols-1 md:grid-cols-2 gap-0 border-t border-zinc-200 dark:border-zinc-700">
-                                <div class="p-3 border-b md:border-b-0 md:border-r border-zinc-200 dark:border-zinc-700">
-                                    <div class="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">{{ __('debug.detail.prompt') }}</div>
-                                    <pre class="text-xs whitespace-pre-wrap font-mono text-zinc-700 dark:text-zinc-300 max-h-80 overflow-auto">{{ $plog->prompt }}</pre>
-                                </div>
-                                <div class="p-3">
-                                    @if ($plog->status === 'failed')
-                                        <div class="text-[10px] uppercase tracking-wide text-red-500 mb-1">{{ __('debug.detail.error') }}</div>
-                                        <pre class="text-xs whitespace-pre-wrap font-mono text-red-700 dark:text-red-300 max-h-80 overflow-auto">{{ $plog->error }}</pre>
-                                    @else
-                                        <div class="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">{{ __('debug.detail.response') }}</div>
-                                        <pre class="text-xs whitespace-pre-wrap font-mono text-zinc-700 dark:text-zinc-300 max-h-80 overflow-auto">{{ $plog->response }}</pre>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    @empty
+                    @if ($selected->promptLogs->isEmpty())
                         <x-empty-state icon="chat-bubble-left-right">{{ __('debug.detail.no_prompts') }}</x-empty-state>
-                    @endforelse
+                    @else
+                        <x-debug.calls-table :calls="$selected->promptLogs" />
+                    @endif
                 </flux:tab.panel>
 
                 <flux:tab.panel name="messages">
