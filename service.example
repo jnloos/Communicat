@@ -29,3 +29,20 @@ RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
+
+---
+
+[Unit]
+Description=Laravel Scheduler (prompts:prune and other scheduled commands)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/communicat
+ExecStart=php artisan schedule:work
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
