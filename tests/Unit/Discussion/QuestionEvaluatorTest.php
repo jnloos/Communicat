@@ -5,6 +5,7 @@ namespace Tests\Unit\Discussion;
 use App\Discussion\Metrics\Questions\DimensionValues;
 use App\Discussion\Metrics\Questions\QuestionEvaluator;
 use App\Discussion\Pipelines\PipelineRegistry;
+use App\Discussion\Values\Dimension;
 use App\Discussion\Values\QuestionDefinition;
 use App\Discussion\Values\QuestionResult;
 use App\Discussion\Values\TurnRange;
@@ -16,6 +17,7 @@ use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -105,6 +107,57 @@ class QuestionEvaluatorTest extends TestCase
         $this->assertSame([0.25, 0.75], array_map(fn ($g) => $g->fairShare(), $together->groups));
         $this->assertEqualsWithDelta(0.5 / 3, $perHead->groups[1]->mean(), 1e-9);
         $this->assertSame(0.25, $perHead->groups[1]->fairShare());
+    }
+
+    public function test_a_leaver_whose_tag_matches_the_people_filter_is_counted(): void
+    {
+        $focus = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'focus persona']);
+        $true = $focus->values()->create(['name' => 'true']);
+        $run = $this->makeRun(['A', 'B', 'C'], [['A', 10], ['A', 10], ['A', 10], ['B', 10]]);
+        $this->experts['A']->setTag($focus, $true);
+        $run->removeContributingExpert($this->experts['A']);
+
+        $group = $this->answer(['people' => ['tags' => [$focus->id => [$true->id]]]])->panels[0]->groups[0];
+
+        $this->assertSame(0.75, $group->mean());
+        $this->assertSame(1, $group->n());
+        // A, B and C are all participants of the run: the fair share of one of three.
+        $this->assertEqualsWithDelta(1 / 3, $group->fairShare(), 1e-9);
+    }
+
+    public function test_a_leaver_whose_tag_does_not_match_the_people_filter_is_not_counted(): void
+    {
+        $focus = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'focus persona']);
+        $true = $focus->values()->create(['name' => 'true']);
+        $run = $this->makeRun(['A', 'B', 'C'], [['A', 10], ['A', 10], ['A', 10], ['B', 10]]);
+        $this->experts['B']->setTag($focus, $true);
+        $run->removeContributingExpert($this->experts['A']);
+
+        $group = $this->answer(['people' => ['tags' => [$focus->id => [$true->id]]]])->panels[0]->groups[0];
+
+        $this->assertSame(0.25, $group->mean());
+        $this->assertEqualsWithDelta(1 / 3, $group->fairShare(), 1e-9);
+    }
+
+    public function test_persona_tags_of_leavers_are_read_ahead(): void
+    {
+        $focus = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'focus persona']);
+        $true = $focus->values()->create(['name' => 'true']);
+        $runs = [];
+
+        foreach (range(1, 4) as $index) {
+            $runs[] = $run = $this->makeRun(["A{$index}", "B{$index}"], [["A{$index}", 10], ["B{$index}", 10]]);
+            $this->experts["A{$index}"]->setTag($focus, $true);
+            $run->removeContributingExpert($this->experts["A{$index}"]);
+        }
+
+        $values = app(DimensionValues::class)->withRuns(new Collection($runs));
+        DB::enableQueryLog();
+        $values->ofExperts(Dimension::fromKey("persona_tag:{$focus->id}"), array_map(fn (int $i) => $this->experts["A{$i}"]->id, range(1, 4)));
+        $queries = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        $this->assertSame(0, $queries);
     }
 
     public function test_agents_without_a_value_form_their_own_group(): void

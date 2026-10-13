@@ -118,8 +118,8 @@ final class QuestionEvaluator
     }
 
     /**
-     * The experts the people filter accepts among everyone seated in these
-     * runs, in one query; null when it accepts everyone (or the metric
+     * The experts the people filter accepts among the participants of these
+     * runs (seated, or spoke and left), in one query; null when it accepts everyone (or the metric
      * describes whole runs and ignores it).
      *
      * @param  Collection<int, Project>  $projects
@@ -138,7 +138,8 @@ final class QuestionEvaluator
             ->where('contributor_type', (new Expert)->getMorphClass())
             ->whereIn('project_id', $projects->modelKeys());
 
-        return Expert::whereIn('id', $seated)
+        // The participants SpeakingShares reports: the seated and whoever spoke and left.
+        return Expert::where(fn ($query) => $query->whereIn('id', $seated)->orWhereIn('id', $this->spoken->speakersIn($projects->modelKeys())))
             ->whereTagFilter($filter->tags)
             ->when($filter->expertNames !== [], fn ($query) => $query->whereIn('name', $filter->expertNames))
             ->pluck('id')

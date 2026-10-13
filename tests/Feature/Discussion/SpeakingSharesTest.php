@@ -249,6 +249,22 @@ class SpeakingSharesTest extends TestCase
         $this->assertSame(Gini::maximumFor(4), $report->giniCeiling);
     }
 
+    public function test_a_leaver_who_spoke_only_before_a_window_appears_in_it_with_zero(): void
+    {
+        $this->turn('Alice', 30);
+        $this->turn('Bob', 10);
+        $this->turn('Carol', 10);
+        $this->project->removeContributingExpert($this->experts['Alice']);
+
+        $report = app(SpeakingShares::class)->forProject($this->project->fresh(), new TurnRange(2, 3));
+        $alice = collect($report->speakers)->firstWhere('name', 'Alice');
+
+        $this->assertNotNull($alice);
+        $this->assertSame(0, $alice->turns);
+        $this->assertSame(0.0, $alice->turnShare);
+        $this->assertSame(Gini::of([1, 1, 0, 0]), $report->turnGini);
+    }
+
     public function test_a_seated_expert_who_left_without_speaking_drops_out(): void
     {
         $this->turn('Bob', 10);

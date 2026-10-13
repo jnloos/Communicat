@@ -2,6 +2,7 @@
 
 namespace App\Discussion\Metrics\Questions;
 
+use App\Discussion\Metrics\SpokenTurns;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Values\Dimension;
 use App\Discussion\Values\DimensionType;
@@ -38,7 +39,7 @@ final class DimensionValues
     /** @var array<string, array<int, array<int, int>>> morph class => model id => category id => value id */
     private array $tags = [];
 
-    public function __construct(private readonly PipelineRegistry $pipelines) {}
+    public function __construct(private readonly PipelineRegistry $pipelines, private readonly SpokenTurns $spoken) {}
 
     /**
      * The same values read for one user: a group is a drawer in that person's
@@ -60,9 +61,9 @@ final class DimensionValues
     }
 
     /**
-     * The same values with the tags of these runs and of everyone seated in
-     * them read ahead, in two queries. A run or agent outside them is still
-     * answered, by a query of its own.
+     * The same values with the tags of these runs and of all their
+     * participants (seated, or spoke and left) read ahead, in a few queries.
+     * A run or agent outside them is still answered, by a query of its own.
      *
      * @param  Collection<int, Project>  $projects
      */
@@ -72,9 +73,13 @@ final class DimensionValues
         $expertIds = $projects->isEmpty() ? [] : DB::table('project_contributors')
             ->where('contributor_type', $expertMorph)
             ->whereIn('project_id', $projects->modelKeys())
-            ->distinct()
+            ->select('contributor_id')
+            // Whoever spoke and left is a participant too (SpokenTurns::participants()).
+            ->union($this->spoken->speakersIn($projects->modelKeys())->toBase())
             ->pluck('contributor_id')
             ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
             ->all();
 
         $scoped = clone $this;

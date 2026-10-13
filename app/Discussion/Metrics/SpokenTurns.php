@@ -70,6 +70,18 @@ class SpokenTurns
             ->all();
     }
 
+    /**
+     * Everyone with a spoken turn in these runs, as a subquery of expert ids:
+     * with the seated, the participants of the runs (see participants()).
+     *
+     * @param  list<int>  $projectIds
+     * @return Builder<JobLog>
+     */
+    public function speakersIn(array $projectIds): Builder
+    {
+        return $this->spoken()->whereIn('project_id', $projectIds)->select('expert_id')->distinct();
+    }
+
     /** @return Builder<JobLog> the counting rule itself, for every run */
     private function spoken(): Builder
     {
@@ -125,6 +137,11 @@ class SpokenTurns
      * order, so a participant keeps the same colour in every chart. A leaver
      * has no pivot, so its seat reads null; its turns are part of the run's
      * totals, so leaving it out would make the shares sum to less than one.
+     *
+     * Leavers are found over the whole run, never per window: in a window
+     * after their last turn they still appear, with zero turns, as a seated
+     * participant who stays silent does.
+
      *
      * @return Collection<int, Expert>
      */
