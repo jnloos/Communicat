@@ -67,7 +67,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/transfer', Transfer::class)->middleware('admin')->name('settings.transfer');
     Route::get('settings/export', [BundleExportController::class, 'everything'])->middleware('admin')->name('settings.export');
     Route::get('statistics', StatisticsPage::class)->middleware('verified')->name('statistics');
-    Route::get('statistics/{question}/export', StudyExportController::class)->middleware('verified')->name('statistics.export');
+    Route::get('statistics/{question}/export', StudyExportController::class)->middleware('verified')->whereNumber('question')->name('statistics.export');
 
     Route::get('debug/jobs', JobDebugPanel::class)->name('debug.jobs');
 });

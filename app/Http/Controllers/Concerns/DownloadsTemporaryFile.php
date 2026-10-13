@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Concerns;
 
+use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 
@@ -14,7 +15,7 @@ trait DownloadsTemporaryFile
     /** @param  callable(string): void  $write  writes the file to the given path */
     private function downloadTemporary(callable $write, string $filename, string $contentType = 'application/zip'): BinaryFileResponse
     {
-        $path = tempnam(sys_get_temp_dir(), 'download');
+        $path = tempnam(sys_get_temp_dir(), 'download') ?: throw new RuntimeException('Could not create a temporary file for the download.');
 
         try {
             $write($path);
