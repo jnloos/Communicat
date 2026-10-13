@@ -40,6 +40,7 @@ return [
         'failed' => 'The bundle could not be read: :message',
         'checking' => 'Checking the bundle …',
         'preview_heading' => 'What would be imported',
+        'nothing_new' => 'Nothing new: everything in this bundle is already here.',
         'done_heading' => 'Imported',
         'done' => 'Import finished.',
         'done_with_failures' => 'Import finished, but some entries failed.',

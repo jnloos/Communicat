@@ -25,13 +25,19 @@
                             :heading="$importReport->hasFailures() ? __('transfer.import.done_with_failures') : __('transfer.import.done')" />
                     @endif
 
-                    <flux:heading>{{ $stage === 'preview' ? __('transfer.import.preview_heading') : __('transfer.import.done_heading') }}</flux:heading>
+                    @php($nothingNew = $stage === 'preview' && $importReport->createsNothing())
+
+                    @if ($nothingNew)
+                        <flux:text>{{ __('transfer.import.nothing_new') }}</flux:text>
+                    @else
+                        <flux:heading>{{ $stage === 'preview' ? __('transfer.import.preview_heading') : __('transfer.import.done_heading') }}</flux:heading>
+                    @endif
                     <x-transfer.report :report="$importReport" />
 
                     <div class="flex justify-end gap-2">
                         @if ($stage === 'preview')
                             <flux:button variant="filled" wire:click="startOver">{{ __('common.actions.cancel') }}</flux:button>
-                            <flux:button variant="primary" icon="arrow-up-tray" wire:click="import" wire:loading.attr="disabled" wire:target="import">{{ __('transfer.import.submit') }}</flux:button>
+                            <flux:button variant="primary" icon="arrow-up-tray" wire:click="import" wire:loading.attr="disabled" wire:target="import" :disabled="$nothingNew">{{ __('transfer.import.submit') }}</flux:button>
                         @else
                             <flux:button wire:click="startOver">{{ __('transfer.import.again') }}</flux:button>
                         @endif

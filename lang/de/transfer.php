@@ -40,6 +40,7 @@ return [
         'failed' => 'Das Bundle konnte nicht gelesen werden: :message',
         'checking' => 'Bundle wird geprüft …',
         'preview_heading' => 'Das würde importiert',
+        'nothing_new' => 'Nichts Neues: alles in diesem Bundle ist schon da.',
         'done_heading' => 'Importiert',
         'done' => 'Import abgeschlossen.',
         'done_with_failures' => 'Import abgeschlossen, aber einige Einträge sind fehlgeschlagen.',

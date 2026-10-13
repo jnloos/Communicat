@@ -18,6 +18,9 @@ class TransferSettingsTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** The import button carrying a plain disabled attribute (not wire:loading.attr="disabled"). */
+    private const DISABLED_IMPORT = '/<button(?=[^>]*wire:click="import")[^>]*\\sdisabled(?:="disabled")?[\\s>]/';
+
     private function bundle(User $admin): UploadedFile
     {
         $project = Project::factory()->create(['user_id' => $admin->id, 'title' => 'School']);
@@ -148,6 +151,42 @@ class TransferSettingsTest extends TestCase
             ->assertSee(__('transfer.errors.broken_entry', ['name' => Bundle::TAGS]));
 
         $this->assertSame(1, Project::count());
+    }
+
+    public function test_a_preview_with_nothing_new_says_so_and_disables_the_import(): void
+    {
+        app()->setLocale('en');
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin);
+        $project = Project::factory()->create(['user_id' => $admin->id, 'title' => 'School']);
+        $project->addContributingExpert(Expert::factory()->create(['name' => 'Alex']));
+        $path = tempnam(sys_get_temp_dir(), 'bundle');
+        app(BundleExporter::class)->project($project, $path);
+
+        $html = Livewire::test(Transfer::class)
+            ->set('bundle', UploadedFile::fake()->createWithContent('school.zip', file_get_contents($path)))
+            ->assertSet('stage', 'preview')
+            ->assertSee('Nothing new: everything in this bundle is already here.')
+            ->assertDontSee('What would be imported')
+            ->html();
+
+        $this->assertMatchesRegularExpression(self::DISABLED_IMPORT, $html);
+    }
+
+    public function test_a_preview_with_new_entries_keeps_its_heading_and_an_enabled_import(): void
+    {
+        app()->setLocale('en');
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin);
+
+        $html = Livewire::test(Transfer::class)
+            ->set('bundle', $this->bundle($admin))
+            ->assertSee('What would be imported')
+            ->assertDontSee('Nothing new')
+            ->html();
+
+        $this->assertDoesNotMatchRegularExpression(self::DISABLED_IMPORT, $html);
+        $this->assertStringContainsString('wire:click="import"', $html);
     }
 
     public function test_failed_entries_are_listed_first_and_their_section_is_open(): void

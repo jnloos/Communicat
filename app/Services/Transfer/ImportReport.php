@@ -51,6 +51,18 @@ final class ImportReport
         return array_values(array_filter(self::ORDER, fn (string $section) => $this->entries($section) !== []));
     }
 
+    /** True when no section creates anything: everything in the bundle is already here, or it is empty. */
+    public function createsNothing(): bool
+    {
+        foreach ($this->sections() as $section) {
+            if ($this->count($section, self::CREATED) > 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public function hasFailures(): bool
     {
         foreach ($this->sections() as $section) {
