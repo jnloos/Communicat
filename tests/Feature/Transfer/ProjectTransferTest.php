@@ -27,6 +27,7 @@ class ProjectTransferTest extends TestCase
         $project->addContributingExpert($kim);
         $job = JobLog::create(['job_class' => 'x', 'project_id' => $project->id, 'status' => 'success', 'started_at' => now()->subMinute(), 'finished_at' => now(), 'turn_index' => 1, 'expert_id' => $alex->id, 'seat' => 1, 'words' => 3, 'chars' => 15, 'selection' => ['selector' => 'HighestBidSelector', 'speaker_id' => $alex->id, 'signals' => ['bids' => ["E{$alex->id}" => 5]]]]);
         PromptLog::create(['job_log_id' => $job->id, 'model' => 'gpt-5-mini', 'prompt' => 'p', 'response' => 'r', 'purpose' => 'think', 'expert_id' => $kim->id, 'tokens_in' => 10, 'tokens_out' => 5]);
+        JobLog::create(['job_class' => 'x', 'project_id' => $project->id, 'status' => 'failed', 'started_at' => now()->subSeconds(30), 'finished_at' => now(), 'turn_index' => 2, 'expert_id' => $kim->id, 'seat' => 2, 'words' => 7, 'chars' => 35, 'error' => 'summarize failed']);
         $first = new Message;
         $first->forceFill(['project_id' => $project->id, 'expert_id' => $alex->id, 'addressee_expert_id' => $kim->id, 'job_log_id' => $job->id, 'content' => 'Hello Kim'])->save();
         Summary::create(['project_id' => $project->id, 'expert_id' => $kim->id, 'content' => 'Kim thinks.']);
@@ -53,12 +54,74 @@ class ProjectTransferTest extends TestCase
         $this->assertSame([1, 2], $copy->experts()->get()->pluck('pivot.seat')->map(fn ($seat) => (int) $seat)->all());
         $this->assertSame('Hello Kim', $copy->messages()->sole()->content);
         $this->assertSame($copy->messages()->sole()->id, (int) $copy->summarized_until_message_id);
-        $this->assertSame(1, JobLog::where('project_id', $copy->id)->count());
+        $this->assertSame(2, JobLog::where('project_id', $copy->id)->count());
         $this->assertSame(10, PromptLog::whereHas('jobLog', fn ($q) => $q->where('project_id', $copy->id))->sole()->tokens_in);
-        $this->assertSame(JobLog::where('project_id', $copy->id)->sole()->id, $copy->messages()->sole()->job_log_id);
+        $this->assertSame(JobLog::where('project_id', $copy->id)->where('turn_index', 1)->sole()->id, $copy->messages()->sole()->job_log_id);
         $this->assertSame('Kim thinks.', Summary::where('project_id', $copy->id)->sole()->content);
         $this->assertEquals($sharesBefore->speakers, app(SpeakingShares::class)->forProject($copy)->speakers);
         $this->assertTrue($copy->hasContributor($owner));
+        $this->assertSame($this->normalise($data), $this->normalise((new ProjectTransfer)->export($copy)));
+        $this->assertSame(2, $sharesBefore->spokenTurns);
+    }
+
+    /** Local keys are per file: compare them by position, everything else verbatim. */
+    private function normalise(array $data): array
+    {
+        $jobs = array_flip(array_column($data['jobs'], 'key'));
+        $messages = array_flip(array_column($data['messages'], 'key'));
+
+        foreach ($data['jobs'] as $i => $job) {
+            $data['jobs'][$i]['key'] = $i;
+        }
+        foreach ($data['messages'] as $i => $message) {
+            $data['messages'][$i]['key'] = $i;
+            $data['messages'][$i]['job'] = $message['job'] === null ? null : $jobs[$message['job']];
+        }
+        $data['summarized_until_message'] = $data['summarized_until_message'] === null ? null : $messages[$data['summarized_until_message']];
+
+        return $data;
+    }
+
+    public function test_skipped_project_tags_are_reported_on_the_created_entry(): void
+    {
+        $owner = User::factory()->create();
+        $data = (new ProjectTransfer)->export($this->studyRun($owner));
+        Project::query()->delete();
+        $data['tags'] = ['No such category' => 'x'];
+        $report = new ImportReport;
+
+        $this->assertNotNull((new ProjectTransfer)->import($data, $owner, $report));
+        $this->assertSame(1, $report->count(ImportReport::PROJECTS, ImportReport::CREATED));
+        $this->assertStringContainsString('No such category: x', $report->entries(ImportReport::PROJECTS)[0]['note']);
+    }
+
+    public function test_an_unknown_model_skips_the_project(): void
+    {
+        $owner = User::factory()->create();
+        $data = (new ProjectTransfer)->export($this->studyRun($owner));
+        Project::query()->delete();
+        $report = new ImportReport;
+
+        $this->assertNull((new ProjectTransfer)->import(['model' => 'nope-1'] + $data, $owner, $report));
+        $this->assertSame(1, $report->count(ImportReport::PROJECTS, ImportReport::SKIPPED));
+        $this->assertSame(0, Project::count());
+    }
+
+    public function test_a_failing_write_rolls_the_whole_project_back(): void
+    {
+        $owner = User::factory()->create();
+        $data = (new ProjectTransfer)->export($this->studyRun($owner));
+        Project::query()->delete();
+        JobLog::query()->delete();
+        Message::query()->delete();
+        $data['summaries'][0]['expert'] = null;
+        $report = new ImportReport;
+
+        $this->assertNull((new ProjectTransfer)->import($data, $owner, $report));
+        $this->assertSame(1, $report->count(ImportReport::PROJECTS, ImportReport::FAILED));
+        $this->assertSame(0, Project::count());
+        $this->assertSame(0, JobLog::count());
+        $this->assertSame(0, Message::count());
     }
 
     public function test_an_existing_project_is_skipped(): void
@@ -94,7 +157,7 @@ class ProjectTransferTest extends TestCase
         $owner = User::factory()->create();
         $project = $this->studyRun($owner);
         $gone = Expert::factory()->create();
-        PromptLog::create(['job_log_id' => JobLog::sole()->id, 'model' => 'm', 'prompt' => 'p', 'response' => 'r', 'expert_id' => $gone->id]);
+        PromptLog::create(['job_log_id' => JobLog::where('turn_index', 1)->sole()->id, 'model' => 'm', 'prompt' => 'p', 'response' => 'r', 'expert_id' => $gone->id]);
 
         $this->assertContains($gone->id, (new ProjectTransfer)->expertIds($project));
     }

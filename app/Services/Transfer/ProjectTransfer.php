@@ -133,15 +133,24 @@ final class ProjectTransfer
             return null;
         }
 
+        $skippedTags = [];
+
         try {
-            $project = DB::transaction(fn () => $this->write($data, $owner, $this->expertIdsByUuid($data)));
+            $project = DB::transaction(function () use ($data, $owner, &$skippedTags) {
+                return $this->write($data, $owner, $this->expertIdsByUuid($data), $skippedTags);
+            });
         } catch (Throwable $exception) {
             $report->add(ImportReport::PROJECTS, $title, ImportReport::FAILED, $exception->getMessage());
 
             return null;
         }
 
-        $report->add(ImportReport::PROJECTS, $title, ImportReport::CREATED);
+        $report->add(
+            ImportReport::PROJECTS,
+            $title,
+            ImportReport::CREATED,
+            $skippedTags === [] ? null : __('transfer.notes.tags_skipped', ['tags' => implode(', ', $skippedTags)]),
+        );
 
         return $project;
     }
@@ -203,8 +212,11 @@ final class ProjectTransfer
         return Expert::whereIn('uuid', $this->namedExperts($data))->pluck('id', 'uuid')->map(fn ($id) => (int) $id)->all();
     }
 
-    /** @param  array<string, int>  $experts  uuid => id */
-    private function write(array $data, User $owner, array $experts): Project
+    /**
+     * @param  array<string, int>  $experts  uuid => id
+     * @param  list<string>  $skippedTags  filled with the tag pairs that could not be placed
+     */
+    private function write(array $data, User $owner, array $experts, array &$skippedTags): Project
     {
         $expert = fn (?string $uuid) => $uuid === null ? null : $experts[$uuid];
         $time = fn ($value) => $value === null ? null : Carbon::parse($value);
@@ -227,7 +239,7 @@ final class ProjectTransfer
         ])->save();
 
         $project->addContributingUser($owner);
-        $this->tags->assign($project, $data['tags'] ?? []);
+        $skippedTags = $this->tags->assign($project, $data['tags'] ?? []);
 
         foreach ($data['seats'] ?? [] as $seat) {
             $project->experts()->attach($expert($seat['expert']), ['seat' => $seat['seat']]);
@@ -240,7 +252,7 @@ final class ProjectTransfer
             $log->forceFill([
                 'project_id' => $project->id,
                 'job_class' => (string) ($job['job_class'] ?? ''),
-                'status' => (string) ($job['status'] ?? 'success'),
+                'status' => (string) ($job['status'] ?? 'failed'),
                 'payload' => $job['payload'] ?? null,
                 'turn_index' => $job['turn_index'] ?? null,
                 'expert_id' => $expert($job['expert'] ?? null),
