@@ -28,27 +28,30 @@
                             @php($owns = $template->user_id === auth()->id())
                             <div class="relative" wire:key="template-{{ $template->id }}" @if ($mayShare) wire:sort:item="{{ $template->id }}" @endif>
                                 <x-statistics.entry :title="$template->name" :notes="$template->notes" :sentence="$sentences[$template->id]" :current="$questionId === $template->id"
-                                    icon="rectangle-stack" :with-menu="$mayShare" wire:click="open({{ $template->id }})" />
+                                    icon="rectangle-stack" with-menu wire:click="open({{ $template->id }})" />
 
-                                @if ($mayShare)
-                                    <div class="absolute end-1 top-1.5" wire:sort:ignore>
-                                        <flux:dropdown position="bottom" align="end">
-                                            <flux:button variant="ghost" size="xs" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')"
-                                                class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!" />
-                                            <flux:menu>
-                                                @if ($owns)
-                                                    <flux:menu.item icon="pencil-square" wire:click="startRenaming({{ $template->id }})">{{ __('questions.actions.rename') }}</flux:menu.item>
-                                                    <flux:menu.separator />
-                                                @endif
+                                {{-- Everyone may export a template's runs; only admins order it, only its admin owner renames or deletes it. --}}
+                                <div class="absolute end-1 top-1.5" wire:sort:ignore>
+                                    <flux:dropdown position="bottom" align="end">
+                                        <flux:button variant="ghost" size="xs" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')"
+                                            class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!" />
+                                        <flux:menu>
+                                            <x-statistics.export-item :question-id="$template->id" />
+                                            @if ($mayShare && $owns)
+                                                <flux:menu.separator />
+                                                <flux:menu.item icon="pencil-square" wire:click="startRenaming({{ $template->id }})">{{ __('questions.actions.rename') }}</flux:menu.item>
+                                            @endif
+                                            @if ($mayShare)
+                                                <flux:menu.separator />
                                                 <x-statistics.move-items :first="$loop->first" :last="$loop->last" action="moveTemplate({{ $template->id }}, %d)" />
-                                                @if ($owns)
-                                                    <flux:menu.separator />
-                                                    <flux:menu.item variant="danger" icon="trash" wire:click="confirmDelete({{ $template->id }})">{{ __('questions.actions.delete') }}</flux:menu.item>
-                                                @endif
-                                            </flux:menu>
-                                        </flux:dropdown>
-                                    </div>
-                                @endif
+                                            @endif
+                                            @if ($mayShare && $owns)
+                                                <flux:menu.separator />
+                                                <flux:menu.item variant="danger" icon="trash" wire:click="confirmDelete({{ $template->id }})">{{ __('questions.actions.delete') }}</flux:menu.item>
+                                            @endif
+                                        </flux:menu>
+                                    </flux:dropdown>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -72,6 +75,8 @@
                                         <flux:button variant="ghost" size="xs" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')"
                                             class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!" />
                                         <flux:menu>
+                                            <x-statistics.export-item :question-id="$question->id" />
+                                            <flux:menu.separator />
                                             <flux:menu.item icon="pencil-square" wire:click="startRenaming({{ $question->id }})">{{ __('questions.actions.rename') }}</flux:menu.item>
                                             <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $question->id }})">{{ __('questions.actions.duplicate') }}</flux:menu.item>
                                             <flux:menu.separator />

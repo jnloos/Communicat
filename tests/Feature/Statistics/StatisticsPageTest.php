@@ -33,6 +33,19 @@ class StatisticsPageTest extends TestCase
         $this->actingAs(User::factory()->create())->get(route('statistics'))->assertOk()->assertSee(__('questions.heading'));
     }
 
+    public function test_every_list_entry_offers_the_raw_data_export_also_to_non_admins(): void
+    {
+        $template = User::factory()->create()->questions()->create(['name' => 'Status effect', 'is_template' => true]);
+        $user = User::factory()->create();
+        $question = $user->questions()->create(['name' => 'Mine']);
+        $this->actingAs($user);
+
+        Livewire::test(StatisticsPage::class)
+            ->assertSeeHtml('href="'.route('statistics.export', $template).'"')
+            ->assertSeeHtml('href="'.route('statistics.export', $question).'"')
+            ->assertDontSeeHtml('moveTemplate(');
+    }
+
     public function test_a_new_question_opens_at_once_without_a_name(): void
     {
         $user = User::factory()->create();
