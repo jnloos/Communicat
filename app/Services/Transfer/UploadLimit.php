@@ -3,8 +3,9 @@
 namespace App\Services\Transfer;
 
 /** The largest bundle the page can really accept: our cap, or less if PHP's own upload limits are lower. */
-class UploadLimit
+final class UploadLimit
 {
+    /** Mirrors Livewire's default rule for temporary uploads (max:12288); above it Livewire refuses first. */
     public const CAP_KB = 12288;
 
     public static function kilobytes(): int
@@ -28,7 +29,7 @@ class UploadLimit
         return max(1, intdiv(self::kilobytes(), 1024));
     }
 
-    /** Parses ini shorthand such as 2M, 8M, 1G or 512K; 0 for empty or unlimited (-1). */
+    /** Parses ini shorthand such as 2M, 8M, 1G or 512K; 0 for empty or unlimited (-1). A byte value below 1 KB counts as 1 KB. */
     public static function iniToKilobytes(string $value): int
     {
         $value = trim($value);
@@ -40,7 +41,7 @@ class UploadLimit
             'g' => (int) $value * 1024 * 1024,
             'm' => (int) $value * 1024,
             'k' => (int) $value,
-            default => intdiv((int) $value, 1024),
+            default => max(1, intdiv((int) $value, 1024)),
         };
     }
 }

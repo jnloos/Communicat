@@ -11,6 +11,9 @@ final class ImportReport
 
     public const FAILED = 'failed';
 
+    /** Badge colour per outcome, in the order the report shows them. */
+    public const COLORS = [self::CREATED => 'green', self::SKIPPED => 'zinc', self::FAILED => 'red'];
+
     public const TAGS = 'tags';
 
     public const EXPERTS = 'experts';

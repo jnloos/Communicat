@@ -26,6 +26,14 @@ class ExportBundle extends Command
         $projectIds = $this->option('project');
         $expertIds = $this->option('expert');
 
+        $requested = count($projectIds) + count($expertIds);
+
+        if ($requested > 1) {
+            $this->error('Give exactly one --project, exactly one --expert, or neither for everything.');
+
+            return self::FAILURE;
+        }
+
         foreach ($projectIds as $id) {
             if (! Project::whereKey($id)->exists()) {
                 $this->error("No project with id {$id}.");
@@ -40,14 +48,6 @@ class ExportBundle extends Command
 
                 return self::FAILURE;
             }
-        }
-
-        $requested = count($projectIds) + count($expertIds);
-
-        if ($requested > 1) {
-            $this->error('Give exactly one --project, exactly one --expert, or neither for everything.');
-
-            return self::FAILURE;
         }
 
         if ($requested === 0) {

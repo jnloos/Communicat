@@ -67,6 +67,16 @@ class BundleCommandsTest extends TestCase
             ->assertFailed();
     }
 
+    public function test_two_options_say_exactly_one_even_when_an_id_is_missing(): void
+    {
+        $project = Project::factory()->create();
+
+        $this->artisan('bundle:export', ['path' => $this->path(), '--project' => [$project->id], '--expert' => [998]])
+            ->expectsOutputToContain('Give exactly one --project, exactly one --expert, or neither for everything.')
+            ->doesntExpectOutputToContain('No expert with id 998.')
+            ->assertFailed();
+    }
+
     public function test_export_names_a_missing_project_or_expert(): void
     {
         $path = $this->path();

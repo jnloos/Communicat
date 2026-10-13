@@ -16,7 +16,7 @@
                     <flux:accordion.heading>
                         <div class="flex flex-wrap items-center gap-2">
                             <span>{{ __('transfer.sections.'.$section) }}</span>
-                            @foreach ([ImportReport::CREATED => 'green', ImportReport::SKIPPED => 'zinc', ImportReport::FAILED => 'red'] as $outcome => $color)
+                            @foreach (ImportReport::COLORS as $outcome => $color)
                                 @if ($report->count($section, $outcome) > 0)
                                     <flux:badge size="sm" :color="$color">{{ trans_choice('transfer.outcomes.'.$outcome, $report->count($section, $outcome), ['count' => $report->count($section, $outcome)]) }}</flux:badge>
                                 @endif
@@ -28,7 +28,7 @@
                             @foreach ($entries as $entry)
                                 <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-1.5 text-sm">
                                     <span class="font-medium text-zinc-800 dark:text-white">{{ $entry['name'] }}</span>
-                                    <flux:badge size="sm" :color="['created' => 'green', 'skipped' => 'zinc', 'failed' => 'red'][$entry['outcome']]">{{ __('transfer.outcome.'.$entry['outcome']) }}</flux:badge>
+                                    <flux:badge size="sm" :color="ImportReport::COLORS[$entry['outcome']] ?? 'zinc'">{{ __('transfer.outcome.'.$entry['outcome']) }}</flux:badge>
                                     @if ($entry['note'])
                                         <span class="w-full text-xs text-zinc-500 dark:text-zinc-400">{{ $entry['note'] }}</span>
                                     @endif

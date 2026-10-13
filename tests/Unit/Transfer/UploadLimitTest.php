@@ -30,4 +30,10 @@ class UploadLimitTest extends TestCase
         $this->assertSame(UploadLimit::CAP_KB, UploadLimit::fromIni('0', '-1'));
         $this->assertSame(UploadLimit::CAP_KB, UploadLimit::fromIni('1G', '1G'));
     }
+
+    public function test_a_byte_value_below_one_kilobyte_counts_as_one_not_as_unlimited(): void
+    {
+        $this->assertSame(1, UploadLimit::iniToKilobytes('500'));
+        $this->assertSame(1, UploadLimit::fromIni('500', '8M'));
+    }
 }
