@@ -6,7 +6,11 @@
             <flux:card class="space-y-3">
                 <flux:heading size="lg">{{ __('transfer.export.heading') }}</flux:heading>
                 <flux:text size="sm">{{ __('transfer.export.description') }}</flux:text>
-                <flux:button icon="arrow-down-tray" :href="route('settings.export')">{{ __('transfer.export.everything') }}</flux:button>
+                {{-- The ZIP is built before the download starts; say so for a while after the click. --}}
+                <div class="flex flex-wrap items-center gap-3" x-data="{ building: false }">
+                    <flux:button icon="arrow-down-tray" :href="route('settings.export')" x-on:click="building = true; setTimeout(() => building = false, 8000)">{{ __('transfer.export.everything') }}</flux:button>
+                    <flux:text size="sm" aria-live="polite"><span x-show="building" x-cloak>{{ __('transfer.export.building') }}</span></flux:text>
+                </div>
             </flux:card>
 
             <flux:card class="space-y-4">
@@ -15,7 +19,7 @@
                 @if ($stage === 'upload')
                     <flux:text size="sm">{{ __('transfer.import.description') }}</flux:text>
                     <flux:file-upload wire:model="bundle" accept=".zip,application/zip">
-                        <flux:file-upload.dropzone inline :heading="__('transfer.import.dropzone_heading')" :text="__('transfer.import.dropzone_text', ['mb' => $maxMegabytes])" />
+                        <flux:file-upload.dropzone inline role="button" :aria-label="__('transfer.import.choose')" :heading="__('transfer.import.dropzone_heading')" :text="__('transfer.import.dropzone_text', ['mb' => $maxMegabytes])" />
                     </flux:file-upload>
                     <flux:text size="sm" aria-live="polite" wire:loading wire:target="bundle">{{ __('transfer.import.checking') }}</flux:text>
                     <flux:error name="bundle" />

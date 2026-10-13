@@ -189,6 +189,24 @@ class TransferSettingsTest extends TestCase
         $this->assertStringContainsString('wire:click="import"', $html);
     }
 
+    public function test_the_upload_has_an_accessible_name(): void
+    {
+        app()->setLocale('en');
+        $html = $this->actingAs(User::factory()->create(['is_admin' => true]))->get(route('settings.transfer'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression('/<div[^>]*role="button"[^>]*aria-label="Choose a bundle"[^>]*data-flux-file-upload-dropzone/s', $html);
+    }
+
+    public function test_the_export_tells_while_it_builds_and_where_large_archives_go(): void
+    {
+        app()->setLocale('en');
+
+        $this->actingAs(User::factory()->create(['is_admin' => true]))->get(route('settings.transfer'))
+            ->assertSee('Building the export …')
+            ->assertSee('php artisan bundle:import')
+            ->assertSee('x-on:click="building = true', false);
+    }
+
     public function test_failed_entries_are_listed_first_and_their_section_is_open(): void
     {
         $report = new ImportReport;

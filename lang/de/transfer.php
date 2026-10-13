@@ -29,12 +29,14 @@ return [
     'subheading' => 'Sichere die Studie als Archiv oder hole Projekte und Experten aus einem herein.',
     'export' => [
         'heading' => 'Exportieren',
-        'description' => 'Alle Projekte mit Turns und protokollierten Aufrufen, alle Experten, die Tags, deine Sidebar-Gruppen und deine Fragen als eine .zip. Prompt-Texte älter als 24 Stunden sind nicht mehr gespeichert und deshalb nicht enthalten.',
+        'description' => 'Alle Projekte mit Turns und protokollierten Aufrufen, alle Experten, die Tags, deine Sidebar-Gruppen und deine Fragen als eine .zip. Prompt-Texte älter als 24 Stunden sind nicht mehr gespeichert und deshalb nicht enthalten. Ein Archiv über dem unten genannten Upload-Limit importierst du mit php artisan bundle:import.',
         'everything' => 'Alles exportieren',
+        'building' => 'Export wird erstellt …',
     ],
     'import' => [
         'heading' => 'Importieren',
         'description' => 'Eine aus dieser App exportierte .zip: ein Projekt, ein Experte oder alles. Du siehst, was passieren würde, bevor etwas geschrieben wird. Projekte und Experten, die schon da sind, werden übersprungen.',
+        'choose' => 'Bundle auswählen',
         'dropzone_heading' => 'Bundle hierher ziehen oder klicken',
         'dropzone_text' => 'Eine .zip bis :mb MB; größere mit php artisan bundle:import',
         'failed' => 'Das Bundle konnte nicht gelesen werden: :message',
