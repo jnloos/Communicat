@@ -51,7 +51,7 @@ return [
             'tokens_in' => 'Tokens ein',
             'tokens_out' => 'Tokens aus',
             'tokens_reasoning' => 'Reasoning',
-            'time' => 'Uhrzeit',
+            'finished' => 'Ende',
             'total' => 'Summe des Turns',
             'toggle' => 'Prompt und Antwort zeigen',
         ],

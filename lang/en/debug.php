@@ -51,7 +51,7 @@ return [
             'tokens_in' => 'Tokens in',
             'tokens_out' => 'Tokens out',
             'tokens_reasoning' => 'Reasoning',
-            'time' => 'Time',
+            'finished' => 'Finished',
             'total' => 'Turn total',
             'toggle' => 'Show prompt and response',
         ],

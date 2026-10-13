@@ -22,7 +22,7 @@
             @foreach ($columns as $column)
                 <flux:table.column align="end">{{ __("debug.detail.calls.{$column}") }}</flux:table.column>
             @endforeach
-            <flux:table.column align="end">{{ __('debug.detail.calls.time') }}</flux:table.column>
+            <flux:table.column align="end">{{ __('debug.detail.calls.finished') }}</flux:table.column>
         </flux:table.columns>
 
         <flux:table.rows>
@@ -52,6 +52,7 @@
                             @endif
                         </flux:table.cell>
                     @endforeach
+                    {{-- RecordPromptLog writes a call when it ends, so created_at is its finish time. --}}
                     <flux:table.cell align="end" class="tabular-nums">{{ $call->created_at?->format('H:i:s') }}</flux:table.cell>
                 </flux:table.row>
 
