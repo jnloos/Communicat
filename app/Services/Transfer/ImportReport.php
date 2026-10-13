@@ -63,6 +63,12 @@ final class ImportReport
         return true;
     }
 
+    /** True when there are entries and every one is skipped: the bundle is already here, nothing failed. */
+    public function isAllSkipped(): bool
+    {
+        return $this->sections() !== [] && $this->createsNothing() && ! $this->hasFailures();
+    }
+
     public function hasFailures(): bool
     {
         foreach ($this->sections() as $section) {

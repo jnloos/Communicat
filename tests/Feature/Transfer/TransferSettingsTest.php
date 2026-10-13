@@ -173,6 +173,61 @@ class TransferSettingsTest extends TestCase
         $this->assertMatchesRegularExpression(self::DISABLED_IMPORT, $html);
     }
 
+    /** A project bundle of a run that is already here, changed by $edit before upload. */
+    private function bundleOfWhatIsHere(User $admin, callable $edit): UploadedFile
+    {
+        $project = Project::factory()->create(['user_id' => $admin->id, 'title' => 'School']);
+        $project->addContributingExpert(Expert::factory()->create(['name' => 'Alex']));
+        $path = tempnam(sys_get_temp_dir(), 'bundle');
+        app(BundleExporter::class)->project($project, $path);
+        $zip = new \ZipArchive;
+        $zip->open($path);
+        $edit($zip);
+        $zip->close();
+
+        return UploadedFile::fake()->createWithContent('school.zip', file_get_contents($path));
+    }
+
+    public function test_a_preview_with_failures_and_nothing_new_keeps_its_heading_and_disables_the_import(): void
+    {
+        app()->setLocale('en');
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin);
+        $upload = $this->bundleOfWhatIsHere($admin, fn (\ZipArchive $zip) => $zip->addFromString(Bundle::TAGS, '{broken'));
+
+        $html = Livewire::test(Transfer::class)
+            ->set('bundle', $upload)
+            ->assertSet('stage', 'preview')
+            ->assertSee('What would be imported')
+            ->assertDontSee('Nothing new')
+            ->html();
+
+        $this->assertMatchesRegularExpression(self::DISABLED_IMPORT, $html);
+    }
+
+    public function test_an_empty_bundle_says_it_is_empty_and_disables_the_import(): void
+    {
+        app()->setLocale('en');
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin);
+        $upload = $this->bundleOfWhatIsHere($admin, function (\ZipArchive $zip) {
+            for ($index = $zip->numFiles - 1; $index >= 0; $index--) {
+                if ($zip->getNameIndex($index) !== Bundle::MANIFEST) {
+                    $zip->deleteIndex($index);
+                }
+            }
+        });
+
+        $html = Livewire::test(Transfer::class)
+            ->set('bundle', $upload)
+            ->assertSet('stage', 'preview')
+            ->assertSee('The bundle is empty.')
+            ->assertDontSee('Nothing new')
+            ->html();
+
+        $this->assertMatchesRegularExpression(self::DISABLED_IMPORT, $html);
+    }
+
     public function test_a_preview_with_new_entries_keeps_its_heading_and_an_enabled_import(): void
     {
         app()->setLocale('en');
