@@ -22,4 +22,12 @@ class UploadLimitTest extends TestCase
         $this->assertLessThanOrEqual(UploadLimit::CAP_KB, UploadLimit::kilobytes());
         $this->assertGreaterThanOrEqual(1, UploadLimit::megabytes());
     }
+
+    public function test_the_lowest_limit_wins_and_unlimited_ones_fall_back_to_the_cap(): void
+    {
+        $this->assertSame(2048, UploadLimit::fromIni('2M', '8M'));
+        $this->assertSame(2048, UploadLimit::fromIni('0', '2M'));
+        $this->assertSame(UploadLimit::CAP_KB, UploadLimit::fromIni('0', '-1'));
+        $this->assertSame(UploadLimit::CAP_KB, UploadLimit::fromIni('1G', '1G'));
+    }
 }

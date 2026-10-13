@@ -9,12 +9,18 @@ class UploadLimit
 
     public static function kilobytes(): int
     {
+        return self::fromIni((string) ini_get('upload_max_filesize'), (string) ini_get('post_max_size'));
+    }
+
+    /** Unlimited (0 or -1) limits drop out; with none left, the cap stands. */
+    public static function fromIni(string $uploadMaxFilesize, string $postMaxSize): int
+    {
         $limits = array_filter([
-            self::iniToKilobytes((string) ini_get('upload_max_filesize')),
-            self::iniToKilobytes((string) ini_get('post_max_size')),
+            self::iniToKilobytes($uploadMaxFilesize),
+            self::iniToKilobytes($postMaxSize),
         ], fn (int $kb): bool => $kb > 0);
 
-        return min(self::CAP_KB, ...$limits);
+        return min([self::CAP_KB, ...$limits]);
     }
 
     public static function megabytes(): int
@@ -30,7 +36,7 @@ class UploadLimit
             return 0;
         }
 
-        return (int) match (strtolower(substr($value, -1))) {
+        return match (strtolower(substr($value, -1))) {
             'g' => (int) $value * 1024 * 1024,
             'm' => (int) $value * 1024,
             'k' => (int) $value,
