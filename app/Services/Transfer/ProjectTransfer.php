@@ -11,7 +11,9 @@ use App\Models\PromptLog;
 use App\Models\Summary;
 use App\Models\User;
 use App\Services\Tags\TagsByName;
-use Illuminate\Support\Carbon;
+use App\Services\Transfer\Rows\JobLogRow;
+use App\Services\Transfer\Rows\PromptLogRow;
+use App\Services\Transfer\Rows\Timestamp;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;
@@ -50,7 +52,6 @@ final class ProjectTransfer
     {
         $uuids = Expert::whereIn('id', $this->expertIds($project))->pluck('uuid', 'id');
         $uuid = fn ($id) => $id === null ? null : ($uuids[(int) $id] ?? null);
-        $time = fn ($value) => $value === null ? null : Carbon::parse($value)->toIso8601String();
 
         return [
             'uuid' => $project->uuid,
@@ -65,7 +66,7 @@ final class ProjectTransfer
             'summarize_oldest' => $project->summarize_oldest,
             'long_term_memory' => $project->long_term_memory,
             'summarized_until_message' => $project->summarized_until_message_id,
-            'created_at' => $time($project->created_at),
+            'created_at' => Timestamp::export($project->created_at),
             'tags' => $this->tags->export($project),
             'expert_ids' => $uuids->mapWithKeys(fn ($uuid, $id) => [(string) $id => $uuid])->all(),
             'seats' => $project->experts()->get()
@@ -79,52 +80,18 @@ final class ProjectTransfer
                     'is_user' => $message->user_id !== null,
                     'addressee' => $uuid($message->addressee_expert_id),
                     'job' => $message->job_log_id,
-                    'created_at' => $time($message->created_at),
+                    'created_at' => Timestamp::export($message->created_at),
                 ])->values()->all(),
             'summaries' => Summary::where('project_id', $project->id)->orderBy('id')->get()
                 ->map(fn (Summary $summary) => [
                     'expert' => $uuid($summary->expert_id),
                     'content' => $summary->content,
-                    'updated_at' => $time($summary->updated_at),
+                    'updated_at' => Timestamp::export($summary->updated_at),
                 ])->values()->all(),
             'jobs' => JobLog::with(['promptLogs' => fn ($query) => $query->orderBy('id')])
                 ->where('project_id', $project->id)->orderBy('id')->get()
-                ->map(fn (JobLog $job) => [
-                    'key' => $job->id,
-                    'job_class' => $job->job_class,
-                    'status' => $job->status,
-                    'payload' => $job->payload,
-                    'turn_index' => $job->turn_index,
-                    'expert' => $uuid($job->expert_id),
-                    'seat' => $job->seat,
-                    'words' => $job->words,
-                    'chars' => $job->chars,
-                    'thought_words' => $job->thought_words,
-                    'thought_chars' => $job->thought_chars,
-                    'reasoning_tokens' => $job->reasoning_tokens,
-                    'selection' => $job->selection,
-                    'error' => $job->error,
-                    'started_at' => $time($job->started_at),
-                    'finished_at' => $time($job->finished_at),
-                    'prompts' => $job->promptLogs->map(fn (PromptLog $log) => [
-                        'label' => $log->label,
-                        'model' => $log->model,
-                        'prompt' => $log->prompt,
-                        'response' => $log->response,
-                        'latency_ms' => $log->latency_ms,
-                        'provider' => $log->provider,
-                        'checkpoint' => $log->checkpoint,
-                        'config' => $log->config,
-                        'purpose' => $log->purpose,
-                        'expert' => $uuid($log->expert_id),
-                        'reasoning' => $log->reasoning,
-                        'tokens_in' => $log->tokens_in,
-                        'tokens_out' => $log->tokens_out,
-                        'tokens_reasoning' => $log->tokens_reasoning,
-                        'status' => $log->status,
-                        'error' => $log->error,
-                        'created_at' => $time($log->created_at),
-                    ])->values()->all(),
+                ->map(fn (JobLog $job) => JobLogRow::toArray($job, $uuid) + [
+                    'prompts' => $job->promptLogs->map(fn (PromptLog $log) => PromptLogRow::toArray($log, $uuid))->values()->all(),
                 ])->values()->all(),
         ];
     }
@@ -228,7 +195,6 @@ final class ProjectTransfer
     {
         $expert = fn (?string $uuid) => $uuid === null ? null : $experts[$uuid];
         $renumbering = ExpertRenumbering::fromExpertIds($data['expert_ids'] ?? []);
-        $time = fn ($value) => $value === null ? null : Carbon::parse($value);
 
         $project = new Project;
         $project->forceFill([
@@ -244,7 +210,7 @@ final class ProjectTransfer
             'summarize_threshold' => $data['summarize_threshold'] ?? null,
             'summarize_oldest' => $data['summarize_oldest'] ?? null,
             'long_term_memory' => $data['long_term_memory'] ?? null,
-            'created_at' => $time($data['created_at'] ?? null) ?? now(),
+            'created_at' => Timestamp::import($data['created_at'] ?? null) ?? now(),
         ])->save();
 
         $project->addContributingUser($owner);
@@ -258,48 +224,11 @@ final class ProjectTransfer
 
         foreach ($data['jobs'] ?? [] as $job) {
             $log = new JobLog;
-            $log->forceFill([
-                'project_id' => $project->id,
-                'job_class' => (string) ($job['job_class'] ?? ''),
-                'status' => (string) ($job['status'] ?? 'failed'),
-                'payload' => $job['payload'] ?? null,
-                'turn_index' => $job['turn_index'] ?? null,
-                'expert_id' => $expert($job['expert'] ?? null),
-                'seat' => $job['seat'] ?? null,
-                'words' => $job['words'] ?? null,
-                'chars' => $job['chars'] ?? null,
-                'thought_words' => $job['thought_words'] ?? null,
-                'thought_chars' => $job['thought_chars'] ?? null,
-                'reasoning_tokens' => $job['reasoning_tokens'] ?? null,
-                'selection' => $renumbering->selection($job['selection'] ?? null),
-                'error' => $job['error'] ?? null,
-                'started_at' => $time($job['started_at'] ?? null) ?? now(),
-                'finished_at' => $time($job['finished_at'] ?? null),
-                'created_at' => $time($job['started_at'] ?? null) ?? now(),
-            ])->save();
+            $log->forceFill(JobLogRow::attributes($job, $project->id, $expert, $renumbering))->save();
             $jobIds[(int) $job['key']] = $log->id;
 
             foreach ($job['prompts'] ?? [] as $prompt) {
-                (new PromptLog)->forceFill([
-                    'job_log_id' => $log->id,
-                    'label' => $prompt['label'] ?? null,
-                    'model' => (string) ($prompt['model'] ?? ''),
-                    'prompt' => (string) ($prompt['prompt'] ?? ''),
-                    'response' => (string) ($prompt['response'] ?? ''),
-                    'latency_ms' => $prompt['latency_ms'] ?? null,
-                    'provider' => $prompt['provider'] ?? null,
-                    'checkpoint' => $prompt['checkpoint'] ?? null,
-                    'config' => $prompt['config'] ?? null,
-                    'purpose' => $prompt['purpose'] ?? null,
-                    'expert_id' => $expert($prompt['expert'] ?? null),
-                    'reasoning' => $prompt['reasoning'] ?? null,
-                    'tokens_in' => $prompt['tokens_in'] ?? null,
-                    'tokens_out' => $prompt['tokens_out'] ?? null,
-                    'tokens_reasoning' => $prompt['tokens_reasoning'] ?? null,
-                    'status' => (string) ($prompt['status'] ?? 'ok'),
-                    'error' => $prompt['error'] ?? null,
-                    'created_at' => $time($prompt['created_at'] ?? null) ?? now(),
-                ])->save();
+                (new PromptLog)->forceFill(PromptLogRow::attributes($prompt, $log->id, $expert))->save();
             }
         }
 
@@ -314,7 +243,7 @@ final class ProjectTransfer
                 'user_id' => ! empty($message['is_user']) ? $owner->id : null,
                 'addressee_expert_id' => $expert($message['addressee'] ?? null),
                 'job_log_id' => isset($message['job']) ? ($jobIds[(int) $message['job']] ?? null) : null,
-                'created_at' => $time($message['created_at'] ?? null) ?? now(),
+                'created_at' => Timestamp::import($message['created_at'] ?? null) ?? now(),
             ])->save();
             $messageIds[(int) $message['key']] = $row->id;
         }
@@ -324,7 +253,7 @@ final class ProjectTransfer
                 'project_id' => $project->id,
                 'expert_id' => $expert($summary['expert']),
                 'content' => (string) ($summary['content'] ?? ''),
-                'updated_at' => $time($summary['updated_at'] ?? null) ?? now(),
+                'updated_at' => Timestamp::import($summary['updated_at'] ?? null) ?? now(),
             ])->save();
         }
 
