@@ -8,7 +8,7 @@
 
 return [
     'heading' => 'Statistik',
-    'subheading' => 'Stelle eine Frage über viele Läufe. Jeder Punkt ist ein Lauf.',
+    'subheading' => 'Stelle eine Frage über viele Läufe.',
     'none_open' => 'Wähle links eine Vorlage oder eine deiner Fragen, oder stelle eine neue.',
 
     'list' => [

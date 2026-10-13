@@ -8,7 +8,7 @@
 
 return [
     'heading' => 'Statistics',
-    'subheading' => 'Ask a question across many runs. Every dot is one run.',
+    'subheading' => 'Ask a question across many runs.',
     'none_open' => 'Pick a template or one of your questions on the left, or ask a new one.',
 
     'list' => [
