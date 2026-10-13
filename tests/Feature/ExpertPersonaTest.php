@@ -28,7 +28,7 @@ class ExpertPersonaTest extends TestCase
     public function test_experts_table_only_has_identity_columns(): void
     {
         $this->assertSame(
-            ['avatar_url', 'created_at', 'description', 'id', 'name', 'role', 'updated_at'],
+            ['avatar_url', 'created_at', 'description', 'id', 'name', 'role', 'updated_at', 'uuid'],
             collect(Schema::getColumnListing('experts'))->sort()->values()->all()
         );
     }

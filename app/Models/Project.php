@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPublicUuid;
 use App\Models\Concerns\HasTags;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,10 +14,10 @@ use Illuminate\Support\Collection;
 
 class Project extends Model
 {
-    use HasFactory, HasTags;
+    use HasFactory, HasPublicUuid, HasTags;
 
     protected $fillable = [
-        'title', 'description', 'user_id',
+        'uuid', 'title', 'description', 'user_id',
         'model', 'pipeline', 'turn_budget', 'seed', 'run_config',
         'long_term_memory', 'summarized_until_message_id',
         'summarize_threshold', 'summarize_oldest',
