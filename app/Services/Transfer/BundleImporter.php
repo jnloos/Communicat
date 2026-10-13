@@ -65,13 +65,15 @@ final class BundleImporter
      * say), it is reported as one failed entry under its file name and the
      * rest of the bundle still goes in, so the report of what was written
      * survives. Entries it wrote before failing stay written and reported.
+     * The note is the reason for an unreadable file, a generic text for
+     * anything else (FailureNote), which is logged.
      */
     private function section(ImportReport $report, string $section, string $file, Closure $import): void
     {
         try {
             $import();
         } catch (Throwable $exception) {
-            $report->add($section, $file, ImportReport::FAILED, $exception->getMessage());
+            $report->add($section, $file, ImportReport::FAILED, FailureNote::for($exception));
         }
     }
 }

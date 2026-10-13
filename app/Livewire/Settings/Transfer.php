@@ -3,6 +3,7 @@
 namespace App\Livewire\Settings;
 
 use App\Services\Transfer\BundleImporter;
+use App\Services\Transfer\FailureNote;
 use App\Services\Transfer\ImportReport;
 use App\Services\Transfer\InvalidBundle;
 use App\Services\Transfer\UploadLimit;
@@ -54,7 +55,7 @@ class Transfer extends Component
         } catch (InvalidBundle $exception) {
             $this->rejectBundle($exception->getMessage());
         } catch (Throwable $exception) {
-            $this->rejectBundle(__('transfer.import.failed', ['message' => $exception->getMessage()]));
+            $this->rejectBundle(__('transfer.import.failed', ['message' => FailureNote::for($exception)]));
         }
     }
 
@@ -74,7 +75,7 @@ class Transfer extends Component
             // back to the upload, the preview no longer says what happened.
             $this->stage = 'upload';
             $this->report = [];
-            $this->rejectBundle(__('transfer.import.failed', ['message' => $exception->getMessage()]));
+            $this->rejectBundle(__('transfer.import.failed', ['message' => FailureNote::for($exception)]));
         }
     }
 

@@ -17,6 +17,7 @@ use App\Services\Transfer\ImportReport;
 use App\Services\Transfer\InvalidBundle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Exceptions;
 use Tests\TestCase;
 
 class BundleRoundTripTest extends TestCase
@@ -165,5 +166,24 @@ class BundleRoundTripTest extends TestCase
         $this->assertSame(1, $report->count(ImportReport::GROUPS, ImportReport::CREATED));
         $this->assertTrue(Project::where('uuid', $project->uuid)->exists());
         $this->assertSame(0, Question::count());
+    }
+
+    public function test_an_unexpected_error_shows_a_generic_note_and_is_logged(): void
+    {
+        Exceptions::fake();
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->study($admin);
+        $path = $this->path();
+        app(BundleExporter::class)->everything($admin, $path);
+        $this->wipe();
+        Expert::creating(fn () => throw new \RuntimeException('SQLSTATE[23000]: secret table detail'));
+
+        $report = app(BundleImporter::class)->import($path, $admin);
+
+        $failed = collect($report->entries(ImportReport::EXPERTS))->firstWhere('outcome', ImportReport::FAILED);
+        $this->assertSame(Bundle::EXPERTS, $failed['name']);
+        $this->assertSame(__('transfer.notes.unexpected_error'), $failed['note']);
+        $this->assertStringNotContainsString('SQLSTATE', json_encode($report->toArray()));
+        Exceptions::assertReported(fn (\RuntimeException $exception) => str_contains($exception->getMessage(), 'SQLSTATE'));
     }
 }

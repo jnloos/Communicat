@@ -116,7 +116,7 @@ final class ProjectTransfer
                 return $this->write($data, $owner, $this->expertIdsByUuid($data), $skippedTags);
             });
         } catch (Throwable $exception) {
-            $report->add(ImportReport::PROJECTS, $title, ImportReport::FAILED, $exception->getMessage());
+            $report->add(ImportReport::PROJECTS, $title, ImportReport::FAILED, FailureNote::for($exception));
 
             return null;
         }
