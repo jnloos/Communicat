@@ -9,12 +9,15 @@ return [
         'unknown_schema' => 'The bundle was written by an incompatible version of this app.',
         'broken_entry' => 'The bundle file :name is not valid JSON.',
     ],
+    'unnamed_entry' => 'Entry without a name',
+
     'notes' => [
         'already_there' => 'Already in the database.',
         'no_uuid' => 'The entry has no uuid.',
         'bad_uuid' => 'The entry has no valid uuid.',
         'unexpected_error' => 'An unexpected error occurred; see the log.',
         'unreadable_entry' => 'The entry could not be read.',
+        'group_unnamed' => 'The group has no name.',
         'tag_unreadable' => 'The tag category has no name or an unknown scope.',
         'tag_values_added' => 'Values added: :values',
         'tags_skipped' => 'Tags not set: :tags',

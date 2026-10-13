@@ -27,7 +27,8 @@
                         <ul class="divide-y divide-zinc-100 dark:divide-white/10">
                             @foreach ($entries as $entry)
                                 <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-1.5 text-sm">
-                                    <span class="font-medium text-zinc-800 dark:text-white">{{ $entry['name'] }}</span>
+                                    {{-- An unreadable entry may have no name to show. --}}
+                                    <span @class(['font-medium', 'text-zinc-800 dark:text-white' => $entry['name'] !== '', 'italic text-zinc-500 dark:text-zinc-400' => $entry['name'] === ''])>{{ $entry['name'] !== '' ? $entry['name'] : __('transfer.unnamed_entry') }}</span>
                                     <flux:badge size="sm" :color="ImportReport::COLORS[$entry['outcome']] ?? 'zinc'">{{ __('transfer.outcome.'.$entry['outcome']) }}</flux:badge>
                                     @if ($entry['note'])
                                         <span class="w-full text-xs text-zinc-500 dark:text-zinc-400">{{ $entry['note'] }}</span>

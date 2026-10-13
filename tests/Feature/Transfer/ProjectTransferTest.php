@@ -313,6 +313,23 @@ class ProjectTransferTest extends TestCase
         $this->assertSame([$newR], array_column($copy->run_config['cast'], 'expert_id'));
     }
 
+    public function test_a_cast_member_missing_here_skips_the_project_instead_of_keeping_a_foreign_id(): void
+    {
+        $owner = User::factory()->create();
+        $project = $this->studyRun($owner);
+        $robin = Expert::factory()->create(['name' => 'Robin']);
+        $project->update(['run_config' => ['pipeline' => 'ScorePipeline', 'cast' => [['seat' => 3, 'expert_id' => $robin->id, 'name' => 'Robin', 'role' => 'Lead']]]]);
+        $data = (new ProjectTransfer)->export($project->fresh());
+        Project::query()->delete();
+        $robin->delete();
+        $report = new ImportReport;
+
+        $this->assertNull((new ProjectTransfer)->import($data, $owner, $report));
+
+        $this->assertSame(ImportReport::SKIPPED, $report->entries(ImportReport::PROJECTS)[0]['outcome']);
+        $this->assertStringContainsString($robin->uuid, $report->entries(ImportReport::PROJECTS)[0]['note']);
+    }
+
     public function test_a_same_id_import_leaves_the_selection_byte_identical(): void
     {
         $owner = User::factory()->create();

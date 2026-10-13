@@ -13,11 +13,38 @@ use App\Services\Transfer\GroupTransfer;
 use App\Services\Transfer\ImportReport;
 use App\Services\Transfer\QuestionTransfer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class GroupAndQuestionTransferTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_the_tags_and_groups_are_read_once_however_many_questions_travel(): void
+    {
+        $user = User::factory()->create();
+        $definition = ['metric' => 'turn_share', 'compare_by' => 'pipeline'];
+        $queries = function (int $questions) use ($user, $definition): int {
+            Question::query()->delete();
+
+            for ($i = 0; $i < $questions; $i++) {
+                $user->questions()->create(['name' => "Q{$i}", 'definition' => $definition]);
+            }
+
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            $named = (new QuestionTransfer)->export($user);
+            Question::query()->delete();
+            DB::flushQueryLog();
+            (new QuestionTransfer)->import($named, $user, new ImportReport);
+            $count = count(DB::getQueryLog());
+            DB::disableQueryLog();
+
+            return $count;
+        };
+
+        $this->assertSame($queries(1) + 4 * 3, $queries(5), 'Each further question adds only its duplicate check, its position and its insert.');
+    }
 
     public function test_a_definition_travels_by_names_and_comes_back_as_this_databases_ids(): void
     {
@@ -36,16 +63,16 @@ class GroupAndQuestionTransferTest extends TestCase
             'split_by' => 'pipeline',
         ];
 
-        $named = DefinitionNames::toNames($definition, $user);
+        $named = (new DefinitionNames($user))->toNames($definition);
 
         $this->assertSame(['focus persona' => ['true']], $named['people']['tags']);
         $this->assertSame(['Quality'], $named['projects']['groups']);
         $this->assertSame('project_tag:status condition', $named['compare_by']);
         $this->assertSame('no-status', $named['baseline']);
-        $this->assertSame($definition['compare_by'], DefinitionNames::toIds($named, $user)['compare_by']);
-        $this->assertSame($definition['baseline'], DefinitionNames::toIds($named, $user)['baseline']);
-        $this->assertSame([$focus->id => [$true->id]], DefinitionNames::toIds($named, $user)['people']['tags']);
-        $this->assertSame([$group->id], DefinitionNames::toIds($named, $user)['projects']['groups']);
+        $this->assertSame($definition['compare_by'], (new DefinitionNames($user))->toIds($named)['compare_by']);
+        $this->assertSame($definition['baseline'], (new DefinitionNames($user))->toIds($named)['baseline']);
+        $this->assertSame([$focus->id => [$true->id]], (new DefinitionNames($user))->toIds($named)['people']['tags']);
+        $this->assertSame([$group->id], (new DefinitionNames($user))->toIds($named)['projects']['groups']);
     }
 
     public function test_groups_are_recreated_for_the_importing_user_and_file_its_projects(): void
@@ -97,7 +124,7 @@ class GroupAndQuestionTransferTest extends TestCase
         $definition = ['metric' => 'turn_share', 'compare_by' => "project_tag:{$category->id}", 'baseline' => (string) $value->id];
         $category->delete();
 
-        $named = DefinitionNames::toNames($definition, $user);
+        $named = (new DefinitionNames($user))->toNames($definition);
 
         $this->assertSame('project_tag:', $named['compare_by']);
         $this->assertNull($named['baseline']);
@@ -113,6 +140,18 @@ class GroupAndQuestionTransferTest extends TestCase
 
         $this->assertTrue((bool) $admin->questions()->sole()->is_template);
         $this->assertNull($report->entries(ImportReport::QUESTIONS)[0]['note']);
+    }
+
+    public function test_a_group_without_a_name_fails_with_a_note_instead_of_vanishing(): void
+    {
+        $user = User::factory()->create();
+        $report = new ImportReport;
+
+        (new GroupTransfer)->import([['name' => '  ', 'projects' => []]], $user, $report);
+
+        $this->assertSame(0, ProjectGroup::count());
+        $this->assertSame([['name' => '', 'outcome' => ImportReport::FAILED, 'note' => __('transfer.notes.group_unnamed')]], $report->entries(ImportReport::GROUPS));
+        $this->assertStringContainsString(__('transfer.unnamed_entry'), view('components.transfer.report', ['report' => $report])->render());
     }
 
     public function test_a_project_the_importer_does_not_contribute_to_is_not_filed(): void
@@ -173,13 +212,13 @@ class GroupAndQuestionTransferTest extends TestCase
             'compare_by' => "project_tag:{$projectCat->id}",
             'baseline' => (string) $a,
         ];
-        $named = DefinitionNames::toNames($definition, $user);
+        $named = (new DefinitionNames($user))->toNames($definition);
 
         TagCategory::all()->each->delete();
         ProjectGroup::query()->delete();
         [$newProject, $newPersona, $newGroup] = $make(true);
         $newA = $newProject->values()->where('name', 'a')->value('id');
-        $ids = DefinitionNames::toIds($named, $user);
+        $ids = (new DefinitionNames($user))->toIds($named);
 
         $this->assertNotSame($projectCat->id, $newProject->id);
         $this->assertSame([$newPersona->id => [$newPersona->values()->value('id')]], $ids['people']['tags']);
@@ -202,7 +241,7 @@ class GroupAndQuestionTransferTest extends TestCase
             'compare_by' => 'project_tag:kind',
         ];
 
-        $ids = DefinitionNames::toIds($named, $user);
+        $ids = (new DefinitionNames($user))->toIds($named);
 
         $this->assertSame([$persona->id => [$ev->id]], $ids['people']['tags']);
         $this->assertSame([$project->id => [$pv->id]], $ids['projects']['tags']);
@@ -217,22 +256,22 @@ class GroupAndQuestionTransferTest extends TestCase
         $project->values()->create(['name' => 'a']);
         $group = ProjectGroup::create(['user_id' => $user->id, 'name' => 'Quality', 'position' => 1]);
 
-        $tagged = DefinitionNames::toNames(['split_by' => "persona_tag:{$persona->id}", 'compare_by' => "project_tag:{$project->id}", 'baseline' => ''], $user);
+        $tagged = (new DefinitionNames($user))->toNames(['split_by' => "persona_tag:{$persona->id}", 'compare_by' => "project_tag:{$project->id}", 'baseline' => '']);
         $this->assertSame('persona_tag:focus persona', $tagged['split_by']);
         $this->assertSame('', $tagged['baseline']);
-        $back = DefinitionNames::toIds($tagged, $user);
+        $back = (new DefinitionNames($user))->toIds($tagged);
         $this->assertSame("persona_tag:{$persona->id}", $back['split_by']);
         $this->assertSame('', $back['baseline']);
 
-        $pipeline = DefinitionNames::toNames(['compare_by' => 'pipeline', 'baseline' => 'QualityPipeline'], $user);
+        $pipeline = (new DefinitionNames($user))->toNames(['compare_by' => 'pipeline', 'baseline' => 'QualityPipeline']);
         $this->assertSame('QualityPipeline', $pipeline['baseline']);
-        $this->assertSame('QualityPipeline', DefinitionNames::toIds($pipeline, $user)['baseline']);
+        $this->assertSame('QualityPipeline', (new DefinitionNames($user))->toIds($pipeline)['baseline']);
 
-        $grouped = DefinitionNames::toNames(['compare_by' => 'group', 'baseline' => (string) $group->id], $user);
+        $grouped = (new DefinitionNames($user))->toNames(['compare_by' => 'group', 'baseline' => (string) $group->id]);
         $this->assertSame('Quality', $grouped['baseline']);
         $group->delete();
         $newGroup = ProjectGroup::create(['user_id' => $user->id, 'name' => 'Quality', 'position' => 1]);
-        $this->assertSame((string) $newGroup->id, DefinitionNames::toIds($grouped, $user)['baseline']);
+        $this->assertSame((string) $newGroup->id, (new DefinitionNames($user))->toIds($grouped)['baseline']);
     }
 
     public function test_imported_questions_join_the_end_of_the_importers_list(): void

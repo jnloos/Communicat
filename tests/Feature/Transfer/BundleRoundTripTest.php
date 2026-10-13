@@ -18,15 +18,16 @@ use App\Services\Transfer\InvalidBundle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Exceptions;
+use Tests\Concerns\TemporaryFiles;
 use Tests\TestCase;
 
 class BundleRoundTripTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, TemporaryFiles;
 
     private function path(): string
     {
-        return tempnam(sys_get_temp_dir(), 'bundle').'.zip';
+        return $this->temporaryPath();
     }
 
     private function study(User $admin): Project

@@ -13,6 +13,12 @@ use Illuminate\Support\Str;
  */
 final class ExpertTransfer
 {
+    /** @var array<string, mixed> uuids present here, during importAll() */
+    private array $takenUuids = [];
+
+    /** @var array<int, mixed> expert ids present here, during importAll() */
+    private array $takenIds = [];
+
     public function __construct(private readonly TagsByName $tags = new TagsByName) {}
 
     public function export(Expert $expert): array
@@ -46,6 +52,9 @@ final class ExpertTransfer
      */
     public function importAll(array $experts, ImportReport $report, bool $withRuns = false): void
     {
+        // Read once and kept current with every expert created, instead of two queries per entry.
+        $this->takenUuids = Expert::pluck('uuid')->flip()->all();
+        $this->takenIds = Expert::pluck('id')->flip()->all();
         $outcomes = [];
         $renumbered = [];
 
@@ -89,7 +98,7 @@ final class ExpertTransfer
         return match (true) {
             $uuid === '' => [ImportReport::FAILED, __('transfer.notes.no_uuid')],
             ! Str::isUuid($uuid) => [ImportReport::FAILED, __('transfer.notes.bad_uuid')],
-            Expert::where('uuid', $uuid)->exists() => [ImportReport::SKIPPED, __('transfer.notes.already_there')],
+            isset($this->takenUuids[$uuid]) => [ImportReport::SKIPPED, __('transfer.notes.already_there')],
             default => null,
         };
     }
@@ -116,7 +125,7 @@ final class ExpertTransfer
     {
         $originalId = (int) ($data['id'] ?? 0);
 
-        return $originalId > 0 && ! Expert::whereKey($originalId)->exists();
+        return $originalId > 0 && ! isset($this->takenIds[$originalId]);
     }
 
     /** @return array{string, string|null} */
@@ -138,6 +147,8 @@ final class ExpertTransfer
             'created_at' => EntryFields::time($data, 'created_at') ?? now(),
         ])->save();
 
+        $this->takenUuids[$expert->uuid] = true;
+        $this->takenIds[$expert->id] = true;
         $skippedTags = $this->tags->assign($expert, $data['tags'] ?? []);
         $notes = array_filter([
             $keepId || $originalId === 0 ? null : __('transfer.notes.new_expert_id', ['old' => $originalId, 'new' => $expert->id]),

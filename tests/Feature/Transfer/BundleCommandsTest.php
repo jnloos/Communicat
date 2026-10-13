@@ -11,15 +11,16 @@ use App\Services\Transfer\BundleReader;
 use App\Services\Transfer\BundleWriter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Tests\Concerns\TemporaryFiles;
 use Tests\TestCase;
 
 class BundleCommandsTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, TemporaryFiles;
 
     private function path(): string
     {
-        return tempnam(sys_get_temp_dir(), 'bundle').'.zip';
+        return $this->temporaryPath();
     }
 
     public function test_export_with_one_project_writes_a_project_bundle(): void
@@ -47,7 +48,6 @@ class BundleCommandsTest extends TestCase
     {
         $projects = Project::factory()->count(2)->create();
         $path = $this->path();
-        unlink(substr($path, 0, -4));
         $this->assertFileDoesNotExist($path);
 
         $this->artisan('bundle:export', ['path' => $path, '--project' => $projects->pluck('id')->all()])
@@ -80,7 +80,6 @@ class BundleCommandsTest extends TestCase
     public function test_export_names_a_missing_project_or_expert(): void
     {
         $path = $this->path();
-        unlink(substr($path, 0, -4));
 
         $this->artisan('bundle:export', ['path' => $path, '--project' => [999]])
             ->expectsOutputToContain('No project with id 999.')->assertFailed();

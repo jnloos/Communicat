@@ -21,25 +21,28 @@ final class QuestionTransfer
     {
         $own = $user->questions()->notTemplates()->get();
         $templates = Question::templates()->get();
+        $names = new DefinitionNames($user);
 
         return $own->concat($templates)
             ->map(fn (Question $question) => [
                 'name' => $question->name,
                 'notes' => $question->notes,
                 'is_template' => (bool) $question->is_template,
-                'definition' => DefinitionNames::toNames($question->definition()->toArray(), $user),
+                'definition' => $names->toNames($question->definition()->toArray()),
             ])
             ->values()->all();
     }
 
     public function import(array $questions, User $user, ImportReport $report): void
     {
+        $names = new DefinitionNames($user);
+
         foreach ($questions as $data) {
             try {
                 $entry = EntryFields::entry($data);
                 $name = EntryFields::text($entry, 'name');
                 $notes = EntryFields::text($entry, 'notes');
-                $definition = $this->definition(EntryFields::map($entry, 'definition'), $user);
+                $definition = $this->definition(EntryFields::map($entry, 'definition'), $names);
             } catch (UnreadableEntry) {
                 $report->add(ImportReport::QUESTIONS, EntryFields::label($data, 'name'), ImportReport::FAILED, __('transfer.notes.unreadable_entry'));
 
@@ -51,10 +54,10 @@ final class QuestionTransfer
     }
 
     /** The definition as this database's ids, normalised the way the statistics page stores it. */
-    private function definition(array $named, User $user): array
+    private function definition(array $named, DefinitionNames $names): array
     {
         try {
-            return QuestionDefinition::fromArray(DefinitionNames::toIds($named, $user))->toArray();
+            return QuestionDefinition::fromArray($names->toIds($named))->toArray();
         } catch (TypeError) {
             // A nested part DefinitionNames does not read itself (turns, say) has the wrong type.
             throw new UnreadableEntry('The definition could not be read.');

@@ -9,6 +9,7 @@ use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\User;
 use App\Services\Tags\TagNames;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * A question's definition names tag categories, tag values and the user's
@@ -16,88 +17,39 @@ use App\Services\Tags\TagNames;
  * names and is read back into this database's ids; a name that does not
  * resolve falls out, as a deleted tag value does on the statistics page.
  * A field of the wrong type in a file's definition throws UnreadableEntry.
+ *
+ * One instance per export or import: the tags and the user's groups are read
+ * once and serve every question.
  */
 final class DefinitionNames
 {
-    public static function toNames(array $definition, User $user): array
+    /** @var Collection<int, TagCategory> by id, values loaded */
+    private readonly Collection $categories;
+
+    /** @var Collection<int, ProjectGroup> by id */
+    private readonly Collection $groups;
+
+    public function __construct(User $user)
     {
-        $categories = TagCategory::with('values')->get()->keyBy('id');
-        $groups = ProjectGroup::where('user_id', $user->id)->pluck('name', 'id');
-        $tagsToNames = function (array $tags) use ($categories): array {
-            $named = [];
+        $this->categories = TagCategory::with('values')->get()->keyBy('id');
+        $this->groups = ProjectGroup::where('user_id', $user->id)->get()->keyBy('id');
+    }
 
-            foreach ($tags as $categoryId => $valueIds) {
-                $category = $categories[(int) $categoryId] ?? null;
-
-                if ($category !== null) {
-                    $named[$category->name] = $category->values->whereIn('id', array_map('intval', (array) $valueIds))->pluck('name')->values()->all();
-                }
-            }
-
-            return $named;
-        };
-        $dimensionToName = function (?string $key) use ($categories): string {
-            $dimension = Dimension::fromKey($key);
-
-            if ($dimension === null) {
-                return '';
-            }
-
-            return $dimension->type->isTag()
-                ? $dimension->type->value.':'.($categories->get($dimension->categoryId)?->name ?? '')
-                : $dimension->key();
-        };
-
+    public function toNames(array $definition): array
+    {
         $named = $definition;
-        $named['people']['tags'] = $tagsToNames($definition['people']['tags'] ?? []);
-        $named['projects']['tags'] = $tagsToNames($definition['projects']['tags'] ?? []);
-        $named['projects']['groups'] = collect($definition['projects']['groups'] ?? [])->map(fn ($id) => $groups[(int) $id] ?? null)->filter()->values()->all();
-        $named['compare_by'] = $dimensionToName($definition['compare_by'] ?? null);
-        $named['split_by'] = $dimensionToName($definition['split_by'] ?? null);
-        $named['baseline'] = self::baselineToName($definition, $categories, $groups);
+        $named['people']['tags'] = $this->tagsToNames($definition['people']['tags'] ?? []);
+        $named['projects']['tags'] = $this->tagsToNames($definition['projects']['tags'] ?? []);
+        $named['projects']['groups'] = collect($definition['projects']['groups'] ?? [])->map(fn ($id) => $this->groups->get((int) $id)?->name)->filter()->values()->all();
+        $named['compare_by'] = $this->dimensionToName($definition['compare_by'] ?? null);
+        $named['split_by'] = $this->dimensionToName($definition['split_by'] ?? null);
+        $named['baseline'] = $this->baselineToName($definition);
 
         return $named;
     }
 
-    public static function toIds(array $named, User $user): array
+    public function toIds(array $named): array
     {
-        $categories = TagCategory::with('values')->get();
-        $groups = ProjectGroup::where('user_id', $user->id)->get();
-        $category = fn (?TagScope $scope, string $name) => $categories->first(fn (TagCategory $candidate) => ($scope === null || $candidate->scope === $scope) && TagNames::same($candidate->name, $name));
-        $tagsToIds = function (array $tags, TagScope $scope) use ($category): array {
-            $ids = [];
-
-            foreach ($tags as $categoryName => $valueNames) {
-                $valueNames = EntryFields::texts(['values' => is_array($valueNames) ? $valueNames : [$valueNames]], 'values');
-                $found = $category($scope, (string) $categoryName);
-                $valueIds = $found === null ? [] : $found->values
-                    ->filter(fn ($value) => collect($valueNames)->contains(fn ($name) => TagNames::same($value->name, (string) $name)))
-                    ->pluck('id')->values()->all();
-
-                if ($valueIds !== []) {
-                    $ids[$found->id] = $valueIds;
-                }
-            }
-
-            return $ids;
-        };
-        $dimensionToKey = function (?string $key) use ($category): string {
-            [$type, $name] = array_pad(explode(':', (string) $key, 2), 2, null);
-            $type = DimensionType::tryFrom((string) $type);
-
-            if ($type === null) {
-                return '';
-            }
-
-            if (! $type->isTag()) {
-                return $type->value;
-            }
-
-            $found = $category($type === DimensionType::PersonaTag ? TagScope::Persona : TagScope::Project, (string) $name);
-
-            return $found === null ? '' : "{$type->value}:{$found->id}";
-        };
-
         $people = EntryFields::map($named, 'people');
         $projects = EntryFields::map($named, 'projects');
         $groupNames = EntryFields::texts($projects, 'groups');
@@ -105,18 +57,96 @@ final class DefinitionNames
         $definition = $named;
         $definition['people'] = $people;
         $definition['projects'] = $projects;
-        $definition['people']['tags'] = $tagsToIds(EntryFields::map($people, 'tags'), TagScope::Persona);
-        $definition['projects']['tags'] = $tagsToIds(EntryFields::map($projects, 'tags'), TagScope::Project);
-        $definition['projects']['groups'] = $groups->filter(fn (ProjectGroup $group) => in_array($group->name, $groupNames, true))->pluck('id')->values()->all();
-        $definition['compare_by'] = $dimensionToKey(EntryFields::text($named, 'compare_by'));
-        $definition['split_by'] = $dimensionToKey(EntryFields::text($named, 'split_by'));
+        $definition['people']['tags'] = $this->tagsToIds(EntryFields::map($people, 'tags'), TagScope::Persona);
+        $definition['projects']['tags'] = $this->tagsToIds(EntryFields::map($projects, 'tags'), TagScope::Project);
+        $definition['projects']['groups'] = $this->groups->filter(fn (ProjectGroup $group) => in_array($group->name, $groupNames, true))->keys()->values()->all();
+        $definition['compare_by'] = $this->dimensionToKey(EntryFields::text($named, 'compare_by'));
+        $definition['split_by'] = $this->dimensionToKey(EntryFields::text($named, 'split_by'));
         EntryFields::assertText($named, 'baseline');
-        $definition['baseline'] = self::baselineToId($named, $definition['compare_by'], $categories, $groups);
+        $definition['baseline'] = $this->baselineToId($named, $definition['compare_by']);
 
         return $definition;
     }
 
-    private static function baselineToName(array $definition, $categories, $groups): ?string
+    /**
+     * @param  array<int|string, mixed>  $tags  category id => value ids
+     * @return array<string, list<string>> category name => value names
+     */
+    private function tagsToNames(array $tags): array
+    {
+        $named = [];
+
+        foreach ($tags as $categoryId => $valueIds) {
+            $category = $this->categories->get((int) $categoryId);
+
+            if ($category !== null) {
+                $named[$category->name] = $category->values->whereIn('id', array_map('intval', (array) $valueIds))->pluck('name')->values()->all();
+            }
+        }
+
+        return $named;
+    }
+
+    /**
+     * @param  array<int|string, mixed>  $tags  category name => value names
+     * @return array<int, list<int>> category id => value ids
+     */
+    private function tagsToIds(array $tags, TagScope $scope): array
+    {
+        $ids = [];
+
+        foreach ($tags as $categoryName => $valueNames) {
+            $valueNames = EntryFields::texts(['values' => is_array($valueNames) ? $valueNames : [$valueNames]], 'values');
+            $found = $this->category($scope, (string) $categoryName);
+            $valueIds = $found === null ? [] : $found->values
+                ->filter(fn ($value) => collect($valueNames)->contains(fn (string $name) => TagNames::same($value->name, $name)))
+                ->pluck('id')->values()->all();
+
+            if ($valueIds !== []) {
+                $ids[$found->id] = $valueIds;
+            }
+        }
+
+        return $ids;
+    }
+
+    private function category(TagScope $scope, string $name): ?TagCategory
+    {
+        return $this->categories->first(fn (TagCategory $candidate) => $candidate->scope === $scope && TagNames::same($candidate->name, $name));
+    }
+
+    private function dimensionToName(?string $key): string
+    {
+        $dimension = Dimension::fromKey($key);
+
+        if ($dimension === null) {
+            return '';
+        }
+
+        return $dimension->type->isTag()
+            ? $dimension->type->value.':'.($this->categories->get($dimension->categoryId)?->name ?? '')
+            : $dimension->key();
+    }
+
+    private function dimensionToKey(?string $key): string
+    {
+        [$type, $name] = array_pad(explode(':', (string) $key, 2), 2, null);
+        $type = DimensionType::tryFrom((string) $type);
+
+        if ($type === null) {
+            return '';
+        }
+
+        if (! $type->isTag()) {
+            return $type->value;
+        }
+
+        $found = $this->category($type === DimensionType::PersonaTag ? TagScope::Persona : TagScope::Project, (string) $name);
+
+        return $found === null ? '' : "{$type->value}:{$found->id}";
+    }
+
+    private function baselineToName(array $definition): ?string
     {
         $baseline = $definition['baseline'] ?? null;
         $dimension = Dimension::fromKey($definition['compare_by'] ?? null);
@@ -126,13 +156,13 @@ final class DefinitionNames
         }
 
         return match (true) {
-            $dimension->type->isTag() => $categories->get($dimension->categoryId)?->values->firstWhere('id', (int) $baseline)?->name,
-            $dimension->type === DimensionType::Group => $groups->get((int) $baseline),
+            $dimension->type->isTag() => $this->categories->get($dimension->categoryId)?->values->firstWhere('id', (int) $baseline)?->name,
+            $dimension->type === DimensionType::Group => $this->groups->get((int) $baseline)?->name,
             default => (string) $baseline,
         };
     }
 
-    private static function baselineToId(array $named, string $compareBy, $categories, $groups): ?string
+    private function baselineToId(array $named, string $compareBy): ?string
     {
         $baseline = $named['baseline'] ?? null;
         $dimension = Dimension::fromKey($compareBy);
@@ -142,8 +172,8 @@ final class DefinitionNames
         }
 
         $id = match (true) {
-            $dimension->type->isTag() => $categories->firstWhere('id', $dimension->categoryId)?->values->first(fn ($value) => TagNames::same($value->name, (string) $baseline))?->id,
-            $dimension->type === DimensionType::Group => $groups->firstWhere('name', $baseline)?->id,
+            $dimension->type->isTag() => $this->categories->get($dimension->categoryId)?->values->first(fn ($value) => TagNames::same($value->name, (string) $baseline))?->id,
+            $dimension->type === DimensionType::Group => $this->groups->firstWhere('name', $baseline)?->id,
             default => $baseline,
         };
 

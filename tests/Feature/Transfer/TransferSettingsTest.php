@@ -9,14 +9,16 @@ use App\Models\User;
 use App\Services\Transfer\Bundle;
 use App\Services\Transfer\BundleExporter;
 use App\Services\Transfer\ImportReport;
+use App\Services\Transfer\UploadLimit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
+use Tests\Concerns\TemporaryFiles;
 use Tests\TestCase;
 
 class TransferSettingsTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, TemporaryFiles;
 
     /** The import button carrying a plain disabled attribute (not wire:loading.attr="disabled"). */
     private const DISABLED_IMPORT = '/<button(?=[^>]*wire:click="import")[^>]*\\sdisabled(?:="disabled")?[\\s>]/';
@@ -25,7 +27,7 @@ class TransferSettingsTest extends TestCase
     {
         $project = Project::factory()->create(['user_id' => $admin->id, 'title' => 'School']);
         $project->addContributingExpert(Expert::factory()->create(['name' => 'Alex']));
-        $path = tempnam(sys_get_temp_dir(), 'bundle');
+        $path = $this->temporaryPath();
         app(BundleExporter::class)->project($project, $path);
         Project::query()->delete();
         Expert::query()->delete();
@@ -160,7 +162,7 @@ class TransferSettingsTest extends TestCase
         $this->actingAs($admin);
         $project = Project::factory()->create(['user_id' => $admin->id, 'title' => 'School']);
         $project->addContributingExpert(Expert::factory()->create(['name' => 'Alex']));
-        $path = tempnam(sys_get_temp_dir(), 'bundle');
+        $path = $this->temporaryPath();
         app(BundleExporter::class)->project($project, $path);
 
         $html = Livewire::test(Transfer::class)
@@ -177,7 +179,7 @@ class TransferSettingsTest extends TestCase
     {
         $project = Project::factory()->create(['user_id' => $admin->id, 'title' => 'School']);
         $project->addContributingExpert(Expert::factory()->create(['name' => 'Alex']));
-        $path = tempnam(sys_get_temp_dir(), 'bundle');
+        $path = $this->temporaryPath();
         app(BundleExporter::class)->project($project, $path);
         $zip = new \ZipArchive;
         $zip->open($path);
@@ -242,6 +244,18 @@ class TransferSettingsTest extends TestCase
         $this->assertDoesNotMatchRegularExpression(self::DISABLED_IMPORT, $html);
         $this->assertStringContainsString('wire:click="import"', $html);
         $this->assertMatchesRegularExpression('#</svg>\s*school\.zip\s*</#', $html, 'The preview names the uploaded file.');
+    }
+
+    public function test_a_bundle_over_the_upload_limit_is_refused_before_any_preview(): void
+    {
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+        $tooLarge = UploadedFile::fake()->create('big.zip', UploadLimit::kilobytes() + 1);
+
+        Livewire::test(Transfer::class)
+            ->set('bundle', $tooLarge)
+            ->assertHasErrors(['bundle' => 'max'])
+            ->assertSet('stage', 'upload')
+            ->assertSet('bundle', null);
     }
 
     public function test_the_upload_has_an_accessible_name(): void

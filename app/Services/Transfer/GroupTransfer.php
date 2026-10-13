@@ -42,9 +42,13 @@ final class GroupTransfer
                 continue;
             }
 
-            if ($name !== '') {
-                $this->importOne($name, $projects, $user, $report);
+            if ($name === '') {
+                $report->add(ImportReport::GROUPS, '', ImportReport::FAILED, __('transfer.notes.group_unnamed'));
+
+                continue;
             }
+
+            $this->importOne($name, $projects, $user, $report);
         }
     }
 
@@ -58,14 +62,16 @@ final class GroupTransfer
             'name' => $name,
             'position' => (int) ProjectGroup::where('user_id', $user->id)->max('position') + 1,
         ]);
-        $filed = 0;
+        // Only projects the user contributes to (Project::hasContributor()), found in one query.
+        $own = Project::whereIn('uuid', $projects)
+            ->where(fn ($query) => $query->where('user_id', $user->id)->orWhereHas('users', fn ($users) => $users->whereKey($user->id)))
+            ->get();
 
-        foreach (Project::whereIn('uuid', $projects)->get() as $project) {
-            if ($project->hasContributor($user)) {
-                $project->fileInGroupFor($user, $group->id);
-                $filed++;
-            }
+        foreach ($own as $project) {
+            $project->fileInGroupFor($user, $group->id);
         }
+
+        $filed = $own->count();
 
         $report->add(ImportReport::GROUPS, $name, $created ? ImportReport::CREATED : ImportReport::SKIPPED, trans_choice('transfer.notes.projects_filed', $filed, ['count' => $filed]));
     }

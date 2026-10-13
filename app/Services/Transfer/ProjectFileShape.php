@@ -36,6 +36,8 @@ final class ProjectFileShape
             EntryFields::map($data, $key);
         }
 
+        EntryFields::texts($data, 'expert_ids');
+
         foreach (EntryFields::map($data, 'seats') as $seat) {
             $seat = EntryFields::entry($seat);
             EntryFields::required($seat, 'expert');

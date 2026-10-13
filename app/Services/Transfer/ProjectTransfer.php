@@ -14,6 +14,7 @@ use App\Services\Tags\TagsByName;
 use App\Services\Transfer\Rows\JobLogRow;
 use App\Services\Transfer\Rows\PromptLogRow;
 use App\Services\Transfer\Rows\Timestamp;
+use Closure;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Throwable;
@@ -36,14 +37,15 @@ final class ProjectTransfer
     /** @return list<int> */
     public function expertIds(Project $project): array
     {
-        $jobIds = JobLog::where('project_id', $project->id)->pluck('id');
+        $jobs = JobLog::where('project_id', $project->id)->get(['id', 'expert_id']);
+        $messages = Message::where('project_id', $project->id)->get(['expert_id', 'addressee_expert_id']);
 
         return collect()
             ->merge($project->experts()->pluck('experts.id'))
-            ->merge(Message::where('project_id', $project->id)->pluck('expert_id'))
-            ->merge(Message::where('project_id', $project->id)->pluck('addressee_expert_id'))
-            ->merge(JobLog::where('project_id', $project->id)->pluck('expert_id'))
-            ->merge(PromptLog::whereIn('job_log_id', $jobIds)->pluck('expert_id'))
+            ->merge($messages->pluck('expert_id'))
+            ->merge($messages->pluck('addressee_expert_id'))
+            ->merge($jobs->pluck('expert_id'))
+            ->merge(PromptLog::whereIn('job_log_id', $jobs->pluck('id'))->pluck('expert_id'))
             ->merge(Summary::where('project_id', $project->id)->pluck('expert_id'))
             // The frozen cast names who sat where, including someone who left without speaking.
             ->merge(collect($project->run_config['cast'] ?? [])->map(fn ($member) => is_array($member) ? ($member['expert_id'] ?? null) : null))
@@ -163,10 +165,16 @@ final class ProjectTransfer
         return array_values(array_diff($named, Expert::whereIn('uuid', $named)->pluck('uuid')->all()));
     }
 
-    /** @return list<string> */
+    /**
+     * Every expert uuid the file refers to. expert_ids counts too: it also
+     * names who sat in the frozen cast without leaving a row, and an id it
+     * cannot map here would stay as it was and point at someone else.
+     *
+     * @return list<string>
+     */
     private function namedExperts(array $data): array
     {
-        $named = [];
+        $named = array_values($data['expert_ids'] ?? []);
 
         foreach ($data['seats'] ?? [] as $seat) {
             $named[] = $seat['expert'] ?? null;
@@ -207,6 +215,21 @@ final class ProjectTransfer
         $expert = fn (?string $uuid) => $uuid === null ? null : $experts[$uuid];
         $renumbering = ExpertRenumbering::fromExpertIds($data['expert_ids'] ?? []);
 
+        $project = $this->createProject($data, $owner, $renumbering);
+        $skippedTags = $this->tags->assign($project, $data['tags'] ?? []);
+        $this->attachSeats($project, $data['seats'] ?? [], $expert);
+        $jobIds = $this->writeJobs($project, $data['jobs'] ?? [], $expert, $renumbering);
+        $messageIds = $this->writeMessages($project, $data['messages'] ?? [], $owner, $expert, $jobIds);
+        $this->writeSummaries($project, $data['summaries'] ?? [], $expert);
+
+        $watermark = $data['summarized_until_message'] ?? null;
+        $project->forceFill(['summarized_until_message_id' => $watermark === null ? null : ($messageIds[(int) $watermark] ?? null)])->save();
+
+        return $project->fresh();
+    }
+
+    private function createProject(array $data, User $owner, ExpertRenumbering $renumbering): Project
+    {
         $project = new Project;
         $project->forceFill([
             'uuid' => $data['uuid'],
@@ -223,17 +246,28 @@ final class ProjectTransfer
             'long_term_memory' => $data['long_term_memory'] ?? null,
             'created_at' => Timestamp::import($data['created_at'] ?? null) ?? now(),
         ])->save();
-
         $project->addContributingUser($owner);
-        $skippedTags = $this->tags->assign($project, $data['tags'] ?? []);
 
-        foreach ($data['seats'] ?? [] as $seat) {
+        return $project;
+    }
+
+    /** @param  Closure(?string): ?int  $expert  uuid => expert id here */
+    private function attachSeats(Project $project, array $seats, Closure $expert): void
+    {
+        foreach ($seats as $seat) {
             $project->experts()->attach($expert($seat['expert']), ['seat' => $seat['seat']]);
         }
+    }
 
+    /**
+     * @param  Closure(?string): ?int  $expert  uuid => expert id here
+     * @return array<int, int> the file's job key => new job_logs id
+     */
+    private function writeJobs(Project $project, array $jobs, Closure $expert, ExpertRenumbering $renumbering): array
+    {
         $jobIds = [];
 
-        foreach ($data['jobs'] ?? [] as $job) {
+        foreach ($jobs as $job) {
             $log = new JobLog;
             $log->forceFill(JobLogRow::attributes($job, $project->id, $expert, $renumbering))->save();
             $jobIds[(int) $job['key']] = $log->id;
@@ -243,9 +277,19 @@ final class ProjectTransfer
             }
         }
 
+        return $jobIds;
+    }
+
+    /**
+     * @param  Closure(?string): ?int  $expert  uuid => expert id here
+     * @param  array<int, int>  $jobIds  the file's job key => new job_logs id
+     * @return array<int, int> the file's message key => new messages id
+     */
+    private function writeMessages(Project $project, array $messages, User $owner, Closure $expert, array $jobIds): array
+    {
         $messageIds = [];
 
-        foreach ($data['messages'] ?? [] as $message) {
+        foreach ($messages as $message) {
             $row = new Message;
             $row->forceFill([
                 'project_id' => $project->id,
@@ -259,7 +303,13 @@ final class ProjectTransfer
             $messageIds[(int) $message['key']] = $row->id;
         }
 
-        foreach ($data['summaries'] ?? [] as $summary) {
+        return $messageIds;
+    }
+
+    /** @param  Closure(?string): ?int  $expert  uuid => expert id here */
+    private function writeSummaries(Project $project, array $summaries, Closure $expert): void
+    {
+        foreach ($summaries as $summary) {
             (new Summary)->forceFill([
                 'project_id' => $project->id,
                 'expert_id' => $expert($summary['expert']),
@@ -267,10 +317,5 @@ final class ProjectTransfer
                 'updated_at' => Timestamp::import($summary['updated_at'] ?? null) ?? now(),
             ])->save();
         }
-
-        $watermark = $data['summarized_until_message'] ?? null;
-        $project->forceFill(['summarized_until_message_id' => $watermark === null ? null : ($messageIds[(int) $watermark] ?? null)])->save();
-
-        return $project->fresh();
     }
 }

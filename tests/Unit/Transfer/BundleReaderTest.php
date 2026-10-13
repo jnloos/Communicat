@@ -6,14 +6,17 @@ use App\Services\Transfer\Bundle;
 use App\Services\Transfer\BundleReader;
 use App\Services\Transfer\BundleWriter;
 use App\Services\Transfer\InvalidBundle;
+use Tests\Concerns\TemporaryFiles;
 use Tests\TestCase;
 use ZipArchive;
 
 class BundleReaderTest extends TestCase
 {
+    use TemporaryFiles;
+
     private function path(): string
     {
-        return tempnam(sys_get_temp_dir(), 'bundle').'.zip';
+        return $this->temporaryPath();
     }
 
     private function zip(array $entries): string
@@ -125,6 +128,21 @@ class BundleReaderTest extends TestCase
         $this->expectException(InvalidBundle::class);
         $this->expectExceptionMessage(__('transfer.errors.too_large'));
         BundleReader::open($path, maxUnpackedBytes: 10);
+    }
+
+    public function test_the_writer_leaves_no_staged_entry_behind(): void
+    {
+        $staged = fn () => glob(sys_get_temp_dir().'/bundle-entry*') ?: [];
+        $before = $staged();
+
+        $writer = new BundleWriter($this->path());
+        $writer->put(Bundle::MANIFEST, ['schema_version' => Bundle::SCHEMA_VERSION]);
+        $writer->close();
+        $abandoned = new BundleWriter($this->path());
+        $abandoned->put(Bundle::TAGS, []);
+        unset($abandoned);
+
+        $this->assertSame($before, $staged());
     }
 
     public function test_an_entry_over_the_single_entry_limit_is_refused(): void
