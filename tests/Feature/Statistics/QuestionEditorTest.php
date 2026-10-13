@@ -67,6 +67,18 @@ class QuestionEditorTest extends TestCase
             ->assertNotDispatched('question-saved');
     }
 
+    public function test_the_raw_data_export_says_what_it_delivers(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $question = $user->questions()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertSee('Export the runs’ raw data as ZIP')
+            ->assertSee('All turns and agents of these runs, without the turn window')
+            ->assertSee(route('statistics.export', $question->id));
+    }
+
     public function test_a_trigger_is_cut_with_an_ellipsis_and_has_no_tooltip(): void
     {
         $user = User::factory()->create();

@@ -17,7 +17,12 @@
         <flux:dropdown position="bottom" align="end" class="shrink-0">
             <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')" />
             <flux:menu>
-                <flux:menu.item icon="arrow-down-tray" href="{{ route('statistics.export', $questionId) }}">{{ __('questions.actions.export_raw') }}</flux:menu.item>
+                <flux:menu.item icon="arrow-down-tray" href="{{ route('statistics.export', $questionId) }}">
+                    <span class="flex flex-col">
+                        <span>{{ __('questions.actions.export_raw') }}</span>
+                        <span class="text-xs font-normal text-zinc-500 dark:text-zinc-400">{{ __('questions.actions.export_raw_hint') }}</span>
+                    </span>
+                </flux:menu.item>
                 @if ($mayManage)
                     <flux:menu.separator />
                     <flux:menu.item icon="pencil-square" wire:click="$parent.startRenaming({{ $questionId }})">{{ __('questions.actions.rename') }}</flux:menu.item>
