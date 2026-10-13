@@ -8,6 +8,7 @@ use App\Models\JobLog;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use WeakMap;
 
 /**
  * The study's counting rules, in one place: which job_logs rows are spoken
@@ -30,10 +31,14 @@ use Illuminate\Support\Collection;
  *   so tokens would bias the contrast between models the study exists to draw.
  * - **Every contributing expert appears, including one that never spoke.** A
  *   zero is a finding, not a missing row — and it is what pulls the Gini
- *   coefficient up.
+ *   coefficient up. An expert who spoke and has since left the run appears
+ *   too, after the seated ones: its turns are in the totals.
  */
 class SpokenTurns
 {
+    /** @var WeakMap<Project, Collection<int, Expert>>|null */
+    private ?WeakMap $leavers = null;
+
     /**
      * The project's spoken turns. Unordered: a caller that aggregates needs no
      * order, and one that walks the turns calls inOrder().
@@ -115,15 +120,28 @@ class SpokenTurns
     }
 
     /**
-     * Everyone seated, in seat order — whether they spoke or not. Seat order,
-     * so a participant keeps the same colour in every chart.
+     * Everyone seated, in seat order -- whether they spoke or not -- followed
+     * by every expert who spoke in the run and has since left it, by id. Seat
+     * order, so a participant keeps the same colour in every chart. A leaver
+     * has no pivot, so its seat reads null; its turns are part of the run's
+     * totals, so leaving it out would make the shares sum to less than one.
      *
      * @return Collection<int, Expert>
      */
     public function participants(Project $project): Collection
     {
-        return $project->contributingExperts()
+        $seated = $project->contributingExperts()
             ->sortBy(fn (Expert $expert) => $expert->pivot?->seat ?? PHP_INT_MAX)
             ->values();
+
+        // Read once per project instance, as contributingExperts() is: the
+        // totals, the window and the curve of one answer ask for the same run.
+        $this->leavers ??= new WeakMap;
+        $this->leavers[$project] ??= Expert::query()
+            ->whereIn('id', $this->of($project)->whereNotIn('expert_id', $seated->modelKeys())->select('expert_id'))
+            ->orderBy('id')
+            ->get();
+
+        return $seated->concat($this->leavers[$project])->values();
     }
 }

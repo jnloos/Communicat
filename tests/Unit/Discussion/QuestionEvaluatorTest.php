@@ -501,8 +501,9 @@ class QuestionEvaluatorTest extends TestCase
         $queries = count(DB::getQueryLog());
         DB::disableQueryLog();
 
-        // Per run: participants, the whole-run and the window report (spoken turns and failed turns each), the curve.
-        $this->assertLessThanOrEqual(14 + 6 * 6, $queries, "{$queries} queries for 6 runs");
+        // Per run: participants, the whole-run and the window report (spoken turns and failed turns each), the curve,
+        // and who left the run (once for the totals, once for the curve).
+        $this->assertLessThanOrEqual(14 + 6 * 8, $queries, "{$queries} queries for 6 runs");
     }
 
     public function test_the_index_of_a_group_the_answer_does_not_have_is_an_error(): void

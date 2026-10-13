@@ -3,7 +3,7 @@
 namespace App\Services\StudyExport;
 
 use App\Discussion\Metrics\SpeakingShares;
-use App\Discussion\Metrics\SpokenTurns;
+use App\Discussion\Values\SpeakerShare;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Message;
@@ -32,7 +32,7 @@ final class StudyExport
 
     private const TURN_COLUMNS = ['run_uuid', 'turn_index', 'status', 'spoken', 'expert_uuid', 'seat', 'addressee_expert_uuid', 'words', 'chars', 'thought_words', 'thought_chars', 'tokens_in', 'tokens_out', 'tokens_reasoning', 'selector', 'fallback', 'tie_broken', 'speaker_bid', 'speaker_bid_fallback', 'judge_label', 'selector_reasoning', 'selection_json', 'error'];
 
-    public function __construct(private readonly SpeakingShares $shares, private readonly SpokenTurns $spoken) {}
+    public function __construct(private readonly SpeakingShares $shares) {}
 
     /** @param  Collection<int, Project>  $runs */
     public function write(Collection $runs, User $viewer, string $path): void
@@ -112,34 +112,28 @@ final class StudyExport
         })->values()->all();
     }
 
-    /** @return list<array<string, scalar|null>> */
+    /**
+     * One row per participant as SpeakingShares reports them: the seated in
+     * seat order, then everyone who spoke and has left the run, seat empty.
+     *
+     * @return list<array<string, scalar|null>>
+     */
     private function participantRows(Collection $runs, array $tagColumns): array
     {
         return $runs->flatMap(function (Project $run) use ($tagColumns) {
             $report = $this->shares->forProject($run);
-            $speakers = collect($report->speakers)->keyBy('expertId');
-            $contributors = $run->experts()->get();
-            $spokeIds = JobLog::where('project_id', $run->id)->whereNotNull('words')->whereNotNull('expert_id')->distinct()->pluck('expert_id');
-            // Someone who spoke and has left the run is still part of its data.
-            $former = Expert::whereIn('id', $spokeIds->diff($contributors->pluck('id')))->orderBy('id')->get();
-            // SpeakingShares only lists current contributors; a leaver's figures come from
-            // the same spoken-turn rule, divided by the run's totals.
-            $leaverCounts = $this->spoken->of($run)->whereIn('expert_id', $former->pluck('id'))->groupBy('expert_id')
-                ->selectRaw('expert_id, count(*) as turns, sum(words) as words')->get()->keyBy('expert_id');
+            $experts = Expert::with('tagValues')->whereIn('id', array_map(fn (SpeakerShare $share) => $share->expertId, $report->speakers))->get()->keyBy('id');
 
-            return $contributors->concat($former)->map(function (Expert $expert) use ($run, $report, $speakers, $leaverCounts, $tagColumns) {
-                $share = $speakers[$expert->id] ?? null;
-                $left = $leaverCounts[$expert->id] ?? null;
-                $turns = $share?->turns ?? (int) ($left->turns ?? 0);
-                $words = $share?->words ?? (int) ($left->words ?? 0);
-                $tags = $expert->tagValues()->get()->keyBy('tag_category_id');
+            return array_map(function (SpeakerShare $share) use ($run, $experts, $tagColumns) {
+                $expert = $experts[$share->expertId];
+                $tags = $expert->tagValues->keyBy('tag_category_id');
                 $row = [
                     'run_uuid' => $run->uuid,
                     'expert_uuid' => $expert->uuid,
                     'expert_token' => $expert->promptId,
                     'name' => $expert->name,
                     'role' => $expert->role,
-                    'seat' => $expert->pivot?->seat,
+                    'seat' => $share->seat,
                 ];
 
                 foreach ($tagColumns as $categoryId => $header) {
@@ -147,13 +141,13 @@ final class StudyExport
                 }
 
                 return $row + [
-                    'turns' => $turns,
-                    'turn_share' => $share?->turnShare ?? ($report->spokenTurns === 0 ? 0 : $turns / $report->spokenTurns),
-                    'words' => $words,
-                    'word_share' => $share?->wordShare ?? ($report->totalWords === 0 ? 0 : $words / $report->totalWords),
-                    'words_per_turn' => $turns === 0 ? null : $words / $turns,
+                    'turns' => $share->turns,
+                    'turn_share' => $share->turnShare,
+                    'words' => $share->words,
+                    'word_share' => $share->wordShare,
+                    'words_per_turn' => $share->turns === 0 ? null : $share->wordsPerTurn(),
                 ];
-            });
+            }, $report->speakers);
         })->values()->all();
     }
 

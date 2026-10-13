@@ -217,6 +217,21 @@ class ShareTrajectoryTest extends TestCase
         }
     }
 
+    public function test_a_speaker_who_left_stays_on_the_curve_after_the_seated(): void
+    {
+        $this->turn('Alice', 30);
+        $this->turn('Bob', 10);
+        $this->turn('Alice', 30);
+        $this->project->removeContributingExpert($this->experts['Alice']);
+
+        $trajectory = $this->trajectory();
+        $last = $trajectory->points[2];
+
+        $this->assertSame([$this->id('Bob'), $this->id('Carol'), $this->id('Dave'), $this->id('Alice')], array_map(fn ($p) => $p->expertId, $trajectory->participants));
+        $this->assertNull($trajectory->participants[3]->seat);
+        $this->assertEqualsWithDelta(2 / 3, $last->share(ShareSeries::CumulativeTurns, $this->id('Alice')), 1e-12);
+    }
+
     public function test_a_run_without_turns_has_no_points_but_all_participants(): void
     {
         $trajectory = $this->trajectory();

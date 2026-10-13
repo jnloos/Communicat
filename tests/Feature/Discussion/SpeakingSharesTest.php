@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Discussion;
 
+use App\Discussion\Metrics\Gini;
 use App\Discussion\Metrics\SpeakingShares;
 use App\Discussion\Values\ShareReport;
 use App\Discussion\Values\SpeakerShare;
@@ -211,6 +212,49 @@ class SpeakingSharesTest extends TestCase
         $names = array_map(fn (SpeakerShare $s) => $s->name, $this->report()->speakers);
 
         $this->assertSame(['Alice', 'Bob', 'Carol', 'Dave'], $names);
+    }
+
+    public function test_a_speaker_who_left_keeps_its_turns_and_comes_after_the_seated(): void
+    {
+        $this->turn('Alice', 30);
+        $this->turn('Alice', 30);
+        $this->turn('Alice', 30);
+        $this->turn('Bob', 10);
+        $this->project->removeContributingExpert($this->experts['Alice']);
+
+        $report = $this->report();
+        $alice = $this->shareOf('Alice');
+
+        $this->assertSame(['Bob', 'Carol', 'Dave', 'Alice'], array_map(fn (SpeakerShare $s) => $s->name, $report->speakers));
+        $this->assertNull($alice->seat);
+        $this->assertSame(3, $alice->turns);
+        $this->assertSame(0.75, $alice->turnShare);
+        $this->assertSame(0.9, $alice->wordShare);
+        $this->assertEqualsWithDelta(1.0, array_sum(array_map(fn (SpeakerShare $s) => $s->turnShare, $report->speakers)), 1e-12);
+        $this->assertEqualsWithDelta(1.0, array_sum(array_map(fn (SpeakerShare $s) => $s->wordShare, $report->speakers)), 1e-12);
+    }
+
+    public function test_the_gini_counts_a_speaker_who_left(): void
+    {
+        $this->turn('Alice', 30);
+        $this->turn('Alice', 30);
+        $this->turn('Alice', 30);
+        $this->turn('Bob', 10);
+        $this->project->removeContributingExpert($this->experts['Alice']);
+
+        $report = $this->report();
+
+        $this->assertSame(Gini::of([1, 0, 0, 3]), $report->turnGini);
+        $this->assertSame(Gini::of([10, 0, 0, 90]), $report->wordGini);
+        $this->assertSame(Gini::maximumFor(4), $report->giniCeiling);
+    }
+
+    public function test_a_seated_expert_who_left_without_speaking_drops_out(): void
+    {
+        $this->turn('Bob', 10);
+        $this->project->removeContributingExpert($this->experts['Alice']);
+
+        $this->assertSame(['Bob', 'Carol', 'Dave'], array_map(fn (SpeakerShare $s) => $s->name, $this->report()->speakers));
     }
 
     public function test_a_window_counts_only_the_turns_inside_it(): void
