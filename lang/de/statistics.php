@@ -24,6 +24,10 @@ return [
         'rolling' => 'Gleitend',
         'cumulative_hint' => 'Anteil an allen bisherigen Turns.',
         'rolling_hint' => '{1}Anteil am letzten Turn.|[2,*]Anteil an den letzten :count Turns.',
+        'cumulative_tooltip' => 'Anteil an allen Turns bisher',
+        'rolling_tooltip' => '{1}Anteil am letzten Turn|[2,*]Anteil an den letzten :count Turns',
+        'turns_tooltip' => 'Anteil an den Turns',
+        'words_tooltip' => 'Anteil an den Wörtern',
         'turn' => 'Turn :turn',
     ],
 

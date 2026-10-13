@@ -35,7 +35,37 @@ class QuestionModelTest extends TestCase
         $user->questions()->create(['name' => 'A', 'is_template' => true]);
         $user->questions()->create(['name' => 'Q']);
 
-        $this->assertSame(['A', 'B'], Question::templates()->pluck('name')->all());
+        $this->assertSame(['B', 'A'], Question::templates()->pluck('name')->all());
         $this->assertSame(['Q'], Question::notTemplates()->pluck('name')->all());
+    }
+
+    public function test_templates_are_ordered_among_all_templates_and_questions_per_owner(): void
+    {
+        $alice = User::factory()->create();
+        $bob = User::factory()->create();
+        $alice->questions()->create(['name' => 'Alice 1']);
+        $second = $alice->questions()->create(['name' => 'Alice 2']);
+        $bobs = $bob->questions()->create(['name' => 'Bob 1']);
+        $alice->questions()->create(['name' => 'T1', 'is_template' => true]);
+        $template = $bob->questions()->create(['name' => 'T2', 'is_template' => true]);
+
+        $second->moveTo(0);
+        $template->moveBy(-1);
+
+        $this->assertSame(['Alice 2', 'Alice 1'], $alice->questions()->notTemplates()->pluck('name')->all());
+        $this->assertSame(1, $bobs->fresh()->position);
+        $this->assertSame(['T2', 'T1'], Question::templates()->pluck('name')->all());
+    }
+
+    public function test_move_by_stops_at_either_end(): void
+    {
+        $user = User::factory()->create();
+        $top = $user->questions()->create(['name' => 'Top']);
+        $bottom = $user->questions()->create(['name' => 'Bottom']);
+
+        $top->moveBy(-1);
+        $bottom->moveBy(5);
+
+        $this->assertSame(['Top', 'Bottom'], $user->questions()->notTemplates()->pluck('name')->all());
     }
 }

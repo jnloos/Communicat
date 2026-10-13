@@ -5,7 +5,7 @@
     'result', {{-- QuestionResult --}}
 ])
 
-{{-- A chart per panel, a line per group: the mean share after each turn over the runs that reached it, and a dashed line in the group's colour at its fair share. --}}
+{{-- A chart per panel, a line per group: the mean share after each turn over the runs that reached it, and a neutral dashed line at its fair share, as in the point strip; the tooltip names whose it is. --}}
 <div {{ $attributes->class('grid gap-4 lg:grid-cols-2') }}>
     @foreach ($result->panels as $panel)
         @php($rows = CurveRows::of($panel))
@@ -24,7 +24,7 @@
                         @foreach ($panel->groups as $index => $group)
                             <flux:chart.line :field="'g'.$index" curve="none" style="color: var(--color-{{ GroupColor::of($result, $group) }})" />
                             @if ($group->fairShare() !== null)
-                                <flux:chart.line :field="'f'.$index" curve="none" stroke-width="1.5" stroke-dasharray="4 4" style="color: var(--color-{{ GroupColor::of($result, $group) }})" />
+                                <flux:chart.line :field="'f'.$index" curve="none" stroke-width="1.5" stroke-dasharray="4 4" class="text-zinc-500 dark:text-zinc-300" />
                             @endif
                         @endforeach
 

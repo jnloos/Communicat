@@ -21,6 +21,8 @@ return [
     ],
 
     'actions' => [
+        'move_up' => 'Nach oben',
+        'move_down' => 'Nach unten',
         'rename' => 'Umbenennen',
         'duplicate' => 'Duplizieren',
         'save_as_template' => 'Als Vorlage speichern',
@@ -107,11 +109,6 @@ return [
         'per_head' => 'pro Kopf',
     ],
 
-    'aggregate_hints' => [
-        'together' => 'Die Anteile der Gruppe addiert. Alle Gruppen ergeben zusammen 100 %.',
-        'per_head' => 'Der Anteil eines durchschnittlichen Mitglieds, damit verschieden große Gruppen fair vergleichbar sind.',
-    ],
-
     'dimensions' => [
         'pipeline' => 'Pipeline',
         'model' => 'Modell',
@@ -140,10 +137,12 @@ return [
         'points' => 'Läufe',
         'composition' => 'Anteile',
         'trajectory' => 'Über den Lauf',
-        'unsupported' => [
-            'composition' => 'Nur wenn die Gruppen zusammen alle ergeben: ein Anteil, verglichen nach einem Persona-Tag, alle Personen, zusammen gezählt.',
-            'trajectory' => 'Nur für Turn-Anteil und Wortanteil.',
-        ],
+    ],
+
+    'form_hints' => [
+        'points' => 'Jeder Lauf ein Punkt',
+        'composition' => 'Gruppen als Teile von 100 %',
+        'trajectory' => 'Mittlerer Anteil pro Turn',
     ],
 
     'curves' => [
@@ -154,13 +153,13 @@ return [
     'result' => [
         'dropped_tags' => '{1}1 Tag-Wert, den diese Frage nutzte, existiert nicht mehr und wurde entfernt. Eine Kategorie ohne verbleibenden Wert filtert weiter und trifft keinen Lauf: Chip öffnen und andere Werte wählen.|[2,*]:count Tag-Werte, die diese Frage nutzte, existieren nicht mehr und wurden entfernt. Eine Kategorie ohne verbleibenden Wert filtert weiter und trifft keinen Lauf: Chip öffnen und andere Werte wählen.',
         'n_of' => ':label, n',
+        'fair_share' => 'Faire Erwartung',
         'fair_share_of' => ':label, faire Erwartung',
         'empty' => 'Kein Lauf beantwortet diese Frage. Erweitere die Läufe oder die Personen.',
         'all' => 'Alle',
         'no_value' => 'ohne Angabe',
-        'fair_share' => 'Gestrichelt: faire Erwartung, also was die Gruppe bekäme, wenn alle gleich viel sprächen.',
         'mean' => 'Mittelwert',
-        'delta' => ':to minus :from: :delta',
+        'delta' => 'Effektstärke: :delta',
         'too_short' => 'Eine Kurve braucht mindestens zwei gesprochene Turns.',
         'run_table' => '{1}Der Lauf hinter diesen Zahlen|[2,*]Die :count Läufe hinter diesen Zahlen',
         'columns' => [

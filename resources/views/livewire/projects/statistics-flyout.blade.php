@@ -73,12 +73,13 @@
 
                         <div class="flex flex-wrap gap-2">
                             <flux:radio.group wire:model.live="trajectoryUnit" variant="segmented" size="sm">
-                                <flux:radio value="turns" :label="__('statistics.columns.turns')" />
-                                <flux:radio value="words" :label="__('statistics.columns.words')" />
+                                <x-segmented-option value="turns" :label="__('statistics.columns.turns')" :tooltip="__('statistics.trajectory.turns_tooltip')" />
+                                <x-segmented-option value="words" :label="__('statistics.columns.words')" :tooltip="__('statistics.trajectory.words_tooltip')" />
                             </flux:radio.group>
                             <flux:radio.group wire:model.live="trajectoryMode" variant="segmented" size="sm">
-                                <flux:radio value="cumulative" :label="__('statistics.trajectory.cumulative')" />
-                                <flux:radio value="rolling" :label="__('statistics.trajectory.rolling')" />
+                                <x-segmented-option value="cumulative" :label="__('statistics.trajectory.cumulative')" :tooltip="__('statistics.trajectory.cumulative_tooltip')" />
+                                <x-segmented-option value="rolling" :label="__('statistics.trajectory.rolling')"
+                                    :tooltip="trans_choice('statistics.trajectory.rolling_tooltip', $trajectoryWindow, ['count' => $trajectoryWindow])" />
                             </flux:radio.group>
                         </div>
                     </div>

@@ -67,7 +67,7 @@ class QuestionEditorTest extends TestCase
             ->assertNotDispatched('question-saved');
     }
 
-    public function test_a_trigger_is_cut_with_an_ellipsis_and_carries_its_full_label_as_title(): void
+    public function test_a_trigger_is_cut_with_an_ellipsis_and_has_no_tooltip(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -77,8 +77,8 @@ class QuestionEditorTest extends TestCase
         foreach ([$own, $template] as $question) {
             $html = Livewire::test(QuestionEditor::class, ['questionId' => $question->id])->html();
 
-            $this->assertMatchesRegularExpression('/<button[^>]*data-statistics-trigger[^>]*>/', $html);
-            $this->assertMatchesRegularExpression('/<button(?=[^>]*title="Word share|[^>]*title="[^"]+")(?=[^>]*max-w-64)(?=[^>]*truncate)[^>]*data-statistics-trigger/', $html);
+            $this->assertMatchesRegularExpression('/<button(?=[^>]*max-w-64)(?=[^>]*truncate)[^>]*data-statistics-trigger/', $html);
+            $this->assertDoesNotMatchRegularExpression('/<button[^>]*title="[^>]*data-statistics-trigger/', $html);
         }
     }
 
@@ -634,7 +634,7 @@ class QuestionEditorTest extends TestCase
         $this->assertDoesNotMatchRegularExpression('/<button(?=[^>]*disabled:opacity-100!)[^>]*data-statistics-trigger/', $html);
     }
 
-    public function test_a_curve_draws_the_fair_share_as_a_dashed_line_and_says_so(): void
+    public function test_a_curve_draws_the_fair_share_as_a_dashed_line_without_a_caption(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -644,7 +644,7 @@ class QuestionEditorTest extends TestCase
 
         Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSeeHtml('stroke-dasharray="4 4"')
-            ->assertSee('Dashed line: fair share');
+            ->assertDontSee('Dashed line');
     }
 
     public function test_the_no_value_radio_uses_a_sentinel_and_stores_the_empty_string(): void

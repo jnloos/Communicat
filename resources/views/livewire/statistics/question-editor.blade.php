@@ -105,7 +105,7 @@
                 <flux:menu>
                     <flux:menu.radio.group wire:model.live="definition.aggregate">
                         @foreach ($aggregates as $aggregate)
-                            <flux:menu.radio :value="$aggregate->value" :title="__('questions.aggregate_hints.'.$aggregate->value)">{{ $aggregate->label() }}</flux:menu.radio>
+                            <flux:menu.radio :value="$aggregate->value">{{ $aggregate->label() }}</flux:menu.radio>
                         @endforeach
                     </flux:menu.radio.group>
                 </flux:menu>
@@ -222,18 +222,15 @@
             @if ($current->form === ResultForm::Trajectory)
                 <flux:radio.group wire:model.live="definition.curve" variant="segmented" size="sm">
                     @foreach (CurveMode::cases() as $mode)
-                        <flux:radio :value="$mode->value" :label="$mode->label()" />
+                        <x-segmented-option :value="$mode->value" :label="$mode->label()"
+                            :tooltip="trans_choice('statistics.trajectory.'.$mode->value.'_tooltip', $rollingWindow, ['count' => $rollingWindow])" />
                     @endforeach
                 </flux:radio.group>
             @endif
 
             <flux:radio.group wire:model.live="definition.form" variant="segmented" size="sm">
                 @foreach ($forms as $form)
-                    @if ($current->supports($form))
-                        <flux:radio :value="$form->value" :label="$form->label()" />
-                    @else
-                        <flux:radio :value="$form->value" :label="$form->label()" disabled :title="__('questions.forms.unsupported.'.$form->value)" />
-                    @endif
+                    <x-segmented-option :value="$form->value" :label="$form->label()" :tooltip="__('questions.form_hints.'.$form->value)" :disabled="! $current->supports($form)" />
                 @endforeach
             </flux:radio.group>
         </div>
@@ -259,16 +256,12 @@
                 @break
             @case(ResultForm::Trajectory)
                 <x-statistics.curve-panels :result="$result" />
-                <flux:text size="sm">{{ __('questions.result.fair_share') }}</flux:text>
                 @if ($current->curve === CurveMode::Rolling)
                     <flux:text size="sm">{{ trans_choice('statistics.trajectory.rolling_hint', $rollingWindow, ['count' => $rollingWindow]) }}</flux:text>
                 @endif
                 @break
             @default
                 <x-statistics.point-panels :result="$result" :metric="$current->metric" />
-                @if ($current->metric->isShare())
-                    <flux:text size="sm">{{ __('questions.result.fair_share') }}</flux:text>
-                @endif
         @endswitch
 
         <x-statistics.run-table :result="$result" :metric="$current->metric" />

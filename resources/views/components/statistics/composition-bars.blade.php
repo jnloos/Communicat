@@ -15,17 +15,21 @@
 --}}
 <div {{ $attributes->class('space-y-3') }}>
     @foreach ($result->panels as $panel)
+        @php($panelLabel = $panel->label !== '' ? $panel->label : __('questions.result.all'))
         <div class="grid grid-cols-1 gap-1 sm:grid-cols-[minmax(0,10rem)_1fr] sm:items-center sm:gap-4" wire:key="composition-{{ $panel->key }}">
-            <span class="truncate text-sm text-zinc-600 dark:text-zinc-300">{{ $panel->label !== '' ? $panel->label : __('questions.result.all') }}</span>
+            <span class="truncate text-sm text-zinc-600 dark:text-zinc-300">{{ $panelLabel }}</span>
 
             <div class="flex h-7 overflow-hidden rounded" role="img"
                 aria-label="{{ collect($panel->groups)->map(fn ($group) => $group->label.': '.$metric->format($panel->shareOf($group)))->implode(', ') }}">
                 @foreach ($panel->groups as $group)
-                    <div class="flex min-w-0 items-center justify-center overflow-hidden text-xs font-medium {{ GroupColor::TEXT_ON }}"
-                        style="width: {{ $panel->shareOf($group) * 100 }}%; background-color: var(--color-{{ GroupColor::of($result, $group) }})"
-                        title="{{ $group->label }}: {{ $metric->format($panel->shareOf($group)) }}">
-                        <span class="truncate px-1">{{ $metric->format($panel->shareOf($group)) }}</span>
-                    </div>
+                    @php($color = GroupColor::of($result, $group))
+                    <x-statistics.chart-tip :heading="$panelLabel" :rows="[['label' => $group->label, 'value' => $metric->format($panel->shareOf($group)), 'color' => $color]]"
+                        class="flex min-w-0" style="width: {{ $panel->shareOf($group) * 100 }}%">
+                        <div class="flex min-w-0 flex-1 items-center justify-center overflow-hidden text-xs font-medium transition hover:brightness-110 {{ GroupColor::TEXT_ON }}"
+                            style="background-color: var(--color-{{ $color }})">
+                            <span class="truncate px-1">{{ $metric->format($panel->shareOf($group)) }}</span>
+                        </div>
+                    </x-statistics.chart-tip>
                 @endforeach
             </div>
         </div>

@@ -22,21 +22,29 @@
                 @if ($templates->isEmpty())
                     <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.no_templates') }}@if ($mayShare) {{ __('questions.list.no_templates_admin') }}@endif</flux:text>
                 @else
-                    <div class="mt-2 space-y-0.5">
+                    {{-- The whole row drags; the menu offers the same move for keyboards and touch screens. Only admins order the templates, for everyone. --}}
+                    <div class="mt-2 space-y-0.5" @if ($mayShare) wire:sort="sortTemplate" @endif>
                         @foreach ($templates as $template)
-                            <div class="group/template relative" wire:key="template-{{ $template->id }}">
+                            @php($owns = $template->user_id === auth()->id())
+                            <div class="relative" wire:key="template-{{ $template->id }}" @if ($mayShare) wire:sort:item="{{ $template->id }}" @endif>
                                 <x-statistics.entry :title="$template->name" :notes="$template->notes" :sentence="$sentences[$template->id]" :current="$questionId === $template->id"
-                                    icon="rectangle-stack" :with-menu="$mayShare && $template->user_id === auth()->id()" wire:click="open({{ $template->id }})" />
+                                    icon="rectangle-stack" :with-menu="$mayShare" wire:click="open({{ $template->id }})" />
 
-                                @if ($mayShare && $template->user_id === auth()->id())
-                                    <div class="absolute end-1 top-1.5">
+                                @if ($mayShare)
+                                    <div class="absolute end-1 top-1.5" wire:sort:ignore>
                                         <flux:dropdown position="bottom" align="end">
                                             <flux:button variant="ghost" size="xs" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')"
                                                 class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!" />
                                             <flux:menu>
-                                                <flux:menu.item icon="pencil-square" wire:click="startRenaming({{ $template->id }})">{{ __('questions.actions.rename') }}</flux:menu.item>
-                                                <flux:menu.separator />
-                                                <flux:menu.item variant="danger" icon="trash" wire:click="confirmDelete({{ $template->id }})">{{ __('questions.actions.delete') }}</flux:menu.item>
+                                                @if ($owns)
+                                                    <flux:menu.item icon="pencil-square" wire:click="startRenaming({{ $template->id }})">{{ __('questions.actions.rename') }}</flux:menu.item>
+                                                    <flux:menu.separator />
+                                                @endif
+                                                <x-statistics.move-items :first="$loop->first" :last="$loop->last" action="moveTemplate({{ $template->id }}, %d)" />
+                                                @if ($owns)
+                                                    <flux:menu.separator />
+                                                    <flux:menu.item variant="danger" icon="trash" wire:click="confirmDelete({{ $template->id }})">{{ __('questions.actions.delete') }}</flux:menu.item>
+                                                @endif
                                             </flux:menu>
                                         </flux:dropdown>
                                     </div>
@@ -53,19 +61,21 @@
                 @if ($questions->isEmpty())
                     <flux:text size="sm" class="mt-2 px-3">{{ __('questions.list.empty') }}</flux:text>
                 @else
-                    <div class="mt-2 space-y-0.5">
+                    <div class="mt-2 space-y-0.5" wire:sort="sortQuestion">
                         @foreach ($questions as $question)
-                            <div class="relative" wire:key="question-{{ $question->id }}">
+                            <div class="relative" wire:key="question-{{ $question->id }}" wire:sort:item="{{ $question->id }}">
                                 <x-statistics.entry :title="$question->name" :notes="$question->notes" :sentence="$sentences[$question->id]" :current="$questionId === $question->id"
                                     with-menu wire:click="open({{ $question->id }})" />
 
-                                <div class="absolute end-1 top-1.5">
+                                <div class="absolute end-1 top-1.5" wire:sort:ignore>
                                     <flux:dropdown position="bottom" align="end">
                                         <flux:button variant="ghost" size="xs" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')"
                                             class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!" />
                                         <flux:menu>
                                             <flux:menu.item icon="pencil-square" wire:click="startRenaming({{ $question->id }})">{{ __('questions.actions.rename') }}</flux:menu.item>
                                             <flux:menu.item icon="document-duplicate" wire:click="duplicate({{ $question->id }})">{{ __('questions.actions.duplicate') }}</flux:menu.item>
+                                            <flux:menu.separator />
+                                            <x-statistics.move-items :first="$loop->first" :last="$loop->last" action="moveQuestion({{ $question->id }}, %d)" />
                                             @if ($mayShare)
                                                 <flux:menu.item icon="rectangle-stack" wire:click="saveAsTemplate({{ $question->id }})">{{ __('questions.actions.save_as_template') }}</flux:menu.item>
                                             @endif

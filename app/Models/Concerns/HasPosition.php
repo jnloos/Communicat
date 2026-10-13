@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * A row with a manual order among its siblings: new rows go to the end, and
- * moveTo() takes the index wire:sort reports and renumbers all siblings 1..n.
+ * moveTo() takes the index wire:sort reports and renumbers all siblings 1..n;
+ * moveBy() moves a number of places up (negative) or down (positive).
  */
 trait HasPosition
 {
@@ -40,5 +41,13 @@ trait HasPosition
         }
 
         $this->position = array_search($this, $others, true) + 1;
+    }
+
+    /** @param  int  $steps  places to move: negative is up, positive is down; the ends stop it */
+    public function moveBy(int $steps): void
+    {
+        $index = $this->siblings()->orderBy('position')->orderBy('id')->pluck($this->getKeyName())->search($this->getKey());
+
+        $this->moveTo(max(0, $index + $steps));
     }
 }

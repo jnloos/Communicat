@@ -9,7 +9,7 @@
 
 {{-- A list entry of auto height: the title, then the sentence small and grey. --}}
 @php($firstNote = filled($notes) ? trim(strtok($notes, "\n")) : null)
-<button type="button" @if ($current) aria-current="page" @endif title="{{ collect([$title ?? __('questions.untitled'), $notes, $sentence])->filter()->implode("\n") }}"
+<button type="button" @if ($current) aria-current="page" @endif
     {{ $attributes->class(['block w-full rounded-lg px-3 py-1.5 text-start hover:bg-zinc-800/5 dark:hover:bg-white/[7%]', 'pe-8' => $withMenu, 'bg-zinc-800/5 dark:bg-white/[7%]' => $current]) }}>
     <span @class(['flex items-center gap-2 text-sm font-medium', 'text-(--color-accent-content)' => $current, 'italic text-zinc-500 dark:text-zinc-400' => $title === null && ! $current])>
         @if ($icon)

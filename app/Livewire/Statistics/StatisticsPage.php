@@ -138,12 +138,42 @@ class StatisticsPage extends Component
 
     public function duplicate(int $questionId): void
     {
-        $source = $this->user()->questions()->notTemplates()->findOrFail($questionId);
+        $source = $this->ownQuestion($questionId);
         $copy = $source->replicate();
         $copy->name = $source->name === null ? null : Str::limit(__('questions.copy_name', ['name' => $source->name]), 100, '');
         $copy->save();
 
         $this->questionId = $copy->id;
+    }
+
+    /** wire:sort hands over the item key and its new 0-based position. */
+    public function sortQuestion(int $questionId, int $position): void
+    {
+        $this->ownQuestion($questionId)->moveTo($position);
+    }
+
+    /** @param  int  $steps  -1 moves one place up, 1 one place down */
+    public function moveQuestion(int $questionId, int $steps): void
+    {
+        $this->ownQuestion($questionId)->moveBy($steps);
+    }
+
+    /** The templates' order is everyone's, so only an admin sets it. */
+    public function sortTemplate(int $templateId, int $position): void
+    {
+        $this->orderedTemplate($templateId)->moveTo($position);
+    }
+
+    public function moveTemplate(int $templateId, int $steps): void
+    {
+        $this->orderedTemplate($templateId)->moveBy($steps);
+    }
+
+    private function orderedTemplate(int $templateId): Question
+    {
+        Gate::authorize('admin');
+
+        return Question::templates()->findOrFail($templateId);
     }
 
     public function confirmDelete(int $questionId): void
@@ -166,6 +196,12 @@ class StatisticsPage extends Component
     }
 
     /** One of the user's own rows, question or template. */
+    /** An own question, never a template: the rows the user orders and duplicates. */
+    private function ownQuestion(int $questionId): Question
+    {
+        return $this->user()->questions()->notTemplates()->findOrFail($questionId);
+    }
+
     private function owned(int $questionId): Question
     {
         return $this->user()->questions()->findOrFail($questionId);

@@ -24,6 +24,10 @@ return [
         'rolling' => 'Rolling',
         'cumulative_hint' => 'Share of all turns so far.',
         'rolling_hint' => '{1}Share of the last turn.|[2,*]Share of the last :count turns.',
+        'cumulative_tooltip' => 'Share of all turns so far',
+        'rolling_tooltip' => '{1}Share of the last turn|[2,*]Share of the last :count turns',
+        'turns_tooltip' => 'Share of turns',
+        'words_tooltip' => 'Share of words',
         'turn' => 'Turn :turn',
     ],
 

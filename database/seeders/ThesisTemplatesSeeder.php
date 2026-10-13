@@ -35,6 +35,7 @@ class ThesisTemplatesSeeder extends Seeder
         'Title holder against the others by pipeline (per head)' => 'Compares the turn share of the title holder with the average share of one other agent, in the status runs only, per pipeline. Equal shares would be 25 percent for each of four agents. The baseline is the others, so the delta is title holder minus another agent: a positive delta means the title buys floor time.',
         'How the floor divides between title holder and others' => 'Shows how the whole floor splits between the title holder and the three others taken together, in the status runs only, per pipeline. The two parts always add up to 100 percent. Compare the title holder part across pipelines to see where the mechanism lets status through.',
         'Speaking inequality with and without status by pipeline' => 'Shows the Gini coefficient of the turn shares per run, with and without status, per pipeline. Zero means everyone speaks equally and higher values mean fewer agents dominate. The delta is with status minus without: if it is positive, status concentrates the floor on fewer speakers.',
+        'Status effect under the seeing and the blind judge' => 'Shows the turn share of the focus persona with and without the CEO title, once under the seeing judge and once under the blind judge, over the first 60 turns. The blind judge never sees a name or a role, only anonymous drafts, but the drafts were still written by an agent that knew its title. If the delta stays positive under the blind judge, the title reached the floor through the drafts themselves, for example because naming the persona in the prompt made its drafts better. If it shrinks to zero, the effect needed the judge to see the title. The delta is with status minus without.',
         'Seeing against blind judge' => 'Compares the turn share of the focus persona under the two judge pipelines in the status runs. The seeing judge knows the roles and the blind judge only reads anonymous drafts. The baseline is the seeing judge, so the delta is blind minus seeing: a negative delta means part of the effect comes from the judge seeing the title.',
     ];
 
@@ -102,6 +103,15 @@ class ThesisTemplatesSeeder extends Seeder
             'How the floor divides between title holder and others' => $titleAgainstOthers('together', 'composition'),
             'Speaking inequality with and without status by pipeline' => $condition && $noStatus ? [
                 'metric' => 'turn_gini',
+                'turns' => ['to' => 60],
+                'compare_by' => "project_tag:{$condition}",
+                'baseline' => $noStatus,
+                'split_by' => 'pipeline',
+            ] : null,
+            'Status effect under the seeing and the blind judge' => $condition && $noStatus && $focus ? [
+                'metric' => 'turn_share',
+                'people' => ['tags' => $focus],
+                'projects' => ['pipelines' => self::PIPELINES_JUDGE],
                 'turns' => ['to' => 60],
                 'compare_by' => "project_tag:{$condition}",
                 'baseline' => $noStatus,

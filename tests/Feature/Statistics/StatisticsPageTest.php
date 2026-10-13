@@ -361,4 +361,45 @@ class StatisticsPageTest extends TestCase
         $this->actingAs(User::factory()->create(['is_admin' => true]));
         Livewire::test(StatisticsPage::class)->assertSee('No template yet.')->assertSee('Save a question as a template to share it.');
     }
+
+    public function test_an_owner_reorders_own_questions_by_drag_and_by_menu(): void
+    {
+        $user = User::factory()->create();
+        foreach (['One', 'Two', 'Three'] as $name) {
+            $user->questions()->create(['name' => $name]);
+        }
+        $this->actingAs($user);
+        $id = fn (string $name) => Question::where('name', $name)->sole()->id;
+
+        Livewire::test(StatisticsPage::class)
+            ->call('sortQuestion', $id('Three'), 0)
+            ->assertSeeInOrder(['Three', 'One', 'Two'])
+            ->call('moveQuestion', $id('Three'), 1)
+            ->assertSeeInOrder(['One', 'Three', 'Two']);
+    }
+
+    public function test_nobody_reorders_someone_elses_question(): void
+    {
+        $foreign = User::factory()->create()->questions()->create(['name' => 'Theirs']);
+        $this->actingAs(User::factory()->create());
+
+        $this->expectException(ModelNotFoundException::class);
+
+        Livewire::test(StatisticsPage::class)->call('sortQuestion', $foreign->id, 0);
+    }
+
+    public function test_only_admins_reorder_the_templates(): void
+    {
+        $owner = User::factory()->create(['is_admin' => true]);
+        $first = $owner->questions()->create(['name' => 'First template', 'is_template' => true]);
+        $second = $owner->questions()->create(['name' => 'Second template', 'is_template' => true]);
+
+        $this->actingAs(User::factory()->create());
+        Livewire::test(StatisticsPage::class)->call('sortTemplate', $second->id, 0)->assertForbidden();
+        Livewire::test(StatisticsPage::class)->call('moveTemplate', $second->id, -1)->assertForbidden();
+        $this->assertSame([$first->id, $second->id], Question::templates()->pluck('id')->all());
+
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+        Livewire::test(StatisticsPage::class)->call('moveTemplate', $second->id, -1)->assertSeeInOrder(['Second template', 'First template']);
+    }
 }

@@ -21,6 +21,8 @@ return [
     ],
 
     'actions' => [
+        'move_up' => 'Move up',
+        'move_down' => 'Move down',
         'rename' => 'Rename',
         'duplicate' => 'Duplicate',
         'save_as_template' => 'Save as template',
@@ -107,11 +109,6 @@ return [
         'per_head' => 'per head',
     ],
 
-    'aggregate_hints' => [
-        'together' => 'The group’s shares added up. All groups add up to 100 %.',
-        'per_head' => 'The share of an average member, so groups of different size compare fairly.',
-    ],
-
     'dimensions' => [
         'pipeline' => 'Pipeline',
         'model' => 'Model',
@@ -140,10 +137,12 @@ return [
         'points' => 'Runs',
         'composition' => 'Shares',
         'trajectory' => 'Over the run',
-        'unsupported' => [
-            'composition' => 'Only when the groups add up to everyone: a share, compared by a persona tag, everyone, counted together.',
-            'trajectory' => 'Only for turn share and word share.',
-        ],
+    ],
+
+    'form_hints' => [
+        'points' => 'Each run as a dot',
+        'composition' => 'Groups as parts of 100 %',
+        'trajectory' => 'Mean share per turn',
     ],
 
     'curves' => [
@@ -154,13 +153,13 @@ return [
     'result' => [
         'dropped_tags' => '{1}1 tag value this question used no longer exists and was removed. A category left with no value still filters and matches no run: open its chip and choose other values.|[2,*]:count tag values this question used no longer exist and were removed. A category left with no value still filters and matches no run: open its chip and choose other values.',
         'n_of' => ':label, n',
+        'fair_share' => 'Fair share',
         'fair_share_of' => ':label, fair share',
         'empty' => 'No run answers this question. Widen the runs or the people.',
         'all' => 'All',
         'no_value' => 'no value',
-        'fair_share' => 'Dashed line: fair share, what the group would get if everyone spoke equally.',
         'mean' => 'Mean',
-        'delta' => ':to minus :from: :delta',
+        'delta' => 'Effect size: :delta',
         'too_short' => 'A curve needs at least two spoken turns.',
         'run_table' => '{1}The run behind these numbers|[2,*]The :count runs behind these numbers',
         'columns' => [
