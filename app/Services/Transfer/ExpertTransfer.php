@@ -48,26 +48,31 @@ final class ExpertTransfer
         $outcomes = [];
         $renumbered = [];
 
-        foreach ($experts as $index => $data) {
-            $refusal = $this->refusal($data);
+        // Reported in finally: when a create throws, the experts already
+        // written are still in the report, in file order, before the
+        // exception reaches the caller.
+        try {
+            foreach ($experts as $index => $data) {
+                $refusal = $this->refusal($data);
 
-            if ($refusal !== null) {
-                $outcomes[$index] = $refusal;
-            } elseif ($this->originalIdIsFree($data)) {
-                $outcomes[$index] = $this->create($data, keepId: true);
-            } else {
-                $renumbered[] = $index;
+                if ($refusal !== null) {
+                    $outcomes[$index] = $refusal;
+                } elseif ($this->originalIdIsFree($data)) {
+                    $outcomes[$index] = $this->create($data, keepId: true);
+                } else {
+                    $renumbered[] = $index;
+                }
             }
-        }
 
-        foreach ($renumbered as $index) {
-            $outcomes[$index] = $this->refusal($experts[$index]) ?? $this->create($experts[$index], keepId: false);
-        }
+            foreach ($renumbered as $index) {
+                $outcomes[$index] = $this->refusal($experts[$index]) ?? $this->create($experts[$index], keepId: false);
+            }
+        } finally {
+            ksort($outcomes);
 
-        ksort($outcomes);
-
-        foreach ($outcomes as $index => [$outcome, $note]) {
-            $report->add(ImportReport::EXPERTS, EntryFields::label($experts[$index], 'name', 'role'), $outcome, $note);
+            foreach ($outcomes as $index => [$outcome, $note]) {
+                $report->add(ImportReport::EXPERTS, EntryFields::label($experts[$index], 'name', 'role'), $outcome, $note);
+            }
         }
     }
 

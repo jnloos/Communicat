@@ -217,4 +217,25 @@ class TagAndExpertTransferTest extends TestCase
         $this->assertSame('Robin', $entries[2]['name']);
         $this->assertSame(['Alex'], Expert::pluck('name')->all());
     }
+
+    public function test_experts_written_before_a_failing_create_stay_in_the_report_in_file_order(): void
+    {
+        Expert::creating(function (Expert $expert) {
+            if ($expert->name === 'Boom') {
+                throw new \RuntimeException('disk full');
+            }
+        });
+        $report = new ImportReport;
+        $entry = fn (string $name, int $id) => ['uuid' => (string) Str::uuid(), 'id' => $id, 'name' => $name, 'role' => 'r', 'description' => 'd'];
+
+        try {
+            (new ExpertTransfer)->importAll([$entry('Alex', 40), $entry('Boom', 41), $entry('Kim', 42)], $report);
+            $this->fail('The failing create should throw.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame('disk full', $exception->getMessage());
+        }
+
+        $this->assertSame(['Alex r'], array_column($report->entries(ImportReport::EXPERTS), 'name'));
+        $this->assertSame(['Alex'], Expert::pluck('name')->all());
+    }
 }
