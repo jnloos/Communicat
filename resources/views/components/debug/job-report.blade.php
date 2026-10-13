@@ -106,10 +106,10 @@
             @endif
 
             {{-- A count nobody reported shows as "–", never 0: 0 would claim the call spent none. --}}
-            @php($tokens = fn (?int $count) => $count === null ? '–' : \Illuminate\Support\Number::format($count, locale: app()->getLocale()))
+            @php($tokens = fn (?int $count) => $count === null ? '–' : \App\Discussion\Support\LocaleNumber::decimal($count, 0))
             {{-- Summed over the job's calls; null when no call reported the figure. --}}
             @php($tokenSum = fn (string $column) => $selected->promptLogs->whereNotNull($column)->isEmpty() ? null : (int) $selected->promptLogs->sum($column))
-            <div class="mb-3 flex flex-wrap gap-2 text-xs">
+            <div data-tokens-total class="mb-3 flex flex-wrap gap-2 text-xs">
                 <flux:badge size="sm">{{ __('debug.detail.tokens_in', ['count' => $tokens($tokenSum('tokens_in'))]) }}</flux:badge>
                 <flux:badge size="sm">{{ __('debug.detail.tokens_out', ['count' => $tokens($tokenSum('tokens_out'))]) }}</flux:badge>
                 <flux:badge size="sm">{{ __('debug.detail.tokens_reasoning', ['count' => $tokens($tokenSum('tokens_reasoning'))]) }}</flux:badge>
