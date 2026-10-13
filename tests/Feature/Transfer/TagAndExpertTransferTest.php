@@ -70,4 +70,84 @@ class TagAndExpertTransferTest extends TestCase
         $this->assertNotSame($expert->id, $copy->id);
         $this->assertNotNull($report->entries(ImportReport::EXPERTS)[1]['note']);
     }
+
+    public function test_skipping_an_existing_expert_leaves_it_untouched(): void
+    {
+        $expert = Expert::factory()->create(['name' => 'Alex Brandt', 'role' => 'CEO']);
+        $data = (new ExpertTransfer)->export($expert);
+        $data['name'] = 'Changed';
+        $data['role'] = 'Intern';
+        $report = new ImportReport;
+
+        (new ExpertTransfer)->import($data, $report);
+
+        $this->assertSame(1, $report->count(ImportReport::EXPERTS, ImportReport::SKIPPED));
+        $expert->refresh();
+        $this->assertSame('Alex Brandt', $expert->name);
+        $this->assertSame('CEO', $expert->role);
+    }
+
+    public function test_tag_names_match_ignoring_case_and_surrounding_space(): void
+    {
+        $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
+        $category->values()->create(['name' => 'true']);
+        $report = new ImportReport;
+
+        (new TagTransfer)->import([['scope' => 'persona', 'name' => ' Title-Holder ', 'values' => ['TRUE', 'false']]], $report);
+
+        $this->assertSame(1, TagCategory::count());
+        $this->assertSame(['true', 'false'], $category->values()->orderBy('id')->pluck('name')->all());
+        $this->assertSame(1, $report->count(ImportReport::TAGS, ImportReport::SKIPPED));
+        $this->assertStringContainsString('false', $report->entries(ImportReport::TAGS)[0]['note']);
+    }
+
+    public function test_the_new_id_note_names_both_ids(): void
+    {
+        $expert = Expert::factory()->create();
+        $data = (new ExpertTransfer)->export($expert);
+        $data['uuid'] = '0b9f2d4c-1a3e-4f5b-8c6d-7e8f9a0b1c2d';
+        $report = new ImportReport;
+
+        (new ExpertTransfer)->import($data, $report);
+
+        $copy = Expert::where('uuid', $data['uuid'])->sole();
+        $this->assertSame(
+            __('transfer.notes.new_expert_id', ['old' => $expert->id, 'new' => $copy->id]),
+            $report->entries(ImportReport::EXPERTS)[0]['note'],
+        );
+    }
+
+    public function test_the_id_sequence_stays_sane_after_a_kept_id(): void
+    {
+        $data = (new ExpertTransfer)->export(Expert::factory()->create());
+        Expert::query()->delete();
+        $data['id'] = 500;
+        $data['uuid'] = '0b9f2d4c-1a3e-4f5b-8c6d-7e8f9a0b1c2d';
+
+        (new ExpertTransfer)->import($data, new ImportReport);
+        $next = Expert::factory()->create();
+
+        $this->assertSame(500, Expert::where('uuid', $data['uuid'])->sole()->id);
+        $this->assertNotSame(500, $next->id);
+    }
+
+    public function test_a_round_trip_keeps_the_plain_fields(): void
+    {
+        $expert = Expert::factory()->create([
+            'name' => 'Alex Brandt',
+            'description' => 'Decides fast.',
+            'avatar_url' => 'https://example.test/a.png',
+            'created_at' => '2026-03-04 05:06:07',
+        ]);
+        $data = (new ExpertTransfer)->export($expert);
+        $expert->delete();
+
+        (new ExpertTransfer)->import($data, new ImportReport);
+
+        $copy = Expert::where('uuid', $data['uuid'])->sole();
+        $this->assertSame('Alex Brandt', $copy->name);
+        $this->assertSame('Decides fast.', $copy->description);
+        $this->assertSame('https://example.test/a.png', $copy->avatar_url);
+        $this->assertSame($expert->created_at->timestamp, $copy->created_at->timestamp);
+    }
 }
