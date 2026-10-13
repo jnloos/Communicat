@@ -74,8 +74,8 @@ class QuestionEditorTest extends TestCase
         $question = $user->questions()->create([]);
 
         Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
-            ->assertSee('Export the runs’ raw data as ZIP')
-            ->assertSee('All turns and agents of these runs, without the turn window')
+            ->assertSee("Export the runs' data as ZIP")
+            ->assertSee('All turns and agents of these runs.')
             ->assertSee(route('statistics.export', $question->id));
     }
 
