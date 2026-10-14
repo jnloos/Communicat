@@ -3,6 +3,7 @@
 namespace App\Livewire\Concerns;
 
 use App\Discussion\Values\TagFilter;
+use App\Discussion\Values\TagFilterMode;
 use App\Models\TagCategory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -16,19 +17,15 @@ use Illuminate\Support\Collection;
  * page):
  *
  *     public array $tagFilter = [];
- *     public string $tagFilterMode = self::FILTER_CUT;
+ *     public string $tagFilterMode = TagFilterMode::Cut->value;
  *
  * $tagFilter holds the picked value ids (bound to the menu's checkboxes),
- * $tagFilterMode is cut (a row matches every picked category, any picked value
+ * $tagFilterMode is a TagFilterMode value: cut (a row matches every picked category, any picked value
  * within one) or merge (any one picked value is enough). The queried model
  * must use HasTags.
  */
 trait FiltersByTags
 {
-    public const FILTER_CUT = 'cut';
-
-    public const FILTER_MERGE = 'merge';
-
     /** Empties the chosen values; the mode is a preference and stays. */
     public function clearTagFilter(): void
     {
@@ -66,7 +63,7 @@ trait FiltersByTags
     /** Narrows a query by the chosen values in the chosen mode. */
     private function applyTagFilter(Builder|Relation $query, TagFilter $filter): Builder|Relation
     {
-        return $this->tagFilterMode === self::FILTER_MERGE
+        return $this->tagFilterMode === TagFilterMode::Merge->value
             ? $query->whereTaggedAny($filter->valueIds())
             : $query->whereTagFilter($filter);
     }
@@ -82,8 +79,8 @@ trait FiltersByTags
      */
     private function normaliseFilterState(Collection $categories): TagFilter
     {
-        if ($this->tagFilterMode !== self::FILTER_MERGE) {
-            $this->tagFilterMode = self::FILTER_CUT;
+        if ($this->tagFilterMode !== TagFilterMode::Merge->value) {
+            $this->tagFilterMode = TagFilterMode::Cut->value;
         }
 
         $filter = $this->activeTagFilter($categories);

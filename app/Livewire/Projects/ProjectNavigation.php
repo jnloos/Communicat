@@ -3,6 +3,7 @@
 namespace App\Livewire\Projects;
 
 use App\Discussion\Values\TagFilter;
+use App\Discussion\Values\TagFilterMode;
 use App\Livewire\Concerns\FiltersByTags;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Project;
@@ -65,7 +66,7 @@ class ProjectNavigation extends Component
      * one). Merge: any one picked value is enough.
      */
     #[Session]
-    public string $tagFilterMode = self::FILTER_CUT;
+    public string $tagFilterMode = TagFilterMode::Cut->value;
 
     public function mount(?int $currentProjectId = null): void
     {

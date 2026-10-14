@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Experts;
 
+use App\Discussion\Values\TagFilterMode;
 use App\Livewire\Concerns\FiltersByTags;
 use App\Models\Expert;
 use App\Models\TagCategory;
@@ -28,12 +29,7 @@ class ExpertList extends Component
     public array $tagFilter = [];
 
     #[Url(as: 'tags_mode')]
-    public string $tagFilterMode = self::FILTER_CUT;
-
-    public function hasActiveFilters(): bool
-    {
-        return trim($this->search) !== '' || $this->chosenIds() !== [];
-    }
+    public string $tagFilterMode = TagFilterMode::Cut->value;
 
     #[On('expert_modified')]
     public function render(): mixed
@@ -58,7 +54,7 @@ class ExpertList extends Component
 
         return view('livewire.experts.expert-list', [
             'experts' => $experts,
-            'hasFilters' => $this->hasActiveFilters(),
+            'hasFilters' => $search !== '' || $filter->valueIds() !== [],
             'tagCategories' => $tagCategories,
             'activeTagCount' => count($filter->valueIds()),
         ]);

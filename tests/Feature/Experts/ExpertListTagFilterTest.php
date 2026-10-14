@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Experts;
 
+use App\Discussion\Values\TagFilterMode;
 use App\Livewire\Experts\ExpertList;
 use App\Models\Expert;
 use App\Models\TagCategory;
@@ -48,7 +49,7 @@ class ExpertListTagFilterTest extends TestCase
         return [$category, $category->values()->create(['name' => $a]), $category->values()->create(['name' => $b])];
     }
 
-    public function test_cut_needs_every_picked_category_and_any_value_within_one(): void
+    public function test_cut_needs_every_picked_category(): void
     {
         [$gender, $female, $male] = $this->categoryWithTwoValues('gender', 'female', 'male');
         [$focus, $yes] = $this->categoryWithTwoValues('focus persona', 'true', 'false');
@@ -61,11 +62,60 @@ class ExpertListTagFilterTest extends TestCase
             ->set('tagFilter', [(string) $female->id, (string) $yes->id])
             ->assertSee('Alice')
             ->assertDontSee('Bella')
-            ->assertDontSee('Carl')
+            ->assertDontSee('Carl');
+    }
+
+    public function test_cut_takes_any_picked_value_within_one_category(): void
+    {
+        [$gender, $female, $male] = $this->categoryWithTwoValues('gender', 'female', 'male');
+        $this->expert('Alice', [[$gender, $female]]);
+        $this->expert('Carl', [[$gender, $male]]);
+        $this->expert('Dora');
+
+        Livewire::test(ExpertList::class)
             ->set('tagFilter', [(string) $female->id, (string) $male->id])
             ->assertSee('Alice')
-            ->assertSee('Bella')
-            ->assertSee('Carl');
+            ->assertSee('Carl')
+            ->assertDontSee('Dora');
+    }
+
+    public function test_an_unknown_mode_falls_back_to_cut(): void
+    {
+        [$gender, $female] = $this->categoryWithTwoValues('gender', 'female', 'male');
+        [$focus, $yes] = $this->categoryWithTwoValues('focus persona', 'true', 'false');
+        $this->expert('Alice', [[$gender, $female], [$focus, $yes]]);
+        $this->expert('Bella', [[$gender, $female]]);
+
+        Livewire::test(ExpertList::class)
+            ->set('tagFilterMode', 'garbage')
+            ->set('tagFilter', [(string) $female->id, (string) $yes->id])
+            ->assertSet('tagFilterMode', TagFilterMode::Cut->value)
+            ->assertSee('Alice')
+            ->assertDontSee('Bella');
+    }
+
+    public function test_the_funnel_is_marked_active_only_with_a_filter(): void
+    {
+        [, $female] = $this->categoryWithTwoValues('gender', 'female', 'male');
+
+        Livewire::test(ExpertList::class)
+            ->assertDontSeeHtml('data-filter-active')
+            ->set('tagFilter', [(string) $female->id])
+            ->assertSeeHtml('data-filter-active="true"');
+    }
+
+    public function test_the_filter_is_bound_to_the_url(): void
+    {
+        [$gender, $female] = $this->categoryWithTwoValues('gender', 'female', 'male');
+        $this->expert('Alice', [[$gender, $female]]);
+        $this->expert('Carl');
+
+        Livewire::withQueryParams(['tags' => [(string) $female->id], 'tags_mode' => 'merge'])
+            ->test(ExpertList::class)
+            ->assertSet('tagFilter', [(string) $female->id])
+            ->assertSet('tagFilterMode', 'merge')
+            ->assertSee('Alice')
+            ->assertDontSee('Carl');
     }
 
     public function test_merge_takes_any_picked_value(): void
@@ -78,7 +128,7 @@ class ExpertListTagFilterTest extends TestCase
         $this->expert('Carl');
 
         Livewire::test(ExpertList::class)
-            ->set('tagFilterMode', ExpertList::FILTER_MERGE)
+            ->set('tagFilterMode', TagFilterMode::Merge->value)
             ->set('tagFilter', [(string) $female->id, (string) $yes->id])
             ->assertSee('Alice')
             ->assertSee('Bella')
@@ -119,11 +169,11 @@ class ExpertListTagFilterTest extends TestCase
         [, $female] = $this->categoryWithTwoValues('gender', 'female', 'male');
 
         Livewire::test(ExpertList::class)
-            ->set('tagFilterMode', ExpertList::FILTER_MERGE)
+            ->set('tagFilterMode', TagFilterMode::Merge->value)
             ->set('tagFilter', [(string) $female->id])
             ->call('clearTagFilter')
             ->assertSet('tagFilter', [])
-            ->assertSet('tagFilterMode', ExpertList::FILTER_MERGE);
+            ->assertSet('tagFilterMode', TagFilterMode::Merge->value);
     }
 
     public function test_without_persona_categories_there_is_no_funnel(): void
@@ -153,5 +203,14 @@ class ExpertListTagFilterTest extends TestCase
         Livewire::test(ExpertList::class)
             ->set('tagFilter', [(string) $male->id])
             ->assertSee(__('experts.list.no_matches'));
+    }
+
+    public function test_the_menu_binds_its_checkboxes_and_mode_to_the_component(): void
+    {
+        $this->categoryWithTwoValues('gender', 'female', 'male');
+
+        Livewire::test(ExpertList::class)
+            ->assertSeeHtml('wire:model.live="tagFilter"')
+            ->assertSeeHtml('wire:model.live="tagFilterMode"');
     }
 }

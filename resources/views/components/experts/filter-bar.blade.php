@@ -23,9 +23,9 @@
         <flux:dropdown position="bottom" align="end" wire:key="expert-tag-filter-dropdown">
             <flux:button
                 icon="funnel"
-                :aria-label="$label"
                 :tooltip="$label"
                 :data-filter-active="$activeTagCount > 0 ? 'true' : null"
+                :class="$activeTagCount > 0 ? 'text-(--color-accent-content)!' : ''"
             >
                 {{ $activeTagCount > 0 ? __('experts.filter.tags_active', ['count' => $activeTagCount]) : __('experts.filter.tags') }}
             </flux:button>

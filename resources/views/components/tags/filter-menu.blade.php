@@ -12,12 +12,10 @@
      Livewire morphs the same element instead of replacing it, hence the fixed
      wire:key (and one on the dropdown around it, set by the trigger). --}}
 <flux:menu keep-open wire:key="tag-filter-menu" {{ $attributes }}>
-    {{-- Each mode explains itself in its tooltip. The values are the trait's
-         FILTER_MERGE and FILTER_CUT; a trait constant cannot be read through
-         the trait itself, so they are spelled out here. --}}
+    {{-- Each mode explains itself in its tooltip. The values are the TagFilterMode cases. --}}
     <flux:menu.radio.group wire:model.live="tagFilterMode">
-        <flux:menu.radio :value="'merge'" :title="$mergeDescription">{{ __('tags.filter.modes.merge.label') }}</flux:menu.radio>
-        <flux:menu.radio :value="'cut'" :title="$cutDescription">{{ __('tags.filter.modes.cut.label') }}</flux:menu.radio>
+        <flux:menu.radio :value="\App\Discussion\Values\TagFilterMode::Merge->value" :title="$mergeDescription">{{ __('tags.filter.modes.merge.label') }}</flux:menu.radio>
+        <flux:menu.radio :value="\App\Discussion\Values\TagFilterMode::Cut->value" :title="$cutDescription">{{ __('tags.filter.modes.cut.label') }}</flux:menu.radio>
     </flux:menu.radio.group>
 
     {{-- One group over every category: Flux's checkbox group collects every
