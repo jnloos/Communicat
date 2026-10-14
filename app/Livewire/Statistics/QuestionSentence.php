@@ -118,7 +118,7 @@ final class QuestionSentence
     /** @param  non-empty-list<Dimension>  $dimensions */
     private function dimensions(array $dimensions): string
     {
-        return implode(' '.__('questions.sentence.and').' ', array_map(fn (Dimension $dimension) => $this->dimension($dimension), $dimensions));
+        return implode(', ', array_map(fn (Dimension $dimension) => $this->dimension($dimension), $dimensions));
     }
 
     private function people(PeopleFilter $people): string

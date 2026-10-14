@@ -28,7 +28,7 @@ class QuestionSentenceTest extends TestCase
 
         $parts = app(QuestionSentence::class)->parts(QuestionDefinition::fromArray(['split_by' => ['pipeline', "project_tag:{$seat->id}"]]));
 
-        $this->assertSame('Pipeline and Seat test', $parts['split_by']);
+        $this->assertSame('Pipeline, Seat test', $parts['split_by']);
     }
 
     public function test_an_empty_question_says_everyone_and_all_runs(): void

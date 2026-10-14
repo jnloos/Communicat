@@ -754,7 +754,7 @@ class QuestionEditorTest extends TestCase
         Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->set('definition.split_by', ['pipeline', 'model'])
             ->assertSet('definition.split_by', ['pipeline', 'model'])
-            ->assertSee('Pipeline and Model')
+            ->assertSee('Pipeline, Model')
             ->assertSee('Up to two: the first gives the rows, the second the columns.');
 
         $this->assertSame(['pipeline', 'model'], $question->fresh()->definition['split_by']);
