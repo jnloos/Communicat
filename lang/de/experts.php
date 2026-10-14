@@ -11,6 +11,14 @@ return [
 
     'filter' => [
         'search_placeholder' => 'Experten nach Name, Rolle oder Beschreibung suchen…',
+        'tags' => 'Tags',
+        'tags_active' => 'Tags (:count)',
+        'button' => 'Experten nach Tag filtern',
+        'button_active' => 'Experten nach Tag filtern (:count aktiv)',
+        'modes' => [
+            'merge' => 'Experten, die irgendeinen gewählten Wert haben',
+            'cut' => 'Experten, die jede gewählte Kategorie erfüllen',
+        ],
     ],
 
     'list' => [

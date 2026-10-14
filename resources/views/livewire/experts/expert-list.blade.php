@@ -1,6 +1,8 @@
 @props([
     'experts' => [],
     'hasFilters' => false,
+    'tagCategories' => [],
+    'activeTagCount' => 0,
 ])
 
 <div class="mx-auto w-full max-w-6xl">
@@ -17,7 +19,7 @@
     <div class="my-6 space-y-5">
         <livewire:experts.expert-editor/>
 
-        <x-experts.filter-bar />
+        <x-experts.filter-bar :tag-categories="$tagCategories" :active-tag-count="$activeTagCount" />
 
         @if($experts->isEmpty())
             <x-empty-state :icon="$hasFilters ? 'magnifying-glass' : 'user-circle'">

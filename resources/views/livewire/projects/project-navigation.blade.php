@@ -48,32 +48,12 @@
                             :class="'[&_svg]:size-3.5 '.($activeFilterCount > 0 ? 'text-(--color-accent-content)!' : 'text-current!')"
                         />
 
-                        <flux:menu keep-open wire:key="tag-filter-menu">
-                            {{-- Each mode explains itself in its tooltip. --}}
-                            <flux:menu.radio.group wire:model.live="tagFilterMode">
-                                <flux:menu.radio :value="\App\Livewire\Projects\ProjectNavigation::FILTER_MERGE" :title="__('tags.filter.modes.merge.description')">{{ __('tags.filter.modes.merge.label') }}</flux:menu.radio>
-                                <flux:menu.radio :value="\App\Livewire\Projects\ProjectNavigation::FILTER_CUT" :title="__('tags.filter.modes.cut.description')">{{ __('tags.filter.modes.cut.label') }}</flux:menu.radio>
-                            </flux:menu.radio.group>
-
-                            {{-- One group over every category: Flux's checkbox group
-                                 collects every menu checkbox below it, headings and
-                                 separators in between or not, so all values write
-                                 the one flat $tagFilter list. --}}
-                            <flux:menu.checkbox.group wire:model.live="tagFilter">
-                                @foreach ($tagCategories as $category)
-                                    <flux:menu.separator />
-                                    <flux:menu.heading>{{ $category->label() }}</flux:menu.heading>
-
-                                    @foreach ($category->values as $value)
-                                        <flux:menu.checkbox :value="(string) $value->id" wire:key="tag-filter-{{ $value->id }}">{{ $value->name }}</flux:menu.checkbox>
-                                    @endforeach
-                                @endforeach
-                            </flux:menu.checkbox.group>
-
-                            <flux:menu.separator />
-
-                            <flux:menu.item icon="x-mark" wire:click="clearTagFilter" :disabled="$activeFilterCount === 0">{{ __('tags.filter.clear_label') }}</flux:menu.item>
-                        </flux:menu>
+                        <x-tags.filter-menu
+                            :categories="$tagCategories"
+                            :active-count="$activeFilterCount"
+                            :merge-description="__('tags.filter.modes.merge.description')"
+                            :cut-description="__('tags.filter.modes.cut.description')"
+                        />
                     </flux:dropdown>
                 </div>
             @endif

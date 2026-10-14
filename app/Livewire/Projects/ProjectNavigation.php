@@ -3,6 +3,7 @@
 namespace App\Livewire\Projects;
 
 use App\Discussion\Values\TagFilter;
+use App\Livewire\Concerns\FiltersByTags;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Project;
 use App\Models\ProjectGroup;
@@ -10,8 +11,6 @@ use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\User;
 use Flux\Flux;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Gate;
@@ -29,11 +28,8 @@ use Livewire\Component;
  */
 class ProjectNavigation extends Component
 {
+    use FiltersByTags;
     use NeedsConfirmation;
-
-    public const FILTER_CUT = 'cut';
-
-    public const FILTER_MERGE = 'merge';
 
     /** Which project the page is showing, so the list can mark it. */
     #[Locked]
@@ -81,23 +77,6 @@ class ProjectNavigation extends Component
     public function refreshList(): void
     {
         // Rendering again is the whole job; Livewire does that after every call.
-    }
-
-    /** Empties the chosen values; the mode is a preference and stays. */
-    public function clearTagFilter(): void
-    {
-        $this->tagFilter = [];
-    }
-
-    /**
-     * The session property as plain id strings; it is client-writable, so
-     * anything else in it is dropped.
-     *
-     * @return list<string>
-     */
-    private function chosenIds(): array
-    {
-        return array_values(array_map('strval', array_filter($this->tagFilter, 'is_numeric')));
     }
 
     /**
@@ -286,31 +265,6 @@ class ProjectNavigation extends Component
         ];
     }
 
-    /**
-     * The chosen values that still exist, by their category. A value deleted
-     * since it was chosen must not leave the list filtered by nothing.
-     *
-     * @param  Collection<int, TagCategory>  $categories  the project categories with their values
-     */
-    private function activeTagFilter(Collection $categories): TagFilter
-    {
-        $chosen = $this->chosenIds();
-
-        return TagFilter::fromArray($categories->mapWithKeys(fn (TagCategory $category) => [
-            $category->id => $category->values->pluck('id')
-                ->filter(fn ($id) => in_array((string) $id, $chosen, true))
-                ->all(),
-        ])->all());
-    }
-
-    /** Narrows a project query by the chosen values in the chosen mode. */
-    private function applyTagFilter(Builder|Relation $query, TagFilter $filter): Builder|Relation
-    {
-        return $this->tagFilterMode === self::FILTER_MERGE
-            ? $query->whereTaggedAny($filter->valueIds())
-            : $query->whereTagFilter($filter);
-    }
-
     public function render(): mixed
     {
         $tagCategories = TagCategory::ofScope(TagScope::Project)->with('values')->get();
@@ -351,31 +305,6 @@ class ProjectNavigation extends Component
             'matchCount' => $hasCategories ? $this->applyTagFilter($this->user()->projects(), $filter)->count() : null,
             'outsideFilterProjectId' => $outsideFilterProjectId,
         ]);
-    }
-
-    /**
-     * Both filter properties are client-writable and session-persisted, so each
-     * render first puts them back into shape: anything but merge reads as the
-     * default mode, and values that no longer exist are forgotten, so the
-     * session does not carry them on.
-     *
-     * @param  Collection<int, TagCategory>  $categories  the project categories with their values
-     * @return TagFilter the chosen values that still apply
-     */
-    private function normaliseFilterState(Collection $categories): TagFilter
-    {
-        if ($this->tagFilterMode !== self::FILTER_MERGE) {
-            $this->tagFilterMode = self::FILTER_CUT;
-        }
-
-        $filter = $this->activeTagFilter($categories);
-        $valueIds = $filter->valueIds();
-
-        if (count($valueIds) !== count($this->tagFilter)) {
-            $this->tagFilter = array_map('strval', $valueIds);
-        }
-
-        return $filter;
     }
 
     /**
