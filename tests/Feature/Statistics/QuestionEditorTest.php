@@ -744,4 +744,19 @@ class QuestionEditorTest extends TestCase
             ->assertSee('seat 1')
             ->assertSee('seat 3');
     }
+
+    public function test_the_split_menu_takes_two_dimensions_and_names_both(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $question = $user->questions()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set('definition.split_by', ['pipeline', 'model'])
+            ->assertSet('definition.split_by', ['pipeline', 'model'])
+            ->assertSee('Pipeline and Model')
+            ->assertSee('Up to two: the first gives the rows, the second the columns.');
+
+        $this->assertSame(['pipeline', 'model'], $question->fresh()->definition['split_by']);
+    }
 }

@@ -91,6 +91,7 @@ return [
     ],
 
     'controls' => [
+        'split_hint' => 'Up to two: the first gives the rows, the second the columns.',
         'metric' => 'Measure',
         'expert_names' => 'Experts by name',
         'any_expert' => 'Any expert',

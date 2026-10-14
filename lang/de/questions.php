@@ -91,6 +91,7 @@ return [
     ],
 
     'controls' => [
+        'split_hint' => 'Bis zu zwei: die erste ergibt die Zeilen, die zweite die Spalten.',
         'metric' => 'Messgröße',
         'expert_names' => 'Experten nach Name',
         'any_expert' => 'Jeder Experte',

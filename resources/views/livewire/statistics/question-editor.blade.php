@@ -203,15 +203,19 @@
         <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.split_by') }}</span>
         <x-statistics.chip :read-only="$readOnly" :label="$parts['split_by'] ?? __('questions.sentence.nothing')" :muted="$parts['split_by'] === null">
-            <flux:menu>
-                <flux:menu.radio.group wire:model.live="definition.split_by">
-                    <flux:menu.radio value="">{{ __('questions.controls.none') }}</flux:menu.radio>
+            <flux:menu keep-open>
+                {{-- Up to MAX_SPLITS: once two are ticked the others are disabled. Unticking all splits nothing. --}}
+                @php($splits = $definition['split_by'] ?? [])
+                <flux:menu.checkbox.group wire:model.live="definition.split_by">
                     @foreach ($splitOptions as $key => $label)
                         @unless ($key === ($definition['compare_by'] ?? ''))
-                            <flux:menu.radio :value="$key" wire:key="split-{{ $key }}">{{ $label }}</flux:menu.radio>
+                            <flux:menu.checkbox :value="$key" wire:key="split-{{ $key }}"
+                                :disabled="count($splits) >= \App\Discussion\Values\QuestionDefinition::MAX_SPLITS && ! in_array($key, $splits, true)">{{ $label }}</flux:menu.checkbox>
                         @endunless
                     @endforeach
-                </flux:menu.radio.group>
+                </flux:menu.checkbox.group>
+                <flux:menu.separator />
+                <flux:text size="sm" class="px-2 py-1">{{ __('questions.controls.split_hint') }}</flux:text>
             </flux:menu>
         </x-statistics.chip>
         </span>
