@@ -726,4 +726,22 @@ class QuestionEditorTest extends TestCase
 
         $this->assertSame($before, $template->fresh()->definition);
     }
+
+    public function test_two_splits_show_the_panels_as_rows_and_columns(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $seat = TagCategory::create(['scope' => TagScope::Project, 'name' => 'seat test']);
+        $one = $seat->values()->create(['name' => 'seat 1', 'position' => 1]);
+        $three = $seat->values()->create(['name' => 'seat 3', 'position' => 2]);
+        $this->spokenRun($user)->setTag($seat, $one);
+        $this->spokenRun($user)->setTag($seat, $three);
+        $question = $user->questions()->create(['definition' => ['split_by' => ['pipeline', "project_tag:{$seat->id}"]]]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertSeeHtml('--columns: 2')
+            ->assertSeeHtml('points-row-')
+            ->assertSee('seat 1')
+            ->assertSee('seat 3');
+    }
 }
