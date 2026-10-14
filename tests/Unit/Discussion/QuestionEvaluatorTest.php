@@ -243,6 +243,28 @@ class QuestionEvaluatorTest extends TestCase
         $this->assertEqualsWithDelta(0.75, end($together)->mean, 1e-9);
     }
 
+    public function test_two_splits_place_each_panel_in_a_row_and_a_column(): void
+    {
+        $seat = TagCategory::create(['scope' => TagScope::Project, 'name' => 'seat test']);
+        $one = $seat->values()->create(['name' => 'seat 1', 'position' => 1]);
+        $three = $seat->values()->create(['name' => 'seat 3', 'position' => 2]);
+        $this->makeRun(['A'], [['A', 10]], ['pipeline' => 'QualityPipeline'])->setTag($seat, $three);
+        $this->makeRun(['A'], [['A', 10]], ['pipeline' => 'OrchestratorPipeline'])->setTag($seat, $one);
+
+        $result = $this->answer(['split_by' => ['pipeline', "project_tag:{$seat->id}"]]);
+        $quality = collect($result->panels)->firstWhere('key', "QualityPipeline|{$three->id}");
+
+        $this->assertSame('QualityPipeline', $quality->row);
+        $this->assertSame(app(PipelineRegistry::class)->options()['QualityPipeline'], $quality->rowLabel);
+        $this->assertSame((string) $three->id, $quality->column);
+        $this->assertSame('Seat test: seat 3', $quality->columnLabel);
+        $this->assertSame([$one->id => 'Seat test: seat 1', $three->id => 'Seat test: seat 3'], $result->columns);
+
+        $single = $this->answer(['split_by' => 'pipeline']);
+        $this->assertSame([], $single->columns);
+        $this->assertSame('', $single->panels[0]->row);
+    }
+
     public function test_two_splits_give_a_panel_per_combination_in_dimension_order(): void
     {
         $seat = TagCategory::create(['scope' => TagScope::Project, 'name' => 'seat test']);

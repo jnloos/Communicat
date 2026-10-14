@@ -99,8 +99,10 @@ final class QuestionEvaluator
         $groupKeys = array_merge([], ...array_map('array_keys', array_values($collected)));
         [$groupLabels, $baseline] = $this->baselineFirst($this->labels($values, $question->compareBy, $groupKeys), $question);
 
+        $splitLabels = $this->splitLabels($values, $question->splitBy, $panelParts);
+
         return new QuestionResult(
-            $this->panels($values, $question, $collected, $panelParts, $groupLabels, $panelRuns),
+            $this->panels($collected, $splitLabels, $groupLabels, $panelRuns),
             array_combine(array_map('strval', array_keys($groupLabels)), $groupLabels),
             $projects->count(),
             $excluded,
@@ -108,6 +110,7 @@ final class QuestionEvaluator
             $shortest !== null && ($question->turns->to === null || $question->turns->to > $shortest),
             $shortest,
             $baseline,
+            columns: count($splitLabels) === 2 ? $splitLabels[1] : [],
         );
     }
 
@@ -374,16 +377,16 @@ final class QuestionEvaluator
 
     /**
      * @param  array<int|string, array<int|string, GroupCollector>>  $collected
-     * @param  array<string, list<int|string>>  $panelParts
+     * @param  list<array<int|string, string>>  $splitLabels
      * @param  array<int|string, string>  $groupLabels
      * @param  array<int|string, int>  $panelRuns
      * @return list<Panel>
      */
-    private function panels(DimensionValues $values, QuestionDefinition $question, array $collected, array $panelParts, array $groupLabels, array $panelRuns): array
+    private function panels(array $collected, array $splitLabels, array $groupLabels, array $panelRuns): array
     {
         $panels = [];
 
-        foreach ($this->combinations($this->splitLabels($values, $question->splitBy, $panelParts)) as $combination) {
+        foreach ($this->combinations($splitLabels) as $combination) {
             $panelKey = implode(Panel::KEY_SEPARATOR, array_column($combination, 0));
 
             if (! isset($collected[$panelKey])) {
@@ -398,7 +401,11 @@ final class QuestionEvaluator
                 }
             }
 
-            $panels[] = new Panel($panelKey, implode(Panel::LABEL_SEPARATOR, array_column($combination, 1)), $groups, $panelRuns[$panelKey], count($groupLabels));
+            $grid = count($combination) === 2
+                ? ['row' => (string) $combination[0][0], 'rowLabel' => $combination[0][1], 'column' => (string) $combination[1][0], 'columnLabel' => $combination[1][1]]
+                : [];
+
+            $panels[] = new Panel($panelKey, implode(Panel::LABEL_SEPARATOR, array_column($combination, 1)), $groups, $panelRuns[$panelKey], count($groupLabels), ...$grid);
         }
 
         return $panels;

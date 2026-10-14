@@ -16,6 +16,7 @@ final readonly class QuestionResult
      * @param  bool  $cappedByShortestRun  the upper bound is the shortest run's length, not what was asked
      * @param  int|null  $shortestRun  that length, whether or not it set the bound
      * @param  string|null  $baseline  the key of the group the others are measured against; it heads $groups
+     * @param  array<int|string, string>  $columns
      */
     public function __construct(
         public array $panels,
@@ -27,6 +28,8 @@ final readonly class QuestionResult
         /** Turns the shortest run that spoke has; null when no run did. */
         public ?int $shortestRun = null,
         public ?string $baseline = null,
+        /** With two splits: the second dimension's values that occur, key => label, in its order — the columns of the panel grid. */
+        public array $columns = [],
     ) {}
 
     public function isEmpty(): bool

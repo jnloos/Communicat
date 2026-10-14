@@ -22,6 +22,11 @@ final readonly class Panel
         public array $groups,
         public int $runs = 0,
         public int $compareCount = 0,
+        /** With two splits: the value key and label of the first dimension (the panel's row) and of the second (its column); '' otherwise. */
+        public string $row = '',
+        public string $rowLabel = '',
+        public string $column = '',
+        public string $columnLabel = '',
     ) {}
 
     /**
