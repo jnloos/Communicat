@@ -161,6 +161,8 @@ return [
         'all' => 'Alle',
         'no_value' => 'ohne Angabe',
         'mean' => 'Mittelwert',
+        'spread' => '± σ',
+        'standard_deviation' => 'Standardabweichung',
         'delta' => 'Effektstärke: :delta',
         'too_short' => 'Eine Kurve braucht mindestens zwei gesprochene Turns.',
         'run_table' => '{1}Der Lauf hinter diesen Zahlen|[2,*]Die :count Läufe hinter diesen Zahlen',

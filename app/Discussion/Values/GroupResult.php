@@ -26,6 +26,23 @@ final readonly class GroupResult
         return array_sum($this->values()) / $this->n();
     }
 
+    /**
+     * The sample standard deviation over the runs (n − 1, since the runs are a
+     * sample of what the cell could produce); null for a single run, which has
+     * no spread to show.
+     */
+    public function standardDeviation(): ?float
+    {
+        if ($this->n() < 2) {
+            return null;
+        }
+
+        $mean = $this->mean();
+        $squares = array_map(fn (float $value) => ($value - $mean) ** 2, $this->values());
+
+        return sqrt(array_sum($squares) / ($this->n() - 1));
+    }
+
     public function min(): float
     {
         return min($this->values());

@@ -110,6 +110,24 @@ class QuestionEditorTest extends TestCase
             ->assertSee(route('project.show', Project::sole()));
     }
 
+    public function test_the_points_show_a_spread_band_from_two_runs_on_that_also_names_the_mean(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $this->spokenRun($user);
+        $question = $user->questions()->create([]);
+
+        $this->assertStringNotContainsString('data-spread', Livewire::test(QuestionEditor::class, ['questionId' => $question->id])->html());
+
+        $this->spokenRun($user);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertSeeHtml('data-spread')
+            ->assertSee('± σ')
+            ->assertSee('standard deviation 0.0 %')
+            ->assertSeeHtml('class="pointer-events-none absolute inset-y-0.5');
+    }
+
     public function test_the_head_shows_the_title(): void
     {
         $user = User::factory()->create();

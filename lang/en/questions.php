@@ -161,6 +161,8 @@ return [
         'all' => 'All',
         'no_value' => 'no value',
         'mean' => 'Mean',
+        'spread' => '± σ',
+        'standard_deviation' => 'standard deviation',
         'delta' => 'Effect size: :delta',
         'too_short' => 'A curve needs at least two spoken turns.',
         'run_table' => '{1}The run behind these numbers|[2,*]The :count runs behind these numbers',

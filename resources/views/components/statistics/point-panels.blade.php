@@ -7,8 +7,10 @@
 
 {{--
     Small multiples: a panel per value of the split, a row per group. Every
-    run is a dot, the mean a bar across the track, the fair share a dashed
-    mark, each with a hover card. All panels share one scale, so they compare at a glance.
+    run is a dot, the mean a bar across the track, the spread a pale band of
+    one standard deviation either side of the mean (from two runs on), the
+    fair share a dashed mark. Dots, band and fair share have hover cards; the
+    band's card names the mean as well. All panels share one scale, so they compare at a glance.
 --}}
 @php($scale = $metric->isShare() ? 1.0 : max($result->maxValue() * 1.1, 0.0001))
 @php($at = fn (float $value) => max(0, min(100, $value / $scale * 100)))
@@ -24,6 +26,8 @@
                 @foreach ($panel->groups as $group)
                     @php($color = GroupColor::of($result, $group))
                     @php($groupLabel = $group->label !== '' ? $group->label : __('questions.result.all'))
+                    @php($deviation = $group->standardDeviation())
+                    @php($summary = __('questions.result.mean').' '.$metric->format($group->mean()).($deviation !== null ? ', '.__('questions.result.standard_deviation').' '.$metric->format($deviation) : ''))
 
                     <div wire:key="points-{{ $panel->key }}-{{ $group->key }}">
                         <div class="flex items-baseline justify-between gap-2 text-xs text-zinc-500 dark:text-zinc-400">
@@ -35,18 +39,27 @@
                         </div>
 
                         <div class="relative mt-1 h-5 rounded bg-zinc-100 dark:bg-white/10" role="img"
-                            aria-label="{{ $groupLabel }}: {{ __('questions.result.mean') }} {{ $metric->format($group->mean()) }}, n = {{ $group->n() }}">
-                            {{-- Fair share and mean come before the dots, so a dot on top of either keeps the hover; each line has an 8 px hover target. --}}
+                            aria-label="{{ $groupLabel }}: {{ $summary }}, n = {{ $group->n() }}">
+                            {{-- Band, fair share and mean come before the dots, so a dot on top of any of them keeps the hover. The band's card carries the mean too, so the mean line lets the pointer through to it; the band is at least 8 px wide, even when every run has the same value. The fair-share line has an 8 px hover target of its own. --}}
+                            @if ($deviation !== null)
+                                @php($low = max(0.0, $group->mean() - $deviation))
+                                @php($high = min($scale, $group->mean() + $deviation))
+                                <x-statistics.chart-tip :heading="$groupLabel" :rows="[
+                                        ['label' => __('questions.result.mean'), 'value' => $metric->format($group->mean()), 'color' => $color],
+                                        ['label' => __('questions.result.spread'), 'value' => $metric->format($low).' – '.$metric->format($high), 'color' => null],
+                                        ['label' => 'n', 'value' => $group->n(), 'color' => null],
+                                    ]"
+                                    class="absolute inset-y-0 min-w-2" style="left: {{ $at($low) }}%; width: {{ $at($high) - $at($low) }}%" data-spread>
+                                    <span class="h-full w-full rounded-sm opacity-25" style="background-color: var(--color-{{ $color }})"></span>
+                                </x-statistics.chart-tip>
+                            @endif
                             @if ($group->fairShare() !== null)
                                 <x-statistics.chart-tip :heading="$groupLabel" :rows="[['label' => __('questions.result.fair_share'), 'value' => $metric->format($group->fairShare()), 'color' => null]]"
                                     class="absolute inset-y-0 flex w-2 -translate-x-1/2 justify-center" style="left: {{ $at($group->fairShare()) }}%">
                                     <span class="h-full border-s border-dashed border-zinc-500 dark:border-zinc-300"></span>
                                 </x-statistics.chart-tip>
                             @endif
-                            <x-statistics.chart-tip :heading="$groupLabel" :rows="[['label' => __('questions.result.mean'), 'value' => $metric->format($group->mean()), 'color' => $color], ['label' => 'n', 'value' => $group->n(), 'color' => null]]"
-                                class="absolute inset-y-0.5 flex w-2 -translate-x-1/2 justify-center" style="left: {{ $at($group->mean()) }}%">
-                                <span class="h-full w-0.5 bg-zinc-900 dark:bg-white"></span>
-                            </x-statistics.chart-tip>
+                            <span class="pointer-events-none absolute inset-y-0.5 w-0.5 -translate-x-1/2 bg-zinc-900 dark:bg-white" style="left: {{ $at($group->mean()) }}%" data-mean></span>
                             @foreach ($group->runs as $run)
                                 {{-- A 16 px hover target around the 8 px dot; the dot grows on hover. --}}
                                 <x-statistics.chart-tip :heading="$run->title" :rows="[['label' => $groupLabel, 'value' => $metric->format($run->value), 'color' => $color]]"
