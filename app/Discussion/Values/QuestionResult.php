@@ -16,7 +16,6 @@ final readonly class QuestionResult
      * @param  bool  $cappedByShortestRun  the upper bound is the shortest run's length, not what was asked
      * @param  int|null  $shortestRun  that length, whether or not it set the bound
      * @param  string|null  $baseline  the key of the group the others are measured against; it heads $groups
-     * @param  array<int|string, string>  $columns
      */
     public function __construct(
         public array $panels,

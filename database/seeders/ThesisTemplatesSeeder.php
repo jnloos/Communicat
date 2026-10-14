@@ -82,7 +82,7 @@ class ThesisTemplatesSeeder extends Seeder
             'turns' => ['to' => 60],
             'compare_by' => "project_tag:{$condition}",
             'baseline' => $noStatus,
-            'split_by' => 'pipeline',
+            'split_by' => ['pipeline'],
         ] : null;
 
         $titleAgainstOthers = fn (string $aggregate, string $form) => $status && $titleHolder && $notTitled ? [
@@ -92,7 +92,7 @@ class ThesisTemplatesSeeder extends Seeder
             'turns' => ['to' => 60],
             'compare_by' => "persona_tag:{$titleHolder}",
             'baseline' => $notTitled,
-            'split_by' => 'pipeline',
+            'split_by' => ['pipeline'],
             'form' => $form,
         ] : null;
 
@@ -106,7 +106,7 @@ class ThesisTemplatesSeeder extends Seeder
                 'turns' => ['to' => 60],
                 'compare_by' => "project_tag:{$condition}",
                 'baseline' => $noStatus,
-                'split_by' => 'pipeline',
+                'split_by' => ['pipeline'],
             ] : null,
             'Status effect under the seeing and the blind judge' => $condition && $noStatus && $focus ? [
                 'metric' => 'turn_share',
@@ -115,7 +115,7 @@ class ThesisTemplatesSeeder extends Seeder
                 'turns' => ['to' => 60],
                 'compare_by' => "project_tag:{$condition}",
                 'baseline' => $noStatus,
-                'split_by' => 'pipeline',
+                'split_by' => ['pipeline'],
             ] : null,
             'Seeing against blind judge' => $status && $focus ? [
                 'metric' => 'turn_share',

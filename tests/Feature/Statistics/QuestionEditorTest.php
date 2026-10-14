@@ -742,7 +742,9 @@ class QuestionEditorTest extends TestCase
             ->assertSeeHtml('--columns: 2')
             ->assertSeeHtml('points-row-')
             ->assertSee('seat 1')
-            ->assertSee('seat 3');
+            ->assertSee('seat 3')
+            ->set('definition.form', 'trajectory')
+            ->assertSeeHtml('curves-row-');
     }
 
     public function test_the_split_menu_takes_two_dimensions_and_names_both(): void
@@ -755,7 +757,7 @@ class QuestionEditorTest extends TestCase
             ->set('definition.split_by', ['pipeline', 'model'])
             ->assertSet('definition.split_by', ['pipeline', 'model'])
             ->assertSee('Pipeline, Model')
-            ->assertSee('Up to two: the first gives the rows, the second the columns.');
+            ->assertSee('Up to two: the first one ticked gives the rows, the second the columns.');
 
         $this->assertSame(['pipeline', 'model'], $question->fresh()->definition['split_by']);
     }

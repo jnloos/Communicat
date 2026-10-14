@@ -5,7 +5,10 @@ namespace App\Discussion\Values;
 /** One panel of an answer: a combination of the split dimensions' values, or the whole answer when nothing is split. */
 final readonly class Panel
 {
-    /** Joins a panel's value keys, one per split dimension: "QualityPipeline|10". */
+    /**
+     * Joins a panel's value keys, one per split dimension: "QualityPipeline|10".
+     * Assumes no value key contains it: pipeline class names, model keys and numeric ids cannot.
+     */
     public const KEY_SEPARATOR = '|';
 
     /** Joins a panel's value labels: "Quality · seat 1". */

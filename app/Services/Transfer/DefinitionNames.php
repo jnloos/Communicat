@@ -42,7 +42,7 @@ final class DefinitionNames
         $named['projects']['tags'] = $this->tagsToNames($definition['projects']['tags'] ?? []);
         $named['projects']['groups'] = collect($definition['projects']['groups'] ?? [])->map(fn ($id) => $this->groups->get((int) $id)?->name)->filter()->values()->all();
         $named['compare_by'] = $this->dimensionToName($definition['compare_by'] ?? null);
-        $named['split_by'] = array_values(array_filter(array_map(fn ($key) => $this->dimensionToName((string) $key), self::storedSplits($definition['split_by'] ?? [])), fn (string $name) => $name !== ''));
+        $named['split_by'] = $this->splitsToNames(self::storedSplits($definition['split_by'] ?? []));
         $named['baseline'] = $this->baselineToName($definition);
 
         return $named;
@@ -61,7 +61,7 @@ final class DefinitionNames
         $definition['projects']['tags'] = $this->tagsToIds(EntryFields::map($projects, 'tags'), TagScope::Project);
         $definition['projects']['groups'] = $this->groups->filter(fn (ProjectGroup $group) => in_array($group->name, $groupNames, true))->keys()->values()->all();
         $definition['compare_by'] = $this->dimensionToKey(EntryFields::text($named, 'compare_by'));
-        $definition['split_by'] = array_values(array_filter(array_map(fn (string $name) => $this->dimensionToKey($name), $this->splitNames($named)), fn (string $key) => $key !== ''));
+        $definition['split_by'] = $this->splitsToKeys($this->splitNames($named));
         EntryFields::assertText($named, 'baseline');
         $definition['baseline'] = $this->baselineToId($named, $definition['compare_by']);
 
@@ -76,7 +76,29 @@ final class DefinitionNames
      */
     private static function storedSplits(mixed $splitBy): array
     {
-        return is_array($splitBy) ? array_values($splitBy) : array_values(array_filter([$splitBy], fn ($key) => $key !== null && $key !== ''));
+        return array_values(array_filter((array) $splitBy, fn ($key) => $key !== null && $key !== ''));
+    }
+
+    /**
+     * @param  list<mixed>  $keys  dimension keys in this database
+     * @return list<string> their names, those that resolve to none dropped
+     */
+    private function splitsToNames(array $keys): array
+    {
+        $names = array_map(fn ($key) => $this->dimensionToName((string) $key), $keys);
+
+        return array_values(array_filter($names, fn (string $name) => $name !== ''));
+    }
+
+    /**
+     * @param  list<string>  $names  dimension names from a file
+     * @return list<string> their keys in this database, unresolved names dropped
+     */
+    private function splitsToKeys(array $names): array
+    {
+        $keys = array_map(fn (string $name) => $this->dimensionToKey($name), $names);
+
+        return array_values(array_filter($keys, fn (string $key) => $key !== ''));
     }
 
     /**

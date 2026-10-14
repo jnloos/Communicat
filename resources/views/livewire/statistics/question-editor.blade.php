@@ -1,4 +1,5 @@
 @use('App\Discussion\Values\CurveMode')
+@use('App\Discussion\Values\QuestionDefinition')
 @use('App\Discussion\Values\ResultForm')
 @use('App\Livewire\Statistics\GroupColor')
 
@@ -206,11 +207,12 @@
             <flux:menu keep-open>
                 {{-- Up to MAX_SPLITS: once two are ticked the others are disabled. Unticking all splits nothing. --}}
                 @php($splits = $definition['split_by'] ?? [])
+                @php($splitsFull = count($splits) >= QuestionDefinition::MAX_SPLITS)
                 <flux:menu.checkbox.group wire:model.live="definition.split_by">
                     @foreach ($splitOptions as $key => $label)
                         @unless ($key === ($definition['compare_by'] ?? ''))
                             <flux:menu.checkbox :value="$key" wire:key="split-{{ $key }}"
-                                :disabled="count($splits) >= \App\Discussion\Values\QuestionDefinition::MAX_SPLITS && ! in_array($key, $splits, true)">{{ $label }}</flux:menu.checkbox>
+                                :disabled="$splitsFull && ! in_array($key, $splits, true)">{{ $label }}</flux:menu.checkbox>
                         @endunless
                     @endforeach
                 </flux:menu.checkbox.group>

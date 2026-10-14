@@ -401,11 +401,19 @@ final class QuestionEvaluator
                 }
             }
 
-            $grid = count($combination) === 2
-                ? ['row' => (string) $combination[0][0], 'rowLabel' => $combination[0][1], 'column' => (string) $combination[1][0], 'columnLabel' => $combination[1][1]]
-                : [];
+            $twoWay = count($combination) === 2;
 
-            $panels[] = new Panel($panelKey, implode(Panel::LABEL_SEPARATOR, array_column($combination, 1)), $groups, $panelRuns[$panelKey], count($groupLabels), ...$grid);
+            $panels[] = new Panel(
+                key: $panelKey,
+                label: implode(Panel::LABEL_SEPARATOR, array_column($combination, 1)),
+                groups: $groups,
+                runs: $panelRuns[$panelKey],
+                compareCount: count($groupLabels),
+                row: $twoWay ? (string) $combination[0][0] : '',
+                rowLabel: $twoWay ? $combination[0][1] : '',
+                column: $twoWay ? (string) $combination[1][0] : '',
+                columnLabel: $twoWay ? $combination[1][1] : '',
+            );
         }
 
         return $panels;

@@ -14,8 +14,8 @@ class PanelGridTest extends TestCase
     public function test_a_row_per_first_value_a_cell_per_column_and_a_gap_where_no_run_is(): void
     {
         $group = new GroupResult('', '', [new RunValue(1, 'One', 0.5, null)]);
-        $a1 = new Panel('a|1', 'A · one', [$group], 1, 1, 'a', 'A', '1', 'one');
-        $b2 = new Panel('b|2', 'B · two', [$group], 1, 1, 'b', 'B', '2', 'two');
+        $a1 = new Panel('a|1', 'A · one', [$group], 1, 1, row: 'a', rowLabel: 'A', column: '1', columnLabel: 'one');
+        $b2 = new Panel('b|2', 'B · two', [$group], 1, 1, row: 'b', rowLabel: 'B', column: '2', columnLabel: 'two');
         $result = new QuestionResult([$a1, $b2], ['' => ''], 2, 0, columns: [1 => 'one', 2 => 'two']);
 
         $rows = PanelGrid::rows($result);
