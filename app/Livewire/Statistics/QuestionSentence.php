@@ -53,7 +53,7 @@ final class QuestionSentence
             array_push($valueIds, ...$definition->people->tags->valueIds(), ...$definition->projects->tags->valueIds());
             array_push($groupIds, ...$definition->projects->groups);
 
-            foreach ([$definition->compareBy, $definition->splitBy] as $dimension) {
+            foreach ([$definition->compareBy, ...$definition->splitBy] as $dimension) {
                 if ($dimension?->categoryId !== null) {
                     $categoryIds[] = $dimension->categoryId;
                 }
@@ -81,7 +81,7 @@ final class QuestionSentence
             'projects' => $this->projects($question->projects),
             'turns' => $this->turns($result?->turns ?? $question->turns, $result),
             'compare_by' => $question->compareBy === null ? null : $this->dimension($question->compareBy),
-            'split_by' => $question->splitBy === null ? null : $this->dimension($question->splitBy),
+            'split_by' => $question->splitBy === [] ? null : $this->dimensions($question->splitBy),
         ];
     }
 
@@ -113,6 +113,12 @@ final class QuestionSentence
             DimensionType::Group => __('questions.dimensions.group'),
             DimensionType::ProjectTag, DimensionType::PersonaTag => $this->category($dimension->categoryId),
         };
+    }
+
+    /** @param  non-empty-list<Dimension>  $dimensions */
+    private function dimensions(array $dimensions): string
+    {
+        return implode(' '.__('questions.sentence.and').' ', array_map(fn (Dimension $dimension) => $this->dimension($dimension), $dimensions));
     }
 
     private function people(PeopleFilter $people): string

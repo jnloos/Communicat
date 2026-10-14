@@ -226,7 +226,7 @@ class StatisticsPageTest extends TestCase
         $this->assertSame([], $template->projects->groups);
         $this->assertSame(['ScorePipeline'], $template->projects->pipelines);
         $this->assertNull($template->compareBy);
-        $this->assertSame('pipeline', $template->splitBy->key());
+        $this->assertSame(['pipeline'], $template->toArray()['split_by']);
         $this->assertSame([$group->id], $question->fresh()->definition()->projects->groups);
     }
 

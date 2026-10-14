@@ -243,6 +243,33 @@ class QuestionEvaluatorTest extends TestCase
         $this->assertEqualsWithDelta(0.75, end($together)->mean, 1e-9);
     }
 
+    public function test_two_splits_give_a_panel_per_combination_in_dimension_order(): void
+    {
+        $seat = TagCategory::create(['scope' => TagScope::Project, 'name' => 'seat test']);
+        $one = $seat->values()->create(['name' => 'seat 1', 'position' => 1]);
+        $three = $seat->values()->create(['name' => 'seat 3', 'position' => 2]);
+        $this->makeRun(['A'], [['A', 10]], ['pipeline' => 'QualityPipeline'])->setTag($seat, $three);
+        $this->makeRun(['A'], [['A', 10]], ['pipeline' => 'QualityPipeline'])->setTag($seat, $one);
+        $this->makeRun(['A'], [['A', 10]], ['pipeline' => 'OrchestratorPipeline'])->setTag($seat, $one);
+        $this->makeRun(['A'], [['A', 10]], ['pipeline' => 'OrchestratorPipeline']); // no seat: drops out
+
+        $result = $this->answer(['split_by' => ['pipeline', "project_tag:{$seat->id}"]]);
+
+        $pipelines = app(PipelineRegistry::class)->options();
+        $byPipeline = [
+            'OrchestratorPipeline' => ["OrchestratorPipeline|{$one->id}" => $pipelines['OrchestratorPipeline'].' · Seat test: seat 1'],
+            'QualityPipeline' => [
+                "QualityPipeline|{$one->id}" => $pipelines['QualityPipeline'].' · Seat test: seat 1',
+                "QualityPipeline|{$three->id}" => $pipelines['QualityPipeline'].' · Seat test: seat 3',
+            ],
+        ];
+        $expected = array_merge(...array_values(array_intersect_key(array_replace(array_flip(array_keys($pipelines)), $byPipeline), $byPipeline)));
+
+        $this->assertSame($expected, array_column(array_map(fn ($panel) => ['key' => $panel->key, 'label' => $panel->label], $result->panels), 'label', 'key'));
+        $this->assertSame(1, $result->excluded);
+        $this->assertSame([1, 1, 1], array_map(fn ($panel) => $panel->runs, $result->panels));
+    }
+
     public function test_split_by_pipeline_gives_panels_in_registry_order(): void
     {
         $this->makeRun(['A'], [['A', 10]], ['pipeline' => 'ScorePipeline']);

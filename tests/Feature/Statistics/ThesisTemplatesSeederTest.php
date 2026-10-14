@@ -37,7 +37,7 @@ class ThesisTemplatesSeederTest extends TestCase
         $this->assertSame(7, Question::templates()->count());
         $this->assertTrue(Question::templates()->get()->every(fn (Question $template) => $template->user_id === $admin->id));
         $statusEffect = Question::templates()->where('name', 'Status effect on turn share by pipeline')->sole()->definition();
-        $this->assertSame('pipeline', $statusEffect->splitBy->key());
+        $this->assertSame(['pipeline'], $statusEffect->toArray()['split_by']);
         $this->assertSame(60, $statusEffect->turns->to);
     }
 
@@ -93,7 +93,7 @@ class ThesisTemplatesSeederTest extends TestCase
         $this->seed(ThesisTemplatesSeeder::class);
 
         $definition = Question::templates()->where('name', 'Status effect under the seeing and the blind judge')->sole()->definition();
-        $this->assertSame('pipeline', $definition->splitBy->key());
+        $this->assertSame(['pipeline'], $definition->toArray()['split_by']);
         $this->assertSame(['QualityPipeline', 'BlindQualityPipeline'], $definition->projects->pipelines);
         $this->assertTrue($definition->projects->tags->isEmpty(), 'Both status conditions are compared, so neither may be filtered out.');
     }

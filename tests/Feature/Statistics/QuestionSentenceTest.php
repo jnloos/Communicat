@@ -22,6 +22,15 @@ class QuestionSentenceTest extends TestCase
         app()->setLocale('en');
     }
 
+    public function test_two_splits_read_as_one_phrase_in_their_order(): void
+    {
+        $seat = TagCategory::create(['scope' => TagScope::Project, 'name' => 'seat test']);
+
+        $parts = app(QuestionSentence::class)->parts(QuestionDefinition::fromArray(['split_by' => ['pipeline', "project_tag:{$seat->id}"]]));
+
+        $this->assertSame('Pipeline and Seat test', $parts['split_by']);
+    }
+
     public function test_an_empty_question_says_everyone_and_all_runs(): void
     {
         $parts = app(QuestionSentence::class)->parts(new QuestionDefinition);

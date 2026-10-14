@@ -2,9 +2,15 @@
 
 namespace App\Discussion\Values;
 
-/** One panel of an answer: a value of the split dimension, or the whole answer when nothing is split. */
+/** One panel of an answer: a combination of the split dimensions' values, or the whole answer when nothing is split. */
 final readonly class Panel
 {
+    /** Joins a panel's value keys, one per split dimension: "QualityPipeline|10". */
+    public const KEY_SEPARATOR = '|';
+
+    /** Joins a panel's value labels: "Quality · seat 1". */
+    public const LABEL_SEPARATOR = ' · ';
+
     /**
      * @param  list<GroupResult>  $groups  the baseline first, then in the order of the compare dimension
      * @param  int  $runs  runs that landed in this panel, whichever groups they had

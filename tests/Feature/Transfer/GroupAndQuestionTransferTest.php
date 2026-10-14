@@ -248,6 +248,21 @@ class GroupAndQuestionTransferTest extends TestCase
         $this->assertSame("project_tag:{$project->id}", $ids['compare_by']);
     }
 
+    public function test_two_splits_travel_by_name_and_a_single_old_one_still_reads(): void
+    {
+        $user = User::factory()->create();
+        $seat = TagCategory::create(['scope' => TagScope::Project, 'name' => 'seat test']);
+        $names = new DefinitionNames($user);
+
+        $named = $names->toNames(['split_by' => ['pipeline', "project_tag:{$seat->id}"]]);
+        $this->assertSame(['pipeline', 'project_tag:seat test'], $named['split_by']);
+        $this->assertSame(['pipeline', "project_tag:{$seat->id}"], $names->toIds($named)['split_by']);
+
+        $this->assertSame(["project_tag:{$seat->id}"], $names->toIds(['split_by' => 'project_tag:seat test'])['split_by']);
+        $this->assertSame(['pipeline'], $names->toNames(['split_by' => 'pipeline'])['split_by']);
+        $this->assertSame([], $names->toIds(['split_by' => ['project_tag:gone']])['split_by']);
+    }
+
     public function test_split_by_and_the_other_baseline_kinds_round_trip(): void
     {
         $user = User::factory()->create();
@@ -257,10 +272,10 @@ class GroupAndQuestionTransferTest extends TestCase
         $group = ProjectGroup::create(['user_id' => $user->id, 'name' => 'Quality', 'position' => 1]);
 
         $tagged = (new DefinitionNames($user))->toNames(['split_by' => "persona_tag:{$persona->id}", 'compare_by' => "project_tag:{$project->id}", 'baseline' => '']);
-        $this->assertSame('persona_tag:focus persona', $tagged['split_by']);
+        $this->assertSame(['persona_tag:focus persona'], $tagged['split_by']);
         $this->assertSame('', $tagged['baseline']);
         $back = (new DefinitionNames($user))->toIds($tagged);
-        $this->assertSame("persona_tag:{$persona->id}", $back['split_by']);
+        $this->assertSame(["persona_tag:{$persona->id}"], $back['split_by']);
         $this->assertSame('', $back['baseline']);
 
         $pipeline = (new DefinitionNames($user))->toNames(['compare_by' => 'pipeline', 'baseline' => 'QualityPipeline']);

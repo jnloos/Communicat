@@ -25,7 +25,7 @@ class QuestionDefinitionTest extends TestCase
         $this->assertSame(Aggregate::Together, $question->aggregate);
         $this->assertTrue($question->projects->isEmpty());
         $this->assertNull($question->compareBy);
-        $this->assertNull($question->splitBy);
+        $this->assertSame([], $question->splitBy);
         $this->assertSame(ResultForm::Points, $question->form);
     }
 
@@ -38,7 +38,7 @@ class QuestionDefinitionTest extends TestCase
             'projects' => ['tags' => [1 => [1, 2]], 'pipelines' => ['ScorePipeline'], 'models' => ['openai-gpt-5'], 'groups' => [4]],
             'turns' => ['from' => 5, 'to' => 60],
             'compare_by' => 'project_tag:1',
-            'split_by' => 'pipeline',
+            'split_by' => ['pipeline', 'project_tag:4'],
             'baseline' => '2',
             'form' => 'trajectory',
             'curve' => 'rolling',
@@ -93,9 +93,29 @@ class QuestionDefinitionTest extends TestCase
 
     public function test_panels_never_split_agents_nor_repeat_the_compare_dimension(): void
     {
-        $this->assertNull(QuestionDefinition::fromArray(['split_by' => 'persona_tag:3'])->splitBy);
-        $this->assertNull(QuestionDefinition::fromArray(['compare_by' => 'pipeline', 'split_by' => 'pipeline'])->splitBy);
-        $this->assertSame('model', QuestionDefinition::fromArray(['compare_by' => 'pipeline', 'split_by' => 'model'])->splitBy->key());
+        $this->assertSame([], QuestionDefinition::fromArray(['split_by' => 'persona_tag:3'])->splitBy);
+        $this->assertSame([], QuestionDefinition::fromArray(['compare_by' => 'pipeline', 'split_by' => 'pipeline'])->splitBy);
+        $this->assertSame(['model'], QuestionDefinition::fromArray(['compare_by' => 'pipeline', 'split_by' => 'model'])->toArray()['split_by']);
+    }
+
+    public function test_split_by_reads_a_single_saved_key_or_a_list_of_up_to_two(): void
+    {
+        $this->assertSame(['pipeline'], QuestionDefinition::fromArray(['split_by' => 'pipeline'])->toArray()['split_by']);
+        $this->assertSame([], QuestionDefinition::fromArray(['split_by' => ''])->toArray()['split_by']);
+        $this->assertSame(['project_tag:6', 'pipeline'], QuestionDefinition::fromArray(['split_by' => ['project_tag:6', 'pipeline']])->toArray()['split_by']);
+        $this->assertSame(['project_tag:6', 'pipeline'], QuestionDefinition::fromArray(['split_by' => ['project_tag:6', 'pipeline', 'model']])->toArray()['split_by']);
+    }
+
+    public function test_split_by_drops_persona_tags_the_compare_dimension_repeats_and_junk(): void
+    {
+        $question = QuestionDefinition::fromArray(['compare_by' => 'pipeline', 'split_by' => ['persona_tag:3', 'pipeline', 7, 'model', 'model', 'group']]);
+
+        $this->assertSame(['model', 'group'], $question->toArray()['split_by']);
+    }
+
+    public function test_without_groups_keeps_the_other_split(): void
+    {
+        $this->assertSame(['pipeline'], QuestionDefinition::fromArray(['split_by' => ['group', 'pipeline']])->withoutGroups()->toArray()['split_by']);
     }
 
     public function test_shares_only_appear_when_the_groups_add_up_to_everyone(): void
@@ -146,8 +166,8 @@ class QuestionDefinitionTest extends TestCase
         $this->assertSame('group', $question->compareBy->key());
         $this->assertSame([3, 7], $question->projects->groups);
         $this->assertSame([3, 7], $question->toArray()['projects']['groups']);
-        $this->assertSame('group', QuestionDefinition::fromArray(['split_by' => 'group'])->splitBy->key());
-        $this->assertNull(QuestionDefinition::fromArray(['compare_by' => 'group', 'split_by' => 'group'])->splitBy);
+        $this->assertSame(['group'], QuestionDefinition::fromArray(['split_by' => 'group'])->toArray()['split_by']);
+        $this->assertSame([], QuestionDefinition::fromArray(['compare_by' => 'group', 'split_by' => 'group'])->splitBy);
         $this->assertFalse(QuestionDefinition::fromArray(['projects' => ['groups' => [3]]])->projects->isEmpty());
     }
 

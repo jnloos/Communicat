@@ -69,6 +69,7 @@ return [
     ],
 
     'sentence' => [
+        'and' => 'and',
         'of' => 'of',
         'in' => 'in',
         'compared_by' => 'compared by',

@@ -5,15 +5,16 @@ namespace App\Discussion\Values;
 /**
  * What a question asks the study's runs, read as one sentence: [metric] of
  * [people] ([together | per head]) in [runs] over [turns], compared by
- * [dimension], split by [dimension]. fromArray() turns any form input into a
+ * [dimension], split by [up to two dimensions]. fromArray() turns any form input into a
  * question that can be answered, so neither the editor nor the evaluator meets
  * a contradiction:
  *
  * - Gini describes a whole run: it counts everyone and cannot compare agents
  *   within a run.
  * - The aggregate only applies to shares; words per turn is a ratio already.
- * - Panels sort runs, so splitBy is never a persona tag, nor the dimension
- *   compareBy already uses.
+ * - Panels sort runs, so a split dimension is never a persona tag, nor the
+ *   dimension compareBy already uses, nor named twice; at most MAX_SPLITS. A
+ *   question saved before splits were lists names one key, which still reads.
  * - A baseline exists only with a compare dimension. Whether its key is one of
  *   that dimension's values is the evaluator's call: it takes the first group
  *   in dimension order when the key names none.
@@ -21,6 +22,9 @@ namespace App\Discussion\Values;
  */
 final readonly class QuestionDefinition
 {
+    /** At most this many dimensions split an answer: the rows and the columns of its panels. */
+    public const MAX_SPLITS = 2;
+
     public function __construct(
         public Metric $metric = Metric::TurnShare,
         public PeopleFilter $people = new PeopleFilter,
@@ -29,7 +33,8 @@ final readonly class QuestionDefinition
         /** The window inside every run; QuestionEvaluator caps its upper bound at the shortest run read. */
         public TurnRange $turns = new TurnRange,
         public ?Dimension $compareBy = null,
-        public ?Dimension $splitBy = null,
+        /** @var list<Dimension> the panels' dimensions: the first gives the rows, the second the columns */
+        public array $splitBy = [],
         public ResultForm $form = ResultForm::Points,
         public CurveMode $curve = CurveMode::Cumulative,
         /**
@@ -45,15 +50,12 @@ final readonly class QuestionDefinition
     {
         $metric = Metric::tryFrom((string) ($data['metric'] ?? '')) ?? Metric::TurnShare;
         $compareBy = Dimension::fromKey($data['compare_by'] ?? null);
-        $splitBy = Dimension::fromKey($data['split_by'] ?? null);
 
         if ($metric->isRunLevel() && $compareBy?->isPersonaLevel()) {
             $compareBy = null;
         }
 
-        if ($splitBy?->isPersonaLevel() || ($splitBy !== null && $splitBy == $compareBy)) {
-            $splitBy = null;
-        }
+        $splitBy = self::splits($data['split_by'] ?? [], $compareBy);
 
         $baseline = $data['baseline'] ?? null;
 
@@ -73,6 +75,27 @@ final readonly class QuestionDefinition
         return $question->supports($question->form) ? $question : $question->withForm(ResultForm::Points);
     }
 
+    /**
+     * The split dimensions as asked: a list of keys, or one key as saved
+     * before splits were lists.
+     *
+     * @return list<Dimension>
+     */
+    private static function splits(mixed $keys, ?Dimension $compareBy): array
+    {
+        $splits = [];
+
+        foreach (is_array($keys) ? $keys : [$keys] as $key) {
+            $dimension = Dimension::fromKey($key);
+
+            if ($dimension !== null && ! $dimension->isPersonaLevel() && $dimension != $compareBy && ! in_array($dimension, $splits)) {
+                $splits[] = $dimension;
+            }
+        }
+
+        return array_slice($splits, 0, self::MAX_SPLITS);
+    }
+
     /** @return array<string, mixed> */
     public function toArray(): array
     {
@@ -83,7 +106,7 @@ final readonly class QuestionDefinition
             'projects' => $this->projects->toArray(),
             'turns' => $this->turns->toArray(),
             'compare_by' => $this->compareBy?->key() ?? '',
-            'split_by' => $this->splitBy?->key() ?? '',
+            'split_by' => array_map(fn (Dimension $dimension) => $dimension->key(), $this->splitBy),
             'baseline' => $this->baseline,
             'form' => $this->form->value,
             'curve' => $this->curve->value,
@@ -119,7 +142,7 @@ final readonly class QuestionDefinition
             projects: $this->projects->withoutGroups(),
             turns: $this->turns,
             compareBy: $comparesGroups ? null : $this->compareBy,
-            splitBy: $this->splitBy?->type === DimensionType::Group ? null : $this->splitBy,
+            splitBy: array_values(array_filter($this->splitBy, fn (Dimension $dimension) => $dimension->type !== DimensionType::Group)),
             form: $this->form,
             curve: $this->curve,
             baseline: $comparesGroups ? null : $this->baseline,

@@ -42,7 +42,7 @@ final class DefinitionNames
         $named['projects']['tags'] = $this->tagsToNames($definition['projects']['tags'] ?? []);
         $named['projects']['groups'] = collect($definition['projects']['groups'] ?? [])->map(fn ($id) => $this->groups->get((int) $id)?->name)->filter()->values()->all();
         $named['compare_by'] = $this->dimensionToName($definition['compare_by'] ?? null);
-        $named['split_by'] = $this->dimensionToName($definition['split_by'] ?? null);
+        $named['split_by'] = array_values(array_filter(array_map(fn ($key) => $this->dimensionToName((string) $key), self::storedSplits($definition['split_by'] ?? [])), fn (string $name) => $name !== ''));
         $named['baseline'] = $this->baselineToName($definition);
 
         return $named;
@@ -61,11 +61,35 @@ final class DefinitionNames
         $definition['projects']['tags'] = $this->tagsToIds(EntryFields::map($projects, 'tags'), TagScope::Project);
         $definition['projects']['groups'] = $this->groups->filter(fn (ProjectGroup $group) => in_array($group->name, $groupNames, true))->keys()->values()->all();
         $definition['compare_by'] = $this->dimensionToKey(EntryFields::text($named, 'compare_by'));
-        $definition['split_by'] = $this->dimensionToKey(EntryFields::text($named, 'split_by'));
+        $definition['split_by'] = array_values(array_filter(array_map(fn (string $name) => $this->dimensionToKey($name), $this->splitNames($named)), fn (string $key) => $key !== ''));
         EntryFields::assertText($named, 'baseline');
         $definition['baseline'] = $this->baselineToId($named, $definition['compare_by']);
 
         return $definition;
+    }
+
+    /**
+     * A stored definition's split keys: a list, or one key as saved before
+     * splits were lists.
+     *
+     * @return list<mixed>
+     */
+    private static function storedSplits(mixed $splitBy): array
+    {
+        return is_array($splitBy) ? array_values($splitBy) : array_values(array_filter([$splitBy], fn ($key) => $key !== null && $key !== ''));
+    }
+
+    /**
+     * A file's split names: a list of texts, or one text from a bundle written
+     * before splits were lists. Anything else is UnreadableEntry.
+     *
+     * @return list<string>
+     */
+    private function splitNames(array $named): array
+    {
+        return is_array($named['split_by'] ?? null)
+            ? EntryFields::texts($named, 'split_by')
+            : array_values(array_filter([EntryFields::text($named, 'split_by') ?? ''], fn (string $name) => $name !== ''));
     }
 
     /**

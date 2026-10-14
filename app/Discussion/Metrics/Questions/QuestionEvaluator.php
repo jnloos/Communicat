@@ -74,6 +74,8 @@ final class QuestionEvaluator
         $collected = [];
         /** @var array<int|string, int> $panelRuns panel => runs that counted in it */
         $panelRuns = [];
+        /** @var array<string, list<int|string>> $panelParts panel => its value in each split dimension */
+        $panelParts = [];
         $excluded = 0;
 
         foreach ($projects as $project) {
@@ -87,6 +89,7 @@ final class QuestionEvaluator
             }
 
             $panelRuns[$place['panel']] = ($panelRuns[$place['panel']] ?? 0) + 1;
+            $panelParts[$place['panel']] = $place['parts'];
 
             foreach ($read as $group => [$runValue, $curve]) {
                 ($collected[$place['panel']][$group] ??= new GroupCollector)->add($runValue, $curve);
@@ -97,7 +100,7 @@ final class QuestionEvaluator
         [$groupLabels, $baseline] = $this->baselineFirst($this->labels($values, $question->compareBy, $groupKeys), $question);
 
         return new QuestionResult(
-            $this->panels($values, $question, $collected, $groupLabels, $panelRuns),
+            $this->panels($values, $question, $collected, $panelParts, $groupLabels, $panelRuns),
             array_combine(array_map('strval', array_keys($groupLabels)), $groupLabels),
             $projects->count(),
             $excluded,
@@ -154,12 +157,12 @@ final class QuestionEvaluator
      * any of them. Null when the run takes no part.
      *
      * @param  array<int, true>|null  $accepted
-     * @return array{panel: int|string, groups: array<int|string, list<int>>}|null groups: key => expert ids
+     * @return array{panel: string, parts: list<int|string>, groups: array<int|string, list<int>>}|null groups: key => expert ids
      */
     private function placeOf(QuestionDefinition $question, Project $project, DimensionValues $values, ?array $accepted): ?array
     {
-        $panel = $question->splitBy === null ? '' : $values->ofProject($question->splitBy, $project);
-        $report = $panel === null ? null : $this->shares->forProject($project);
+        $parts = $this->panelOf($question->splitBy, $project, $values);
+        $report = $parts === null ? null : $this->shares->forProject($project);
 
         if ($report === null || $report->isEmpty()) {
             return null;
@@ -171,9 +174,34 @@ final class QuestionEvaluator
         $groups = array_filter($this->grouped($question->compareBy, $project, $values, $people), fn (array $speakers) => $this->isMeasurable($question->metric, $speakers));
 
         return $groups === [] ? null : [
-            'panel' => $panel,
+            'panel' => implode(Panel::KEY_SEPARATOR, $parts),
+            'parts' => $parts,
             'groups' => array_map(fn (array $speakers) => array_map(fn (SpeakerShare $speaker) => $speaker->expertId, $speakers), $groups),
         ];
+    }
+
+    /**
+     * The run's value in every split dimension, in their order; empty without
+     * a split. Null when the run lacks a value in one of them.
+     *
+     * @param  list<Dimension>  $splitBy
+     * @return list<int|string>|null
+     */
+    private function panelOf(array $splitBy, Project $project, DimensionValues $values): ?array
+    {
+        $parts = [];
+
+        foreach ($splitBy as $dimension) {
+            $key = $values->ofProject($dimension, $project);
+
+            if ($key === null) {
+                return null;
+            }
+
+            $parts[] = $key;
+        }
+
+        return $parts;
     }
 
     /**
@@ -346,15 +374,22 @@ final class QuestionEvaluator
 
     /**
      * @param  array<int|string, array<int|string, GroupCollector>>  $collected
+     * @param  array<string, list<int|string>>  $panelParts
      * @param  array<int|string, string>  $groupLabels
      * @param  array<int|string, int>  $panelRuns
      * @return list<Panel>
      */
-    private function panels(DimensionValues $values, QuestionDefinition $question, array $collected, array $groupLabels, array $panelRuns): array
+    private function panels(DimensionValues $values, QuestionDefinition $question, array $collected, array $panelParts, array $groupLabels, array $panelRuns): array
     {
         $panels = [];
 
-        foreach ($this->labels($values, $question->splitBy, array_keys($collected)) as $panelKey => $panelLabel) {
+        foreach ($this->combinations($this->splitLabels($values, $question->splitBy, $panelParts)) as $combination) {
+            $panelKey = implode(Panel::KEY_SEPARATOR, array_column($combination, 0));
+
+            if (! isset($collected[$panelKey])) {
+                continue;
+            }
+
             $groups = [];
 
             foreach ($groupLabels as $groupKey => $groupLabel) {
@@ -363,10 +398,53 @@ final class QuestionEvaluator
                 }
             }
 
-            $panels[] = new Panel((string) $panelKey, $panelLabel, $groups, $panelRuns[$panelKey], count($groupLabels));
+            $panels[] = new Panel($panelKey, implode(Panel::LABEL_SEPARATOR, array_column($combination, 1)), $groups, $panelRuns[$panelKey], count($groupLabels));
         }
 
         return $panels;
+    }
+
+    /**
+     * Per split dimension the labels of its values that occur in a panel, in
+     * the dimension's own order.
+     *
+     * @param  list<Dimension>  $splitBy
+     * @param  array<string, list<int|string>>  $panelParts
+     * @return list<array<int|string, string>>
+     */
+    private function splitLabels(DimensionValues $values, array $splitBy, array $panelParts): array
+    {
+        return array_map(
+            fn (Dimension $dimension, int $index) => $this->labels($values, $dimension, array_values(array_unique(array_column($panelParts, $index)))),
+            $splitBy,
+            array_keys($splitBy),
+        );
+    }
+
+    /**
+     * Every combination of the dimensions' values, the first dimension
+     * varying slowest; one empty combination without a split.
+     *
+     * @param  list<array<int|string, string>>  $splitLabels
+     * @return list<list<array{0: int|string, 1: string}>> per combination its [value key, label] per dimension
+     */
+    private function combinations(array $splitLabels): array
+    {
+        $combinations = [[]];
+
+        foreach ($splitLabels as $labels) {
+            $next = [];
+
+            foreach ($combinations as $combination) {
+                foreach ($labels as $key => $label) {
+                    $next[] = [...$combination, [$key, $label]];
+                }
+            }
+
+            $combinations = $next;
+        }
+
+        return $combinations;
     }
 
     /**

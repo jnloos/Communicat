@@ -449,13 +449,13 @@ class QuestionEditorTest extends TestCase
         Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->set('definition.metric', 'word_share')
             ->set('definition.compare_by', "project_tag:{$category->id}")
-            ->set('definition.split_by', 'pipeline')
+            ->set('definition.split_by', ['pipeline'])
             ->set('definition.aggregate', 'per_head');
 
         $saved = $question->fresh()->definition;
         $this->assertSame('word_share', $saved['metric']);
         $this->assertSame("project_tag:{$category->id}", $saved['compare_by']);
-        $this->assertSame('pipeline', $saved['split_by']);
+        $this->assertSame(['pipeline'], $saved['split_by']);
         $this->assertSame('per_head', $saved['aggregate']);
     }
 
