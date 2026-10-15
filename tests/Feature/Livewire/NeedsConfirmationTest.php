@@ -6,7 +6,8 @@ use App\Livewire\Concerns\NeedsConfirmation;
 use App\Livewire\Experts\ExpertEditor;
 use App\Livewire\Projects\EditProject;
 use App\Livewire\Projects\ProjectChat;
-use App\Livewire\Projects\ProjectNavigation;
+use App\Livewire\Projects\ProjectDialogs;
+use App\Livewire\Projects\ProjectGroupDialogs;
 use App\Livewire\Settings\Tags;
 use App\Livewire\Settings\Users;
 use App\Livewire\Statistics\StatisticsPage;
@@ -48,8 +49,8 @@ class NeedsConfirmationTest extends TestCase
         return [
             'tags: value' => [Tags::class, 'deleteValue'],
             'tags: category' => [Tags::class, 'deleteCategory'],
-            'navigation: group' => [ProjectNavigation::class, 'deleteGroup'],
-            'navigation: project' => [ProjectNavigation::class, 'deleteProject'],
+            'navigation: group' => [ProjectGroupDialogs::class, 'deleteGroup'],
+            'navigation: project' => [ProjectDialogs::class, 'deleteProject'],
             'chat: leave' => [ProjectChat::class, 'leaveProject'],
             'edit project: delete' => [EditProject::class, 'delete'],
             'expert editor: delete' => [ExpertEditor::class, 'delete'],

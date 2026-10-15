@@ -2,19 +2,15 @@
 
 namespace App\Livewire\Projects;
 
-use App\Actions\Projects\DeleteProject;
 use App\Discussion\Values\TagFilter;
 use App\Discussion\Values\TagFilterMode;
 use App\Livewire\Concerns\FiltersByTags;
-use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Project;
 use App\Models\ProjectGroup;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\User;
-use Flux\Flux;
 use Illuminate\Support\Collection;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Authorize;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -22,35 +18,28 @@ use Livewire\Attributes\Session;
 use Livewire\Component;
 
 /**
- * The project list in the sidebar, sorted into the signed-in user's own groups.
+ * The project list in the sidebar, sorted into the signed-in user's own groups
+ * and narrowed by the tag filter.
  *
  * Grouping is per person, not per project (see the pivot migration): every
  * project and group id from the request is bound to its model and checked
  * against ProjectPolicy and ProjectGroupPolicy before anything is written, and
  * someone else's group answers 404, as if it did not exist.
+ *
+ * The dialogs behind the menus live in ProjectGroupDialogs and ProjectDialogs;
+ * they announce a change with LIST_CHANGED, and a rename from the project's
+ * own edit modal arrives as project_edited. Both only render the list again.
  */
+#[On(['project_edited', self::LIST_CHANGED])]
 class ProjectNavigation extends Component
 {
+    public const LIST_CHANGED = 'project-list-changed';
+
     use FiltersByTags;
-    use NeedsConfirmation;
 
     /** Which project the page is showing, so the list can mark it. */
     #[Locked]
     public ?int $currentProjectId = null;
-
-    /** The project a new group is being created for; null while that modal is closed. */
-    #[Locked]
-    public ?int $newGroupForProjectId = null;
-
-    #[Locked]
-    public ?int $renamingGroupId = null;
-
-    #[Locked]
-    public ?int $renamingProjectId = null;
-
-    public string $groupName = '';
-
-    public string $projectTitle = '';
 
     /**
      * Project tag values the list is narrowed to, combined by $tagFilterMode.
@@ -75,13 +64,6 @@ class ProjectNavigation extends Component
         $this->currentProjectId = $currentProjectId;
     }
 
-    /** A rename elsewhere (the project's own edit modal) has to reach the list. */
-    #[On('project_edited')]
-    public function refreshList(): void
-    {
-        // Rendering again is the whole job; Livewire does that after every call.
-    }
-
     /**
      * Ticking the group the project already sits in takes it out again — there
      * is deliberately no separate "remove from group" entry.
@@ -95,147 +77,9 @@ class ProjectNavigation extends Component
         $project->fileInGroupFor($user, $project->groupIdFor($user) === $group->id ? null : $group->id);
     }
 
-    /** Filing is open to everyone who reads the project — it touches only their own row. */
-    #[Authorize('view', 'project')]
-    public function startNewGroup(Project $project): void
-    {
-        $this->newGroupForProjectId = $project->id;
-        $this->groupName = '';
-        $this->resetValidation();
-
-        Flux::modal('project-group-create')->show();
-    }
-
-    /** Creates the group and files the project into it in one step. */
-    public function createGroup(): void
-    {
-        $project = Project::findOrFail($this->newGroupForProjectId);
-        $this->authorize('view', $project);
-        $this->validate($this->groupNameRules());
-
-        $group = $this->user()->projectGroups()->create([
-            'name' => trim($this->groupName),
-            'position' => (int) $this->user()->projectGroups()->max('position') + 1,
-        ]);
-
-        $project->fileInGroupFor($this->user(), $group->id);
-
-        $this->newGroupForProjectId = null;
-        $this->groupName = '';
-        Flux::modal('project-group-create')->close();
-    }
-
-    #[Authorize('update', 'group')]
-    public function startRenamingGroup(ProjectGroup $group): void
-    {
-        $this->renamingGroupId = $group->id;
-        $this->groupName = $group->name;
-        $this->resetValidation();
-
-        Flux::modal('project-group-rename')->show();
-    }
-
-    public function saveGroupName(): void
-    {
-        $group = ProjectGroup::findOrFail($this->renamingGroupId);
-        $this->authorize('update', $group);
-        $this->validate($this->groupNameRules($group->id));
-
-        $group->update(['name' => trim($this->groupName)]);
-
-        $this->renamingGroupId = null;
-        $this->groupName = '';
-        Flux::modal('project-group-rename')->close();
-    }
-
-    #[Authorize('delete', 'group')]
-    public function confirmDeleteGroup(ProjectGroup $group): void
-    {
-        $this->confirmTitle = __('groups.confirm.delete_group.title');
-        $this->confirmMessage = __('groups.confirm.delete_group.message');
-        $this->needsConfirmation('deleteGroup', $group->id);
-    }
-
-    /**
-     * The projects stay: the pivot's foreign key is nullOnDelete. A confirmed
-     * action is called directly, past Livewire's attributes and bindings, so it
-     * takes the id and authorizes itself.
-     */
-    public function deleteGroup(int $groupId): void
-    {
-        $group = ProjectGroup::findOrFail($groupId);
-        $this->authorize('delete', $group);
-        $group->delete();
-    }
-
-    /** Renaming and deleting are the owner's alone, enforced here and not in the view. */
-    #[Authorize('update', 'project')]
-    public function startRenamingProject(Project $project): void
-    {
-        $this->renamingProjectId = $project->id;
-        $this->projectTitle = $project->title;
-        $this->resetValidation();
-
-        Flux::modal('project-rename')->show();
-    }
-
-    public function saveProjectTitle(): void
-    {
-        $project = Project::findOrFail($this->renamingProjectId);
-        $this->authorize('update', $project);
-        $this->validate(['projectTitle' => ['required', 'string', 'max:255']]);
-
-        $project->title = trim($this->projectTitle);
-        $project->save();
-
-        $this->renamingProjectId = null;
-        $this->projectTitle = '';
-        Flux::modal('project-rename')->close();
-
-        $this->dispatch('project_edited');
-    }
-
-    #[Authorize('delete', 'project')]
-    public function confirmDeleteProject(Project $project): void
-    {
-        $this->confirmTitle = __('groups.confirm.delete_project.title');
-        $this->confirmMessage = __('groups.confirm.delete_project.message');
-        $this->needsConfirmation('deleteProject', $project->id);
-    }
-
-    /** Confirmed, so called directly: takes the id and authorizes itself (see deleteGroup()). */
-    public function deleteProject(int $projectId): void
-    {
-        $project = Project::findOrFail($projectId);
-        $this->authorize('delete', $project);
-        $wasOpen = $this->currentProjectId === $project->id;
-
-        app(DeleteProject::class)->handle($project);
-
-        // Only the project the page is showing takes the user with it; deleting
-        // one from the list while reading another must not move them.
-        if ($wasOpen) {
-            $this->currentProjectId = null;
-            $this->redirectRoute('dashboard');
-        }
-    }
-
     private function user(): User
     {
         return auth()->user();
-    }
-
-    /** @return array<string, array<int, mixed>> */
-    private function groupNameRules(?int $ignoreId = null): array
-    {
-        return [
-            'groupName' => [
-                'required', 'string', 'max:255',
-                Rule::unique('project_groups', 'name')
-                    ->where('user_id', $this->user()->id)
-                    ->ignore($ignoreId),
-            ],
-        ];
     }
 
     public function render(): mixed

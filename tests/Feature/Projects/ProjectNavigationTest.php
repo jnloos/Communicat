@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Projects;
 
+use App\Livewire\Projects\ProjectDialogs;
+use App\Livewire\Projects\ProjectGroupDialogs;
 use App\Livewire\Projects\ProjectNavigation;
 use App\Models\Project;
 use App\Models\ProjectGroup;
@@ -130,21 +132,21 @@ class ProjectNavigationTest extends TestCase
 
         $this->actingAs($reader);
 
-        Livewire::test(ProjectNavigation::class)
+        Livewire::test(ProjectDialogs::class)
             ->call('startRenamingProject', $project->id)
             ->assertForbidden();
 
-        Livewire::test(ProjectNavigation::class)
+        Livewire::test(ProjectDialogs::class)
             ->call('deleteProject', $project->id)
             ->assertForbidden();
 
         // Even with the id already sitting in the component's state — put there
         // while the owner was signed in — the save authorizes again.
         $this->actingAs($owner);
-        $component = Livewire::test(ProjectNavigation::class)->call('startRenamingProject', $project->id);
+        $component = Livewire::test(ProjectDialogs::class)->call('startRenamingProject', $project->id);
 
         $this->actingAs($reader);
-        $component->set('projectTitle', 'Gekapert')->call('saveProjectTitle')->assertForbidden();
+        $component->set('form.title', 'Gekapert')->call('saveProjectTitle')->assertForbidden();
 
         $this->assertDatabaseHas('projects', ['id' => $project->id, 'title' => 'Originaltitel']);
     }
@@ -159,11 +161,13 @@ class ProjectNavigationTest extends TestCase
 
         Livewire::test(ProjectNavigation::class)->call('toggleGroup', $project->id, $group->id);
 
-        $component = Livewire::test(ProjectNavigation::class)->call('deleteGroup', $group->id);
+        Livewire::test(ProjectGroupDialogs::class)
+            ->call('deleteGroup', $group->id)
+            ->assertDispatched(ProjectNavigation::LIST_CHANGED);
 
         $this->assertDatabaseMissing('project_groups', ['id' => $group->id]);
         $this->assertDatabaseHas('projects', ['id' => $project->id]);
-        $this->assertSame([$project->id], $component->viewData('ungrouped')->pluck('id')->all());
+        $this->assertSame([$project->id], Livewire::test(ProjectNavigation::class)->viewData('ungrouped')->pluck('id')->all());
     }
 
     public function test_an_empty_group_stays_visible(): void
@@ -209,14 +213,15 @@ class ProjectNavigationTest extends TestCase
 
         $project = $this->projectOwnedBy($user);
 
-        $component = Livewire::test(ProjectNavigation::class)
+        Livewire::test(ProjectGroupDialogs::class)
             ->call('startNewGroup', $project->id)
-            ->set('groupName', 'Statuseffekt')
-            ->call('createGroup');
+            ->set('form.name', 'Statuseffekt')
+            ->call('createGroup')
+            ->assertDispatched(ProjectNavigation::LIST_CHANGED);
 
         $group = $user->projectGroups()->firstOrFail();
         $this->assertSame('Statuseffekt', $group->name);
-        $this->assertSame([$project->id], $this->projectsInGroup($component, $group)->pluck('id')->all());
+        $this->assertSame([$project->id], $this->projectsInGroup(Livewire::test(ProjectNavigation::class), $group)->pluck('id')->all());
     }
 
     public function test_two_groups_of_one_user_cannot_share_a_name(): void
@@ -227,11 +232,11 @@ class ProjectNavigationTest extends TestCase
         $project = $this->projectOwnedBy($user);
         $this->groupFor($user, 'Statuseffekt');
 
-        Livewire::test(ProjectNavigation::class)
+        Livewire::test(ProjectGroupDialogs::class)
             ->call('startNewGroup', $project->id)
-            ->set('groupName', 'Statuseffekt')
+            ->set('form.name', 'Statuseffekt')
             ->call('createGroup')
-            ->assertHasErrors('groupName');
+            ->assertHasErrors('form.name');
 
         $this->assertSame(1, $user->projectGroups()->count());
     }
@@ -246,9 +251,9 @@ class ProjectNavigationTest extends TestCase
         $this->actingAs($user);
         $project = $this->projectOwnedBy($user);
 
-        Livewire::test(ProjectNavigation::class)
+        Livewire::test(ProjectGroupDialogs::class)
             ->call('startNewGroup', $project->id)
-            ->set('groupName', 'Statuseffekt')
+            ->set('form.name', 'Statuseffekt')
             ->call('createGroup')
             ->assertHasNoErrors();
 
@@ -264,15 +269,16 @@ class ProjectNavigationTest extends TestCase
         $group = $this->groupFor($user, 'Alt');
         $project->fileInGroupFor($user, $group->id);
 
-        $component = Livewire::test(ProjectNavigation::class)
+        Livewire::test(ProjectGroupDialogs::class)
             ->call('startRenamingGroup', $group->id)
-            ->assertSet('groupName', 'Alt')
-            ->set('groupName', 'Neu')
+            ->assertSet('form.name', 'Alt')
+            ->set('form.name', 'Neu')
             ->call('saveGroupName')
-            ->assertHasNoErrors();
+            ->assertHasNoErrors()
+            ->assertDispatched(ProjectNavigation::LIST_CHANGED);
 
         $this->assertSame('Neu', $group->fresh()->name);
-        $this->assertSame([$project->id], $this->projectsInGroup($component, $group)->pluck('id')->all());
+        $this->assertSame([$project->id], $this->projectsInGroup(Livewire::test(ProjectNavigation::class), $group)->pluck('id')->all());
     }
 
     /** The unique rule must ignore the group being renamed, or saving its own name would fail. */
@@ -283,7 +289,7 @@ class ProjectNavigationTest extends TestCase
 
         $group = $this->groupFor($user, 'Pilotläufe');
 
-        Livewire::test(ProjectNavigation::class)
+        Livewire::test(ProjectGroupDialogs::class)
             ->call('startRenamingGroup', $group->id)
             ->call('saveGroupName')
             ->assertHasNoErrors();
@@ -299,11 +305,11 @@ class ProjectNavigationTest extends TestCase
         $group = $this->groupFor($user, 'Pilotläufe');
         $this->groupFor($user, 'Hauptlauf');
 
-        Livewire::test(ProjectNavigation::class)
+        Livewire::test(ProjectGroupDialogs::class)
             ->call('startRenamingGroup', $group->id)
-            ->set('groupName', 'Hauptlauf')
+            ->set('form.name', 'Hauptlauf')
             ->call('saveGroupName')
-            ->assertHasErrors('groupName');
+            ->assertHasErrors('form.name');
 
         $this->assertSame('Pilotläufe', $group->fresh()->name);
     }
@@ -316,11 +322,11 @@ class ProjectNavigationTest extends TestCase
 
         $foreign = $this->groupFor($stranger, 'Fremde Gruppe');
 
-        Livewire::test(ProjectNavigation::class)
+        Livewire::test(ProjectGroupDialogs::class)
             ->call('startRenamingGroup', $foreign->id)
             ->assertStatus(404);
 
-        Livewire::test(ProjectNavigation::class)
+        Livewire::test(ProjectGroupDialogs::class)
             ->call('deleteGroup', $foreign->id)
             ->assertStatus(404);
 
@@ -334,14 +340,14 @@ class ProjectNavigationTest extends TestCase
 
         $project = $this->projectOwnedBy($user, 'Alt');
 
-        Livewire::test(ProjectNavigation::class)
+        Livewire::test(ProjectDialogs::class)
             ->call('startRenamingProject', $project->id)
-            ->set('projectTitle', 'Neu')
+            ->set('form.title', 'Neu')
             ->call('saveProjectTitle');
 
         $this->assertDatabaseHas('projects', ['id' => $project->id, 'title' => 'Neu']);
 
-        Livewire::test(ProjectNavigation::class, ['currentProjectId' => $project->id])
+        Livewire::test(ProjectDialogs::class, ['currentProjectId' => $project->id])
             ->call('deleteProject', $project->id)
             ->assertRedirect(route('dashboard'));
 
@@ -361,7 +367,7 @@ class ProjectNavigationTest extends TestCase
 
         $project = $this->projectOwnedBy($user);
 
-        $component = Livewire::test(ProjectNavigation::class, ['currentProjectId' => $project->id])
+        $component = Livewire::test(ProjectDialogs::class, ['currentProjectId' => $project->id])
             ->call('confirmDeleteProject', $project->id)
             ->assertDispatched('open-confirm');
 
@@ -380,7 +386,7 @@ class ProjectNavigationTest extends TestCase
 
         $group = $this->groupFor($user, 'Pilot');
 
-        $component = Livewire::test(ProjectNavigation::class)
+        $component = Livewire::test(ProjectGroupDialogs::class)
             ->call('confirmDeleteGroup', $group->id)
             ->assertDispatched('open-confirm');
 
@@ -400,7 +406,7 @@ class ProjectNavigationTest extends TestCase
         $open = $this->projectOwnedBy($user, 'Offen');
         $other = $this->projectOwnedBy($user, 'Anderes');
 
-        Livewire::test(ProjectNavigation::class, ['currentProjectId' => $open->id])
+        Livewire::test(ProjectDialogs::class, ['currentProjectId' => $open->id])
             ->call('deleteProject', $other->id)
             ->assertNoRedirect();
 
@@ -420,6 +426,49 @@ class ProjectNavigationTest extends TestCase
         Livewire::test(ProjectNavigation::class)
             ->call('toggleGroup', $foreign->id, $group->id)
             ->assertForbidden();
+    }
+
+    /**
+     * The menus sit in the list and reach the dialogs by event; the event's
+     * parameters must be bound and authorized like a wire:click's.
+     */
+    public function test_the_menus_reach_the_dialogs_by_event_with_the_same_checks(): void
+    {
+        $user = User::factory()->create();
+        $stranger = User::factory()->create();
+        $this->actingAs($user);
+
+        $group = $this->groupFor($user, 'Alt');
+        $foreign = $this->groupFor($stranger, 'Fremd');
+
+        Livewire::test(ProjectGroupDialogs::class)
+            ->dispatch('rename-group', group: $group->id)
+            ->assertSet('form.name', 'Alt');
+
+        Livewire::test(ProjectGroupDialogs::class)
+            ->dispatch('delete-group', group: $foreign->id)
+            ->assertStatus(404);
+
+        $this->assertSame(1, substr_count(
+            Livewire::test(ProjectNavigation::class)->html(),
+            "\$dispatchTo('projects.project-group-dialogs', 'rename-group', { group: {$group->id} })",
+        ));
+    }
+
+    /** Deleting a project one is not looking at leaves the page, so the list has to drop it itself. */
+    public function test_deleting_another_project_refreshes_the_list(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $open = $this->projectOwnedBy($user, 'Offen');
+        $other = $this->projectOwnedBy($user, 'Anderes');
+
+        Livewire::test(ProjectDialogs::class, ['currentProjectId' => $open->id])
+            ->call('deleteProject', $other->id)
+            ->assertDispatched(ProjectNavigation::LIST_CHANGED);
+
+        Livewire::test(ProjectNavigation::class)->dispatch(ProjectNavigation::LIST_CHANGED)->assertOk();
     }
 
     public function test_the_sidebar_renders_the_navigation(): void

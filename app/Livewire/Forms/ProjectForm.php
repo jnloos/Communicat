@@ -15,6 +15,9 @@ use Livewire\Form;
  */
 class ProjectForm extends Form
 {
+    /** Shared with ProjectTitleForm, the sidebar's rename, so a title means the same everywhere. */
+    public const TITLE_RULES = ['required', 'string', 'max:255'];
+
     public string $title = '';
 
     public string $description = '';
@@ -71,7 +74,7 @@ class ProjectForm extends Form
     protected function rules(): array
     {
         return [
-            'title' => ['required', 'string', 'max:255'],
+            'title' => self::TITLE_RULES,
             // The topic every prompt carries; without it a run refuses to start.
             'description' => ['required', 'string'],
             'pipeline' => ['required', Rule::in(array_keys(app(PipelineRegistry::class)->options()))],

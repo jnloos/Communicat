@@ -58,7 +58,7 @@
                     >{{ $group->name }}</flux:menu.checkbox>
                 @endforeach
 
-                <flux:menu.item icon="folder-plus" wire:click="startNewGroup({{ $project->id }})">
+                <flux:menu.item icon="folder-plus" wire:click="$dispatchTo('projects.project-group-dialogs', 'new-group', { project: {{ $project->id }} })">
                     {{ __('groups.actions.create_group') }}
                 </flux:menu.item>
 
@@ -67,11 +67,11 @@
                 @can('update', $project)
                     <flux:menu.separator />
 
-                    <flux:menu.item icon="pencil-square" wire:click="startRenamingProject({{ $project->id }})">
+                    <flux:menu.item icon="pencil-square" wire:click="$dispatchTo('projects.project-dialogs', 'rename-project', { project: {{ $project->id }} })">
                         {{ __('groups.actions.rename') }}
                     </flux:menu.item>
 
-                    <flux:menu.item variant="danger" icon="trash" wire:click="confirmDeleteProject({{ $project->id }})">
+                    <flux:menu.item variant="danger" icon="trash" wire:click="$dispatchTo('projects.project-dialogs', 'delete-project', { project: {{ $project->id }} })">
                         {{ __('groups.actions.delete_project') }}
                     </flux:menu.item>
                 @endcan

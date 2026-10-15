@@ -119,11 +119,11 @@
                         />
 
                         <flux:menu>
-                            <flux:menu.item icon="pencil-square" wire:click="startRenamingGroup({{ $group->id }})">
+                            <flux:menu.item icon="pencil-square" wire:click="$dispatchTo('projects.project-group-dialogs', 'rename-group', { group: {{ $group->id }} })">
                                 {{ __('groups.actions.rename') }}
                             </flux:menu.item>
 
-                            <flux:menu.item variant="danger" icon="trash" wire:click="confirmDeleteGroup({{ $group->id }})">
+                            <flux:menu.item variant="danger" icon="trash" wire:click="$dispatchTo('projects.project-group-dialogs', 'delete-group', { group: {{ $group->id }} })">
                                 {{ __('groups.actions.delete_group') }}
                             </flux:menu.item>
                         </flux:menu>
@@ -152,50 +152,8 @@
         @endif
     </div>
 
-    {{-- Renaming inline would fight Flux's disclosure button and its link item,
-         so both renames use the house modal pattern instead. --}}
-    <flux:modal name="project-group-create" class="md:w-96">
-        <form wire:submit.prevent="createGroup" class="space-y-6">
-            <x-modal-header :heading="__('groups.create.heading')" :subheading="__('groups.create.subheading')" />
-
-            <flux:input wire:model.defer="groupName" :label="__('groups.fields.name')" autofocus />
-
-            <x-modal-footer padding="dialog">
-                <flux:modal.close>
-                    <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary">{{ __('groups.create.submit') }}</flux:button>
-            </x-modal-footer>
-        </form>
-    </flux:modal>
-
-    <flux:modal name="project-group-rename" class="md:w-96">
-        <form wire:submit.prevent="saveGroupName" class="space-y-6">
-            <x-modal-header :heading="__('groups.rename_group.heading')" />
-
-            <flux:input wire:model.defer="groupName" :label="__('groups.fields.name')" autofocus />
-
-            <x-modal-footer padding="dialog">
-                <flux:modal.close>
-                    <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary">{{ __('common.actions.save') }}</flux:button>
-            </x-modal-footer>
-        </form>
-    </flux:modal>
-
-    <flux:modal name="project-rename" class="md:w-96">
-        <form wire:submit.prevent="saveProjectTitle" class="space-y-6">
-            <x-modal-header :heading="__('groups.rename_project.heading')" />
-
-            <flux:input wire:model.defer="projectTitle" :label="__('common.fields.title')" autofocus />
-
-            <x-modal-footer padding="dialog">
-                <flux:modal.close>
-                    <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
-                </flux:modal.close>
-                <flux:button type="submit" variant="primary">{{ __('common.actions.save') }}</flux:button>
-            </x-modal-footer>
-        </form>
-    </flux:modal>
+    {{-- The dialogs behind the menus above are components of their own; the
+         menus reach them by event (wire:click="$dispatchTo(...)"). --}}
+    <livewire:projects.project-group-dialogs />
+    <livewire:projects.project-dialogs :current-project-id="$currentProjectId" />
 </div>
