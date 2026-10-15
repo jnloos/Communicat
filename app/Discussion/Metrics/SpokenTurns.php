@@ -8,7 +8,9 @@ use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use WeakMap;
 
 /**
@@ -72,13 +74,28 @@ class SpokenTurns
     }
 
     /**
-     * Everyone with a spoken turn in these runs, as a subquery of expert ids:
-     * with the seated, the participants of the runs (see participants()).
+     * The expert ids of everyone taking part in these runs, as a subquery: the
+     * seated and whoever spoke and left -- the same people participants() lists
+     * per run, for many runs at once.
+     *
+     * @param  list<int>  $projectIds
+     */
+    public function participantIdsIn(array $projectIds): QueryBuilder
+    {
+        return DB::table('project_contributors')
+            ->where('contributor_type', (new Expert)->getMorphClass())
+            ->whereIn('project_id', $projectIds)
+            ->select('contributor_id')
+            ->union($this->speakersIn($projectIds)->toBase());
+    }
+
+    /**
+     * Everyone with a spoken turn in these runs, as a subquery of expert ids.
      *
      * @param  list<int>  $projectIds
      * @return Builder<JobLog>
      */
-    public function speakersIn(array $projectIds): Builder
+    private function speakersIn(array $projectIds): Builder
     {
         return $this->spoken()->whereIn('project_id', $projectIds)->select('expert_id')->distinct();
     }

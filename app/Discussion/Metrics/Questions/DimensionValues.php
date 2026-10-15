@@ -73,12 +73,7 @@ final class DimensionValues
     public function withRuns(Collection $projects): self
     {
         $expertMorph = (new Expert)->getMorphClass();
-        $expertIds = $projects->isEmpty() ? [] : DB::table('project_contributors')
-            ->where('contributor_type', $expertMorph)
-            ->whereIn('project_id', $projects->modelKeys())
-            ->select('contributor_id')
-            // Whoever spoke and left is a participant too (SpokenTurns::participants()).
-            ->union($this->spoken->speakersIn($projects->modelKeys())->toBase())
+        $expertIds = $projects->isEmpty() ? [] : $this->spoken->participantIdsIn($projects->modelKeys())
             ->pluck('contributor_id')
             ->map(fn ($id) => (int) $id)
             ->unique()

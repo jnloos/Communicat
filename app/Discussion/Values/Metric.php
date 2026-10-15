@@ -29,6 +29,18 @@ enum Metric: string
         return $this === self::TurnShare || $this === self::WordShare;
     }
 
+    /**
+     * Whether these agents give the measure a value: no agents give none, and
+     * neither do words per turn of agents who never spoke -- no value, not a zero.
+     *
+     * @param  list<SpeakerShare>  $speakers
+     */
+    public function hasValueFor(array $speakers): bool
+    {
+        return $speakers !== []
+            && ($this !== self::WordsPerTurn || array_sum(array_map(fn (SpeakerShare $speaker) => $speaker->turns, $speakers)) > 0);
+    }
+
     /** The trajectory series holding this metric's curve. */
     public function series(CurveMode $mode): ShareSeries
     {

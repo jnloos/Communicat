@@ -6,7 +6,7 @@ use App\Discussion\Values\GroupResult;
 use App\Discussion\Values\RunValue;
 use App\Discussion\Values\TrajectoryMean;
 
-/** Gathers one group's runs while QuestionEvaluator walks them; mutable, and never leaves it. */
+/** Gathers one group's runs for PanelCollector; mutable, and never leaves it. */
 final class GroupCollector
 {
     /** @var list<RunValue> */
