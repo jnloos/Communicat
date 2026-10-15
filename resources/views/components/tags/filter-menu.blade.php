@@ -5,8 +5,8 @@
     'cutDescription' => '',
 ])
 
-{{-- The tag filter's menu, shared by the sidebar and the experts page; each
-     keeps its own trigger. The host component uses FiltersByTags. A plain
+{{-- The tag filter's menu, under the trigger of x-tags.filter-dropdown. The
+     host component uses FiltersByTags. A plain
      flux:menu with keep-open, so ticking a value or switching the mode
      re-renders the component without closing it. That only holds while
      Livewire morphs the same element instead of replacing it, hence the fixed

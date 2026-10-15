@@ -29,32 +29,18 @@
             <span class="truncate text-xs font-medium uppercase leading-none tracking-wide">{{ __('tags.filter.label') }}</span>
 
             @if ($tagCategories->isNotEmpty())
-                @php
-                    $funnelLabel = $activeFilterCount > 0
-                        ? __('tags.filter.button_active', ['count' => $activeFilterCount])
-                        : __('tags.filter.button');
-                @endphp
-
                 <div class="relative flex h-8 items-center">
-                    <flux:dropdown position="bottom" align="start" wire:key="tag-filter-dropdown">
-                        <flux:button
-                            size="xs"
-                            variant="subtle"
-                            icon="funnel"
-                            icon:variant="solid"
-                            :aria-label="$funnelLabel"
-                            :tooltip="$funnelLabel"
-                            :data-filter-active="$activeFilterCount > 0 ? 'true' : null"
-                            :class="'[&_svg]:size-3.5 '.($activeFilterCount > 0 ? 'text-(--color-accent-content)!' : 'text-current!')"
-                        />
-
-                        <x-tags.filter-menu
-                            :categories="$tagCategories"
-                            :active-count="$activeFilterCount"
-                            :merge-description="__('tags.filter.modes.merge.description')"
-                            :cut-description="__('tags.filter.modes.cut.description')"
-                        />
-                    </flux:dropdown>
+                    <x-tags.filter-dropdown
+                        icon-only
+                        align="start"
+                        wire:key="tag-filter-dropdown"
+                        :categories="$tagCategories"
+                        :active-count="$activeFilterCount"
+                        :label="__('tags.filter.button')"
+                        :active-label="__('tags.filter.button_active', ['count' => $activeFilterCount])"
+                        :merge-description="__('tags.filter.modes.merge.description')"
+                        :cut-description="__('tags.filter.modes.cut.description')"
+                    />
                 </div>
             @endif
         </div>
@@ -110,13 +96,7 @@
                      takes its own hover, hence the second condition. --}}
                 <div class="absolute end-1 top-0 flex h-8 items-center opacity-0 transition-opacity hover:opacity-100 has-[:focus-visible]:opacity-100 group-has-[>ui-disclosure>button:hover]/navgroup:opacity-100 has-[[data-open]]:opacity-100">
                     <flux:dropdown position="bottom" align="start">
-                        <flux:button
-                            variant="ghost"
-                            size="xs"
-                            icon="ellipsis-horizontal"
-                            :aria-label="__('groups.menus.group')"
-                            class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"
-                        />
+                        <x-more-button :label="__('groups.menus.group')" />
 
                         <flux:menu>
                             <flux:menu.item icon="pencil-square" wire:click="$dispatchTo('projects.project-group-dialogs', 'rename-group', { group: {{ $group->id }} })">
