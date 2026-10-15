@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Statistics;
+namespace App\Discussion\Metrics\Questions;
 
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Values\Aggregate;
@@ -15,6 +15,7 @@ use App\Discussion\Values\TurnRange;
 use App\Models\ProjectGroup;
 use App\Models\TagCategory;
 use App\Models\TagValue;
+use App\Models\User;
 
 /**
  * A question in words: part by part for the chips of the editor, joined into
@@ -23,6 +24,9 @@ use App\Models\TagValue;
  * The tag values, categories and groups it names are read once per instance
  * and kept; prime() reads those of many questions in one go, so a list of
  * sentences costs a few queries, not a few per entry.
+ *
+ * Groups are personal: only the viewer's own are named, so a sentence that
+ * names groups needs forUser(); without a viewer every group reads as deleted.
  */
 final class QuestionSentence
 {
@@ -38,7 +42,20 @@ final class QuestionSentence
     /** @var array<int, true> tag value ids already asked for */
     private array $valuesRead = [];
 
+    /** Whose groups a group id names; null names none. */
+    private ?User $viewer = null;
+
     public function __construct(private readonly PipelineRegistry $pipelines) {}
+
+    /** A copy that names the groups of this viewer, with nothing read yet. */
+    public function forUser(User $viewer): self
+    {
+        $scoped = clone $this;
+        $scoped->viewer = $viewer;
+        $scoped->groupsRead = [];
+
+        return $scoped;
+    }
 
     /**
      * Reads ahead what these questions name, in at most three queries.
@@ -217,7 +234,7 @@ final class QuestionSentence
             return;
         }
 
-        $found = ProjectGroup::where('user_id', auth()->id())->whereKey($unread)->get()->keyBy('id');
+        $found = ProjectGroup::where('user_id', $this->viewer?->id)->whereKey($unread)->get()->keyBy('id');
 
         foreach ($unread as $id) {
             $this->groupsRead[$id] = $found[$id] ?? null;

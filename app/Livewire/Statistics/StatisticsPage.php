@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Statistics;
 
+use App\Discussion\Metrics\Questions\QuestionSentence;
 use App\Discussion\Values\QuestionDefinition;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Question;
@@ -94,7 +95,7 @@ class StatisticsPage extends Component
         $template = $asked->withoutGroups();
 
         $this->user()->questions()->create([
-            'name' => Str::limit($question->name ?? app(QuestionSentence::class)->of($asked), 100, ''),
+            'name' => Str::limit($question->name ?? $this->sentence()->of($asked), 100, ''),
             'notes' => $question->notes,
             'definition' => $template->toArray(),
             'is_template' => true,
@@ -218,13 +219,18 @@ class StatisticsPage extends Component
         return auth()->user();
     }
 
+    private function sentence(): QuestionSentence
+    {
+        return app(QuestionSentence::class)->forUser($this->user());
+    }
+
     public function render(): mixed
     {
         $questions = $this->user()->questions()->notTemplates()->get();
 
         $templates = Question::templates()->get();
         $definitions = $questions->concat($templates)->mapWithKeys(fn (Question $question) => [$question->id => $question->definition()]);
-        $sentence = app(QuestionSentence::class)->prime($definitions);
+        $sentence = $this->sentence()->prime($definitions);
 
         return view('livewire.statistics.statistics-page', [
             'questions' => $questions,

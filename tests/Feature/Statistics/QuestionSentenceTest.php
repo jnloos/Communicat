@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Statistics;
 
+use App\Discussion\Metrics\Questions\QuestionSentence;
 use App\Discussion\Values\QuestionDefinition;
 use App\Discussion\Values\QuestionResult;
 use App\Discussion\Values\TurnRange;
-use App\Livewire\Statistics\QuestionSentence;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\User;
@@ -161,10 +161,9 @@ class QuestionSentenceTest extends TestCase
     public function test_the_sentence_names_the_groups_of_the_user_and_the_group_dimension(): void
     {
         $user = User::factory()->create();
-        $this->actingAs($user);
         $score = $user->projectGroups()->create(['name' => 'Score', 'position' => 0]);
         $quality = $user->projectGroups()->create(['name' => 'Quality', 'position' => 1]);
-        $sentence = app(QuestionSentence::class);
+        $sentence = app(QuestionSentence::class)->forUser($user);
 
         $question = QuestionDefinition::fromArray(['projects' => ['groups' => [$score->id, $quality->id, 9999]], 'compare_by' => 'group']);
 

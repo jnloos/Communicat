@@ -4,6 +4,8 @@ namespace App\Livewire\Statistics;
 
 use App\Discussion\Metrics\Questions\DimensionValues;
 use App\Discussion\Metrics\Questions\QuestionEvaluator;
+use App\Discussion\Metrics\Questions\QuestionNormaliser;
+use App\Discussion\Metrics\Questions\QuestionSentence;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Values\Aggregate;
 use App\Discussion\Values\Dimension;
@@ -13,31 +15,33 @@ use App\Discussion\Values\Metric;
 use App\Discussion\Values\ModelConfig;
 use App\Discussion\Values\QuestionDefinition;
 use App\Discussion\Values\ResultForm;
-use App\Discussion\Values\TagFilter;
-use App\Discussion\Values\TurnRange;
 use App\Models\Expert;
 use App\Models\ProjectGroup;
 use App\Models\Question;
 use App\Models\TagCategory;
 use App\Models\TagScope;
-use App\Models\TagValue;
+use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 /**
  * One question, edited in place: its sentence on top, its answer below. Every
- * change is normalised through QuestionDefinition and saved at once; there is no draft.
+ * change is normalised through QuestionDefinition and QuestionNormaliser and
+ * saved at once; there is no draft.
  * The user's own questions open for editing. A template opens read only:
  * nothing it shows is saved, the form and curve switches change this view and
  * nothing else, and the page copies it to adjust.
+ *
+ * The page renames a question through its own modal: question-renamed renders
+ * the editor again so the heading follows.
  */
+#[On('question-renamed')]
 class QuestionEditor extends Component
 {
-    /** The page renamed this question; render again so the heading follows. */
-    protected $listeners = ['question-renamed' => '$refresh'];
-
     #[Locked]
     public int $questionId;
 
@@ -80,30 +84,43 @@ class QuestionEditor extends Component
         $this->syncBaselineChoice();
     }
 
-    public function updated(string $property): void
+    public function updatedNotes(): void
     {
-        if ($property === 'baselineChoice') {
-            if ($this->readOnly) {
-                $this->syncBaselineChoice();
-                $this->skipRender();
+        $question = $this->question($this->questionId);
 
-                return;
-            }
-
-            $this->definition['baseline'] = $this->baselineChoice === self::NO_VALUE ? DimensionValues::NONE : $this->baselineChoice;
-            $property = 'definition.baseline';
-        }
-
-        if ($property === 'notes') {
-            $this->saveNotes();
+        // A template's notes are only shown, so nothing is saved there.
+        if ($this->readOnly) {
+            $this->notes = (string) $question->notes;
+            $this->skipRender();
 
             return;
         }
 
-        if (! str_starts_with($property, 'definition')) {
+        // Trimmed; empty is no notes.
+        $this->notes = trim($this->notes);
+        $question->update(['notes' => $this->notes === '' ? null : $this->notes]);
+
+        // The notes change no number: the list re-renders for its first line, the answer stays as it is.
+        $this->dispatch('question-saved');
+        $this->skipRender();
+    }
+
+    public function updatedBaselineChoice(): void
+    {
+        if ($this->readOnly) {
+            $this->syncBaselineChoice();
+            $this->skipRender();
+
             return;
         }
 
+        $this->definition['baseline'] = $this->baselineChoice === self::NO_VALUE ? DimensionValues::NONE : $this->baselineChoice;
+        $this->saveDefinition('baseline');
+    }
+
+    /** @param  string|null  $key  the changed part of the definition, e.g. 'compare_by' or 'turns.from'; null when all of it was set */
+    public function updatedDefinition(mixed $value, ?string $key): void
+    {
         if ($this->readOnly) {
             // Back to the stored definition, which may name tag values deleted since: drop them again.
             $this->definition = $this->onlyTheViewChanged();
@@ -112,45 +129,34 @@ class QuestionEditor extends Component
             return;
         }
 
+        $this->saveDefinition($key);
+    }
+
+    private function saveDefinition(?string $key): void
+    {
         // A baseline names a value of one dimension; another dimension starts from its own first value.
-        if ($property === 'definition.compare_by') {
+        if ($key === 'compare_by') {
             $this->definition['baseline'] = null;
         }
 
-        $this->definition = $this->withBaseline(QuestionDefinition::fromArray($this->definition))->toArray();
+        $definition = $this->normaliser()->withBaseline($this->user(), $this->currentDefinition());
 
-        if (str_starts_with($property, 'definition.turns')) {
-            $this->definition = $this->turnsWithinShortestRun(QuestionDefinition::fromArray($this->definition))->toArray();
+        // Costs one evaluation per turn edit; the render evaluates again.
+        if (str_starts_with((string) $key, 'turns')) {
+            $definition = $this->normaliser()->withinShortestRun($this->user(), $definition);
         }
 
+        $this->definition = $definition->toArray();
         $this->question($this->questionId)->update(['definition' => $this->definition]);
         $this->syncBaselineChoice();
 
         $this->dispatch('question-saved');
     }
 
-    /**
-     * A bound typed beyond the shortest run is stored as that run, so the field
-     * shows the maximum instead of a number the answer would silently cap.
-     * Costs one evaluation per turn edit; the render evaluates again.
-     */
-    private function turnsWithinShortestRun(QuestionDefinition $definition): QuestionDefinition
-    {
-        $shortest = app(QuestionEvaluator::class)->evaluate(auth()->user(), $definition)->shortestRun;
-
-        if ($shortest === null || ($definition->turns->from <= $shortest && ($definition->turns->to ?? 0) <= $shortest)) {
-            return $definition;
-        }
-
-        $from = min($definition->turns->from, $shortest);
-
-        return $definition->withTurns(new TurnRange($from, min($definition->turns->to ?? $shortest, $shortest)));
-    }
-
     /** An own question shows the baseline the evaluator uses: store the fallback instead of leaving it implicit. */
     private function saveEffectiveBaseline(): void
     {
-        $effective = $this->withBaseline(QuestionDefinition::fromArray($this->definition))->toArray();
+        $effective = $this->normaliser()->withBaseline($this->user(), $this->currentDefinition())->toArray();
 
         if ($effective !== $this->definition) {
             $this->definition = $effective;
@@ -161,96 +167,61 @@ class QuestionEditor extends Component
     /** The radio value for the effective baseline; a template is shown with it but never saved. */
     private function syncBaselineChoice(): void
     {
-        $baseline = $this->withBaseline(QuestionDefinition::fromArray($this->definition))->baseline;
-        $this->baselineChoice = $baseline === DimensionValues::NONE ? self::NO_VALUE : (string) $baseline;
-    }
-
-    /**
-     * A compared question without a baseline gets the first value of its
-     * dimension, so the sign of its delta is stored, not left to the order in
-     * which the values happen to be listed later.
-     */
-    private function withBaseline(QuestionDefinition $definition): QuestionDefinition
-    {
-        if ($definition->compareBy === null || $definition->baseline !== null) {
-            return $definition;
-        }
-
-        $first = array_key_first($this->dimensionValues()->labels($definition->compareBy));
-
-        return $first === null ? $definition : $definition->withBaseline((string) $first);
-    }
-
-    private function dimensionValues(): DimensionValues
-    {
-        return app(DimensionValues::class)->forUser(auth()->user());
-    }
-
-    /** Trimmed; empty is no notes. A template's notes are only shown, so nothing is saved there. */
-    private function saveNotes(): void
-    {
-        $question = $this->question($this->questionId);
-        $this->notes = $this->readOnly ? (string) $question->notes : trim($this->notes);
-
-        if ($this->readOnly) {
-            $this->skipRender();
-
-            return;
-        }
-
-        $question->update(['notes' => $this->notes === '' ? null : $this->notes]);
-
-        // The notes change no number: the list re-renders for its first line, the answer stays as it is.
-        $this->dispatch('question-saved');
-        $this->skipRender();
+        $baseline = $this->normaliser()->withBaseline($this->user(), $this->currentDefinition())->baseline;
+        $this->baselineChoice = $this->radioValue($baseline);
     }
 
     /** The stored question with the form and curve of this view: the only things a viewer may switch. */
     private function onlyTheViewChanged(): array
     {
         $stored = $this->question($this->questionId)->definition()->toArray();
-        $viewed = QuestionDefinition::fromArray($this->definition)->toArray();
+        $viewed = $this->currentDefinition()->toArray();
 
         return QuestionDefinition::fromArray(['form' => $viewed['form'], 'curve' => $viewed['curve']] + $stored)->toArray();
     }
 
-    /**
-     * Tag values deleted since the question was saved have no checkbox, so the
-     * user could never remove them. Drop them and say so. TagFilter::without()
-     * keeps a category whose values are all gone, so a filter never widens
-     * silently; its chip reads "deleted value" until the user picks others.
-     */
+    /** Tag values deleted since the question was saved are dropped, counted for the notice and, on an own question, saved. */
     private function dropDeletedTagValues(): void
     {
-        $filters = ['people' => TagFilter::fromArray($this->definition['people']['tags'] ?? []), 'projects' => TagFilter::fromArray($this->definition['projects']['tags'] ?? [])];
-        $named = array_merge(...array_map(fn (TagFilter $filter) => $filter->valueIds(), array_values($filters)));
+        ['definition' => $definition, 'dropped' => $dropped] = $this->normaliser()->withoutDeletedTagValues($this->currentDefinition());
 
-        if ($named === []) {
+        if ($dropped === 0) {
             return;
         }
 
-        $gone = array_values(array_diff($named, TagValue::whereKey($named)->pluck('id')->all()));
-
-        if ($gone === []) {
-            return;
-        }
-
-        foreach ($filters as $part => $filter) {
-            $this->definition[$part]['tags'] = $filter->without($gone)->toArray();
-        }
-
-        $this->definition = QuestionDefinition::fromArray($this->definition)->toArray();
-        $this->droppedTagValues = count($gone);
+        $this->definition = $definition->toArray();
+        $this->droppedTagValues = $dropped;
 
         if (! $this->readOnly) {
             $this->question($this->questionId)->update(['definition' => $this->definition]);
         }
     }
 
+    private function currentDefinition(): QuestionDefinition
+    {
+        return QuestionDefinition::fromArray($this->definition);
+    }
+
+    /** Flux reads '' as unset, so the "no value" group travels as NO_VALUE. */
+    private function radioValue(int|string|null $baseline): string
+    {
+        return $baseline === DimensionValues::NONE ? self::NO_VALUE : (string) $baseline;
+    }
+
+    private function normaliser(): QuestionNormaliser
+    {
+        return app(QuestionNormaliser::class);
+    }
+
+    private function user(): User
+    {
+        return auth()->user();
+    }
+
     private function question(int $questionId): Question
     {
         if ($this->loaded?->id !== $questionId) {
-            $this->loaded = Question::visibleTo(auth()->user())->findOrFail($questionId);
+            $this->loaded = Question::visibleTo($this->user())->findOrFail($questionId);
         }
 
         return $this->loaded;
@@ -258,49 +229,167 @@ class QuestionEditor extends Component
 
     public function render(): mixed
     {
-        $definition = QuestionDefinition::fromArray($this->definition);
-        $sentence = app(QuestionSentence::class)->prime([$definition]);
-        $result = app(QuestionEvaluator::class)->evaluate(auth()->user(), $definition);
-        $personaCategories = TagCategory::ofScope(TagScope::Persona)->with('values')->get();
-        $projectCategories = TagCategory::ofScope(TagScope::Project)->with('values')->get();
+        $definition = $this->currentDefinition();
+        $result = app(QuestionEvaluator::class)->evaluate($this->user(), $definition);
 
         return view('livewire.statistics.question-editor', [
             'title' => $this->question($this->questionId)->name,
             'current' => $definition,
             'mayManage' => Gate::allows('update', $this->question($this->questionId)),
             'mayShare' => Gate::allows('manageTemplates', Question::class),
-            'parts' => $sentence->parts($definition, $result),
+            'parts' => $this->sentence()->prime([$definition])->parts($definition, $result),
             'result' => $result,
-            'metrics' => Metric::cases(),
-            'aggregates' => Aggregate::cases(),
-            'forms' => ResultForm::cases(),
-            'personaCategories' => $personaCategories,
-            'projectCategories' => $projectCategories,
-            'projectSource' => TagScope::Project->source(),
-            'personaSource' => TagScope::Persona->source(),
-            'runSource' => DimensionSource::Run,
-            'groupSource' => DimensionSource::Group,
-            'pipelines' => app(PipelineRegistry::class)->options(),
-            'models' => ModelConfig::options(),
-            'groups' => ProjectGroup::where('user_id', auth()->id())->orderBy('position')->orderBy('name')->pluck('name', 'id'),
-            'expertNames' => Expert::query()->distinct()->orderBy('name')->pluck('name'),
-            'compareOptions' => $this->dimensionOptions($sentence, $projectCategories, $definition->metric->isRunLevel() ? collect() : $personaCategories),
-            'baselineOptions' => $definition->compareBy === null ? [] : $this->dimensionValues()->labels($definition->compareBy),
-            'splitOptions' => $this->dimensionOptions($sentence, $projectCategories, collect()),
-            'rollingWindow' => (int) config('discussion.share_window'),
         ]);
     }
 
+    /** @return list<Metric> */
+    #[Computed]
+    public function metrics(): array
+    {
+        return Metric::cases();
+    }
+
+    /** @return list<Aggregate> */
+    #[Computed]
+    public function aggregates(): array
+    {
+        return Aggregate::cases();
+    }
+
+    /** @return list<ResultForm> */
+    #[Computed]
+    public function forms(): array
+    {
+        return ResultForm::cases();
+    }
+
+    /** @return Collection<int, TagCategory> with their values */
+    #[Computed]
+    public function personaCategories(): Collection
+    {
+        return TagCategory::ofScope(TagScope::Persona)->with('values')->get();
+    }
+
+    /** @return Collection<int, TagCategory> with their values */
+    #[Computed]
+    public function projectCategories(): Collection
+    {
+        return TagCategory::ofScope(TagScope::Project)->with('values')->get();
+    }
+
     /**
-     * @param  Collection<int, TagCategory>  $projectCategories
+     * Where each menu group's values come from, named in its heading.
+     *
+     * @return array{persona: DimensionSource, project: DimensionSource, run: DimensionSource, group: DimensionSource}
+     */
+    #[Computed]
+    public function sources(): array
+    {
+        return [
+            'persona' => TagScope::Persona->source(),
+            'project' => TagScope::Project->source(),
+            'run' => DimensionSource::Run,
+            'group' => DimensionSource::Group,
+        ];
+    }
+
+    /** @return array<string, string> pipeline name => label */
+    #[Computed]
+    public function pipelines(): array
+    {
+        return app(PipelineRegistry::class)->options();
+    }
+
+    /** @return array<string, string> model key => label */
+    #[Computed]
+    public function models(): array
+    {
+        return ModelConfig::options();
+    }
+
+    /** @return Collection<int, string> the viewer's group id => name, in sidebar order */
+    #[Computed]
+    public function groups(): Collection
+    {
+        return ProjectGroup::where('user_id', $this->user()->id)->orderBy('position')->orderBy('name')->pluck('name', 'id');
+    }
+
+    /** @return Collection<int, string> */
+    #[Computed]
+    public function expertNames(): Collection
+    {
+        return Expert::query()->distinct()->orderBy('name')->pluck('name');
+    }
+
+    #[Computed]
+    public function rollingWindow(): int
+    {
+        return (int) config('discussion.share_window');
+    }
+
+    /** @return array<string, string> dimension key => label; agents are offered only where the metric compares them */
+    #[Computed]
+    public function compareOptions(): array
+    {
+        return $this->dimensionOptions($this->currentDefinition()->metric->isRunLevel() ? collect() : $this->personaCategories);
+    }
+
+    /**
+     * The values of the compared dimension, keyed by their radio value: the
+     * "no value" group as NO_VALUE, because Flux reads '' as unset.
+     *
+     * @return array<string, string> radio value => label; empty without a comparison
+     */
+    #[Computed]
+    public function baselineOptions(): array
+    {
+        $compareBy = $this->currentDefinition()->compareBy;
+
+        if ($compareBy === null) {
+            return [];
+        }
+
+        $options = [];
+
+        foreach (app(DimensionValues::class)->forUser($this->user())->labels($compareBy) as $key => $label) {
+            $options[$this->radioValue($key)] = $label;
+        }
+
+        return $options;
+    }
+
+    /** @return array<string, string> dimension key => label, without the dimension compared by, which cannot split too */
+    #[Computed]
+    public function splitOptions(): array
+    {
+        $options = $this->dimensionOptions(collect());
+        unset($options[$this->definition['compare_by'] ?? '']);
+
+        return $options;
+    }
+
+    /** Up to MAX_SPLITS: once that many are ticked the others are disabled. */
+    #[Computed]
+    public function splitsFull(): bool
+    {
+        return count($this->definition['split_by'] ?? []) >= QuestionDefinition::MAX_SPLITS;
+    }
+
+    private function sentence(): QuestionSentence
+    {
+        return app(QuestionSentence::class)->forUser($this->user());
+    }
+
+    /**
      * @param  Collection<int, TagCategory>  $personaCategories  empty when agents cannot be compared
      * @return array<string, string> dimension key => its name with the source in brackets: project tags, persona tags, pipeline, model, group
      */
-    private function dimensionOptions(QuestionSentence $sentence, Collection $projectCategories, Collection $personaCategories): array
+    private function dimensionOptions(Collection $personaCategories): array
     {
         $options = [];
+        $sentence = $this->sentence();
 
-        foreach ([[DimensionType::ProjectTag, $projectCategories], [DimensionType::PersonaTag, $personaCategories]] as [$type, $categories]) {
+        foreach ([[DimensionType::ProjectTag, $this->projectCategories], [DimensionType::PersonaTag, $personaCategories]] as [$type, $categories]) {
             foreach ($categories as $category) {
                 $options[(new Dimension($type, $category->id))->key()] = $type->source()->named($category->label());
             }

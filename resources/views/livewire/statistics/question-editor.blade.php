@@ -1,5 +1,4 @@
 @use('App\Discussion\Values\CurveMode')
-@use('App\Discussion\Values\QuestionDefinition')
 @use('App\Discussion\Values\ResultForm')
 @use('App\Livewire\Statistics\GroupColor')
 
@@ -65,7 +64,7 @@
         <x-statistics.chip :read-only="$readOnly" :label="$parts['metric']">
             <flux:menu>
                 <flux:menu.radio.group wire:model.live="definition.metric">
-                    @foreach ($metrics as $metric)
+                    @foreach ($this->metrics as $metric)
                         <flux:menu.radio :value="$metric->value">{{ $metric->label() }}</flux:menu.radio>
                     @endforeach
                 </flux:menu.radio.group>
@@ -78,8 +77,8 @@
             <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.of') }}</span>
             <x-statistics.chip :read-only="$readOnly" :label="$parts['people']" :muted="$current->people->isEveryone()">
                 <flux:menu keep-open>
-                    @foreach ($personaCategories as $category)
-                        <flux:menu.group :heading="$personaSource->named($category->label())" wire:key="people-{{ $category->id }}">
+                    @foreach ($this->personaCategories as $category)
+                        <flux:menu.group :heading="$this->sources['persona']->named($category->label())" wire:key="people-{{ $category->id }}">
                             <flux:menu.checkbox.group wire:model.live="definition.people.tags.{{ $category->id }}">
                                 @foreach ($category->values as $value)
                                     <flux:menu.checkbox :value="(string) $value->id">{{ $value->name }}</flux:menu.checkbox>
@@ -92,7 +91,7 @@
                     <flux:menu.separator />
                     <div class="px-2 pb-1" x-on:keydown.stop>
                         <flux:select variant="listbox" size="sm" multiple searchable clearable wire:model.live="definition.people.expert_names" :label="__('questions.controls.expert_names')" :placeholder="__('questions.controls.any_expert')">
-                            @foreach ($expertNames as $expertName)
+                            @foreach ($this->expertNames as $expertName)
                                 <flux:select.option :value="$expertName" wire:key="expert-{{ $expertName }}">{{ $expertName }}</flux:select.option>
                             @endforeach
                         </flux:select>
@@ -107,7 +106,7 @@
             <x-statistics.chip :read-only="$readOnly" :label="$parts['aggregate']" :muted="true">
                 <flux:menu>
                     <flux:menu.radio.group wire:model.live="definition.aggregate">
-                        @foreach ($aggregates as $aggregate)
+                        @foreach ($this->aggregates as $aggregate)
                             <flux:menu.radio :value="$aggregate->value">{{ $aggregate->label() }}</flux:menu.radio>
                         @endforeach
                     </flux:menu.radio.group>
@@ -120,8 +119,8 @@
         <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.in') }}</span>
         <x-statistics.chip :read-only="$readOnly" :label="$parts['projects']" :muted="$current->projects->isEmpty()">
             <flux:menu keep-open>
-                @foreach ($projectCategories as $category)
-                    <flux:menu.group :heading="$projectSource->named($category->label())" wire:key="projects-{{ $category->id }}">
+                @foreach ($this->projectCategories as $category)
+                    <flux:menu.group :heading="$this->sources['project']->named($category->label())" wire:key="projects-{{ $category->id }}">
                         <flux:menu.checkbox.group wire:model.live="definition.projects.tags.{{ $category->id }}">
                             @foreach ($category->values as $value)
                                 <flux:menu.checkbox :value="(string) $value->id">{{ $value->name }}</flux:menu.checkbox>
@@ -130,26 +129,26 @@
                     </flux:menu.group>
                 @endforeach
 
-                <flux:menu.group :heading="$runSource->named(__('questions.controls.pipelines'))">
+                <flux:menu.group :heading="$this->sources['run']->named(__('questions.controls.pipelines'))">
                     <flux:menu.checkbox.group wire:model.live="definition.projects.pipelines">
-                        @foreach ($pipelines as $pipelineName => $label)
+                        @foreach ($this->pipelines as $pipelineName => $label)
                             <flux:menu.checkbox :value="$pipelineName">{{ $label }}</flux:menu.checkbox>
                         @endforeach
                     </flux:menu.checkbox.group>
                 </flux:menu.group>
 
-                <flux:menu.group :heading="$runSource->named(__('questions.controls.models'))">
+                <flux:menu.group :heading="$this->sources['run']->named(__('questions.controls.models'))">
                     <flux:menu.checkbox.group wire:model.live="definition.projects.models">
-                        @foreach ($models as $key => $label)
+                        @foreach ($this->models as $key => $label)
                             <flux:menu.checkbox :value="$key">{{ $label }}</flux:menu.checkbox>
                         @endforeach
                     </flux:menu.checkbox.group>
                 </flux:menu.group>
 
-                @if ($groups->isNotEmpty())
-                    <flux:menu.group :heading="$groupSource->named(__('questions.controls.groups'))">
+                @if ($this->groups->isNotEmpty())
+                    <flux:menu.group :heading="$this->sources['group']->named(__('questions.controls.groups'))">
                         <flux:menu.checkbox.group wire:model.live="definition.projects.groups">
-                            @foreach ($groups as $groupId => $groupName)
+                            @foreach ($this->groups as $groupId => $groupName)
                                 <flux:menu.checkbox :value="(string) $groupId" wire:key="group-{{ $groupId }}">{{ $groupName }}</flux:menu.checkbox>
                             @endforeach
                         </flux:menu.checkbox.group>
@@ -178,17 +177,17 @@
             <flux:menu>
                 <flux:menu.radio.group wire:model.live="definition.compare_by">
                     <flux:menu.radio value="">{{ __('questions.controls.none') }}</flux:menu.radio>
-                    @foreach ($compareOptions as $key => $label)
+                    @foreach ($this->compareOptions as $key => $label)
                         <flux:menu.radio :value="$key" wire:key="compare-{{ $key }}">{{ $label }}</flux:menu.radio>
                     @endforeach
                 </flux:menu.radio.group>
                 {{-- The group the others are measured against: it comes first, and the delta is the other group minus it. --}}
-                @if ($baselineOptions !== [])
+                @if ($this->baselineOptions !== [])
                     <flux:menu.separator />
                     <flux:menu.group :heading="__('questions.controls.baseline')">
                         <flux:menu.radio.group wire:model.live="baselineChoice">
-                            @foreach ($baselineOptions as $key => $label)
-                                <flux:menu.radio :value="(string) $key === '' ? \App\Livewire\Statistics\QuestionEditor::NO_VALUE : (string) $key" wire:key="baseline-{{ $key }}">{{ $label }}</flux:menu.radio>
+                            @foreach ($this->baselineOptions as $value => $label)
+                                <flux:menu.radio :value="(string) $value" wire:key="baseline-{{ $value }}">{{ $label }}</flux:menu.radio>
                             @endforeach
                         </flux:menu.radio.group>
                     </flux:menu.group>
@@ -206,14 +205,10 @@
         <x-statistics.chip :read-only="$readOnly" :label="$parts['split_by'] ?? __('questions.sentence.nothing')" :muted="$parts['split_by'] === null">
             <flux:menu keep-open>
                 {{-- Up to MAX_SPLITS: once two are ticked the others are disabled. Unticking all splits nothing. --}}
-                @php($splits = $definition['split_by'] ?? [])
-                @php($splitsFull = count($splits) >= QuestionDefinition::MAX_SPLITS)
                 <flux:menu.checkbox.group wire:model.live="definition.split_by">
-                    @foreach ($splitOptions as $key => $label)
-                        @unless ($key === ($definition['compare_by'] ?? ''))
-                            <flux:menu.checkbox :value="$key" wire:key="split-{{ $key }}"
-                                :disabled="$splitsFull && ! in_array($key, $splits, true)">{{ $label }}</flux:menu.checkbox>
-                        @endunless
+                    @foreach ($this->splitOptions as $key => $label)
+                        <flux:menu.checkbox :value="$key" wire:key="split-{{ $key }}"
+                            :disabled="$this->splitsFull && ! in_array($key, $definition['split_by'] ?? [], true)">{{ $label }}</flux:menu.checkbox>
                     @endforeach
                 </flux:menu.checkbox.group>
                 <flux:menu.separator />
@@ -231,13 +226,13 @@
                 <flux:radio.group wire:model.live="definition.curve" variant="segmented" size="sm">
                     @foreach (CurveMode::cases() as $mode)
                         <x-segmented-option :value="$mode->value" :label="$mode->label()"
-                            :tooltip="trans_choice('statistics.trajectory.'.$mode->value.'_tooltip', $rollingWindow, ['count' => $rollingWindow])" />
+                            :tooltip="trans_choice('statistics.trajectory.'.$mode->value.'_tooltip', $this->rollingWindow, ['count' => $this->rollingWindow])" />
                     @endforeach
                 </flux:radio.group>
             @endif
 
             <flux:radio.group wire:model.live="definition.form" variant="segmented" size="sm">
-                @foreach ($forms as $form)
+                @foreach ($this->forms as $form)
                     <x-segmented-option :value="$form->value" :label="$form->label()" :tooltip="__('questions.form_hints.'.$form->value)" :disabled="! $current->supports($form)" />
                 @endforeach
             </flux:radio.group>
@@ -265,7 +260,7 @@
             @case(ResultForm::Trajectory)
                 <x-statistics.curve-panels :result="$result" />
                 @if ($current->curve === CurveMode::Rolling)
-                    <flux:text size="sm">{{ trans_choice('statistics.trajectory.rolling_hint', $rollingWindow, ['count' => $rollingWindow]) }}</flux:text>
+                    <flux:text size="sm">{{ trans_choice('statistics.trajectory.rolling_hint', $this->rollingWindow, ['count' => $this->rollingWindow]) }}</flux:text>
                 @endif
                 @break
             @default
