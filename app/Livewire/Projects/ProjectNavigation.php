@@ -14,8 +14,8 @@ use App\Models\User;
 use Flux\Flux;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Authorize;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Session;
@@ -24,8 +24,10 @@ use Livewire\Component;
 /**
  * The project list in the sidebar, sorted into the signed-in user's own groups.
  *
- * Grouping is per person, not per project (see the pivot migration): everything
- * here therefore starts from auth()->user() and never from an id in the request.
+ * Grouping is per person, not per project (see the pivot migration): every
+ * project and group id from the request is bound to its model and checked
+ * against ProjectPolicy and ProjectGroupPolicy before anything is written, and
+ * someone else's group answers 404, as if it did not exist.
  */
 class ProjectNavigation extends Component
 {
@@ -84,20 +86,20 @@ class ProjectNavigation extends Component
      * Ticking the group the project already sits in takes it out again — there
      * is deliberately no separate "remove from group" entry.
      */
-    public function toggleGroup(int $projectId, int $groupId): void
+    #[Authorize('view', 'project')]
+    #[Authorize('update', 'group')]
+    public function toggleGroup(Project $project, ProjectGroup $group): void
     {
-        $project = $this->readableProject($projectId);
-        $group = $this->ownGroup($groupId);
         $user = $this->user();
 
         $project->fileInGroupFor($user, $project->groupIdFor($user) === $group->id ? null : $group->id);
     }
 
-    public function startNewGroup(int $projectId): void
+    /** Filing is open to everyone who reads the project — it touches only their own row. */
+    #[Authorize('view', 'project')]
+    public function startNewGroup(Project $project): void
     {
-        $this->readableProject($projectId);
-
-        $this->newGroupForProjectId = $projectId;
+        $this->newGroupForProjectId = $project->id;
         $this->groupName = '';
         $this->resetValidation();
 
@@ -107,7 +109,8 @@ class ProjectNavigation extends Component
     /** Creates the group and files the project into it in one step. */
     public function createGroup(): void
     {
-        $project = $this->readableProject((int) $this->newGroupForProjectId);
+        $project = Project::findOrFail($this->newGroupForProjectId);
+        $this->authorize('view', $project);
         $this->validate($this->groupNameRules());
 
         $group = $this->user()->projectGroups()->create([
@@ -122,10 +125,9 @@ class ProjectNavigation extends Component
         Flux::modal('project-group-create')->close();
     }
 
-    public function startRenamingGroup(int $groupId): void
+    #[Authorize('update', 'group')]
+    public function startRenamingGroup(ProjectGroup $group): void
     {
-        $group = $this->ownGroup($groupId);
-
         $this->renamingGroupId = $group->id;
         $this->groupName = $group->name;
         $this->resetValidation();
@@ -135,7 +137,8 @@ class ProjectNavigation extends Component
 
     public function saveGroupName(): void
     {
-        $group = $this->ownGroup((int) $this->renamingGroupId);
+        $group = ProjectGroup::findOrFail($this->renamingGroupId);
+        $this->authorize('update', $group);
         $this->validate($this->groupNameRules($group->id));
 
         $group->update(['name' => trim($this->groupName)]);
@@ -145,25 +148,30 @@ class ProjectNavigation extends Component
         Flux::modal('project-group-rename')->close();
     }
 
-    public function confirmDeleteGroup(int $groupId): void
+    #[Authorize('delete', 'group')]
+    public function confirmDeleteGroup(ProjectGroup $group): void
     {
-        $this->ownGroup($groupId);
-
         $this->confirmTitle = __('groups.confirm.delete_group.title');
         $this->confirmMessage = __('groups.confirm.delete_group.message');
-        $this->needsConfirmation('deleteGroup', $groupId);
+        $this->needsConfirmation('deleteGroup', $group->id);
     }
 
-    /** The projects stay: the pivot's foreign key is nullOnDelete. */
+    /**
+     * The projects stay: the pivot's foreign key is nullOnDelete. A confirmed
+     * action is called directly, past Livewire's attributes and bindings, so it
+     * takes the id and authorizes itself.
+     */
     public function deleteGroup(int $groupId): void
     {
-        $this->ownGroup($groupId)->delete();
+        $group = ProjectGroup::findOrFail($groupId);
+        $this->authorize('delete', $group);
+        $group->delete();
     }
 
-    public function startRenamingProject(int $projectId): void
+    /** Renaming and deleting are the owner's alone, enforced here and not in the view. */
+    #[Authorize('update', 'project')]
+    public function startRenamingProject(Project $project): void
     {
-        $project = $this->ownedProject($projectId);
-
         $this->renamingProjectId = $project->id;
         $this->projectTitle = $project->title;
         $this->resetValidation();
@@ -173,7 +181,8 @@ class ProjectNavigation extends Component
 
     public function saveProjectTitle(): void
     {
-        $project = $this->ownedProject((int) $this->renamingProjectId);
+        $project = Project::findOrFail($this->renamingProjectId);
+        $this->authorize('update', $project);
         $this->validate(['projectTitle' => ['required', 'string', 'max:255']]);
 
         $project->title = trim($this->projectTitle);
@@ -186,18 +195,19 @@ class ProjectNavigation extends Component
         $this->dispatch('project_edited');
     }
 
-    public function confirmDeleteProject(int $projectId): void
+    #[Authorize('delete', 'project')]
+    public function confirmDeleteProject(Project $project): void
     {
-        $this->ownedProject($projectId);
-
         $this->confirmTitle = __('groups.confirm.delete_project.title');
         $this->confirmMessage = __('groups.confirm.delete_project.message');
-        $this->needsConfirmation('deleteProject', $projectId);
+        $this->needsConfirmation('deleteProject', $project->id);
     }
 
+    /** Confirmed, so called directly: takes the id and authorizes itself (see deleteGroup()). */
     public function deleteProject(int $projectId): void
     {
-        $project = $this->ownedProject($projectId);
+        $project = Project::findOrFail($projectId);
+        $this->authorize('delete', $project);
         $wasOpen = $this->currentProjectId === $project->id;
 
         $project->delete();
@@ -209,43 +219,6 @@ class ProjectNavigation extends Component
             $this->currentProjectId = null;
             $this->redirectRoute('dashboard');
         }
-    }
-
-    /**
-     * Every group id from the request is resolved through this user's own
-     * groups. Taking one at face value would let anybody file a project into a
-     * stranger's sidebar, so a foreign id must not even be readable here.
-     */
-    private function ownGroup(int $groupId): ProjectGroup
-    {
-        $group = $this->user()->projectGroups()->find($groupId);
-
-        // Not 403: someone else's drawer does not exist as far as this user is
-        // concerned, and saying otherwise would confirm the id.
-        abort_if($group === null, 404);
-
-        return $group;
-    }
-
-    /** Filing is open to everyone who reads the project — it touches only their own row. */
-    private function readableProject(int $projectId): Project
-    {
-        return $this->authorizedProject($projectId, 'access-project');
-    }
-
-    /** Renaming and deleting are the owner's alone, enforced here and not in the view. */
-    private function ownedProject(int $projectId): Project
-    {
-        return $this->authorizedProject($projectId, 'manage-project');
-    }
-
-    private function authorizedProject(int $projectId, string $ability): Project
-    {
-        $project = Project::find($projectId);
-        abort_if($project === null, 404);
-        Gate::authorize($ability, $project);
-
-        return $project;
     }
 
     private function user(): User

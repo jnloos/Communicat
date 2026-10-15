@@ -35,7 +35,7 @@ class ExpertPersonaTest extends TestCase
 
     public function test_editor_saves_name_role_and_description(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
 
         Livewire::test(ExpertEditor::class)
             ->call('edit')

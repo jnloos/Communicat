@@ -236,7 +236,7 @@ class Project extends Model
         return (int) ($this->summarize_oldest ?? config('discussion.summarize_oldest'));
     }
 
-    /** The projects this user may read — the access-project gate's rule (owner or contributor) as a query. */
+    /** The projects this user may read — ProjectPolicy::view() (owner or contributor) as a query. */
     public function scopeAccessibleBy(Builder $query, User $user): void
     {
         $query->where(fn (Builder $q) => $q

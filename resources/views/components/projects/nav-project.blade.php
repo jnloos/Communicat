@@ -64,7 +64,7 @@
 
                 {{-- Zone 2: the owner's alone. Someone who only reads the project
                      never sees it — and the gate is checked again server-side. --}}
-                @can('manage-project', $project)
+                @can('update', $project)
                     <flux:menu.separator />
 
                     <flux:menu.item icon="pencil-square" wire:click="startRenamingProject({{ $project->id }})">

@@ -1,6 +1,7 @@
 @props([
     'categories', {{-- Collection<TagCategory> of one scope, values loaded --}}
     'model' => 'tagSelection', {{-- the parent's property: category id => value id, '' for not set --}}
+    'disabled' => false, {{-- read only, e.g. the expert flyout for a non-admin --}}
 ])
 
 {{-- One select per category, bound straight to the parent form's property:
@@ -12,7 +13,7 @@
 @if ($categories->isNotEmpty())
     <div class="grid gap-4 sm:grid-cols-2">
         @foreach ($categories as $category)
-            <flux:select wire:key="tag-field-{{ $category->id }}" wire:model="{{ $model }}.{{ $category->id }}" :label="$category->label()">
+            <flux:select wire:key="tag-field-{{ $category->id }}" wire:model="{{ $model }}.{{ $category->id }}" :label="$category->label()" :disabled="$disabled">
                 <option value="">{{ __('tags.fields.unset') }}</option>
                 @foreach ($category->values as $value)
                     <option value="{{ $value->id }}">{{ $value->name }}</option>

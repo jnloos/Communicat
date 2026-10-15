@@ -49,6 +49,12 @@ class Question extends Model
         $query->where('is_template', false)->orderBy('position')->orderBy('id');
     }
 
+    /** The rows this user may open — QuestionPolicy::view() as a query: their own questions and every template. */
+    public function scopeVisibleTo(Builder $query, User $user): void
+    {
+        $query->where(fn (Builder $q) => $q->where('is_template', true)->orWhere('user_id', $user->id));
+    }
+
     /** Templates are ordered among all templates, a question among its owner's questions. */
     protected function siblings(): Builder
     {

@@ -94,7 +94,7 @@ class EditProject extends Component
     public function save(): void
     {
         $project = Project::findOrFail($this->forProjectId);
-        Gate::authorize('manage-project', $project);
+        Gate::authorize('update', $project);
         $this->validate();
 
         $this->noteRunConfigChanges($project);
@@ -173,7 +173,7 @@ class EditProject extends Component
     public function delete(): void
     {
         $project = Project::findOrFail($this->forProjectId);
-        Gate::authorize('manage-project', $project);
+        Gate::authorize('delete', $project);
         $project->delete();
         Cookie::expire('curr_project');
         Flux::modal('edit-project')->close();

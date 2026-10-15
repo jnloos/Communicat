@@ -38,6 +38,8 @@ return [
         'role' => 'Rolle',
         'description_help' => 'Wird in der UI angezeigt und ist der Persona-Kern im Prompt.',
         'delete' => 'Experte löschen',
+        'view' => 'Experte',
+        'read_only' => 'Nur Administratoren ändern Experten.',
     ],
 
     'memory' => [

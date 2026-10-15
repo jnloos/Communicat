@@ -10,7 +10,7 @@
 
     {{-- Project header --}}
     <header class="flex shrink-0 items-center gap-2 border-b border-zinc-200 px-4 py-3 sm:gap-3 sm:px-6 dark:border-zinc-700">
-        @can('manage-project', $this->project)
+        @can('update', $this->project)
             <flux:button
                 variant="subtle"
                 icon="cog-6-tooth"

@@ -37,7 +37,7 @@ Route::middleware(['auth', 'verified'])
 
         // Project access path
         Route::get('{project}', function (Project $project) {
-            if (! Gate::allows('access-project', $project)) {
+            if (! Gate::allows('view', $project)) {
                 return redirect()->route('project.new');
             }
 
@@ -46,7 +46,7 @@ Route::middleware(['auth', 'verified'])
             return view('project', compact('project'));
         })->name('show');
 
-        Route::get('{project}/export', [BundleExportController::class, 'project'])->name('export');
+        Route::get('{project}/export', [BundleExportController::class, 'project'])->can('view', 'project')->name('export');
     });
 
 Route::get('experts', function () {
@@ -67,7 +67,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/transfer', Transfer::class)->can('admin')->name('settings.transfer');
     Route::get('settings/export', [BundleExportController::class, 'everything'])->can('admin')->name('settings.export');
     Route::get('statistics', StatisticsPage::class)->middleware('verified')->name('statistics');
-    Route::get('statistics/{question}/export', StudyExportController::class)->middleware('verified')->whereNumber('question')->name('statistics.export');
+    Route::get('statistics/{question}/export', StudyExportController::class)->middleware('verified')->whereNumber('question')->can('view', 'question')->name('statistics.export');
 
     Route::get('debug/jobs', JobDebugPanel::class)->name('debug.jobs');
 });

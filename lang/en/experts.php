@@ -38,6 +38,8 @@ return [
         'role' => 'Role',
         'description_help' => 'Shown in the UI and used as the persona core in the prompt.',
         'delete' => 'Delete Expert',
+        'view' => 'Expert',
+        'read_only' => 'Only administrators change experts.',
     ],
 
     'memory' => [

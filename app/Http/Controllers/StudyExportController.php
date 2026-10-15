@@ -12,15 +12,14 @@ class StudyExportController extends Controller
 {
     use DownloadsTemporaryFile;
 
-    /** The raw data of exactly the runs a question selects; an own question or any template. */
-    public function __invoke(int $question, QuestionRuns $runs, StudyExport $export): BinaryFileResponse
+    /** The raw data of exactly the runs a question selects; authorized on the route (`can:view,question`): an own question or any template. */
+    public function __invoke(Question $question, QuestionRuns $runs, StudyExport $export): BinaryFileResponse
     {
         $user = auth()->user();
-        $found = $user->questions()->notTemplates()->find($question) ?? Question::templates()->find($question) ?? abort(404);
 
         return $this->downloadTemporary(
-            fn (string $path) => $export->write($runs->for($user, $found->definition()->projects), $user, $path),
-            $export->filename($found->name ?? __('questions.untitled')),
+            fn (string $path) => $export->write($runs->for($user, $question->definition()->projects), $user, $path),
+            $export->filename($question->name ?? __('questions.untitled')),
         );
     }
 }

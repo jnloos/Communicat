@@ -8,6 +8,7 @@ use App\Models\TagCategory;
 use App\Models\TagScope;
 use Flux\Flux;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -15,6 +16,11 @@ use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
+/**
+ * The expert flyout: every verified user opens it to read a persona, only an
+ * admin creates, changes or deletes one (ExpertPolicy). For everyone else it
+ * shows the same fields read only.
+ */
 class ExpertEditor extends Component
 {
     use NeedsConfirmation, WithFileUploads;
@@ -46,9 +52,11 @@ class ExpertEditor extends Component
         $this->resetForm();
 
         $expert = null;
-        if (! is_null($id)) {
+        if (is_null($id)) {
+            $this->authorize('create', Expert::class);
+        } else {
             $expert = Expert::findOrFail($id);
-            $this->expertId = $id;
+            $this->expertId = $expert->id;
         }
 
         $this->name = $expert->name ?? '';
@@ -62,9 +70,8 @@ class ExpertEditor extends Component
 
     public function save(): void
     {
+        $expert = $this->authorizedForSaving();
         $this->validate();
-
-        $expert = $this->expertId ? Expert::findOrFail($this->expertId) : new Expert;
 
         $expert->name = $this->name;
         $expert->role = $this->role;
@@ -90,6 +97,20 @@ class ExpertEditor extends Component
         $this->dispatch('expert_modified');
     }
 
+    private function authorizedForSaving(): Expert
+    {
+        if (is_null($this->expertId)) {
+            $this->authorize('create', Expert::class);
+
+            return new Expert;
+        }
+
+        $expert = Expert::findOrFail($this->expertId);
+        $this->authorize('update', $expert);
+
+        return $expert;
+    }
+
     public function updatedAvatarUpload(): void
     {
         if (! is_null($this->avatarUpload)) {
@@ -107,10 +128,12 @@ class ExpertEditor extends Component
         return Storage::url($path);
     }
 
+    /** Confirmed, so called directly, past Livewire's attributes: it authorizes itself. */
     public function delete(): void
     {
         if (! is_null($this->expertId)) {
             $expert = Expert::findOrFail($this->expertId);
+            $this->authorize('delete', $expert);
             $this->deleteAvatar($expert->avatar_url);
             $expert->delete();
 
@@ -140,8 +163,12 @@ class ExpertEditor extends Component
 
     public function render(): mixed
     {
+        $expert = is_null($this->expertId) ? null : Expert::find($this->expertId);
+
         return view('livewire.experts.expert-editor', [
             'isUpdate' => ! is_null($this->expertId),
+            'mayEdit' => $expert === null ? Gate::allows('create', Expert::class) : Gate::allows('update', $expert),
+            'mayDelete' => $expert !== null && Gate::allows('delete', $expert),
             'tagCategories' => TagCategory::ofScope(TagScope::Persona)->with('values')->get(),
         ]);
     }

@@ -16,10 +16,9 @@ class BundleExportController extends Controller
 
     public function __construct(private readonly BundleExporter $exporter) {}
 
+    /** Authorized on the route (`can:view,project`). */
     public function project(Project $project): BinaryFileResponse
     {
-        Gate::authorize('access-project', $project);
-
         return $this->downloadTemporary(fn (string $path) => $this->exporter->project($project, $path), $this->exporter->filename(Bundle::KIND_PROJECT, $project->title));
     }
 

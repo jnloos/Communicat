@@ -250,8 +250,7 @@ class QuestionEditor extends Component
     private function question(int $questionId): Question
     {
         if ($this->loaded?->id !== $questionId) {
-            $this->loaded = Question::templates()->find($questionId)
-                ?? auth()->user()->questions()->notTemplates()->findOrFail($questionId);
+            $this->loaded = Question::visibleTo(auth()->user())->findOrFail($questionId);
         }
 
         return $this->loaded;
@@ -268,8 +267,8 @@ class QuestionEditor extends Component
         return view('livewire.statistics.question-editor', [
             'title' => $this->question($this->questionId)->name,
             'current' => $definition,
-            'mayManage' => $this->mayManage(),
-            'mayShare' => Gate::allows('admin'),
+            'mayManage' => Gate::allows('update', $this->question($this->questionId)),
+            'mayShare' => Gate::allows('manageTemplates', Question::class),
             'parts' => $sentence->parts($definition, $result),
             'result' => $result,
             'metrics' => Metric::cases(),
@@ -290,15 +289,6 @@ class QuestionEditor extends Component
             'splitOptions' => $this->dimensionOptions($sentence, $projectCategories, collect()),
             'rollingWindow' => (int) config('discussion.share_window'),
         ]);
-    }
-
-    /**
-     * An own question is managed by its owner; a template only by an admin who owns it.
-     */
-    private function mayManage(): bool
-    {
-        return ! $this->readOnly
-            || ($this->question($this->questionId)->user_id === auth()->id() && Gate::allows('admin'));
     }
 
     /**

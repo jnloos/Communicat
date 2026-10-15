@@ -69,7 +69,7 @@ class ProjectChat extends Component
 
     public function leaveProject(): void
     {
-        abort_if($this->project->isOwner(auth()->user()), 403);
+        $this->authorize('leave', $this->project);
         $this->project->removeContributingUser(auth()->user());
         ContributorsChanged::dispatch($this->projectId);
         $this->redirectRoute('project.new');

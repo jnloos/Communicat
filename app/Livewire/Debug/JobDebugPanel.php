@@ -57,7 +57,7 @@ class JobDebugPanel extends Component
     private function authorizeProject(): void
     {
         if ($this->projectId !== null) {
-            Gate::authorize('access-project', Project::findOrFail($this->projectId));
+            Gate::authorize('view', Project::findOrFail($this->projectId));
         }
     }
 

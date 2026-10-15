@@ -139,7 +139,7 @@ class TagFieldsTest extends TestCase
 
     public function test_the_expert_editor_loads_and_saves_the_persona_tags(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
         $expert = Expert::factory()->create();
 
         Livewire::test(ExpertEditor::class)
@@ -214,7 +214,7 @@ class TagFieldsTest extends TestCase
 
     public function test_a_forged_tag_value_in_the_expert_editor_creates_or_changes_nothing(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
         $expert = Expert::factory()->create(['name' => 'Ada']);
         $forged = [$this->gender->id => (string) $this->status->id];
 

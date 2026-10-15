@@ -15,7 +15,7 @@ use Livewire\Component;
 
 /**
  * The flyout that seats experts and invites users. Both change who takes part
- * in a run, so every write is the owner's alone (`manage-contributors`).
+ * in a run, so every write is the owner's alone (`ProjectPolicy::manageContributors()`).
  */
 class SelectContributors extends Component
 {
@@ -47,7 +47,7 @@ class SelectContributors extends Component
 
     public function addExpert(int $expertId): void
     {
-        Gate::authorize('manage-contributors', $this->project);
+        Gate::authorize('manageContributors', $this->project);
 
         if (! $this->project->canAddExpert()) {
             $this->limitWarning = trans_choice('projects.contributors.limit_warning', Project::MAX_CONTRIBUTING_EXPERTS);
@@ -61,21 +61,21 @@ class SelectContributors extends Component
 
     public function removeExpert(int $expertId): void
     {
-        Gate::authorize('manage-contributors', $this->project);
+        Gate::authorize('manageContributors', $this->project);
         $this->project->removeContributingExpert(Expert::findOrFail($expertId));
         $this->contributorsChanged();
     }
 
     public function addUser(int $userId): void
     {
-        Gate::authorize('manage-contributors', $this->project);
+        Gate::authorize('manageContributors', $this->project);
         $this->project->addContributingUser(User::findOrFail($userId));
         $this->contributorsChanged();
     }
 
     public function removeUser(int $userId): void
     {
-        Gate::authorize('manage-contributors', $this->project);
+        Gate::authorize('manageContributors', $this->project);
         $this->project->removeContributingUser(User::findOrFail($userId));
         $this->contributorsChanged();
     }
@@ -106,7 +106,7 @@ class SelectContributors extends Component
             'users' => $users,
             'seatedExpertIds' => array_flip($project->experts()->pluck('experts.id')->all()),
             'invitedUserIds' => array_flip($project->users()->pluck('users.id')->all()),
-            'mayManage' => Gate::allows('manage-contributors', $project),
+            'mayManage' => Gate::allows('manageContributors', $project),
             'hasFilters' => trim($this->search) !== '',
             'canAddExpert' => $project->canAddExpert(),
             'expertLimit' => Project::MAX_CONTRIBUTING_EXPERTS,
