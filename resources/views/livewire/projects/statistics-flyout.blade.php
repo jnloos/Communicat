@@ -78,7 +78,8 @@
                             <flux:chart.cursor />
                         </flux:chart.svg>
 
-                        <flux:chart.tooltip>
+                        {{-- Flux hides the tooltip by opacity only and leaves it in place; without this it swallows clicks on whatever it last covered. --}}
+                        <flux:chart.tooltip class="pointer-events-none">
                             <flux:chart.tooltip.heading field="label" />
                             @foreach ($trajectoryLines as $line)
                                 <flux:chart.tooltip.value :field="$line['field']" :label="$line['name']" suffix=" %" />
