@@ -25,62 +25,15 @@
         <x-tags.badges :values="$savedTags" class="-mt-3" />
 
         <form wire:submit.prevent="save" class="flex flex-1 flex-col gap-6">
-            <flux:input wire:model.defer="title" :label="__('common.fields.title')"/>
-            <flux:textarea wire:model.defer="description" :label="__('common.fields.description')" rows="10"/>
+            <flux:input wire:model.defer="form.title" :label="__('common.fields.title')"/>
+            <flux:textarea wire:model.defer="form.description" :label="__('common.fields.description')" rows="10"/>
 
             @if ($runStarted)
                 <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ __('projects.fields.run_started_help') }}</flux:text>
             @endif
 
             <flux:accordion>
-                <flux:accordion.item transition="true">
-                    <flux:accordion.heading>
-                        <div class="flex gap-2 {{ $errors->hasAny(['pipeline', 'provider', 'model']) ? 'text-red-500 dark:text-red-400' : '' }}">
-                            <flux:icon.cpu-chip class="size-5"/> {{ __('projects.groups.ai_pipeline') }}
-                        </div>
-                    </flux:accordion.heading>
-                    <flux:accordion.content class="my-4 space-y-4">
-                        <flux:select wire:model.defer="pipeline" :label="__('projects.fields.pipeline')">
-                            @foreach ($pipelines as $name => $label)
-                                <option value="{{ $name }}">{{ $label }}</option>
-                            @endforeach
-                        </flux:select>
-
-                        <flux:select wire:model.live="provider" :label="__('projects.fields.provider')">
-                            @foreach ($providers as $key => $label)
-                                <option value="{{ $key }}">{{ $label }}</option>
-                            @endforeach
-                        </flux:select>
-
-                        <flux:select wire:model.defer="model" :label="__('projects.fields.model')">
-                            @foreach ($models as $key => $label)
-                                <option value="{{ $key }}">{{ $label }}</option>
-                            @endforeach
-                        </flux:select>
-                    </flux:accordion.content>
-                </flux:accordion.item>
-
-                <flux:accordion.item transition="true">
-                    <flux:accordion.heading>
-                        <div class="flex gap-2 {{ $errors->hasAny(['summarizeThreshold', 'summarizeOldest']) ? 'text-red-500 dark:text-red-400' : '' }}">
-                            <flux:icon.arrows-pointing-in class="size-5"/> {{ __('projects.groups.reduction') }}
-                        </div>
-                    </flux:accordion.heading>
-                    <flux:accordion.content class="my-4 space-y-4">
-                        <flux:autocomplete wire:model.defer="summarizeThreshold" :label="__('projects.fields.summarize_threshold')">
-                            <flux:autocomplete.item>20</flux:autocomplete.item>
-                            <flux:autocomplete.item>30</flux:autocomplete.item>
-                            <flux:autocomplete.item>40</flux:autocomplete.item>
-                            <flux:autocomplete.item>60</flux:autocomplete.item>
-                        </flux:autocomplete>
-
-                        <flux:autocomplete wire:model.defer="summarizeOldest" :label="__('projects.fields.summarize_oldest')">
-                            <flux:autocomplete.item>10</flux:autocomplete.item>
-                            <flux:autocomplete.item>20</flux:autocomplete.item>
-                            <flux:autocomplete.item>30</flux:autocomplete.item>
-                        </flux:autocomplete>
-                    </flux:accordion.content>
-                </flux:accordion.item>
+                <x-projects.run-settings :pipelines="$pipelines" :providers="$providers" :models="$models"/>
                 @if ($tagCategories->isNotEmpty())
                     <x-tags.project-accordion-item :values="$chosenTags" :categories="$tagCategories" />
                 @endif

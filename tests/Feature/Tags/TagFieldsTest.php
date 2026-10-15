@@ -90,8 +90,8 @@ class TagFieldsTest extends TestCase
         $this->actingAs(User::factory()->create());
 
         Livewire::test(CreateProject::class)
-            ->set('title', 'Schule | with status | 100')
-            ->set('description', 'Handyverbot an Schulen?')
+            ->set('form.title', 'Schule | with status | 100')
+            ->set('form.description', 'Handyverbot an Schulen?')
             ->set('tagSelection', [$this->condition->id => (string) $this->status->id])
             ->call('save')
             ->assertHasNoErrors();
@@ -203,8 +203,8 @@ class TagFieldsTest extends TestCase
 
         try {
             Livewire::test(CreateProject::class)
-                ->set('title', 'Forged')
-                ->set('description', 'Handyverbot an Schulen?')
+                ->set('form.title', 'Forged')
+                ->set('form.description', 'Handyverbot an Schulen?')
                 ->set('tagSelection', [$this->condition->id => (string) $this->gender->values()->first()->id])
                 ->call('save');
         } finally {
@@ -243,7 +243,7 @@ class TagFieldsTest extends TestCase
 
         try {
             Livewire::test(EditProject::class, ['project' => $project])
-                ->set('title', 'Neu')
+                ->set('form.title', 'Neu')
                 ->set('tagSelection', [$this->condition->id => (string) $this->female->id])
                 ->call('save');
             $this->fail('A forged value must be refused.');

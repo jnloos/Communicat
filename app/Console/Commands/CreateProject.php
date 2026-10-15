@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Actions\Projects\OpenProject;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Models\Expert;
 use App\Models\Project;
@@ -30,7 +31,7 @@ class CreateProject extends Command
 
     protected $description = 'Create a discussion project with its pipeline, model, seat order and seed.';
 
-    public function handle(PipelineRegistry $pipelines): int
+    public function handle(PipelineRegistry $pipelines, OpenProject $openProject): int
     {
         if (! $this->optionsAreValid()) {
             return self::FAILURE;
@@ -66,28 +67,14 @@ class CreateProject extends Command
             return self::FAILURE;
         }
 
-        $project = Project::create(array_filter([
+        $project = $openProject->handle($owner, array_filter([
             'title' => $this->argument('title'),
             'description' => trim($this->option('description')),
-            'user_id' => $owner->id,
             'pipeline' => $pipeline,
             'model' => $model,
             'turn_budget' => $this->option('turns') === null ? null : (int) $this->option('turns'),
             'seed' => $this->option('seed') === null ? null : (int) $this->option('seed'),
-        ], fn ($value) => $value !== null));
-
-        // Owning a project is not the same as being in it: the sidebar lists
-        // projects through the contributor pivot, so without this the project
-        // exists, is reachable by URL, and appears nowhere.
-        $project->addContributingUser($owner);
-
-        foreach ($experts as $expert) {
-            $project->addContributingExpert($expert);
-        }
-
-        // The same opening notice the UI writes. It carries no sender, so
-        // participantMessages() leaves it out of every prompt and every count.
-        $project->addMessage(view('components.projects.welcome-message', ['project' => $project])->render());
+        ], fn ($value) => $value !== null), $experts);
 
         $this->info("Project {$project->id} created.");
         $this->table(['', ''], [

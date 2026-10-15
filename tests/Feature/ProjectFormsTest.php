@@ -21,13 +21,13 @@ class ProjectFormsTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(CreateProject::class)
-            ->assertSet('pipeline', 'RoundRobinPipeline')
-            ->set('title', 'KI an Schulen')
-            ->set('description', 'Sollen Schulen KI-Werkzeuge erlauben?')
-            ->set('provider', 'anthropic')
-            ->set('model', 'anthropic-opus-5')
-            ->set('summarizeThreshold', '30')
-            ->set('summarizeOldest', '10')
+            ->assertSet('form.pipeline', 'RoundRobinPipeline')
+            ->set('form.title', 'KI an Schulen')
+            ->set('form.description', 'Sollen Schulen KI-Werkzeuge erlauben?')
+            ->set('form.provider', 'anthropic')
+            ->set('form.model', 'anthropic-opus-5')
+            ->set('form.summarizeThreshold', '30')
+            ->set('form.summarizeOldest', '10')
             ->call('save')
             ->assertHasNoErrors();
 
@@ -47,12 +47,12 @@ class ProjectFormsTest extends TestCase
         $this->actingAs(User::factory()->create());
 
         Livewire::test(CreateProject::class)
-            ->set('title', 'x')
-            ->set('description', 'y')
-            ->set('pipeline', 'NopePipeline')
-            ->set('model', 'nope')
+            ->set('form.title', 'x')
+            ->set('form.description', 'y')
+            ->set('form.pipeline', 'NopePipeline')
+            ->set('form.model', 'nope')
             ->call('save')
-            ->assertHasErrors(['pipeline', 'model']);
+            ->assertHasErrors(['form.pipeline', 'form.model']);
     }
 
     public function test_creating_a_project_outside_a_request_needs_no_logged_in_user(): void
@@ -73,9 +73,9 @@ class ProjectFormsTest extends TestCase
         $project = Project::factory()->create(['user_id' => $owner->id, 'description' => 'Handyverbot an Schulen?']);
 
         Livewire::test(EditProject::class, ['project' => $project])
-            ->set('description', '')
+            ->set('form.description', '')
             ->call('save')
-            ->assertHasErrors(['description' => 'required']);
+            ->assertHasErrors(['form.description' => 'required']);
 
         $this->assertSame('Handyverbot an Schulen?', $project->fresh()->description);
     }
@@ -90,7 +90,7 @@ class ProjectFormsTest extends TestCase
         $project->update(['summarized_until_message_id' => $message->id]);
 
         Livewire::test(EditProject::class, ['project' => $project])
-            ->set('title', 'Neuer Titel')
+            ->set('form.title', 'Neuer Titel')
             ->call('save')
             ->assertHasNoErrors();
 
@@ -116,8 +116,8 @@ class ProjectFormsTest extends TestCase
 
         Livewire::test(EditProject::class, ['project' => $project])
             ->assertSet('runStarted', true)
-            ->set('provider', 'gemini')
-            ->set('model', 'gemini-3.8-flash')
+            ->set('form.provider', 'gemini')
+            ->set('form.model', 'gemini-3.8-flash')
             ->call('save')
             ->assertHasNoErrors();
 
@@ -146,7 +146,7 @@ class ProjectFormsTest extends TestCase
         ]);
 
         Livewire::test(EditProject::class, ['project' => $project])
-            ->set('title', 'Anderer Titel')
+            ->set('form.title', 'Anderer Titel')
             ->call('save')
             ->assertHasNoErrors();
 
@@ -168,9 +168,9 @@ class ProjectFormsTest extends TestCase
         ]);
 
         Livewire::test(EditProject::class, ['project' => $project])
-            ->set('pipeline', 'RoundRobinPipeline')
-            ->set('provider', 'gemini')
-            ->set('model', 'gemini-3.8-flash')
+            ->set('form.pipeline', 'RoundRobinPipeline')
+            ->set('form.provider', 'gemini')
+            ->set('form.model', 'gemini-3.8-flash')
             ->call('save')
             ->assertHasNoErrors();
 
@@ -195,13 +195,13 @@ class ProjectFormsTest extends TestCase
         ]);
 
         Livewire::test(EditProject::class, ['project' => $project])
-            ->set('provider', 'gemini')
-            ->set('model', 'gemini-3.8-flash')
+            ->set('form.provider', 'gemini')
+            ->set('form.model', 'gemini-3.8-flash')
             ->call('save');
 
         Livewire::test(EditProject::class, ['project' => $project->fresh()])
-            ->set('provider', 'anthropic')
-            ->set('model', 'anthropic-opus-5')
+            ->set('form.provider', 'anthropic')
+            ->set('form.model', 'anthropic-opus-5')
             ->call('save');
 
         $changes = $project->fresh()->run_config['changes'];
@@ -218,21 +218,21 @@ class ProjectFormsTest extends TestCase
         $project = Project::factory()->create(['user_id' => $owner->id]);
 
         Livewire::test(EditProject::class, ['project' => $project])
-            ->set('summarizeThreshold', '20')
-            ->set('summarizeOldest', '20')
+            ->set('form.summarizeThreshold', '20')
+            ->set('form.summarizeOldest', '20')
             ->call('save')
-            ->assertHasErrors(['summarizeOldest' => 'lt']);
+            ->assertHasErrors(['form.summarizeOldest' => 'lt']);
 
         Livewire::test(EditProject::class, ['project' => $project])
-            ->set('summarizeThreshold', '1')
-            ->set('summarizeOldest', '0')
+            ->set('form.summarizeThreshold', '1')
+            ->set('form.summarizeOldest', '0')
             ->call('save')
-            ->assertHasErrors(['summarizeThreshold' => 'min', 'summarizeOldest' => 'min']);
+            ->assertHasErrors(['form.summarizeThreshold' => 'min', 'form.summarizeOldest' => 'min']);
 
         Livewire::test(EditProject::class, ['project' => $project])
-            ->set('summarizeThreshold', 'viele')
+            ->set('form.summarizeThreshold', 'viele')
             ->call('save')
-            ->assertHasErrors(['summarizeThreshold' => 'integer']);
+            ->assertHasErrors(['form.summarizeThreshold' => 'integer']);
 
         $this->assertNull($project->fresh()->summarize_threshold);
     }
@@ -245,10 +245,10 @@ class ProjectFormsTest extends TestCase
         $project = Project::factory()->create(['user_id' => $owner->id]);
 
         Livewire::test(EditProject::class, ['project' => $project])
-            ->assertSet('summarizeThreshold', (string) config('discussion.summarize_threshold'))
-            ->assertSet('summarizeOldest', (string) config('discussion.summarize_oldest'))
-            ->set('summarizeThreshold', '60')
-            ->set('summarizeOldest', '30')
+            ->assertSet('form.summarizeThreshold', (string) config('discussion.summarize_threshold'))
+            ->assertSet('form.summarizeOldest', (string) config('discussion.summarize_oldest'))
+            ->set('form.summarizeThreshold', '60')
+            ->set('form.summarizeOldest', '30')
             ->call('save')
             ->assertHasNoErrors();
 
@@ -268,8 +268,8 @@ class ProjectFormsTest extends TestCase
 
         Livewire::test(EditProject::class, ['project' => $project])
             ->assertSet('runStarted', false)
-            ->set('provider', 'gemini')
-            ->set('model', 'gemini-3.8-flash')
+            ->set('form.provider', 'gemini')
+            ->set('form.model', 'gemini-3.8-flash')
             ->call('save')
             ->assertHasNoErrors();
 
@@ -296,7 +296,7 @@ class ProjectFormsTest extends TestCase
         JobLog::create(['job_class' => 'X', 'project_id' => $project->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => 3]);
 
         Livewire::test(EditProject::class, ['project' => $project])
-            ->set('summarizeThreshold', '60')
+            ->set('form.summarizeThreshold', '60')
             ->call('save')
             ->assertHasNoErrors();
 
@@ -348,10 +348,10 @@ class ProjectFormsTest extends TestCase
         // The form opens on the configured default, whichever that currently is --
         // naming it here would tie this test to an unrelated config change.
         Livewire::test(CreateProject::class)
-            ->assertSet('provider', 'openai')
-            ->assertSet('model', config('ai.default_model'))
-            ->set('provider', 'gemini')
-            ->assertSet('model', 'gemini-3.8-flash');
+            ->assertSet('form.provider', 'openai')
+            ->assertSet('form.model', config('ai.default_model'))
+            ->set('form.provider', 'gemini')
+            ->assertSet('form.model', 'gemini-3.8-flash');
     }
 
     public function test_a_model_that_does_not_belong_to_the_chosen_provider_is_rejected(): void
@@ -363,11 +363,11 @@ class ProjectFormsTest extends TestCase
         // validation checks the model against its provider's own entries, so the
         // project cannot end up claiming a provider it does not run on.
         Livewire::test(CreateProject::class)
-            ->set('title', 'Titel')
-            ->set('description', 'Beschreibung')
-            ->set('provider', 'openai')
-            ->set('model', 'gemini-3.8-flash')
+            ->set('form.title', 'Titel')
+            ->set('form.description', 'Beschreibung')
+            ->set('form.provider', 'openai')
+            ->set('form.model', 'gemini-3.8-flash')
             ->call('save')
-            ->assertHasErrors('model');
+            ->assertHasErrors('form.model');
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Projects;
 
+use App\Actions\Projects\DeleteProject;
 use App\Discussion\Values\TagFilter;
 use App\Discussion\Values\TagFilterMode;
 use App\Livewire\Concerns\FiltersByTags;
@@ -13,7 +14,6 @@ use App\Models\TagScope;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Authorize;
 use Livewire\Attributes\Locked;
@@ -210,12 +210,11 @@ class ProjectNavigation extends Component
         $this->authorize('delete', $project);
         $wasOpen = $this->currentProjectId === $project->id;
 
-        $project->delete();
+        app(DeleteProject::class)->handle($project);
 
         // Only the project the page is showing takes the user with it; deleting
         // one from the list while reading another must not move them.
         if ($wasOpen) {
-            Cookie::expire('curr_project');
             $this->currentProjectId = null;
             $this->redirectRoute('dashboard');
         }

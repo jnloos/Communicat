@@ -2,22 +2,21 @@
 
 namespace App\Livewire\Projects;
 
+use App\Actions\Projects\DeleteProject;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Values\ModelConfig;
 use App\Livewire\Concerns\NeedsConfirmation;
+use App\Livewire\Forms\ProjectForm;
 use App\Models\JobLog;
 use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
 use Flux\Flux;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
-use Livewire\Attributes\Validate;
 use Livewire\Component;
 
 class EditProject extends Component
@@ -27,23 +26,7 @@ class EditProject extends Component
     #[Locked]
     public int $forProjectId;
 
-    #[Validate('required|string|max:255')]
-    public string $title = '';
-
-    #[Validate('required|string')]
-    public string $description = '';
-
-    public string $pipeline = '';
-
-    public string $model = '';
-
-    /** UI state only: the provider filters the model dropdown and is never stored. */
-    public string $provider = '';
-
-    /** Free-typed suggestions, so both are kept as text and cast when saved. */
-    public string $summarizeThreshold = '';
-
-    public string $summarizeOldest = '';
+    public ProjectForm $form;
 
     /** @var array<int|string, int|string|null> bound by x-tags.fields; category id => value id */
     public array $tagSelection = [];
@@ -54,13 +37,7 @@ class EditProject extends Component
     public function mount(Project $project): void
     {
         $this->forProjectId = $project->id;
-        $this->title = $project->title;
-        $this->description = $project->description;
-        $this->pipeline = $project->pipeline;
-        $this->model = $project->model;
-        $this->provider = ModelConfig::fromConfig($project->model)->provider;
-        $this->summarizeThreshold = (string) $project->summarizeThreshold();
-        $this->summarizeOldest = (string) $project->summarizeOldest();
+        $this->form->fillFrom($project);
         $this->runStarted = $project->run_config !== null;
         $this->tagSelection = $project->tagSelection();
     }
@@ -71,40 +48,15 @@ class EditProject extends Component
         Flux::modal('edit-project')->show();
     }
 
-    protected function rules(): array
-    {
-        return [
-            'pipeline' => ['required', Rule::in(array_keys(app(PipelineRegistry::class)->options()))],
-            'provider' => ['required', Rule::in(array_keys(ModelConfig::providers()))],
-            // Against the provider's own models, so a forged request cannot pair
-            // a model with a provider it does not belong to.
-            'model' => ['required', Rule::in(array_keys(ModelConfig::optionsFor($this->provider)))],
-            'summarizeThreshold' => ['required', 'integer', 'min:2'],
-            // Folding every pending message would leave no verbatim history at all.
-            'summarizeOldest' => ['required', 'integer', 'min:1', 'lt:summarizeThreshold'],
-        ];
-    }
-
-    /** A new provider invalidates the chosen model: move to its first one. */
-    public function updatedProvider(): void
-    {
-        $this->model = (string) array_key_first(ModelConfig::optionsFor($this->provider));
-    }
-
     public function save(): void
     {
         $project = Project::findOrFail($this->forProjectId);
         Gate::authorize('update', $project);
-        $this->validate();
+        $this->form->validate();
+        $attributes = $this->form->attributes();
 
-        $this->noteRunConfigChanges($project);
-
-        $project->title = $this->title;
-        $project->description = $this->description;
-        $project->pipeline = $this->pipeline;
-        $project->model = $this->model;
-        $project->summarize_threshold = (int) $this->summarizeThreshold;
-        $project->summarize_oldest = (int) $this->summarizeOldest;
+        $this->noteRunConfigChanges($project, $attributes);
+        $project->fill($attributes);
 
         // One transaction, so a forged tag value leaves the project as it was.
         DB::transaction(function () use ($project) {
@@ -121,7 +73,7 @@ class EditProject extends Component
      * summarization numbers all stay editable, so a change mid-run would make that
      * snapshot claim a condition that no longer holds: append one entry per change
      * instead, naming the turn it took effect after. Called before the new values
-     * are assigned.
+     * are assigned, with the form's attributes() as $attributes.
      *
      * The summarization numbers are the ones that truly depend on this entry. The
      * model leaves a trail in prompt_logs.config on every single call and the
@@ -135,18 +87,20 @@ class EditProject extends Component
      * after_turn is the highest turn index that exists when the change is saved. A
      * turn still running may pick the new values up, so read it as "from this turn
      * onwards", not "strictly after it".
+     *
+     * @param  array<string, mixed>  $attributes
      */
-    private function noteRunConfigChanges(Project $project): void
+    private function noteRunConfigChanges(Project $project, array $attributes): void
     {
         if ($project->run_config === null) {
             return;
         }
 
         $fields = [
-            'pipeline' => [$project->pipeline, $this->pipeline],
-            'model' => [$project->model, $this->model],
-            'summarize_threshold' => [$project->summarizeThreshold(), (int) $this->summarizeThreshold],
-            'summarize_oldest' => [$project->summarizeOldest(), (int) $this->summarizeOldest],
+            'pipeline' => [$project->pipeline, $attributes['pipeline']],
+            'model' => [$project->model, $attributes['model']],
+            'summarize_threshold' => [$project->summarizeThreshold(), $attributes['summarize_threshold']],
+            'summarize_oldest' => [$project->summarizeOldest(), $attributes['summarize_oldest']],
         ];
 
         $changed = array_filter($fields, fn (array $pair) => $pair[0] !== $pair[1]);
@@ -174,8 +128,7 @@ class EditProject extends Component
     {
         $project = Project::findOrFail($this->forProjectId);
         Gate::authorize('delete', $project);
-        $project->delete();
-        Cookie::expire('curr_project');
+        app(DeleteProject::class)->handle($project);
         Flux::modal('edit-project')->close();
         $this->redirectRoute('dashboard');
     }
@@ -185,7 +138,7 @@ class EditProject extends Component
         return view('livewire.projects.edit-project', [
             'pipelines' => app(PipelineRegistry::class)->options(),
             'providers' => ModelConfig::providers(),
-            'models' => ModelConfig::optionsFor($this->provider),
+            'models' => ModelConfig::optionsFor($this->form->provider),
             'tagCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
             'chosenTags' => TagValue::chosenIn(TagScope::Project, $this->tagSelection),
             'savedTags' => Project::findOrFail($this->forProjectId)->tagValues()->with('category')->get(),
