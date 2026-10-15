@@ -7,6 +7,7 @@ use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Pipelines\TurnPipeline;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\Support\TextLength;
+use App\Discussion\Values\JobStatus;
 use App\Discussion\Values\ModelConfig;
 use App\Discussion\Values\TurnResult;
 use App\Events\JobLogged;
@@ -52,7 +53,7 @@ class TurnRunner
         $log = JobLog::create([
             'job_class' => static::class,
             'project_id' => $project->id,
-            'status' => 'running',
+            'status' => JobStatus::Running,
             'started_at' => now(),
             'turn_index' => (int) JobLog::where('project_id', $project->id)->max('turn_index') + 1,
         ]);
@@ -65,12 +66,12 @@ class TurnRunner
         } catch (Throwable $e) {
             Log::error(sprintf('Turn %d of project %d failed: %s', $log->turn_index, $project->id, $e->getMessage()), ['exception' => $e]);
 
-            $this->finish($log, $payload, 'failed', class_basename($e).': '.$e->getMessage());
+            $this->finish($log, $payload, JobStatus::Failed, class_basename($e).': '.$e->getMessage());
 
             return TurnResult::stop('failed');
         }
 
-        $this->finish($log, $payload, 'success', null);
+        $this->finish($log, $payload, JobStatus::Success, null);
 
         return $payload->stop ? TurnResult::stop((string) $payload->reason) : TurnResult::proceed();
     }
@@ -123,7 +124,7 @@ class TurnRunner
         $project->save();
     }
 
-    private function finish(JobLog $log, TurnPayload $payload, string $status, ?string $error): void
+    private function finish(JobLog $log, TurnPayload $payload, JobStatus $status, ?string $error): void
     {
         $log->update(['status' => $status, 'finished_at' => now(), 'error' => $error] + $this->measure($payload));
 

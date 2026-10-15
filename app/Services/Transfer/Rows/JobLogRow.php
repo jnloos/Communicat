@@ -2,6 +2,7 @@
 
 namespace App\Services\Transfer\Rows;
 
+use App\Discussion\Values\JobStatus;
 use App\Models\JobLog;
 use App\Services\Transfer\ExpertRenumbering;
 use Closure;
@@ -30,7 +31,7 @@ final class JobLogRow
         return [
             'key' => $job->id,
             'job_class' => $job->job_class,
-            'status' => $job->status,
+            'status' => $job->status?->value,
             'payload' => $job->payload,
             'turn_index' => $job->turn_index,
             'expert' => $uuid($job->expert_id),
@@ -55,7 +56,7 @@ final class JobLogRow
         return [
             'project_id' => $projectId,
             'job_class' => (string) ($job['job_class'] ?? ''),
-            'status' => (string) ($job['status'] ?? 'failed'),
+            'status' => JobStatus::from($job['status'] ?? JobStatus::Failed->value),
             'payload' => $job['payload'] ?? null,
             'turn_index' => $job['turn_index'] ?? null,
             'expert_id' => $expert($job['expert'] ?? null),

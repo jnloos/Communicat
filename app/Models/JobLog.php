@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Discussion\Values\JobStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,6 +16,7 @@ class JobLog extends Model
     ];
 
     protected $casts = [
+        'status' => JobStatus::class,
         'payload' => 'array',
         'selection' => 'array',
         'started_at' => 'datetime',

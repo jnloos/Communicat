@@ -260,7 +260,7 @@ final class StudyExport
         return [
             'run_uuid' => $run->uuid,
             'turn_index' => $job->turn_index,
-            'status' => $job->status,
+            'status' => $job->status->value,
             'spoken' => $job->words === null ? 0 : 1,
             'expert_uuid' => $this->uuidOf($expertUuids, $job->expert_id),
             'seat' => $job->seat,

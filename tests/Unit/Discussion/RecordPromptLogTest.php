@@ -5,7 +5,9 @@ namespace Tests\Unit\Discussion;
 use App\Discussion\Agents\SpeakAgent;
 use App\Discussion\Agents\StudyAgent;
 use App\Discussion\Logging\RecordPromptLog;
+use App\Discussion\Values\CallStatus;
 use App\Discussion\Values\ModelConfig;
+use App\Discussion\Values\Purpose;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\PromptLog;
@@ -42,13 +44,13 @@ class RecordPromptLogTest extends TestCase
         $row = PromptLog::sole();
 
         $this->assertSame($log->id, $row->job_log_id);
-        $this->assertSame('speak', $row->purpose);
+        $this->assertSame(Purpose::Speak, $row->purpose);
         $this->assertSame($expert->id, $row->expert_id);
         $this->assertSame("speak:{$expert->id}", $row->label);
         $this->assertSame('Der gerenderte Prompt', $row->prompt);
         $this->assertSame('Antwort', $row->response);
         $this->assertSame('Gedanke', $row->reasoning);
-        $this->assertSame('ok', $row->status);
+        $this->assertSame(CallStatus::Ok, $row->status);
         $this->assertNull($row->error);
         $this->assertSame('probe-model', $row->model);
         $this->assertSame('probe-model-001', $row->checkpoint);
@@ -69,7 +71,7 @@ class RecordPromptLogTest extends TestCase
 
         $row = PromptLog::sole();
 
-        $this->assertSame('ok', $row->status);
+        $this->assertSame(CallStatus::Ok, $row->status);
         $this->assertNull($row->tokens_reasoning);
     }
 
@@ -83,7 +85,7 @@ class RecordPromptLogTest extends TestCase
 
         $row = PromptLog::sole();
 
-        $this->assertSame('failed', $row->status);
+        $this->assertSame(CallStatus::Failed, $row->status);
         $this->assertStringContainsString('overloaded', $row->error);
         $this->assertSame('', $row->response);
         $this->assertNull($row->tokens_in);
@@ -101,7 +103,7 @@ class RecordPromptLogTest extends TestCase
 
         $row = PromptLog::sole();
 
-        $this->assertSame('failed', $row->status);
+        $this->assertSame(CallStatus::Failed, $row->status);
         $this->assertStringContainsString('no provider left', $row->error);
         $this->assertSame('', $row->response);
     }
@@ -118,7 +120,7 @@ class RecordPromptLogTest extends TestCase
 
         $row = PromptLog::sole();
 
-        $this->assertSame('failed', $row->status);
+        $this->assertSame(CallStatus::Failed, $row->status);
         $this->assertNotNull($row->error);
         $this->assertSame(11, $row->tokens_in);
         $this->assertSame(22, $row->tokens_out);
@@ -137,7 +139,7 @@ class RecordPromptLogTest extends TestCase
 
         $row = PromptLog::sole();
 
-        $this->assertSame('failed', $row->status);
+        $this->assertSame(CallStatus::Failed, $row->status);
         $this->assertNotNull($row->error);
         $this->assertSame(11, $row->tokens_in);
         $this->assertSame(22, $row->tokens_out);

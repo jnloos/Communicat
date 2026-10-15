@@ -36,7 +36,7 @@
                     <flux:table.cell variant="strong" class="font-mono">
                         <span class="flex items-center gap-2">
                             {{ $call->label ?? '–' }}
-                            @if ($call->status === 'failed')
+                            @if ($call->status === \App\Discussion\Values\CallStatus::Failed)
                                 <flux:badge size="sm" color="red">{{ __('debug.status.failed') }}</flux:badge>
                             @endif
                         </span>
@@ -67,7 +67,7 @@
                                 @endif
                             </div>
                             <div>
-                                @if ($call->status === 'failed')
+                                @if ($call->status === \App\Discussion\Values\CallStatus::Failed)
                                     <flux:heading size="sm" class="mb-1 text-red-600! dark:text-red-400!">{{ __('debug.detail.error') }}</flux:heading>
                                     <pre class="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-xs text-red-700 dark:text-red-300">{{ $call->error }}</pre>
                                 @else

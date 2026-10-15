@@ -2,6 +2,8 @@
 
 namespace App\Services\Transfer\Rows;
 
+use App\Discussion\Values\CallStatus;
+use App\Discussion\Values\Purpose;
 use App\Models\PromptLog;
 use Closure;
 
@@ -35,13 +37,13 @@ final class PromptLogRow
             'provider' => $log->provider,
             'checkpoint' => $log->checkpoint,
             'config' => $log->config,
-            'purpose' => $log->purpose,
+            'purpose' => $log->purpose?->value,
             'expert' => $uuid($log->expert_id),
             'reasoning' => $log->reasoning,
             'tokens_in' => $log->tokens_in,
             'tokens_out' => $log->tokens_out,
             'tokens_reasoning' => $log->tokens_reasoning,
-            'status' => $log->status,
+            'status' => $log->status?->value,
             'error' => $log->error,
             'created_at' => Timestamp::export($log->created_at),
         ];
@@ -60,13 +62,13 @@ final class PromptLogRow
             'provider' => $prompt['provider'] ?? null,
             'checkpoint' => $prompt['checkpoint'] ?? null,
             'config' => $prompt['config'] ?? null,
-            'purpose' => $prompt['purpose'] ?? null,
+            'purpose' => isset($prompt['purpose']) ? Purpose::from($prompt['purpose']) : null,
             'expert_id' => $expert($prompt['expert'] ?? null),
             'reasoning' => $prompt['reasoning'] ?? null,
             'tokens_in' => $prompt['tokens_in'] ?? null,
             'tokens_out' => $prompt['tokens_out'] ?? null,
             'tokens_reasoning' => $prompt['tokens_reasoning'] ?? null,
-            'status' => (string) ($prompt['status'] ?? 'ok'),
+            'status' => CallStatus::from($prompt['status'] ?? CallStatus::Ok->value),
             'error' => $prompt['error'] ?? null,
             'created_at' => Timestamp::import($prompt['created_at'] ?? null) ?? now(),
         ];

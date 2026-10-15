@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Discussion\Values\CallStatus;
+use App\Discussion\Values\Purpose;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +16,11 @@ class PromptLog extends Model
         'tokens_in', 'tokens_out', 'tokens_reasoning', 'status', 'error',
     ];
 
-    protected $casts = ['config' => 'array'];
+    protected $casts = [
+        'config' => 'array',
+        'purpose' => Purpose::class,
+        'status' => CallStatus::class,
+    ];
 
     public function jobLog(): BelongsTo
     {

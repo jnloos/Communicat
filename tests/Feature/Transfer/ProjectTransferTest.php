@@ -3,6 +3,9 @@
 namespace Tests\Feature\Transfer;
 
 use App\Discussion\Metrics\SpeakingShares;
+use App\Discussion\Values\CallStatus;
+use App\Discussion\Values\JobStatus;
+use App\Discussion\Values\Purpose;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Message;
@@ -74,6 +77,40 @@ class ProjectTransferTest extends TestCase
         $this->assertSame(['status condition' => 'status'], $data['tags']);
         $this->assertSame($this->normalise($data), $this->normalise((new ProjectTransfer)->export($copy)));
         $this->assertSame(2, $sharesBefore->spokenTurns);
+    }
+
+    public function test_statuses_and_purposes_travel_as_strings_and_come_back_as_enums(): void
+    {
+        $owner = User::factory()->create();
+        $source = $this->studyRun($owner);
+        $data = (new ProjectTransfer)->export($source);
+        $source->delete();
+
+        $this->assertSame(['success', 'failed'], array_column($data['jobs'], 'status'));
+        $this->assertSame('ok', $data['jobs'][0]['prompts'][0]['status']);
+        $this->assertSame('think', $data['jobs'][0]['prompts'][0]['purpose']);
+
+        $copy = (new ProjectTransfer)->import(json_decode(json_encode($data), true), $owner, new ImportReport);
+
+        $this->assertSame([JobStatus::Success, JobStatus::Failed], JobLog::where('project_id', $copy->id)->orderBy('turn_index')->pluck('status')->all());
+        $call = PromptLog::whereHas('jobLog', fn ($q) => $q->where('project_id', $copy->id))->sole();
+        $this->assertSame(CallStatus::Ok, $call->status);
+        $this->assertSame(Purpose::Think, $call->purpose);
+    }
+
+    public function test_an_unknown_status_fails_the_project_and_writes_nothing(): void
+    {
+        $owner = User::factory()->create();
+        $source = $this->studyRun($owner);
+        $data = (new ProjectTransfer)->export($source);
+        $source->delete();
+        $data['jobs'][0]['status'] = 'done';
+
+        $report = new ImportReport;
+
+        $this->assertNull((new ProjectTransfer)->import($data, $owner, $report));
+        $this->assertSame(1, $report->count(ImportReport::PROJECTS, ImportReport::FAILED));
+        $this->assertSame(0, JobLog::count());
     }
 
     /** Local keys are per file: compare them by position, everything else verbatim. */

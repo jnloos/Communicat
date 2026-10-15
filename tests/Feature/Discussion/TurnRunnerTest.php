@@ -7,6 +7,7 @@ use App\Discussion\Agents\SummarizeAgent;
 use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\MissingTopic;
 use App\Discussion\TurnRunner;
+use App\Discussion\Values\JobStatus;
 use App\Events\JobLogged;
 use App\Events\PipelineStageChanged;
 use App\Models\Expert;
@@ -80,7 +81,7 @@ class TurnRunnerTest extends TestCase
         $this->assertSame('Alice antwortet kurz.', $message->content);
 
         $log = JobLog::sole();
-        $this->assertSame('success', $log->status);
+        $this->assertSame(JobStatus::Success, $log->status);
         $this->assertSame(1, $log->turn_index);
         $this->assertSame($this->experts[0]->id, $log->expert_id);
         $this->assertSame(1, $log->seat);
@@ -126,7 +127,7 @@ class TurnRunnerTest extends TestCase
         $this->assertSame('failed', $result->reason);
 
         $log = JobLog::sole();
-        $this->assertSame('failed', $log->status);
+        $this->assertSame(JobStatus::Failed, $log->status);
         $this->assertStringContainsString('verweigert', $log->error);
         $this->assertSame($this->experts[0]->id, $log->expert_id);
         $this->assertNull($log->words);
@@ -194,7 +195,7 @@ class TurnRunnerTest extends TestCase
         $this->assertSame('failed', $result->reason);
 
         $log = JobLog::sole();
-        $this->assertSame('failed', $log->status);
+        $this->assertSame(JobStatus::Failed, $log->status);
         $this->assertNotNull($log->words);
         $this->assertStringContainsString('Zusammenfassung nicht erreichbar', $log->error);
         $this->assertSame('Alice antwortet kurz.', Message::whereNotNull('expert_id')->latest('id')->first()->content);

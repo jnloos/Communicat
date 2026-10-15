@@ -9,6 +9,7 @@ use App\Discussion\Agents\SummarizeAgent;
 use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\TurnRunner;
+use App\Discussion\Values\JobStatus;
 use App\Events\JobLogged;
 use App\Events\PipelineStageChanged;
 use App\Models\Expert;
@@ -94,7 +95,7 @@ class PipelineSmokeTest extends TestCase
 
         $this->assertSame(2, Message::where('project_id', $project->id)->whereNotNull('expert_id')->count());
         $this->assertSame(
-            ['success', 'success'],
+            [JobStatus::Success, JobStatus::Success],
             JobLog::where('project_id', $project->id)->orderBy('id')->pluck('status')->all(),
         );
         $this->assertGreaterThan(0, JobLog::where('project_id', $project->id)->min('words'));

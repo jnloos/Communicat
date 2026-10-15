@@ -45,7 +45,7 @@ class JobLogged implements ShouldBroadcast
             'id' => $this->log->id,
             'job_class' => $this->log->job_class,
             'project_id' => $this->log->project_id,
-            'status' => $this->log->status,
+            'status' => $this->log->status->value,
             'started_at' => $this->log->started_at?->toISOString(),
             'finished_at' => $this->log->finished_at?->toISOString(),
             'duration' => $this->log->duration(),

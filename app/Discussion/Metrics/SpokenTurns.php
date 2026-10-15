@@ -2,6 +2,7 @@
 
 namespace App\Discussion\Metrics;
 
+use App\Discussion\Values\JobStatus;
 use App\Discussion\Values\TurnRange;
 use App\Models\Expert;
 use App\Models\JobLog;
@@ -126,7 +127,7 @@ class SpokenTurns
     public function failedWithoutSpeaking(Project $project): int
     {
         return JobLog::where('project_id', $project->id)
-            ->where('status', 'failed')
+            ->where('status', JobStatus::Failed)
             ->whereNull('words')
             ->count();
     }

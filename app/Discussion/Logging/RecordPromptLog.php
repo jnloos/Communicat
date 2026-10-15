@@ -3,6 +3,7 @@
 namespace App\Discussion\Logging;
 
 use App\Discussion\Agents\StudyAgent;
+use App\Discussion\Values\CallStatus;
 use App\Models\PromptLog;
 use Laravel\Ai\Events\AgentFailed;
 use Laravel\Ai\Events\PromptingAgent;
@@ -50,7 +51,7 @@ class RecordPromptLog
             'tokens_out' => $event->response->usage->outputTokens,
             'tokens_reasoning' => $event->response->usage->reasoningTokens,
             'latency_ms' => (int) $event->time,
-            'status' => $rejection === null ? 'ok' : 'failed',
+            'status' => $rejection === null ? CallStatus::Ok : CallStatus::Failed,
             'error' => $rejection,
         ]);
     }
@@ -70,7 +71,7 @@ class RecordPromptLog
         $this->write($event->agent, $prompt, [
             'response' => '',
             'latency_ms' => (int) $event->time,
-            'status' => 'failed',
+            'status' => CallStatus::Failed,
             'error' => $this->describe($event->exception),
         ]);
     }
@@ -86,7 +87,7 @@ class RecordPromptLog
 
         $this->write($agent, $this->take($event->invocationId), [
             'response' => '',
-            'status' => 'failed',
+            'status' => CallStatus::Failed,
             'error' => $this->describe($event->exception),
         ]);
     }
@@ -101,13 +102,13 @@ class RecordPromptLog
 
     private function write(StudyAgent $agent, string $prompt, array $outcome): void
     {
-        $purpose = $agent->purpose()->value;
+        $purpose = $agent->purpose();
 
         PromptLog::create([
             'job_log_id' => $agent->jobLogId,
             'purpose' => $purpose,
             'expert_id' => $agent->expertId,
-            'label' => $agent->expertId === null ? $purpose : "{$purpose}:{$agent->expertId}",
+            'label' => $agent->expertId === null ? $purpose->value : "{$purpose->value}:{$agent->expertId}",
             'provider' => $agent->model->provider,
             'model' => $agent->model->model,
             'config' => $agent->model->toArray(),
