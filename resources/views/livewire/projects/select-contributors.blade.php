@@ -1,4 +1,4 @@
-<flux:modal name="select-contributors" variant="flyout" class="w-full p-5! sm:p-8! md:w-[32rem]">
+<x-flyout name="select-contributors" width="32rem" :flex="false">
     <x-modal-header
         :heading="__('projects.contributors.heading')"
         :subheading="trans_choice('projects.contributors.subheading', $expertLimit)"
@@ -87,4 +87,4 @@
             </flux:tab.panel>
         @endif
     </flux:tab.group>
-</flux:modal>
+</x-flyout>

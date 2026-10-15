@@ -1,7 +1,7 @@
 @use('App\Discussion\Support\LocaleNumber')
 
 <div>
-    <flux:modal :name="\App\Livewire\Projects\StatisticsFlyout::MODAL" variant="flyout" class="flex w-full flex-col p-5! sm:p-8! md:w-[720px]">
+    <x-flyout :name="\App\Livewire\Projects\StatisticsFlyout::MODAL" width="720px">
         <x-modal-header :heading="__('statistics.title')" :subheading="__('statistics.subheading')" />
 
         <div class="mt-6 flex-1 overflow-y-auto">
@@ -127,5 +127,5 @@
                 </flux:table>
             @endif
         </div>
-    </flux:modal>
+    </x-flyout>
 </div>

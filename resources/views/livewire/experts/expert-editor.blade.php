@@ -1,4 +1,4 @@
-<flux:modal name="edit-expert" variant="flyout" class="flex w-full flex-col p-5! sm:p-8! md:w-[40rem]">
+<x-flyout name="edit-expert" width="40rem">
     <form wire:submit.prevent="save" class="flex flex-1 flex-col gap-6">
         <x-modal-header
             :heading="! $mayEdit ? __('experts.editor.view') : ($isUpdate ? __('experts.editor.update') : __('experts.editor.create'))"
@@ -8,9 +8,7 @@
                 {{-- What this modal does to the expert, as opposed to what the form does. --}}
                 <x-slot:actions>
                     <flux:dropdown position="bottom" align="end">
-                        <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal"
-                            :aria-label="__('common.actions.more')"
-                            class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"/>
+                        <x-more-button size="sm" />
                         <flux:menu>
                             <flux:menu.item icon="arrow-down-tray" href="{{ route('experts.export', $expertId) }}">
                                 {{ __('transfer.actions.export') }}
@@ -90,4 +88,4 @@
             @endif
         </x-modal-footer>
     </form>
-</flux:modal>
+</x-flyout>

@@ -1,13 +1,11 @@
-<flux:modal name="edit-project" variant="flyout" class="flex w-full flex-col p-5! sm:p-8! md:w-[32rem]">
+<x-flyout name="edit-project" width="32rem">
     <div class="flex flex-1 flex-col gap-6">
         <x-modal-header :heading="__('projects.edit.heading')" :subheading="__('projects.edit.subheading')">
             {{-- What this modal does to the project, as opposed to what the form
                  does: keeps the footer to cancel and save, like every other modal. --}}
             <x-slot:actions>
                 <flux:dropdown position="bottom" align="end">
-                    <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal"
-                        :aria-label="__('common.actions.more')"
-                        class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"/>
+                    <x-more-button size="sm" />
                     <flux:menu>
                         <flux:menu.item icon="arrow-down-tray"
                             href="{{ route('project.export', $forProjectId) }}">
@@ -49,4 +47,4 @@
             </x-modal-footer>
         </form>
     </div>
-</flux:modal>
+</x-flyout>

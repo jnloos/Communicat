@@ -11,13 +11,7 @@
      groups and the saved questions: rename, move up/down (the keyboard and
      touch way to sort, WCAG 2.5.7), and delete as the only red. --}}
 <flux:dropdown position="bottom" align="end">
-    <flux:button
-        variant="ghost"
-        size="xs"
-        icon="ellipsis-horizontal"
-        :aria-label="$label"
-        class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"
-    />
+    <x-more-button :label="$label" />
 
     <flux:menu>
         <flux:menu.item icon="pencil-square" wire:click="{{ $rename }}">{{ __('tags.actions.rename') }}</flux:menu.item>

@@ -1,6 +1,6 @@
 @props([
-    // 'flyout' for the full-height variants (p-5!/sm:p-8!), 'dialog' for the
-    // centred ones, which keep Flux's own p-6.
+    // 'flyout' inside x-flyout (whose p-5!/sm:p-8! it cancels), 'dialog' for
+    // the centred ones, which keep Flux's own p-6.
     'padding' => 'flyout',
 ])
 
@@ -18,8 +18,8 @@
     object — exporting, deleting — belongs in the overflow menu in its header,
     which is what keeps this footer identical everywhere.
 
-    mt-auto drops it to the floor wherever the modal is a flex column (see
-    edit-project) and is inert elsewhere — a centred modal is only as tall as
+    mt-auto drops it to the floor wherever the modal is a flex column (an
+    x-flyout by default) and is inert elsewhere — a centred modal is only as tall as
     its content anyway.
 
     The top border is the reason this is a component: on its own, mid-form, such

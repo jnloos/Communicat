@@ -25,7 +25,7 @@
 
 {{-- Every settings page shares this frame: the page header, then its own navigation and content. --}}
 <section class="mx-auto w-full max-w-6xl">
-    @include('partials.settings-heading')
+    <x-page-header :heading="__('settings.heading')" :subheading="__('settings.subheading')" class="mb-6" />
 
     <div class="flex items-start max-md:flex-col">
         {{-- Mobile: compact horizontal tabs instead of a tall vertical list --}}

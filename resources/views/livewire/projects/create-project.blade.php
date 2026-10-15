@@ -1,8 +1,5 @@
 <div class="mx-auto w-full max-w-2xl">
-    <div>
-        <flux:heading size="xl" level="1">{{ __('projects.create.heading') }}</flux:heading>
-        <flux:text class="mt-1">{{ __('projects.create.subheading') }}</flux:text>
-    </div>
+    <x-page-header :heading="__('projects.create.heading')" :subheading="__('projects.create.subheading')" />
 
     <flux:card class="mt-6 max-sm:border-0! max-sm:bg-transparent! max-sm:p-0! max-sm:shadow-none! sm:p-6!">
         <form wire:submit.prevent="save" class="space-y-6">

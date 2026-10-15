@@ -29,13 +29,7 @@
 
     <div class="absolute end-1 top-0 flex h-8 items-center opacity-0 transition-opacity has-[:focus-visible]:opacity-100 group-hover/navitem:opacity-100 has-[[data-open]]:opacity-100">
         <flux:dropdown position="bottom" align="start">
-            <flux:button
-                variant="ghost"
-                size="xs"
-                icon="ellipsis-horizontal"
-                :aria-label="__('groups.menus.project')"
-                class="text-zinc-400! hover:text-zinc-800! dark:text-zinc-500! dark:hover:text-white!"
-            />
+            <x-more-button :label="__('groups.menus.project')" />
 
             <flux:menu>
                 {{-- Zone 1: everyone who reads the project files it for themselves.

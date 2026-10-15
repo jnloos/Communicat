@@ -1,5 +1,5 @@
 <div>
-    <flux:modal name="expert-thoughts-flyout" variant="flyout" class="w-full p-5! sm:p-8! md:w-[560px]">
+    <x-flyout name="expert-thoughts-flyout" width="560px" :flex="false">
         @if ($expert)
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
@@ -29,5 +29,5 @@
         @else
             <flux:text class="py-8 text-center">{{ __('experts.memory.none_selected') }}</flux:text>
         @endif
-    </flux:modal>
+    </x-flyout>
 </div>

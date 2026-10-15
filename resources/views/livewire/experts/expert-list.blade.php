@@ -1,15 +1,13 @@
 <div class="mx-auto w-full max-w-6xl">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <flux:heading size="xl" level="1">{{ __('experts.list.heading') }}</flux:heading>
-            <flux:text class="mt-1">{{ trans_choice('experts.list.count', $experts->count()) }}</flux:text>
-        </div>
+    <x-page-header :heading="__('experts.list.heading')" :subheading="trans_choice('experts.list.count', $experts->count())" align="center">
         @can('create', App\Models\Expert::class)
-            <flux:button variant="primary" icon="plus" @click="$wire.dispatch('edit_expert')">
-                {{ __('experts.list.create') }}
-            </flux:button>
+            <x-slot:actions>
+                <flux:button variant="primary" icon="plus" @click="$wire.dispatch('edit_expert')">
+                    {{ __('experts.list.create') }}
+                </flux:button>
+            </x-slot:actions>
         @endcan
-    </div>
+    </x-page-header>
 
     <div class="my-6 space-y-5">
         <livewire:experts.expert-editor/>
