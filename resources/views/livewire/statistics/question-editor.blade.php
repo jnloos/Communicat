@@ -15,7 +15,7 @@
         @endunless
 
         <flux:dropdown position="bottom" align="end" class="shrink-0">
-            <flux:button variant="ghost" size="sm" icon="ellipsis-horizontal" :aria-label="__('common.actions.more')" />
+            <x-more-button size="sm" />
             <flux:menu>
                 <x-statistics.export-item :question-id="$questionId" />
                 @if ($mayManage)
@@ -58,164 +58,142 @@
 
     {{-- The question as one sentence. Each part is a button that opens a Flux menu; a template shows them disabled. --}}
     <flux:card size="sm" class="text-base">
-        {{-- Each connector word travels with the trigger it introduces and breaks only as a whole unit. --}}
         <div class="flex flex-wrap items-center gap-x-1.5 gap-y-2">
-        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
-        <x-statistics.chip :read-only="$readOnly" :label="$parts['metric']">
-            <flux:menu>
-                <flux:menu.radio.group wire:model.live="definition.metric">
-                    @foreach ($this->metrics as $metric)
-                        <flux:menu.radio :value="$metric->value">{{ $metric->label() }}</flux:menu.radio>
-                    @endforeach
-                </flux:menu.radio.group>
-            </flux:menu>
-        </x-statistics.chip>
-        </span>
+            <x-statistics.sentence-part>
+                <x-statistics.chip :read-only="$readOnly" :label="$parts['metric']">
+                    <flux:menu>
+                        <flux:menu.radio.group wire:model.live="definition.metric">
+                            @foreach ($this->metrics as $metric)
+                                <flux:menu.radio :value="$metric->value">{{ $metric->label() }}</flux:menu.radio>
+                            @endforeach
+                        </flux:menu.radio.group>
+                    </flux:menu>
+                </x-statistics.chip>
+            </x-statistics.sentence-part>
 
-        @if ($parts['people'] !== null)
-        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
-            <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.of') }}</span>
-            <x-statistics.chip :read-only="$readOnly" :label="$parts['people']" :muted="$current->people->isEveryone()">
-                <flux:menu keep-open>
-                    @foreach ($this->personaCategories as $category)
-                        <flux:menu.group :heading="$this->sources['persona']->named($category->label())" wire:key="people-{{ $category->id }}">
-                            <flux:menu.checkbox.group wire:model.live="definition.people.tags.{{ $category->id }}">
-                                @foreach ($category->values as $value)
-                                    <flux:menu.checkbox :value="(string) $value->id">{{ $value->name }}</flux:menu.checkbox>
+            @if ($parts['people'] !== null)
+                <x-statistics.sentence-part :connector="__('questions.sentence.of')">
+                    <x-statistics.chip :read-only="$readOnly" :label="$parts['people']" :muted="$current->people->isEveryone()">
+                        <flux:menu keep-open>
+                            <x-statistics.tag-checkbox-groups :categories="$this->personaCategories" :source="$this->sources['persona']" model="definition.people.tags" />
+
+                            {{-- A menu radio group cannot go back to "any" (Flux reads '' as unset), cannot filter and takes one value; a searchable, clearable, multiple listbox does all three. Keys are stopped here so the menu's own type-ahead does not take them from the search field. --}}
+                            <flux:menu.separator />
+                            <div class="px-2 pb-1" x-on:keydown.stop>
+                                <flux:select variant="listbox" size="sm" multiple searchable clearable wire:model.live="definition.people.expert_names" :label="__('questions.controls.expert_names')" :placeholder="__('questions.controls.any_expert')">
+                                    @foreach ($this->expertNames as $expertName)
+                                        <flux:select.option :value="$expertName" wire:key="expert-{{ $expertName }}">{{ $expertName }}</flux:select.option>
+                                    @endforeach
+                                </flux:select>
+                            </div>
+                        </flux:menu>
+                    </x-statistics.chip>
+                </x-statistics.sentence-part>
+            @endif
+
+            @if ($parts['aggregate'] !== null)
+                <x-statistics.sentence-part>
+                    <x-statistics.chip :read-only="$readOnly" :label="$parts['aggregate']" :muted="true">
+                        <flux:menu>
+                            <flux:menu.radio.group wire:model.live="definition.aggregate">
+                                @foreach ($this->aggregates as $aggregate)
+                                    <flux:menu.radio :value="$aggregate->value">{{ $aggregate->label() }}</flux:menu.radio>
+                                @endforeach
+                            </flux:menu.radio.group>
+                        </flux:menu>
+                    </x-statistics.chip>
+                </x-statistics.sentence-part>
+            @endif
+
+            <x-statistics.sentence-part :connector="__('questions.sentence.in')">
+                <x-statistics.chip :read-only="$readOnly" :label="$parts['projects']" :muted="$current->projects->isEmpty()">
+                    <flux:menu keep-open>
+                        <x-statistics.tag-checkbox-groups :categories="$this->projectCategories" :source="$this->sources['project']" model="definition.projects.tags" />
+
+                        <flux:menu.group :heading="$this->sources['run']->named(__('questions.controls.pipelines'))">
+                            <flux:menu.checkbox.group wire:model.live="definition.projects.pipelines">
+                                @foreach ($this->pipelines as $pipelineName => $label)
+                                    <flux:menu.checkbox :value="$pipelineName">{{ $label }}</flux:menu.checkbox>
                                 @endforeach
                             </flux:menu.checkbox.group>
                         </flux:menu.group>
-                    @endforeach
 
-                    {{-- A menu radio group cannot go back to "any" (Flux reads '' as unset), cannot filter and takes one value; a searchable, clearable, multiple listbox does all three. Keys are stopped here so the menu's own type-ahead does not take them from the search field. --}}
-                    <flux:menu.separator />
-                    <div class="px-2 pb-1" x-on:keydown.stop>
-                        <flux:select variant="listbox" size="sm" multiple searchable clearable wire:model.live="definition.people.expert_names" :label="__('questions.controls.expert_names')" :placeholder="__('questions.controls.any_expert')">
-                            @foreach ($this->expertNames as $expertName)
-                                <flux:select.option :value="$expertName" wire:key="expert-{{ $expertName }}">{{ $expertName }}</flux:select.option>
-                            @endforeach
-                        </flux:select>
-                    </div>
-                </flux:menu>
-            </x-statistics.chip>
-        </span>
-        @endif
+                        <flux:menu.group :heading="$this->sources['run']->named(__('questions.controls.models'))">
+                            <flux:menu.checkbox.group wire:model.live="definition.projects.models">
+                                @foreach ($this->models as $key => $label)
+                                    <flux:menu.checkbox :value="$key">{{ $label }}</flux:menu.checkbox>
+                                @endforeach
+                            </flux:menu.checkbox.group>
+                        </flux:menu.group>
 
-        @if ($parts['aggregate'] !== null)
-        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
-            <x-statistics.chip :read-only="$readOnly" :label="$parts['aggregate']" :muted="true">
-                <flux:menu>
-                    <flux:menu.radio.group wire:model.live="definition.aggregate">
-                        @foreach ($this->aggregates as $aggregate)
-                            <flux:menu.radio :value="$aggregate->value">{{ $aggregate->label() }}</flux:menu.radio>
-                        @endforeach
-                    </flux:menu.radio.group>
-                </flux:menu>
-            </x-statistics.chip>
-        </span>
-        @endif
+                        @if ($this->groups->isNotEmpty())
+                            <flux:menu.group :heading="$this->sources['group']->named(__('questions.controls.groups'))">
+                                <flux:menu.checkbox.group wire:model.live="definition.projects.groups">
+                                    @foreach ($this->groups as $groupId => $groupName)
+                                        <flux:menu.checkbox :value="(string) $groupId" wire:key="group-{{ $groupId }}">{{ $groupName }}</flux:menu.checkbox>
+                                    @endforeach
+                                </flux:menu.checkbox.group>
+                            </flux:menu.group>
+                        @endif
+                    </flux:menu>
+                </x-statistics.chip>
+            </x-statistics.sentence-part>
 
-        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
-        <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.in') }}</span>
-        <x-statistics.chip :read-only="$readOnly" :label="$parts['projects']" :muted="$current->projects->isEmpty()">
-            <flux:menu keep-open>
-                @foreach ($this->projectCategories as $category)
-                    <flux:menu.group :heading="$this->sources['project']->named($category->label())" wire:key="projects-{{ $category->id }}">
-                        <flux:menu.checkbox.group wire:model.live="definition.projects.tags.{{ $category->id }}">
-                            @foreach ($category->values as $value)
-                                <flux:menu.checkbox :value="(string) $value->id">{{ $value->name }}</flux:menu.checkbox>
-                            @endforeach
-                        </flux:menu.checkbox.group>
-                    </flux:menu.group>
-                @endforeach
+            {{-- Menus cannot hold input fields, so the window is the one part that opens a popover. --}}
+            <x-statistics.sentence-part>
+                <x-statistics.chip :read-only="$readOnly" :label="$parts['turns']" :muted="$current->turns->isWholeRun() && ! $result->cappedByShortestRun">
+                    <flux:popover class="w-80 max-w-[calc(100vw-2rem)] space-y-4">
+                        <div class="grid grid-cols-2 gap-3">
+                            {{-- Empty fields are not "nothing": the placeholders show the window the answer is read over; max stops the spinner at the shortest run. --}}
+                            <flux:input type="number" min="1" :max="$result->shortestRun" wire:model.live.debounce.500ms="definition.turns.from" :label="__('questions.controls.turn_from')" :placeholder="$result->turns->from" />
+                            <flux:input type="number" min="1" :max="$result->shortestRun" wire:model.live.debounce.500ms="definition.turns.to" :label="__('questions.controls.turn_to')" :placeholder="$result->turns->to" />
+                        </div>
+                    </flux:popover>
+                </x-statistics.chip>
+            </x-statistics.sentence-part>
 
-                <flux:menu.group :heading="$this->sources['run']->named(__('questions.controls.pipelines'))">
-                    <flux:menu.checkbox.group wire:model.live="definition.projects.pipelines">
-                        @foreach ($this->pipelines as $pipelineName => $label)
-                            <flux:menu.checkbox :value="$pipelineName">{{ $label }}</flux:menu.checkbox>
-                        @endforeach
-                    </flux:menu.checkbox.group>
-                </flux:menu.group>
-
-                <flux:menu.group :heading="$this->sources['run']->named(__('questions.controls.models'))">
-                    <flux:menu.checkbox.group wire:model.live="definition.projects.models">
-                        @foreach ($this->models as $key => $label)
-                            <flux:menu.checkbox :value="$key">{{ $label }}</flux:menu.checkbox>
-                        @endforeach
-                    </flux:menu.checkbox.group>
-                </flux:menu.group>
-
-                @if ($this->groups->isNotEmpty())
-                    <flux:menu.group :heading="$this->sources['group']->named(__('questions.controls.groups'))">
-                        <flux:menu.checkbox.group wire:model.live="definition.projects.groups">
-                            @foreach ($this->groups as $groupId => $groupName)
-                                <flux:menu.checkbox :value="(string) $groupId" wire:key="group-{{ $groupId }}">{{ $groupName }}</flux:menu.checkbox>
-                            @endforeach
-                        </flux:menu.checkbox.group>
-                    </flux:menu.group>
-                @endif
-            </flux:menu>
-        </x-statistics.chip>
-        </span>
-
-        {{-- Menus cannot hold input fields, so the window is the one part that opens a popover. --}}
-        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
-        <x-statistics.chip :read-only="$readOnly" :label="$parts['turns']" :muted="$current->turns->isWholeRun() && ! $result->cappedByShortestRun">
-            <flux:popover class="w-80 max-w-[calc(100vw-2rem)] space-y-4">
-                <div class="grid grid-cols-2 gap-3">
-                    {{-- Empty fields are not "nothing": the placeholders show the window the answer is read over; max stops the spinner at the shortest run. --}}
-                    <flux:input type="number" min="1" :max="$result->shortestRun" wire:model.live.debounce.500ms="definition.turns.from" :label="__('questions.controls.turn_from')" :placeholder="$result->turns->from" />
-                    <flux:input type="number" min="1" :max="$result->shortestRun" wire:model.live.debounce.500ms="definition.turns.to" :label="__('questions.controls.turn_to')" :placeholder="$result->turns->to" />
-                </div>
-            </flux:popover>
-        </x-statistics.chip>
-        </span>
-
-        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
-        <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.compared_by') }}</span>
-        <x-statistics.chip :read-only="$readOnly" :label="$parts['compare_by'] ?? __('questions.sentence.nothing')" :muted="$parts['compare_by'] === null">
-            <flux:menu>
-                <flux:menu.radio.group wire:model.live="definition.compare_by">
-                    <flux:menu.radio value="">{{ __('questions.controls.none') }}</flux:menu.radio>
-                    @foreach ($this->compareOptions as $key => $label)
-                        <flux:menu.radio :value="$key" wire:key="compare-{{ $key }}">{{ $label }}</flux:menu.radio>
-                    @endforeach
-                </flux:menu.radio.group>
-                {{-- The group the others are measured against: it comes first, and the delta is the other group minus it. --}}
-                @if ($this->baselineOptions !== [])
-                    <flux:menu.separator />
-                    <flux:menu.group :heading="__('questions.controls.baseline')">
-                        <flux:menu.radio.group wire:model.live="baselineChoice">
-                            @foreach ($this->baselineOptions as $value => $label)
-                                <flux:menu.radio :value="(string) $value" wire:key="baseline-{{ $value }}">{{ $label }}</flux:menu.radio>
+            <x-statistics.sentence-part :connector="__('questions.sentence.compared_by')">
+                <x-statistics.chip :read-only="$readOnly" :label="$parts['compare_by'] ?? __('questions.sentence.nothing')" :muted="$parts['compare_by'] === null">
+                    <flux:menu>
+                        <flux:menu.radio.group wire:model.live="definition.compare_by">
+                            <flux:menu.radio value="">{{ __('questions.controls.none') }}</flux:menu.radio>
+                            @foreach ($this->compareOptions as $key => $label)
+                                <flux:menu.radio :value="$key" wire:key="compare-{{ $key }}">{{ $label }}</flux:menu.radio>
                             @endforeach
                         </flux:menu.radio.group>
-                    </flux:menu.group>
-                @endif
-                @if ($current->metric->isRunLevel())
-                    <flux:menu.separator />
-                    <flux:text size="sm" class="px-2 py-1">{{ __('questions.controls.gini_hint') }}</flux:text>
-                @endif
-            </flux:menu>
-        </x-statistics.chip>
-        </span>
+                        {{-- The group the others are measured against: it comes first, and the delta is the other group minus it. --}}
+                        @if ($this->baselineOptions !== [])
+                            <flux:menu.separator />
+                            <flux:menu.group :heading="__('questions.controls.baseline')">
+                                <flux:menu.radio.group wire:model.live="baselineChoice">
+                                    @foreach ($this->baselineOptions as $value => $label)
+                                        <flux:menu.radio :value="(string) $value" wire:key="baseline-{{ $value }}">{{ $label }}</flux:menu.radio>
+                                    @endforeach
+                                </flux:menu.radio.group>
+                            </flux:menu.group>
+                        @endif
+                        @if ($current->metric->isRunLevel())
+                            <flux:menu.separator />
+                            <flux:text size="sm" class="px-2 py-1">{{ __('questions.controls.gini_hint') }}</flux:text>
+                        @endif
+                    </flux:menu>
+                </x-statistics.chip>
+            </x-statistics.sentence-part>
 
-        <span class="inline-flex max-w-full shrink-0 items-center gap-1.5 whitespace-nowrap [&>*]:min-w-0">
-        <span class="text-zinc-500 dark:text-zinc-400">{{ __('questions.sentence.split_by') }}</span>
-        <x-statistics.chip :read-only="$readOnly" :label="$parts['split_by'] ?? __('questions.sentence.nothing')" :muted="$parts['split_by'] === null">
-            <flux:menu keep-open>
-                {{-- Up to MAX_SPLITS: once two are ticked the others are disabled. Unticking all splits nothing. --}}
-                <flux:menu.checkbox.group wire:model.live="definition.split_by">
-                    @foreach ($this->splitOptions as $key => $label)
-                        <flux:menu.checkbox :value="$key" wire:key="split-{{ $key }}"
-                            :disabled="$this->splitsFull && ! in_array($key, $definition['split_by'] ?? [], true)">{{ $label }}</flux:menu.checkbox>
-                    @endforeach
-                </flux:menu.checkbox.group>
-                <flux:menu.separator />
-                <flux:text size="sm" class="px-2 py-1">{{ __('questions.controls.split_hint') }}</flux:text>
-            </flux:menu>
-        </x-statistics.chip>
-        </span>
+            <x-statistics.sentence-part :connector="__('questions.sentence.split_by')">
+                <x-statistics.chip :read-only="$readOnly" :label="$parts['split_by'] ?? __('questions.sentence.nothing')" :muted="$parts['split_by'] === null">
+                    <flux:menu keep-open>
+                        {{-- Up to MAX_SPLITS: once two are ticked the others are disabled. Unticking all splits nothing. --}}
+                        <flux:menu.checkbox.group wire:model.live="definition.split_by">
+                            @foreach ($this->splitOptions as $key => $label)
+                                <flux:menu.checkbox :value="$key" wire:key="split-{{ $key }}" :disabled="isset($this->lockedSplits[$key])">{{ $label }}</flux:menu.checkbox>
+                            @endforeach
+                        </flux:menu.checkbox.group>
+                        <flux:menu.separator />
+                        <flux:text size="sm" class="px-2 py-1">{{ __('questions.controls.split_hint') }}</flux:text>
+                    </flux:menu>
+                </x-statistics.chip>
+            </x-statistics.sentence-part>
         </div>
     </flux:card>
 

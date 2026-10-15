@@ -32,6 +32,12 @@ final readonly class Panel
         public string $columnLabel = '',
     ) {}
 
+    /** The label to show: the panel of an answer that splits nothing has none and stands for all runs. */
+    public function displayLabel(): string
+    {
+        return $this->label !== '' ? $this->label : __('questions.result.all');
+    }
+
     /**
      * The other group's mean minus the baseline's (the baseline comes first).
      * Only when the whole answer compares exactly two groups, so every panel

@@ -16,6 +16,12 @@ final readonly class GroupResult
         public array $curve = [],
     ) {}
 
+    /** The label to show: a group of an answer that compares nothing has none and stands for everyone. */
+    public function displayLabel(): string
+    {
+        return $this->label !== '' ? $this->label : __('questions.result.all');
+    }
+
     public function n(): int
     {
         return count($this->runs);

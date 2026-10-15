@@ -368,11 +368,22 @@ class QuestionEditor extends Component
         return $options;
     }
 
-    /** Up to MAX_SPLITS: once that many are ticked the others are disabled. */
+    /**
+     * The split options that cannot be ticked: once MAX_SPLITS are, every
+     * other one. A ticked option stays free, so it can be unticked.
+     *
+     * @return array<string, true> dimension key => true
+     */
     #[Computed]
-    public function splitsFull(): bool
+    public function lockedSplits(): array
     {
-        return count($this->definition['split_by'] ?? []) >= QuestionDefinition::MAX_SPLITS;
+        $ticked = $this->definition['split_by'] ?? [];
+
+        if (count($ticked) < QuestionDefinition::MAX_SPLITS) {
+            return [];
+        }
+
+        return array_fill_keys(array_diff(array_keys($this->splitOptions), $ticked), true);
     }
 
     private function sentence(): QuestionSentence

@@ -18,7 +18,7 @@
     <div class="mt-2 space-y-3">
         @foreach ($panel->groups as $group)
             @php($color = GroupColor::of($result, $group))
-            @php($groupLabel = $group->label !== '' ? $group->label : __('questions.result.all'))
+            @php($groupLabel = $group->displayLabel())
             @php($deviation = $group->standardDeviation())
             @php($summary = __('questions.result.mean').' '.$metric->format($group->mean()).($deviation !== null ? ', '.__('questions.result.standard_deviation').' '.$metric->format($deviation) : ''))
 

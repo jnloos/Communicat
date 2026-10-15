@@ -25,4 +25,16 @@ class PanelGridTest extends TestCase
         $this->assertSame([$a1, null], $rows[0]['cells']);
         $this->assertSame([null, $b2], $rows[1]['cells']);
     }
+
+    public function test_an_unlabelled_panel_or_group_shows_as_all(): void
+    {
+        app()->setLocale('en');
+        $unlabelled = new GroupResult('', '', [new RunValue(1, 'One', 0.5, null)]);
+        $labelled = new GroupResult('g', 'Title holder: true', [new RunValue(1, 'One', 0.5, null)]);
+
+        $this->assertSame('All', $unlabelled->displayLabel());
+        $this->assertSame('Title holder: true', $labelled->displayLabel());
+        $this->assertSame('All', (new Panel('', '', [$unlabelled]))->displayLabel());
+        $this->assertSame('Quality', (new Panel('q', 'Quality', [$unlabelled]))->displayLabel());
+    }
 }

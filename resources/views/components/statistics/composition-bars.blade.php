@@ -15,7 +15,7 @@
 --}}
 <div {{ $attributes->class('space-y-3') }}>
     @foreach ($result->panels as $panel)
-        @php($panelLabel = $panel->label !== '' ? $panel->label : __('questions.result.all'))
+        @php($panelLabel = $panel->displayLabel())
         <div class="grid grid-cols-1 gap-1 sm:grid-cols-[minmax(0,10rem)_1fr] sm:items-center sm:gap-4" wire:key="composition-{{ $panel->key }}">
             <span class="truncate text-sm text-zinc-600 dark:text-zinc-300">{{ $panelLabel }}</span>
 

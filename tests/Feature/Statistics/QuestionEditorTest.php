@@ -761,4 +761,21 @@ class QuestionEditorTest extends TestCase
 
         $this->assertSame(['pipeline', 'model'], $question->fresh()->definition['split_by']);
     }
+
+    public function test_once_two_splits_are_ticked_only_the_others_are_locked(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $question = $user->questions()->create([]);
+
+        $editor = Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set('definition.split_by', ['pipeline']);
+        $this->assertSame([], $editor->instance()->lockedSplits);
+
+        $editor->set('definition.split_by', ['pipeline', 'model']);
+        $locked = $editor->instance()->lockedSplits;
+        $this->assertArrayHasKey('group', $locked);
+        $this->assertArrayNotHasKey('pipeline', $locked);
+        $this->assertArrayNotHasKey('model', $locked);
+    }
 }
