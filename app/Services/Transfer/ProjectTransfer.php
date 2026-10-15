@@ -2,28 +2,16 @@
 
 namespace App\Services\Transfer;
 
-use App\Discussion\Pipelines\PipelineRegistry;
-use App\Models\Expert;
-use App\Models\JobLog;
-use App\Models\Message;
 use App\Models\Project;
-use App\Models\PromptLog;
-use App\Models\Summary;
 use App\Models\User;
-use App\Services\Tags\TagsByName;
-use App\Services\Transfer\Rows\JobLogRow;
-use App\Services\Transfer\Rows\PromptLogRow;
-use App\Services\Transfer\Rows\Timestamp;
-use Closure;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Throwable;
 
 /**
  * One run, complete: settings, frozen run_config, seats, messages, both memory
- * layers, the per-turn measurement and every logged call. Experts are named by
- * uuid; inside the file, messages and turns refer to each other by their
- * original ids, which are local keys and never written back as ids.
+ * layers, the per-turn measurement and every logged call. The bundle's entry
+ * point for a project file: ProjectExporter reads a run, ProjectImportCheck
+ * decides whether a file can go in, ProjectWriter writes it.
  *
  * An expert whose id was taken in the target database is renumbered on import
  * (ExpertTransfer). expert_ids maps every original id to its uuid, so the ids
@@ -32,72 +20,21 @@ use Throwable;
  */
 final class ProjectTransfer
 {
-    public function __construct(private readonly TagsByName $tags = new TagsByName) {}
+    public function __construct(
+        private readonly ProjectExporter $exporter = new ProjectExporter,
+        private readonly ProjectImportCheck $check = new ProjectImportCheck,
+        private readonly ProjectWriter $writer = new ProjectWriter,
+    ) {}
 
     /** @return list<int> */
     public function expertIds(Project $project): array
     {
-        $jobs = JobLog::where('project_id', $project->id)->get(['id', 'expert_id']);
-        $messages = Message::where('project_id', $project->id)->get(['expert_id', 'addressee_expert_id']);
-
-        return collect()
-            ->merge($project->experts()->pluck('experts.id'))
-            ->merge($messages->pluck('expert_id'))
-            ->merge($messages->pluck('addressee_expert_id'))
-            ->merge($jobs->pluck('expert_id'))
-            ->merge(PromptLog::whereIn('job_log_id', $jobs->pluck('id'))->pluck('expert_id'))
-            ->merge(Summary::where('project_id', $project->id)->pluck('expert_id'))
-            // The frozen cast names who sat where, including someone who left without speaking.
-            ->merge(collect($project->run_config['cast'] ?? [])->map(fn ($member) => is_array($member) ? ($member['expert_id'] ?? null) : null))
-            ->filter(fn ($id) => is_int($id) || (is_string($id) && ctype_digit($id)))->map(fn ($id) => (int) $id)->unique()->sort()->values()->all();
+        return $this->exporter->expertIds($project);
     }
 
     public function export(Project $project): array
     {
-        $uuids = Expert::whereIn('id', $this->expertIds($project))->pluck('uuid', 'id');
-        $uuid = fn ($id) => $id === null ? null : ($uuids[(int) $id] ?? null);
-
-        return [
-            'uuid' => $project->uuid,
-            'title' => $project->title,
-            'description' => $project->description,
-            'pipeline' => $project->pipeline,
-            'model' => $project->model,
-            'seed' => $project->seed,
-            'turn_budget' => $project->turn_budget,
-            'run_config' => $project->run_config,
-            'summarize_threshold' => $project->summarize_threshold,
-            'summarize_oldest' => $project->summarize_oldest,
-            'long_term_memory' => $project->long_term_memory,
-            'summarized_until_message' => $project->summarized_until_message_id,
-            'created_at' => Timestamp::export($project->created_at),
-            'tags' => $this->tags->export($project),
-            'expert_ids' => $uuids->mapWithKeys(fn ($uuid, $id) => [(string) $id => $uuid])->all(),
-            'seats' => $project->experts()->get()
-                ->map(fn (Expert $expert) => ['expert' => $expert->uuid, 'seat' => $expert->pivot->seat === null ? null : (int) $expert->pivot->seat])
-                ->values()->all(),
-            'messages' => Message::where('project_id', $project->id)->orderBy('id')->get()
-                ->map(fn (Message $message) => [
-                    'key' => $message->id,
-                    'content' => $message->content,
-                    'expert' => $uuid($message->expert_id),
-                    'is_user' => $message->user_id !== null,
-                    'addressee' => $uuid($message->addressee_expert_id),
-                    'job' => $message->job_log_id,
-                    'created_at' => Timestamp::export($message->created_at),
-                ])->values()->all(),
-            'summaries' => Summary::where('project_id', $project->id)->orderBy('id')->get()
-                ->map(fn (Summary $summary) => [
-                    'expert' => $uuid($summary->expert_id),
-                    'content' => $summary->content,
-                    'updated_at' => Timestamp::export($summary->updated_at),
-                ])->values()->all(),
-            'jobs' => JobLog::with(['promptLogs' => fn ($query) => $query->orderBy('id')])
-                ->where('project_id', $project->id)->orderBy('id')->get()
-                ->map(fn (JobLog $job) => JobLogRow::toArray($job, $uuid) + [
-                    'prompts' => $job->promptLogs->map(fn (PromptLog $log) => PromptLogRow::toArray($log, $uuid))->values()->all(),
-                ])->values()->all(),
-        ];
+        return $this->exporter->export($project);
     }
 
     public function import(array $data, User $owner, ImportReport $report): ?Project
@@ -112,7 +49,7 @@ final class ProjectTransfer
             return null;
         }
 
-        $reason = $this->reasonToSkip($data);
+        $reason = $this->check->reasonToSkip($data);
 
         if ($reason !== null) {
             $report->add(ImportReport::PROJECTS, $title, ImportReport::SKIPPED, $reason);
@@ -124,7 +61,7 @@ final class ProjectTransfer
 
         try {
             $project = DB::transaction(function () use ($data, $owner, &$skippedTags) {
-                return $this->write($data, $owner, $this->expertIdsByUuid($data), $skippedTags);
+                return $this->writer->write($data, $owner, $this->check->foundExperts($data), $skippedTags);
             });
         } catch (Throwable $exception) {
             $report->add(ImportReport::PROJECTS, $title, ImportReport::FAILED, FailureNote::for($exception));
@@ -140,182 +77,5 @@ final class ProjectTransfer
         );
 
         return $project;
-    }
-
-    private function reasonToSkip(array $data): ?string
-    {
-        $uuid = (string) ($data['uuid'] ?? '');
-
-        return match (true) {
-            $uuid === '' => __('transfer.notes.no_uuid'),
-            ! Str::isUuid($uuid) => __('transfer.notes.bad_uuid'),
-            Project::where('uuid', $uuid)->exists() => __('transfer.notes.already_there'),
-            ! app(PipelineRegistry::class)->has((string) ($data['pipeline'] ?? '')) => __('transfer.notes.unknown_pipeline', ['pipeline' => $data['pipeline'] ?? '']),
-            ! isset(config('ai.models')[(string) ($data['model'] ?? '')]) => __('transfer.notes.unknown_model', ['model' => $data['model'] ?? '']),
-            ($missing = $this->missingExperts($data)) !== [] => __('transfer.notes.missing_experts', ['experts' => implode(', ', $missing)]),
-            default => null,
-        };
-    }
-
-    /** @return list<string> uuids the file names that are neither here nor imported before */
-    private function missingExperts(array $data): array
-    {
-        $named = $this->namedExperts($data);
-
-        return array_values(array_diff($named, Expert::whereIn('uuid', $named)->pluck('uuid')->all()));
-    }
-
-    /**
-     * Every expert uuid the file refers to. expert_ids counts too: it also
-     * names who sat in the frozen cast without leaving a row, and an id it
-     * cannot map here would stay as it was and point at someone else.
-     *
-     * @return list<string>
-     */
-    private function namedExperts(array $data): array
-    {
-        $named = array_values($data['expert_ids'] ?? []);
-
-        foreach ($data['seats'] ?? [] as $seat) {
-            $named[] = $seat['expert'] ?? null;
-        }
-
-        foreach ($data['messages'] ?? [] as $message) {
-            $named[] = $message['expert'] ?? null;
-            $named[] = $message['addressee'] ?? null;
-        }
-
-        foreach ($data['summaries'] ?? [] as $summary) {
-            $named[] = $summary['expert'] ?? null;
-        }
-
-        foreach ($data['jobs'] ?? [] as $job) {
-            $named[] = $job['expert'] ?? null;
-
-            foreach ($job['prompts'] ?? [] as $prompt) {
-                $named[] = $prompt['expert'] ?? null;
-            }
-        }
-
-        return array_values(array_unique(array_filter($named)));
-    }
-
-    /** @return array<string, int> */
-    private function expertIdsByUuid(array $data): array
-    {
-        return Expert::whereIn('uuid', $this->namedExperts($data))->pluck('id', 'uuid')->map(fn ($id) => (int) $id)->all();
-    }
-
-    /**
-     * @param  array<string, int>  $experts  uuid => id
-     * @param  list<string>  $skippedTags  filled with the tag pairs that could not be placed
-     */
-    private function write(array $data, User $owner, array $experts, array &$skippedTags): Project
-    {
-        $expert = fn (?string $uuid) => $uuid === null ? null : $experts[$uuid];
-        $renumbering = ExpertRenumbering::fromExpertIds($data['expert_ids'] ?? []);
-
-        $project = $this->createProject($data, $owner, $renumbering);
-        $skippedTags = $this->tags->assign($project, $data['tags'] ?? []);
-        $this->attachSeats($project, $data['seats'] ?? [], $expert);
-        $jobIds = $this->writeJobs($project, $data['jobs'] ?? [], $expert, $renumbering);
-        $messageIds = $this->writeMessages($project, $data['messages'] ?? [], $owner, $expert, $jobIds);
-        $this->writeSummaries($project, $data['summaries'] ?? [], $expert);
-
-        $watermark = $data['summarized_until_message'] ?? null;
-        $project->forceFill(['summarized_until_message_id' => $watermark === null ? null : ($messageIds[(int) $watermark] ?? null)])->save();
-
-        return $project->fresh();
-    }
-
-    private function createProject(array $data, User $owner, ExpertRenumbering $renumbering): Project
-    {
-        $project = new Project;
-        $project->forceFill([
-            'uuid' => $data['uuid'],
-            'user_id' => $owner->id,
-            'title' => (string) ($data['title'] ?? ''),
-            'description' => (string) ($data['description'] ?? ''),
-            'pipeline' => $data['pipeline'],
-            'model' => $data['model'],
-            'seed' => $data['seed'] ?? null,
-            'turn_budget' => $data['turn_budget'] ?? null,
-            'run_config' => $renumbering->runConfig($data['run_config'] ?? null),
-            'summarize_threshold' => $data['summarize_threshold'] ?? null,
-            'summarize_oldest' => $data['summarize_oldest'] ?? null,
-            'long_term_memory' => $data['long_term_memory'] ?? null,
-            'created_at' => Timestamp::import($data['created_at'] ?? null) ?? now(),
-        ])->save();
-        $project->addContributingUser($owner);
-
-        return $project;
-    }
-
-    /** @param  Closure(?string): ?int  $expert  uuid => expert id here */
-    private function attachSeats(Project $project, array $seats, Closure $expert): void
-    {
-        foreach ($seats as $seat) {
-            $project->experts()->attach($expert($seat['expert']), ['seat' => $seat['seat']]);
-        }
-    }
-
-    /**
-     * @param  Closure(?string): ?int  $expert  uuid => expert id here
-     * @return array<int, int> the file's job key => new job_logs id
-     */
-    private function writeJobs(Project $project, array $jobs, Closure $expert, ExpertRenumbering $renumbering): array
-    {
-        $jobIds = [];
-
-        foreach ($jobs as $job) {
-            $log = new JobLog;
-            $log->forceFill(JobLogRow::attributes($job, $project->id, $expert, $renumbering))->save();
-            $jobIds[(int) $job['key']] = $log->id;
-
-            foreach ($job['prompts'] ?? [] as $prompt) {
-                (new PromptLog)->forceFill(PromptLogRow::attributes($prompt, $log->id, $expert))->save();
-            }
-        }
-
-        return $jobIds;
-    }
-
-    /**
-     * @param  Closure(?string): ?int  $expert  uuid => expert id here
-     * @param  array<int, int>  $jobIds  the file's job key => new job_logs id
-     * @return array<int, int> the file's message key => new messages id
-     */
-    private function writeMessages(Project $project, array $messages, User $owner, Closure $expert, array $jobIds): array
-    {
-        $messageIds = [];
-
-        foreach ($messages as $message) {
-            $row = new Message;
-            $row->forceFill([
-                'project_id' => $project->id,
-                'content' => (string) ($message['content'] ?? ''),
-                'expert_id' => $expert($message['expert'] ?? null),
-                'user_id' => ! empty($message['is_user']) ? $owner->id : null,
-                'addressee_expert_id' => $expert($message['addressee'] ?? null),
-                'job_log_id' => isset($message['job']) ? ($jobIds[(int) $message['job']] ?? null) : null,
-                'created_at' => Timestamp::import($message['created_at'] ?? null) ?? now(),
-            ])->save();
-            $messageIds[(int) $message['key']] = $row->id;
-        }
-
-        return $messageIds;
-    }
-
-    /** @param  Closure(?string): ?int  $expert  uuid => expert id here */
-    private function writeSummaries(Project $project, array $summaries, Closure $expert): void
-    {
-        foreach ($summaries as $summary) {
-            (new Summary)->forceFill([
-                'project_id' => $project->id,
-                'expert_id' => $expert($summary['expert']),
-                'content' => (string) ($summary['content'] ?? ''),
-                'updated_at' => Timestamp::import($summary['updated_at'] ?? null) ?? now(),
-            ])->save();
-        }
     }
 }

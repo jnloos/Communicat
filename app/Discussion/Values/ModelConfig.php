@@ -22,11 +22,11 @@ final readonly class ModelConfig
     {
         // Array index, not dot notation: a model key may contain dots
         // (gemini-3.8-flash), and config() would read those as nesting.
-        $entry = config('ai.models')[$key] ?? null;
-
-        if (! is_array($entry)) {
+        if (! self::exists($key)) {
             throw new InvalidArgumentException("Unknown LLM model key [{$key}]. Check config/ai.php.");
         }
+
+        $entry = config('ai.models')[$key];
 
         return new self(
             key: $key,
@@ -38,6 +38,12 @@ final readonly class ModelConfig
             reasoningEffort: $entry['reasoning_effort'] ?? null,
             nativeStructuredOutput: self::nativeStructuredOutputOf($entry['provider']),
         );
+    }
+
+    /** Whether the registry has this model key. Array index, not dot notation, as in fromConfig(). */
+    public static function exists(string $key): bool
+    {
+        return is_array(config('ai.models')[$key] ?? null);
     }
 
     /**

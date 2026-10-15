@@ -3,7 +3,7 @@
 namespace App\Services\Transfer;
 
 /**
- * Checks a project file's fields have the types ProjectTransfer reads, before
+ * Checks a project file's fields have the types ProjectWriter reads, before
  * anything decides on or writes the project. A wrong type then fails the
  * project with "could not be read" instead of an unexpected error from deep
  * inside the write. Fields whose content is free (run_config, selection,
