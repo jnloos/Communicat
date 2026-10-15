@@ -12,7 +12,9 @@ use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\User;
 use App\Services\StudyExport\StudyExport;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\Concerns\TemporaryFiles;
 use Tests\TestCase;
 use ZipArchive;
@@ -345,6 +347,25 @@ class StudyExportTest extends TestCase
         $this->assertSame('0', $read['speaker_bid_fallback']);
         $this->assertSame('', $other['speaker_bid']);
         $this->assertSame('', $other['speaker_bid_fallback']);
+    }
+
+    public function test_the_participants_tags_are_read_in_one_query_however_many_runs(): void
+    {
+        $viewer = User::factory()->create();
+        $runs = Project::factory()->count(3)->create(['user_id' => $viewer->id])->each(function (Project $run) {
+            $run->addContributingExpert(Expert::factory()->create());
+            $run->addContributingExpert(Expert::factory()->create());
+        });
+        $expertTagQueries = 0;
+        DB::listen(function (QueryExecuted $query) use (&$expertTagQueries) {
+            if (str_contains($query->sql, 'taggables') && in_array((new Expert)->getMorphClass(), $query->bindings, true)) {
+                $expertTagQueries++;
+            }
+        });
+
+        app(StudyExport::class)->write($runs, $viewer, $this->temporaryPath());
+
+        $this->assertSame(1, $expertTagQueries);
     }
 
     public function test_participants_carry_the_expert_token_of_this_database(): void
