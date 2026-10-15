@@ -7,6 +7,7 @@ use App\Models\JobLog;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Exceptions\EventHandlerDoesNotExist;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -130,7 +131,7 @@ class JobDebugFlyoutTest extends TestCase
         $component = Livewire::test(JobDebugFlyout::class, ['project' => $project]);
 
         $this->jobFor($project);
-        $component->dispatch('echo-private:debug,.JobLogUpdated');
+        $component->dispatch("echo-private:projects.{$project->id},.JobLogUpdated");
 
         $this->assertTrue($component->viewData('logs')->isEmpty());
     }
@@ -148,9 +149,23 @@ class JobDebugFlyoutTest extends TestCase
         $this->assertCount(1, $component->viewData('logs'));
 
         $this->jobFor($project, 'running');
-        $component->dispatch('echo-private:debug,.JobLogUpdated');
+        $component->dispatch("echo-private:projects.{$project->id},.JobLogUpdated");
 
         $this->assertCount(2, $component->viewData('logs'));
+    }
+
+    /**
+     * Job updates travel on the project's own channel, which only its owner and
+     * contributors may join; the flyout listens there and nowhere else.
+     */
+    public function test_it_listens_on_its_projects_channel_only(): void
+    {
+        $project = $this->project();
+
+        $component = Livewire::test(JobDebugFlyout::class, ['project' => $project])->call('open');
+
+        $this->expectException(EventHandlerDoesNotExist::class);
+        $component->dispatch('echo-private:debug,.JobLogUpdated');
     }
 
     public function test_it_is_unreachable_when_debug_is_off(): void

@@ -111,4 +111,117 @@ document.addEventListener('alpine:init', () => {
             );
         },
     }));
+
+    // Chat sound: a short blip whenever a new message of THIS project arrives
+    // while the tab is visible. The on/off choice is remembered per browser.
+    window.Alpine.data('chatSound', (projectId) => ({
+        popEnabled: true,
+        audioCtx: null,
+        popListener: null,
+
+        init() {
+            this.popEnabled = localStorage.getItem('chatPop') !== '0';
+            this.popListener = (event) => {
+                if (!this.popEnabled) return;
+                if (String(event.detail?.projectId ?? '') !== String(projectId)) return;
+                if (document.visibilityState !== 'visible') return;
+                this.playPop();
+            };
+            window.addEventListener('message_generated', this.popListener);
+        },
+
+        destroy() {
+            window.removeEventListener('message_generated', this.popListener);
+        },
+
+        playPop() {
+            try {
+                const Ctx = window.AudioContext || window.webkitAudioContext;
+                if (!Ctx) return;
+                this.audioCtx = this.audioCtx || new Ctx();
+                const ctx = this.audioCtx;
+                if (ctx.state === 'suspended') ctx.resume();
+                const now = ctx.currentTime;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(760, now + 0.06);
+                gain.gain.setValueAtTime(0.0001, now);
+                gain.gain.exponentialRampToValueAtTime(0.22, now + 0.012);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+                osc.connect(gain).connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } catch (e) {}
+        },
+
+        togglePop() {
+            this.popEnabled = !this.popEnabled;
+            localStorage.setItem('chatPop', this.popEnabled ? '1' : '0');
+            if (this.popEnabled) this.playPop(); // audible feedback on enable
+        },
+    }));
+
+    // Chat scrolling: starts at the bottom, loads older messages when the
+    // reader scrolls near the top, and follows new messages and the pipeline
+    // indicator only while the reader is already near the bottom. Whether
+    // older messages exist is read from the element's data-has-more attribute,
+    // which Livewire's morph keeps current.
+    window.Alpine.data('chatScroll', () => ({
+        loading: false,
+        locked: false,
+        scrollThreshold: 300,
+        followListener: null,
+
+        init() {
+            this.$nextTick(() => this.scrollToBottom());
+
+            this.$el.addEventListener('scroll', () => this.loadOlderNearTop());
+
+            this.followListener = () => {
+                const wasNearBottom = this.isNearBottom();
+                this.$nextTick(() => {
+                    if (wasNearBottom) this.scrollToBottom();
+                });
+            };
+            window.addEventListener('message_generated', this.followListener);
+            window.addEventListener('pipeline_stage_changed', this.followListener);
+        },
+
+        destroy() {
+            window.removeEventListener('message_generated', this.followListener);
+            window.removeEventListener('pipeline_stage_changed', this.followListener);
+        },
+
+        hasMore() {
+            return this.$el.dataset.hasMore === 'true';
+        },
+
+        isNearBottom() {
+            const el = this.$el;
+            return el.scrollHeight - el.scrollTop - el.clientHeight <= this.scrollThreshold;
+        },
+
+        scrollToBottom() {
+            this.$el.scrollTop = this.$el.scrollHeight;
+        },
+
+        async loadOlderNearTop() {
+            const el = this.$el;
+            if (this.locked || !this.hasMore() || el.scrollTop > 50) return;
+
+            this.locked = true;
+            this.loading = true;
+            const before = el.scrollHeight;
+
+            await this.$wire.loadMore();
+
+            this.$nextTick(() => {
+                el.scrollTop = el.scrollHeight - before;
+                this.loading = false;
+                this.locked = false;
+            });
+        },
+    }));
 });

@@ -81,4 +81,47 @@ class ContributorLimitTest extends TestCase
 
         $this->assertTrue($project->fresh()->canAddExpert());
     }
+
+    public function test_only_the_owner_may_add_or_remove_experts(): void
+    {
+        $owner = User::factory()->create();
+        $reader = User::factory()->create();
+        $project = Project::withoutEvents(fn () => Project::create([
+            'title' => 't', 'description' => 'd', 'user_id' => $owner->id,
+        ]));
+        $project->addContributingUser($reader);
+        $seated = Expert::factory()->create();
+        $project->addContributingExpert($seated);
+        $newcomer = Expert::factory()->create();
+
+        $this->actingAs($reader);
+        Livewire::test(SelectContributors::class, ['project' => $project])
+            ->call('addExpert', $newcomer->id)
+            ->assertForbidden();
+        Livewire::test(SelectContributors::class, ['project' => $project])
+            ->call('removeExpert', $seated->id)
+            ->assertForbidden();
+
+        $this->assertSame([$seated->id], $project->experts()->pluck('experts.id')->all());
+    }
+
+    public function test_the_card_lists_mark_seated_experts_and_users(): void
+    {
+        $owner = User::factory()->create(['name' => 'Owner']);
+        $reader = User::factory()->create(['name' => 'Reader']);
+        $project = Project::withoutEvents(fn () => Project::create([
+            'title' => 't', 'description' => 'd', 'user_id' => $owner->id,
+        ]));
+        $project->addContributingUser($reader);
+        $seated = Expert::factory()->create(['name' => 'Seated']);
+        $project->addContributingExpert($seated);
+        Expert::factory()->create(['name' => 'Free']);
+
+        $this->actingAs($owner);
+        Livewire::test(SelectContributors::class, ['project' => $project])
+            ->assertSeeHtml('wire:click="removeExpert('.$seated->id.')"')
+            ->assertSeeHtml('wire:key="expert-'.$seated->id.'"')
+            ->assertSeeHtml('wire:click="removeUser('.$reader->id.')"')
+            ->assertSeeHtml('wire:key="user-'.$reader->id.'"');
+    }
 }

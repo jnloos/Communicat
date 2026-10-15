@@ -5,6 +5,7 @@ namespace Tests\Feature\Discussion;
 use App\Discussion\Agents\SpeakAgent;
 use App\Discussion\Agents\SummarizeAgent;
 use App\Discussion\Agents\ThinkAgent;
+use App\Discussion\MissingTopic;
 use App\Discussion\TurnRunner;
 use App\Events\JobLogged;
 use App\Events\PipelineStageChanged;
@@ -141,6 +142,25 @@ class TurnRunnerTest extends TestCase
 
         $this->assertTrue($result->stop);
         $this->assertSame('no_candidates', $result->reason);
+        $this->assertSame(0, JobLog::count());
+    }
+
+    /**
+     * The topic partial used to fall back to the title, which is the
+     * researcher's label for the cell and names its condition. A run without a
+     * description must not start at all, and must not leave a turn behind.
+     */
+    public function test_refuses_to_run_a_project_without_a_description(): void
+    {
+        $this->project->update(['description' => '  ']);
+
+        try {
+            app(TurnRunner::class)->run($this->project);
+            $this->fail('A project without a description ran a turn.');
+        } catch (MissingTopic $e) {
+            $this->assertStringContainsString((string) $this->project->id, $e->getMessage());
+        }
+
         $this->assertSame(0, JobLog::count());
     }
 

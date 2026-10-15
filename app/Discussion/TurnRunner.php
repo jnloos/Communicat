@@ -2,6 +2,7 @@
 
 namespace App\Discussion;
 
+use App\Discussion\Metrics\SpokenTurns;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Pipelines\TurnPipeline;
 use App\Discussion\Support\PromptRenderer;
@@ -26,6 +27,7 @@ class TurnRunner
     public function __construct(
         private readonly PipelineRegistry $pipelines,
         private readonly PromptRenderer $prompts,
+        private readonly SpokenTurns $spokenTurns,
     ) {}
 
     public function run(Project $project): TurnResult
@@ -36,6 +38,12 @@ class TurnRunner
 
         if ($this->budgetIsSpent($project)) {
             return TurnResult::stop('turn_budget');
+        }
+
+        // A configuration error, not a model answer: no turn would ever succeed,
+        // so it fails loudly instead of logging the same failed turn each time.
+        if (! $project->hasTopic()) {
+            throw MissingTopic::in($project);
         }
 
         $pipeline = $this->pipelines->resolve($project->pipeline);
@@ -73,12 +81,9 @@ class TurnRunner
             return false;
         }
 
-        // Counts turns that produced a public contribution, not turns that finished
-        // cleanly: PersistMessage saves the message before later stages (e.g. Summarize)
-        // run, so a turn can fail after speaking. The study's unit of analysis is the
-        // spoken turn, so that turn must still consume budget even though its status
-        // ends up 'failed'.
-        $done = JobLog::where('project_id', $project->id)->whereNotNull('words')->count();
+        // Spoken turns, not turns that finished cleanly: a turn can speak and then
+        // fail in Summarize, and it still consumed budget. SpokenTurns owns that rule.
+        $done = $this->spokenTurns->of($project)->count();
 
         return $done >= $project->turn_budget;
     }

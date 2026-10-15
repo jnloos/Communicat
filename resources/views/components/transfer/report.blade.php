@@ -7,7 +7,6 @@
 {{-- What an import would do or did: a card per section with its counts, the entries in an accordion, failures first and open. --}}
 <div class="space-y-3">
     @forelse ($report->sections() as $section)
-        @php($entries = collect($report->entries($section))->sortBy(fn (array $entry) => $entry['outcome'] === ImportReport::FAILED ? 0 : 1)->values())
         @php($failed = $report->count($section, ImportReport::FAILED))
 
         <flux:card size="sm" wire:key="report-{{ $section }}">
@@ -25,7 +24,7 @@
                     </flux:accordion.heading>
                     <flux:accordion.content>
                         <ul class="divide-y divide-zinc-100 dark:divide-white/10">
-                            @foreach ($entries as $entry)
+                            @foreach ($report->entriesFailedFirst($section) as $entry)
                                 <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-1.5 text-sm">
                                     {{-- An unreadable entry may have no name to show. --}}
                                     <span @class(['font-medium', 'text-zinc-800 dark:text-white' => $entry['name'] !== '', 'italic text-zinc-500 dark:text-zinc-400' => $entry['name'] === ''])>{{ $entry['name'] !== '' ? $entry['name'] : __('transfer.unnamed_entry') }}</span>

@@ -40,14 +40,7 @@ class ExpertList extends Component
 
         $experts = Expert::query()
             ->with('tagValues.category')
-            ->when($search !== '', function ($q) use ($search) {
-                $like = '%'.$search.'%';
-                $q->where(function ($w) use ($like) {
-                    $w->where('name', 'like', $like)
-                        ->orWhere('role', 'like', $like)
-                        ->orWhere('description', 'like', $like);
-                });
-            })
+            ->search($search)
             ->where(fn ($q) => $this->applyTagFilter($q, $filter))
             ->orderBy('name')
             ->get();

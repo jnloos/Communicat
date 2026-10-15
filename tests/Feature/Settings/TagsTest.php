@@ -54,6 +54,8 @@ class TagsTest extends TestCase
             'deleteValue' => ['deleteValue', 'value'],
             'sortCategory' => ['sortCategory', 'category', 0],
             'sortValue' => ['sortValue', 'value', 0],
+            'moveCategory' => ['moveCategory', 'category', 1],
+            'moveValue' => ['moveValue', 'value', 1],
             '\$refresh' => ['$refresh'],
         ];
     }
@@ -207,6 +209,52 @@ class TagsTest extends TestCase
         $this->assertSame(['C', 'A', 'B'], TagCategory::ofScope(TagScope::Persona)->pluck('name')->all());
         $this->assertSame(['zwei', 'eins'], $a->values()->pluck('name')->all());
         $this->assertSame(2, $first->fresh()->position);
+    }
+
+    public function test_move_up_and_down_sorts_without_dragging(): void
+    {
+        $this->actingAs($this->admin());
+        $a = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'A']);
+        TagCategory::create(['scope' => TagScope::Persona, 'name' => 'B']);
+        $c = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'C']);
+        $first = $a->values()->create(['name' => 'eins']);
+        $a->values()->create(['name' => 'zwei']);
+
+        Livewire::test(Tags::class)
+            ->call('moveCategory', $c->id, -1)
+            ->call('moveCategory', $a->id, 1)
+            ->call('moveValue', $first->id, 1);
+
+        $this->assertSame(['C', 'A', 'B'], TagCategory::ofScope(TagScope::Persona)->pluck('name')->all());
+        $this->assertSame(['zwei', 'eins'], $a->values()->pluck('name')->all());
+    }
+
+    public function test_moving_past_either_end_keeps_the_order(): void
+    {
+        $this->actingAs($this->admin());
+        $a = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'A']);
+        $b = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'B']);
+
+        Livewire::test(Tags::class)
+            ->call('moveCategory', $a->id, -1)
+            ->call('moveCategory', $b->id, 1);
+
+        $this->assertSame(['A', 'B'], TagCategory::ofScope(TagScope::Persona)->pluck('name')->all());
+    }
+
+    public function test_the_row_menus_offer_move_up_and_down(): void
+    {
+        $this->actingAs($this->admin());
+        $a = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'A']);
+        TagCategory::create(['scope' => TagScope::Persona, 'name' => 'B']);
+        $value = $a->values()->create(['name' => 'eins']);
+
+        Livewire::test(Tags::class)
+            ->assertSeeHtml('wire:click="moveCategory('.$a->id.', -1)"')
+            ->assertSeeHtml('wire:click="moveCategory('.$a->id.', 1)"')
+            ->assertSeeHtml('wire:click="moveValue('.$value->id.', 1)"')
+            ->assertSee('Move up')
+            ->assertSee('Move down');
     }
 
     public function test_each_value_counts_its_experts_or_projects_in_words(): void

@@ -1,10 +1,3 @@
-@props([
-    'experts' => [],
-    'hasFilters' => false,
-    'tagCategories' => [],
-    'activeTagCount' => 0,
-])
-
 <div class="mx-auto w-full max-w-6xl">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>

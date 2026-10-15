@@ -24,4 +24,17 @@ final readonly class Completion
          */
         public array $structured = [],
     ) {}
+
+    /**
+     * A text field of the structured answer, trimmed; '' when it is missing or
+     * not a string. A schema is a request on some providers, not a guarantee,
+     * so a field may arrive as a list or a number -- the caller then sees an
+     * empty field and falls back, instead of a TypeError ending the run.
+     */
+    public function field(string $key): string
+    {
+        $value = $this->structured[$key] ?? null;
+
+        return is_string($value) ? trim($value) : '';
+    }
 }

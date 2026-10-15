@@ -25,7 +25,7 @@ class ThinkAndPropose
 
         foreach ($experts as $expert) {
             $answer = $answers[$expert->id];
-            $thought = trim($answer['thought'] ?? '');
+            $thought = $answer->field('thought');
 
             if ($thought === '') {
                 throw new ParseFailure(
@@ -35,7 +35,7 @@ class ThinkAndPropose
 
             // A missing draft is left null: JudgeSelector scores what it was
             // given and records who drafted nothing in its fallbacks.
-            $draft = trim($answer['draft'] ?? '');
+            $draft = $answer->field('draft');
 
             $this->thinking->remember($payload->project, $expert, $thought);
             $payload->addThought(new Thought($expert->id, $thought, proposal: $draft === '' ? null : $draft));

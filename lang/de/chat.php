@@ -13,6 +13,8 @@ return [
         'set_contributors' => 'Teilnehmende festlegen',
     ],
 
+    'loading_older' => 'Ältere Nachrichten werden geladen …',
+
     'message' => [
         'addressed' => 'Angesprochen:',
         'show_memory' => 'Gedächtnis anzeigen: :name',
@@ -31,6 +33,7 @@ return [
         'aria_label' => 'Steuerung der Diskussion',
         'busy_hint' => 'Ein anderer Vorgang läuft gerade. Bitte versuchen Sie es gleich noch einmal.',
         'waiting_hint' => 'Warte auf die aktuelle Expertennachricht…',
+        'missing_topic' => 'Dieses Projekt hat keine Beschreibung. Sie ist das Thema der Diskussion; tragen Sie sie in den Projekteinstellungen ein und starten Sie dann erneut.',
     ],
 
     'indicator' => [

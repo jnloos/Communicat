@@ -9,9 +9,8 @@
 {{-- One row per model call, the turn's sum as the last row in the same columns.
      A count nobody reported is "–", never 0: 0 would claim the call spent none. --}}
 @php($columns = ['tokens_in', 'tokens_out', 'tokens_reasoning'])
-@php($number = fn (?int $value) => $value === null ? null : LocaleNumber::decimal($value, 0))
-{{-- Structured output arrives as one line of JSON; indent it so its fields can be read. --}}
-@php($readable = fn (?string $text) => is_array($decoded = json_decode((string) $text, true)) ? json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : $text)
+{{-- The token columns plus toggle, call, latency and finish time. --}}
+@php($columnCount = count($columns) + 4)
 
 <div x-data="{ open: null }">
     <flux:table class="[&_[data-flux-cell]]:py-1.5 [&_[data-flux-column]]:py-2">
@@ -42,13 +41,13 @@
                             @endif
                         </span>
                     </flux:table.cell>
-                    <flux:table.cell align="end" class="tabular-nums">{{ $call->latency_ms === null ? '–' : $number($call->latency_ms).' ms' }}</flux:table.cell>
+                    <flux:table.cell align="end" class="tabular-nums">{{ $call->latency_ms === null ? '–' : LocaleNumber::decimal($call->latency_ms, 0).' ms' }}</flux:table.cell>
                     @foreach ($columns as $column)
                         <flux:table.cell align="end" class="tabular-nums">
                             @if ($call->{$column} === null)
                                 <span aria-label="{{ __('debug.detail.tokens_missing') }}">–</span>
                             @else
-                                {{ $number($call->{$column}) }}
+                                {{ LocaleNumber::decimal($call->{$column}, 0) }}
                             @endif
                         </flux:table.cell>
                     @endforeach
@@ -57,14 +56,14 @@
                 </flux:table.row>
 
                 <flux:table.row wire:key="call-detail-{{ $call->id }}" x-show="open === {{ $call->id }}" x-cloak>
-                    <flux:table.cell colspan="7" class="whitespace-normal">
+                    <flux:table.cell colspan="{{ $columnCount }}" class="whitespace-normal">
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
                                 <flux:heading size="sm" class="mb-1">{{ __('debug.detail.prompt') }}</flux:heading>
                                 @if (PrunePrompts::removed((string) $call->prompt))
                                     <flux:text size="sm" class="italic">{{ __('debug.detail.prompt_removed') }}</flux:text>
                                 @else
-                                    <pre class="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-xs text-zinc-700 dark:text-zinc-300">{{ $readable($call->prompt) }}</pre>
+                                    <pre class="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-xs text-zinc-700 dark:text-zinc-300">{{ $call->readable_prompt }}</pre>
                                 @endif
                             </div>
                             <div>
@@ -73,7 +72,7 @@
                                     <pre class="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-xs text-red-700 dark:text-red-300">{{ $call->error }}</pre>
                                 @else
                                     <flux:heading size="sm" class="mb-1">{{ __('debug.detail.response') }}</flux:heading>
-                                    <pre class="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-xs text-zinc-700 dark:text-zinc-300">{{ $readable($call->response) }}</pre>
+                                    <pre class="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-xs text-zinc-700 dark:text-zinc-300">{{ $call->readable_response }}</pre>
                                 @endif
                             </div>
                         </div>
@@ -91,10 +90,10 @@
                         @if ($total->sum === null)
                             <span aria-label="{{ __('debug.detail.tokens_missing') }}">–</span>
                         @elseif ($total->complete)
-                            {{ $number($total->sum) }}
+                            {{ LocaleNumber::decimal($total->sum, 0) }}
                         @else
                             <flux:tooltip :content="__('debug.detail.tokens_partial')">
-                                <span tabindex="0" class="cursor-help underline decoration-dotted underline-offset-4">≥ {{ $number($total->sum) }}</span>
+                                <span tabindex="0" class="cursor-help underline decoration-dotted underline-offset-4">≥ {{ LocaleNumber::decimal($total->sum, 0) }}</span>
                             </flux:tooltip>
                         @endif
                     </flux:table.cell>

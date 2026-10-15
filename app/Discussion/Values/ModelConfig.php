@@ -15,6 +15,7 @@ final readonly class ModelConfig
         public int $maxOutputTokens,
         public ?float $temperature = null,
         public ?string $reasoningEffort = null,
+        public ?bool $nativeStructuredOutput = null,
     ) {}
 
     public static function fromConfig(string $key): self
@@ -35,7 +36,20 @@ final readonly class ModelConfig
             maxOutputTokens: (int) ($entry['max_output_tokens'] ?? 8000),
             temperature: isset($entry['temperature']) ? (float) $entry['temperature'] : null,
             reasoningEffort: $entry['reasoning_effort'] ?? null,
+            nativeStructuredOutput: self::nativeStructuredOutputOf($entry['provider']),
         );
+    }
+
+    /**
+     * Whether the provider answers schemas natively (shape guaranteed) or through
+     * the synthetic tool (shape only requested). A provider-level switch, so it
+     * is read from `ai.providers`; null where the provider has no such switch.
+     */
+    private static function nativeStructuredOutputOf(string $provider): ?bool
+    {
+        $value = (config('ai.providers')[$provider] ?? [])['use_native_structured_output'] ?? null;
+
+        return $value === null ? null : (bool) $value;
     }
 
     /**
@@ -94,6 +108,7 @@ final readonly class ModelConfig
             'max_output_tokens' => $this->maxOutputTokens,
             'temperature' => $this->temperature,
             'reasoning_effort' => $this->reasoningEffort,
+            'native_structured_output' => $this->nativeStructuredOutput,
         ];
     }
 }

@@ -6,14 +6,16 @@ use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\User;
 use Flux\Flux;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class Users extends Component
 {
     use NeedsConfirmation;
 
+    /** Set by openEdit() only; a client could otherwise point save() at another user. */
+    #[Locked]
     public ?int $editingUserId = null;
 
     public string $name = '';
@@ -68,15 +70,16 @@ class Users extends Component
 
         if ($this->editingUserId) {
             $data = ['name' => $this->name, 'email' => $this->email, 'is_admin' => $this->is_admin];
+            // The model's 'hashed' cast hashes it.
             if ($this->password) {
-                $data['password'] = Hash::make($this->password);
+                $data['password'] = $this->password;
             }
             User::findOrFail($this->editingUserId)->update($data);
         } else {
             User::create([
                 'name' => $this->name,
                 'email' => $this->email,
-                'password' => Hash::make($this->password),
+                'password' => $this->password,
                 'is_admin' => $this->is_admin,
             ]);
         }

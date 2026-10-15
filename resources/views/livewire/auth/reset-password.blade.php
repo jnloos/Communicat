@@ -1,11 +1,11 @@
 <div class="flex flex-col gap-6">
     <x-auth-header :title="__('login.reset_password.heading')" :description="__('login.reset_password.description')" />
 
-    <!-- Session Status -->
+    {{-- Session Status --}}
     <x-auth-session-status class="text-center" :status="session('status')" />
 
     <form wire:submit="resetPassword" class="flex flex-col gap-6">
-        <!-- Email Address -->
+        {{-- Email Address --}}
         <flux:input
             wire:model="email"
             :label="__('common.fields.email')"
@@ -14,7 +14,7 @@
             autocomplete="email"
         />
 
-        <!-- Password -->
+        {{-- Password --}}
         <flux:input
             wire:model="password"
             :label="__('common.fields.password')"
@@ -24,7 +24,7 @@
             :placeholder="__('common.fields.password')"
         />
 
-        <!-- Confirm Password -->
+        {{-- Confirm Password --}}
         <flux:input
             wire:model="password_confirmation"
             :label="__('login.reset_password.confirm_password')"

@@ -59,7 +59,7 @@ final class DefinitionNames
         $definition['projects'] = $projects;
         $definition['people']['tags'] = $this->tagsToIds(EntryFields::map($people, 'tags'), TagScope::Persona);
         $definition['projects']['tags'] = $this->tagsToIds(EntryFields::map($projects, 'tags'), TagScope::Project);
-        $definition['projects']['groups'] = $this->groups->filter(fn (ProjectGroup $group) => in_array($group->name, $groupNames, true))->keys()->values()->all();
+        $definition['projects']['groups'] = $this->groups->filter(fn (ProjectGroup $group) => $this->namesGroup($group, $groupNames))->keys()->values()->all();
         $definition['compare_by'] = $this->dimensionToKey(EntryFields::text($named, 'compare_by'));
         $definition['split_by'] = $this->splitsToKeys($this->splitNames($named));
         EntryFields::assertText($named, 'baseline');
@@ -219,10 +219,21 @@ final class DefinitionNames
 
         $id = match (true) {
             $dimension->type->isTag() => $this->categories->get($dimension->categoryId)?->values->first(fn ($value) => TagNames::same($value->name, (string) $baseline))?->id,
-            $dimension->type === DimensionType::Group => $this->groups->firstWhere('name', $baseline)?->id,
+            $dimension->type === DimensionType::Group => $this->groups->first(fn (ProjectGroup $group) => TagNames::same($group->name, (string) $baseline))?->id,
             default => $baseline,
         };
 
         return $id === null ? null : (string) $id;
+    }
+
+    /**
+     * Groups match by name as tags do (TagNames::same()). Two groups of the
+     * same name both match a filter, which is OR within; a baseline takes the first.
+     *
+     * @param  list<string>  $names
+     */
+    private function namesGroup(ProjectGroup $group, array $names): bool
+    {
+        return collect($names)->contains(fn (string $name) => TagNames::same($group->name, $name));
     }
 }

@@ -23,7 +23,7 @@ class ThinkAsSpeaker
 
         $answers = $this->thinking->ask($payload, [$speaker], 'prompts.think.speaker', ThoughtSchema::class);
 
-        $thought = trim($answers[$speaker->id]['thought'] ?? '');
+        $thought = $answers[$speaker->id]->field('thought');
 
         // The schema declares the field required, so an empty one means the
         // provider did not honour the contract -- not that the model had nothing

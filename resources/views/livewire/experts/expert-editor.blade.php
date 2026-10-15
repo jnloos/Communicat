@@ -1,7 +1,3 @@
-@props([
-    '$isUpdate' => false,
-])
-
 <flux:modal name="edit-expert" variant="flyout" class="flex w-full flex-col p-5! sm:p-8! md:w-[40rem]">
     <form wire:submit.prevent="save" class="flex flex-1 flex-col gap-6">
         <x-modal-header

@@ -92,6 +92,16 @@ class JudgeSelectorTest extends TestCase
         $this->assertContains($selection->speaker->id, [$this->experts[0]->id, $this->experts[1]->id]);
     }
 
+    public function test_a_speaker_that_is_not_a_string_falls_back_to_the_tie_breaker(): void
+    {
+        FakeAgents::always(JudgeAgent::class, ['speaker' => 42, 'reasoning' => '-']);
+
+        $selection = $this->judge(drafting: [0, 1]);
+
+        $this->assertSame(['token' => '', 'fallback' => true], $selection->signals);
+        $this->assertTrue($selection->tieBroken);
+    }
+
     /** A token for someone who handed in no draft cannot win either: there is nothing of theirs to judge. */
     public function test_a_token_without_a_draft_is_a_fallback(): void
     {

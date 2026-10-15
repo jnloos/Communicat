@@ -11,6 +11,7 @@ use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class DimensionValuesTest extends TestCase
@@ -71,5 +72,26 @@ class DimensionValuesTest extends TestCase
             [$alex->id => $true->id, $kim->id => DimensionValues::NONE],
             $this->values()->ofExperts(new Dimension(DimensionType::PersonaTag, $category->id), [$alex->id, $kim->id]),
         );
+    }
+
+    /** A run without a value and a category label are read once, not once per question part. */
+    public function test_repeated_lookups_are_answered_without_a_new_query(): void
+    {
+        $category = TagCategory::create(['scope' => TagScope::Project, 'name' => 'condition']);
+        $dimension = new Dimension(DimensionType::ProjectTag, $category->id);
+        $untagged = Project::factory()->create();
+        $values = $this->values();
+
+        $this->assertNull($values->ofProject($dimension, $untagged));
+        $values->labels($dimension);
+
+        DB::enableQueryLog();
+        $this->assertNull($values->ofProject($dimension, $untagged));
+        $values->labels($dimension);
+
+        $this->assertEmpty(array_filter(
+            DB::getQueryLog(),
+            fn (array $query) => str_contains($query['query'], 'from "taggables"') || str_contains($query['query'], 'from "tag_categories"'),
+        ));
     }
 }

@@ -3,6 +3,8 @@
 namespace Tests\Unit\Discussion;
 
 use App\Discussion\GenerationLoop;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class GenerationLoopTest extends TestCase
@@ -56,5 +58,42 @@ class GenerationLoopTest extends TestCase
         });
 
         $this->assertFalse($innerRan);
+    }
+
+    public function test_asking_whether_a_turn_runs_does_not_take_the_lock(): void
+    {
+        Cache::spy();
+
+        (new GenerationLoop)->isTurnRunning(1);
+
+        Cache::shouldNotHaveReceived('lock');
+    }
+
+    public function test_the_running_flag_is_cleared_even_when_the_turn_throws(): void
+    {
+        $loop = new GenerationLoop;
+
+        try {
+            $loop->withLock(1, fn () => throw new \RuntimeException('kaputt'));
+        } catch (\RuntimeException) {
+        }
+
+        $this->assertFalse($loop->isTurnRunning(1));
+
+        $ran = false;
+        $loop->withLock(1, function () use (&$ran) {
+            $ran = true;
+        });
+        $this->assertTrue($ran);
+    }
+
+    public function test_a_skipped_turn_is_logged(): void
+    {
+        Log::spy();
+        $loop = new GenerationLoop;
+
+        $loop->withLock(1, fn () => $loop->withLock(1, fn () => null));
+
+        Log::shouldHaveReceived('info')->once();
     }
 }

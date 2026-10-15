@@ -17,11 +17,13 @@ class MessageSent implements ShouldBroadcastNow
         public readonly ?int $senderId = null,
     ) {}
 
-    public function broadcastOn(): array {
+    public function broadcastOn(): array
+    {
         return [new PrivateChannel("projects.{$this->projectId}")];
     }
 
-    public function broadcastAs(): string {
+    public function broadcastAs(): string
+    {
         return 'UserMessageSent';
     }
 }

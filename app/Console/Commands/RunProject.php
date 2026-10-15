@@ -3,8 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\ResolvesProject;
+use App\Discussion\Metrics\SpokenTurns;
 use App\Discussion\TurnRunner;
-use App\Models\JobLog;
 use App\Models\Project;
 use Illuminate\Console\Command;
 use Throwable;
@@ -32,7 +32,7 @@ class RunProject extends Command
 
     protected $description = 'Run a discussion headlessly for a number of turns.';
 
-    public function handle(TurnRunner $runner): int
+    public function handle(TurnRunner $runner, SpokenTurns $spokenTurns): int
     {
         $project = $this->project();
 
@@ -50,7 +50,7 @@ class RunProject extends Command
 
         $this->line("<info>{$project->title}</info> · {$project->pipeline} · {$project->model} · seed {$project->seed}");
 
-        $spokenBefore = $this->spokenTurns($project);
+        $spokenBefore = $spokenTurns->of($project)->count();
         $bar = $this->output->createProgressBar($turns);
         $bar->start();
 
@@ -93,24 +93,18 @@ class RunProject extends Command
         $bar->finish();
         $this->newLine(2);
 
-        $spoken = $this->spokenTurns($project) - $spokenBefore;
+        $spokenAfter = $spokenTurns->of($project)->count();
 
         $this->table(['', ''], [
             ['Turns attempted', $ran],
-            ['Turns that spoke', $spoken],
+            ['Turns that spoke', $spokenAfter - $spokenBefore],
             ['Turns that failed', $failed],
-            ['Budget', $project->turn_budget === null ? 'unlimited' : $this->spokenTurns($project).' / '.$project->turn_budget],
+            ['Budget', $project->turn_budget === null ? 'unlimited' : $spokenAfter.' / '.$project->turn_budget],
             ['Stopped because', $stoppedBecause ?? 'the requested turns were done'],
         ]);
 
         // A run that stops for a reason other than a failure did what it was
         // asked to; only a failure is worth a non-zero exit code.
         return $failed > 0 && $this->option('stop-on-failure') ? self::FAILURE : self::SUCCESS;
-    }
-
-    /** The study's counting rule: a turn spoke when it recorded words. */
-    private function spokenTurns(Project $project): int
-    {
-        return JobLog::where('project_id', $project->id)->whereNotNull('words')->count();
     }
 }

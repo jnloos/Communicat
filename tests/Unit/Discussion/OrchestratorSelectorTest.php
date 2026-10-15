@@ -70,6 +70,17 @@ class OrchestratorSelectorTest extends TestCase
         $this->assertTrue($this->orchestrate()->signals['fallback']);
     }
 
+    /** A provider that answers through a tool is asked, not forced: a wrong type must fall back, not throw. */
+    public function test_a_speaker_that_is_not_a_string_falls_back_to_the_tie_breaker(): void
+    {
+        FakeAgents::always(SelectorAgent::class, ['speaker' => ['E1'], 'reasoning' => ['kein Text']]);
+
+        $selection = $this->orchestrate();
+
+        $this->assertSame(['token' => '', 'fallback' => true], $selection->signals);
+        $this->assertSame('', $selection->reasoning);
+    }
+
     public function test_a_user_token_is_not_a_speaker(): void
     {
         // Only contributing experts speak; a user token must not be accepted.

@@ -4,11 +4,11 @@
         :description="__('login.confirm_password.description')"
     />
 
-    <!-- Session Status -->
+    {{-- Session Status --}}
     <x-auth-session-status class="text-center" :status="session('status')" />
 
     <form wire:submit="confirmPassword" class="flex flex-col gap-6">
-        <!-- Password -->
+        {{-- Password --}}
         <flux:input
             wire:model="password"
             :label="__('common.fields.password')"

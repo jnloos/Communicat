@@ -2,6 +2,7 @@
 
 namespace App\Discussion\Selectors;
 
+use App\Discussion\Schemas\ThoughtWithPrioritySchema;
 use App\Discussion\Support\TieBreaker;
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\Selection;
@@ -18,8 +19,6 @@ use App\Models\Expert;
  */
 class HighestBidSelector implements SpeakerSelector
 {
-    private const LOWEST = 1;
-
     public function __construct(private readonly TieBreaker $tieBreaker) {}
 
     public function select(TurnPayload $payload): Selection
@@ -34,7 +33,7 @@ class HighestBidSelector implements SpeakerSelector
 
             if ($priority === null) {
                 $fallbacks[] = $expert->promptId;
-                $priority = self::LOWEST;
+                $priority = ThoughtWithPrioritySchema::LOWEST;
             }
 
             $bids[$expert->promptId] = $priority;

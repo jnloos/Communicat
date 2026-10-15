@@ -1,6 +1,6 @@
 @props([
-    'name' => 'John Doe',
-    'role' => 'Mannequin',
+    'name',
+    'role',
     'description' => null,
     'avatarUrl' => null,
     'selected' => null, {{-- null: plain card; bool: selectable card with state indicator --}}

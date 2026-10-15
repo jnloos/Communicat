@@ -18,7 +18,7 @@
                         ['sectors' => $turnSectors, 'label' => __('statistics.turn_share'), 'unit' => __('statistics.columns.turns'), 'gini' => $report->turnGini, 'total' => trans_choice('statistics.turns_total', $report->spokenTurns, ['count' => $report->spokenTurns])],
                         ['sectors' => $wordSectors, 'label' => __('statistics.word_share'), 'unit' => __('statistics.columns.words'), 'gini' => $report->wordGini, 'total' => trans_choice('statistics.words_total', $report->totalWords, ['count' => LocaleNumber::decimal($report->totalWords, 0)])],
                     ] as $chart)
-                        <section class="rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                        <flux:card size="sm">
                             <flux:heading size="sm">{{ $chart['label'] }}</flux:heading>
                             <flux:text size="sm" class="mt-0.5">{{ $chart['total'] }}</flux:text>
 
@@ -52,7 +52,7 @@
                                     <span class="text-zinc-400">/ {{ LocaleNumber::decimal($report->giniCeiling, 2) }}</span>
                                 </span>
                             </div>
-                        </section>
+                        </flux:card>
                     @endforeach
                 </div>
 
@@ -60,7 +60,7 @@
                      settles, but flattens by arithmetic alone (one turn moves it by at
                      most ~1/n); the rolling view forgets everything older than the
                      window and shows whether the discussion itself is still moving. --}}
-                <section class="mt-6 rounded-lg border border-zinc-200 p-4 dark:border-zinc-700">
+                <flux:card size="sm" class="mt-6">
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
                             <flux:heading size="sm">{{ __('statistics.trajectory.title') }}</flux:heading>
@@ -123,41 +123,38 @@
                             </flux:chart.legend>
                         @endforeach
                     </div>
-                </section>
+                </flux:card>
 
                 {{-- The numbers behind the slices: a pie cannot be read off precisely,
                      and a participant who never spoke has no slice at all. --}}
-                <div class="mt-6 overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
-                    <table class="w-full text-sm">
-                        <thead class="bg-zinc-100 text-xs uppercase tracking-wide text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-                            <tr>
-                                <th class="px-3 py-2 text-left font-medium">{{ __('statistics.columns.participant') }}</th>
-                                <th class="px-3 py-2 text-right font-medium">{{ __('statistics.columns.turns') }}</th>
-                                <th class="px-3 py-2 text-right font-medium">{{ __('statistics.columns.turn_share') }}</th>
-                                <th class="px-3 py-2 text-right font-medium">{{ __('statistics.columns.words') }}</th>
-                                <th class="px-3 py-2 text-right font-medium">{{ __('statistics.columns.word_share') }}</th>
-                                <th class="px-3 py-2 text-right font-medium">{{ __('statistics.columns.words_per_turn') }}</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-zinc-100 dark:divide-zinc-800">
-                            @foreach ($report->speakers as $index => $share)
-                                <tr wire:key="share-{{ $share->expertId }}" @class(['text-zinc-400 dark:text-zinc-600' => $share->turns === 0])>
-                                    <td class="px-3 py-2">
-                                        <span class="flex items-center gap-2">
-                                            <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $this->colorFor($index) }}-500)"></span>
-                                            <span class="truncate">{{ $share->name }}</span>
-                                        </span>
-                                    </td>
-                                    <td class="px-3 py-2 text-right font-mono">{{ $share->turns }}</td>
-                                    <td class="px-3 py-2 text-right font-mono">{{ LocaleNumber::percent($share->turnShare) }}</td>
-                                    <td class="px-3 py-2 text-right font-mono">{{ LocaleNumber::decimal($share->words, 0) }}</td>
-                                    <td class="px-3 py-2 text-right font-mono">{{ LocaleNumber::percent($share->wordShare) }}</td>
-                                    <td class="px-3 py-2 text-right font-mono">{{ LocaleNumber::decimal($share->wordsPerTurn(), 1) }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+                <flux:table class="mt-6">
+                    <flux:table.columns>
+                        <flux:table.column>{{ __('statistics.columns.participant') }}</flux:table.column>
+                        <flux:table.column align="end">{{ __('statistics.columns.turns') }}</flux:table.column>
+                        <flux:table.column align="end">{{ __('statistics.columns.turn_share') }}</flux:table.column>
+                        <flux:table.column align="end">{{ __('statistics.columns.words') }}</flux:table.column>
+                        <flux:table.column align="end">{{ __('statistics.columns.word_share') }}</flux:table.column>
+                        <flux:table.column align="end">{{ __('statistics.columns.words_per_turn') }}</flux:table.column>
+                    </flux:table.columns>
+                    <flux:table.rows>
+                        @foreach ($report->speakers as $index => $share)
+                            {{-- Someone who never spoke stays in the table, greyed out. --}}
+                            <flux:table.row wire:key="share-{{ $share->expertId }}" :class="$share->turns === 0 ? '*:text-zinc-400! dark:*:text-zinc-600!' : ''">
+                                <flux:table.cell variant="strong">
+                                    <span class="flex items-center gap-2">
+                                        <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $this->colorFor($index) }}-500)"></span>
+                                        <span class="truncate">{{ $share->name }}</span>
+                                    </span>
+                                </flux:table.cell>
+                                <flux:table.cell align="end" class="font-mono">{{ $share->turns }}</flux:table.cell>
+                                <flux:table.cell align="end" class="font-mono">{{ LocaleNumber::percent($share->turnShare) }}</flux:table.cell>
+                                <flux:table.cell align="end" class="font-mono">{{ LocaleNumber::decimal($share->words, 0) }}</flux:table.cell>
+                                <flux:table.cell align="end" class="font-mono">{{ LocaleNumber::percent($share->wordShare) }}</flux:table.cell>
+                                <flux:table.cell align="end" class="font-mono">{{ LocaleNumber::decimal($share->wordsPerTurn(), 1) }}</flux:table.cell>
+                            </flux:table.row>
+                        @endforeach
+                    </flux:table.rows>
+                </flux:table>
             @endif
         </div>
     </flux:modal>

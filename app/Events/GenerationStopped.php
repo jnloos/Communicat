@@ -14,11 +14,13 @@ class GenerationStopped implements ShouldBroadcastNow
 
     public function __construct(public readonly int $projectId) {}
 
-    public function broadcastOn(): array {
+    public function broadcastOn(): array
+    {
         return [new PrivateChannel("projects.{$this->projectId}")];
     }
 
-    public function broadcastAs(): string {
+    public function broadcastAs(): string
+    {
         return 'GenerationStopped';
     }
 }

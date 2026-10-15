@@ -17,6 +17,39 @@ class Memory
      */
     public function viewFor(Project $project, ?Expert $expert = null): MemoryView
     {
+        return $expert === null
+            ? $this->shared($project)
+            : $this->viewsFor($project, [$expert])[$expert->id];
+    }
+
+    /**
+     * One view per expert, as viewFor() builds it, for a round in which every
+     * expert is asked at once: History and Long-Term are read a single time and
+     * only Short-Term differs.
+     *
+     * @param  iterable<Expert>  $experts
+     * @return array<int, MemoryView> expert id => view
+     */
+    public function viewsFor(Project $project, iterable $experts): array
+    {
+        $shared = $this->shared($project);
+        $ids = collect($experts)->map(fn (Expert $expert) => $expert->id)->all();
+        $thoughts = Summary::where('project_id', $project->id)
+            ->whereIn('expert_id', $ids)
+            ->pluck('content', 'expert_id');
+
+        $views = [];
+
+        foreach ($ids as $id) {
+            $views[$id] = new MemoryView($shared->history, (string) ($thoughts[$id] ?? ''), $shared->longTerm);
+        }
+
+        return $views;
+    }
+
+    /** History and Long-Term, which every agent sees alike. */
+    private function shared(Project $project): MemoryView
+    {
         $watermark = $project->summarized_until_message_id ?? 0;
 
         // Where the visible window sits in the discussion as a whole. Numbering
@@ -33,11 +66,7 @@ class Memory
             ->map(fn (Message $message, int $offset) => $this->describe($message, $alreadyFolded + $offset + 1))
             ->all();
 
-        return new MemoryView(
-            history: $history,
-            shortTerm: $expert === null ? '' : $this->thoughtOf($project, $expert),
-            longTerm: (string) $project->long_term_memory,
-        );
+        return new MemoryView(history: $history, shortTerm: '', longTerm: (string) $project->long_term_memory);
     }
 
     /**
@@ -72,12 +101,5 @@ class Memory
                 'name' => $addressee->name,
             ],
         ];
-    }
-
-    private function thoughtOf(Project $project, Expert $expert): string
-    {
-        return (string) Summary::where('project_id', $project->id)
-            ->where('expert_id', $expert->id)
-            ->value('content');
     }
 }

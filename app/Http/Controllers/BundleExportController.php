@@ -18,7 +18,7 @@ class BundleExportController extends Controller
 
     public function project(Project $project): BinaryFileResponse
     {
-        abort_unless(Gate::allows('access-project', $project), 403);
+        Gate::authorize('access-project', $project);
 
         return $this->downloadTemporary(fn (string $path) => $this->exporter->project($project, $path), $this->exporter->filename(Bundle::KIND_PROJECT, $project->title));
     }

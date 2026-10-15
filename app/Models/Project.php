@@ -77,6 +77,15 @@ class Project extends Model
         $this->users()->updateExistingPivot($user->id, ['project_group_id' => $groupId]);
     }
 
+    /**
+     * The description is the topic every prompt carries; without one the
+     * agents would have nothing to discuss (TurnRunner throws MissingTopic).
+     */
+    public function hasTopic(): bool
+    {
+        return trim((string) $this->description) !== '';
+    }
+
     public function isOwner(User $user): bool
     {
         return $this->user_id === $user->id;

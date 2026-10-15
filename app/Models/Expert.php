@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\HasPublicUuid;
 use App\Models\Concerns\HasTags;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -47,21 +48,18 @@ class Expert extends Model
         return $this->morphToMany(Project::class, 'contributor', 'project_contributors');
     }
 
-    public function thoughtsAbout(int|Project $project): Summary
+    /** Experts whose name, role or description contains the term; a blank term matches everyone. */
+    public function scopeSearch(Builder $query, string $term): void
     {
-        if ($project instanceof Project) {
-
-            $project = $project->id;
+        $term = trim($term);
+        if ($term === '') {
+            return;
         }
 
-        return Summary::firstOrCreate(
-            ['project_id' => $project, 'expert_id' => $this->id],
-            ['content' => '']
-        );
-    }
-
-    public function isContributing(Project $project): bool
-    {
-        return $this->projects()->whereKey($project->id)->exists();
+        $like = '%'.$term.'%';
+        $query->where(fn (Builder $q) => $q
+            ->where('name', 'like', $like)
+            ->orWhere('role', 'like', $like)
+            ->orWhere('description', 'like', $like));
     }
 }

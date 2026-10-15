@@ -58,18 +58,15 @@ return [
             'key' => env('ANTHROPIC_API_KEY'),
             'url' => env('ANTHROPIC_URL', 'https://api.anthropic.com/v1'),
 
-            // Anthropic's native structured output is sent as `output_config`,
-            // which is the same key StudyAgent uses for the reasoning effort --
-            // and provider options are merged last, so ours would silently
-            // delete the schema. Turning it off makes the SDK request structure
-            // through a synthetic tool instead, leaving output_config free.
-            //
-            // The cost: with `thinking` on, the gateway must use
-            // tool_choice: auto (Anthropic forbids forcing a tool alongside
-            // extended thinking), so structure is requested, not guaranteed. A
-            // turn that comes back unstructured fails and is counted in the
-            // failure rate the study reports anyway.
-            'use_native_structured_output' => false,
+            // Native structured output: the SDK sends the schema as
+            // `output_config.format`, and StudyAgent::providerOptions() sends
+            // only `thinking` for Anthropic, so nothing overwrites it. Checked
+            // with one real call on 15.10.2026 (claude-opus-5, thinking
+            // adaptive): the answer came back as valid JSON for the schema.
+            // Native mode guarantees the shape; the synthetic-tool path
+            // (false) only requests it, because Anthropic forbids forcing a
+            // tool while extended thinking is on.
+            'use_native_structured_output' => true,
         ],
 
         'gemini' => [

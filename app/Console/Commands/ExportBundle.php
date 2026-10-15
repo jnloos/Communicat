@@ -7,6 +7,7 @@ use App\Models\Expert;
 use App\Models\Project;
 use App\Services\Transfer\BundleExporter;
 use Illuminate\Console\Command;
+use Illuminate\Support\Number;
 
 class ExportBundle extends Command
 {
@@ -62,7 +63,7 @@ class ExportBundle extends Command
             $exporter->expert(Expert::findOrFail($expertIds[0]), $path);
         }
 
-        $this->info("Bundle written to {$path} (".number_format(filesize($path) / 1024 / 1024, 1).' MB).');
+        $this->info("Bundle written to {$path} (".Number::fileSize(filesize($path), precision: 1).').');
 
         return self::SUCCESS;
     }

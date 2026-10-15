@@ -40,6 +40,19 @@ final class ImportReport
         return $this->entries[$section] ?? [];
     }
 
+    /**
+     * The section's entries with the failed ones first, each group in the order it was added.
+     *
+     * @return list<array{name: string, outcome: string, note: ?string}>
+     */
+    public function entriesFailedFirst(string $section): array
+    {
+        $entries = $this->entries($section);
+        $failed = array_filter($entries, fn (array $entry) => $entry['outcome'] === self::FAILED);
+
+        return [...array_values($failed), ...array_values(array_diff_key($entries, $failed))];
+    }
+
     public function count(string $section, string $outcome): int
     {
         return count(array_filter($this->entries($section), fn (array $entry) => $entry['outcome'] === $outcome));

@@ -47,9 +47,15 @@ class Message extends Model
         return ! is_null($this->expert_id);
     }
 
-    public function isCurrUser(): bool
+    /**
+     * The addressee the chat shows: none when the turn spoke to the group, and
+     * none when a model addressed its own speaker, which says nothing to a reader.
+     */
+    public function visibleAddressee(): ?Expert
     {
-        return $this->isUser() && $this->user_id === auth()->id();
+        $addressee = $this->addressee;
+
+        return $addressee?->id === $this->expert_id ? null : $addressee;
     }
 
     public function sender(): Expert|User|null

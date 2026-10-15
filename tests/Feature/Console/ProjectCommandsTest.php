@@ -47,7 +47,7 @@ class ProjectCommandsTest extends TestCase
 
     public function test_create_seats_the_experts_in_the_given_order(): void
     {
-        $this->artisan('project:create', [
+        $this->artisan('project:create', ['--description' => 'Ein Thema.',
             'title' => 'Tempolimit',
             '--experts' => "{$this->experts['Bob']->id},{$this->experts['Alice']->id}",
             '--pipeline' => 'RoundRobinPipeline',
@@ -66,7 +66,7 @@ class ProjectCommandsTest extends TestCase
 
     public function test_create_without_a_seed_still_gets_one(): void
     {
-        $this->artisan('project:create', ['title' => 'Ohne Seed'])->assertSuccessful();
+        $this->artisan('project:create', ['--description' => 'Ein Thema.', 'title' => 'Ohne Seed'])->assertSuccessful();
 
         $this->assertNotNull(Project::where('title', 'Ohne Seed')->sole()->seed);
     }
@@ -78,7 +78,7 @@ class ProjectCommandsTest extends TestCase
      */
     public function test_create_puts_the_owner_in_the_project(): void
     {
-        $this->artisan('project:create', ['title' => 'Visible'])->assertSuccessful();
+        $this->artisan('project:create', ['--description' => 'Ein Thema.', 'title' => 'Visible'])->assertSuccessful();
 
         $project = Project::where('title', 'Visible')->sole();
 
@@ -89,7 +89,7 @@ class ProjectCommandsTest extends TestCase
     /** The opening notice has no sender, so it never reaches a prompt or a count. */
     public function test_the_welcome_message_stays_out_of_the_measurement(): void
     {
-        $this->artisan('project:create', ['title' => 'With notice'])->assertSuccessful();
+        $this->artisan('project:create', ['--description' => 'Ein Thema.', 'title' => 'With notice'])->assertSuccessful();
 
         $project = Project::where('title', 'With notice')->sole();
 
@@ -99,7 +99,7 @@ class ProjectCommandsTest extends TestCase
 
     public function test_create_rejects_an_unknown_pipeline(): void
     {
-        $this->artisan('project:create', ['title' => 'x', '--pipeline' => 'NoSuchPipeline'])
+        $this->artisan('project:create', ['--description' => 'Ein Thema.', 'title' => 'x', '--pipeline' => 'NoSuchPipeline'])
             ->expectsOutputToContain('Unknown pipeline')
             ->assertFailed();
 
@@ -108,7 +108,7 @@ class ProjectCommandsTest extends TestCase
 
     public function test_create_rejects_an_unknown_model(): void
     {
-        $this->artisan('project:create', ['title' => 'x', '--model' => 'no-such-model'])
+        $this->artisan('project:create', ['--description' => 'Ein Thema.', 'title' => 'x', '--model' => 'no-such-model'])
             ->expectsOutputToContain('Unknown model')
             ->assertFailed();
 
@@ -119,7 +119,25 @@ class ProjectCommandsTest extends TestCase
     {
         $ids = Expert::factory()->count(Project::MAX_CONTRIBUTING_EXPERTS + 1)->create()->pluck('id')->implode(',');
 
-        $this->artisan('project:create', ['title' => 'x', '--experts' => $ids])->assertFailed();
+        $this->artisan('project:create', ['--description' => 'Ein Thema.', 'title' => 'x', '--experts' => $ids])->assertFailed();
+
+        $this->assertSame(0, Project::count());
+    }
+
+    /** Without a description the topic partial has nothing to show, and the title would give away the condition. */
+    public function test_create_requires_a_description(): void
+    {
+        $this->artisan('project:create', ['title' => 'x'])->assertFailed();
+        $this->artisan('project:create', ['title' => 'x', '--description' => '   '])->assertFailed();
+
+        $this->assertSame(0, Project::count());
+    }
+
+    public function test_create_rejects_a_turn_budget_or_seed_that_is_not_a_number(): void
+    {
+        foreach ([['--turns' => '0'], ['--turns' => 'zehn'], ['--seed' => 'abc']] as $options) {
+            $this->artisan('project:create', ['title' => 'x', '--description' => 'Ein Thema.'] + $options)->assertFailed();
+        }
 
         $this->assertSame(0, Project::count());
     }

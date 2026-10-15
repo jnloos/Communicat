@@ -47,8 +47,8 @@ class OrchestratorSelector implements SpeakerSelector
             'memory' => $this->memory->viewFor($project),
         ] + $this->prompts->participants($project)));
 
-        $reasoning = trim($completion->structured['reasoning'] ?? '');
-        $token = trim($completion->structured['speaker'] ?? '');
+        $reasoning = $completion->field('reasoning');
+        $token = $completion->field('speaker');
         $speaker = $this->resolve($project, $token);
 
         if ($speaker !== null) {

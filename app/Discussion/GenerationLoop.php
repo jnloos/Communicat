@@ -3,6 +3,7 @@
 namespace App\Discussion;
 
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Shared state of the self-perpetuating generation loop, kept in the cache so
@@ -11,7 +12,10 @@ use Illuminate\Support\Facades\Cache;
  */
 class GenerationLoop
 {
-    /** Must outlast the longest possible turn (MessageGenerator::$timeout), or turns could overlap. */
+    /**
+     * Must outlast the longest possible turn (MessageGenerator::$timeout), or turns
+     * could overlap. Also the life of the running flag, should a worker die mid-turn.
+     */
     private const LOCK_SECONDS = 300;
 
     /** Generous enough to survive background-tab poll throttling (~60s). */
@@ -46,32 +50,34 @@ class GenerationLoop
         return (bool) Cache::get($this->viewersKey($projectId), false);
     }
 
+    /**
+     * Whether a turn of this project is running right now. Reads a flag that
+     * withLock() raises, so asking never takes the lock itself -- a poll that
+     * held it even for a moment could make a queued turn skip its run.
+     */
     public function isTurnRunning(int $projectId): bool
     {
-        $lock = Cache::lock($this->lockKey($projectId));
-
-        if ($lock->get() === false) {
-            return true;
-        }
-
-        $lock->release();
-
-        return false;
+        return (bool) Cache::get($this->runningKey($projectId), false);
     }
 
     /** Runs $callback unless another turn of this project holds the lock. */
     public function withLock(int $projectId, callable $callback): void
     {
-        $lock = Cache::lock($this->lockKey($projectId), self::LOCK_SECONDS);
+        $ran = Cache::lock($this->lockKey($projectId), self::LOCK_SECONDS)
+            ->get(function () use ($projectId, $callback): bool {
+                Cache::put($this->runningKey($projectId), true, self::LOCK_SECONDS);
 
-        if ($lock->get() === false) {
-            return;
-        }
+                try {
+                    $callback();
+                } finally {
+                    Cache::forget($this->runningKey($projectId));
+                }
 
-        try {
-            $callback();
-        } finally {
-            $lock->release();
+                return true;
+            });
+
+        if ($ran !== true) {
+            Log::info("Skipped a turn of project {$projectId}: another turn holds the lock.");
         }
     }
 
@@ -83,6 +89,11 @@ class GenerationLoop
     private function viewersKey(int $projectId): string
     {
         return "project_{$projectId}_viewers";
+    }
+
+    private function runningKey(int $projectId): string
+    {
+        return "project_{$projectId}_turn_running";
     }
 
     private function lockKey(int $projectId): string

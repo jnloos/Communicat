@@ -43,12 +43,6 @@ return [
     'memory' => [
         'heading' => 'Memory of this discussion',
         'empty' => 'No memory yet. :name has not taken any notes so far.',
-        'about_user' => 'About the user',
-        'about' => 'About :name',
-        'thoughts_of' => 'Thoughts of :name',
-        'open_questions' => 'Open questions',
-        'last_state' => 'Latest state of the conversation',
-        'legacy_format' => 'The format will be updated with the next memory update.',
         'none_selected' => 'No expert selected.',
     ],
 ];

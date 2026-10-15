@@ -59,8 +59,8 @@ class JudgeSelector implements SpeakerSelector
             ])->all(),
         ] + $this->prompts->participants($project)));
 
-        $reasoning = trim($completion->structured['reasoning'] ?? '');
-        $token = trim($completion->structured['speaker'] ?? '');
+        $reasoning = $completion->field('reasoning');
+        $token = $completion->field('speaker');
         $speaker = $drafters->get($token);
 
         if ($speaker === null) {

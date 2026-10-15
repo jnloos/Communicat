@@ -4,7 +4,6 @@ namespace App\Livewire\Debug\Concerns;
 
 use App\Models\JobLog;
 use Illuminate\Support\Collection;
-use Livewire\Attributes\On;
 
 /**
  * What the two hosts of the job report share: the full-page JobDebugPanel and
@@ -40,7 +39,24 @@ trait ShowsJobReport
         $this->selectedJobId = $this->selectedJobId === $jobId ? null : $jobId;
     }
 
-    #[On('echo-private:debug,.JobLogUpdated')]
+    /**
+     * Job updates arrive on the shown project's private channel. Declared here
+     * rather than with #[On], because a host may show no project at all, and an
+     * attribute would then subscribe to a broken `projects.` channel (or throw on
+     * the null placeholder). Echo subscriptions are fixed at mount, so a host
+     * that switches projects has to remount to follow the new channel.
+     *
+     * @return array<string, string>
+     */
+    protected function getListeners(): array
+    {
+        if ($this->projectId === null) {
+            return [];
+        }
+
+        return ["echo-private:projects.{$this->projectId},.JobLogUpdated" => 'onJobLogUpdated'];
+    }
+
     public function onJobLogUpdated(): void
     {
         if ($this->jobReportIsFrozen()) {

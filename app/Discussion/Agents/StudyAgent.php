@@ -194,10 +194,8 @@ abstract class StudyAgent implements Agent, HasProviderOptions, HasStructuredOut
     }
 
     /**
-     * The rejection rule the provider adapters carried (AnthropicClient.php:73-75
-     * and 90-92, with the same checks in OpenAiClient and GeminiClient): an empty
-     * answer after trim, or a finish reason of ContentFilter (a provider refusal),
-     * disqualify a response. Static and shared with RecordPromptLog, which applies
+     * The rejection rule: an empty answer after trim, or a finish reason of
+     * ContentFilter (a provider refusal), disqualify a response. Static and shared with RecordPromptLog, which applies
      * the same rule to StepCompleted so a refused or empty answer lands in
      * prompt_logs as status 'failed' instead of 'ok' — ensureAnswered() below only
      * ever sees that outcome after RecordPromptLog's listener has already run for

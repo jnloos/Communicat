@@ -45,7 +45,7 @@ class Summarize
                     'entries' => $toCompress->map(fn (Message $message) => $this->memory->describe($message))->all(),
                 ]));
 
-            $summary = trim($completion->structured['summary'] ?? '');
+            $summary = $completion->field('summary');
 
             // ask() used to reject an empty answer for us, but with a schema the
             // response text is the JSON and never empty. Without this check an

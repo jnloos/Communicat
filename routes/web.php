@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function (Request $request) {
+Route::get('/', function () {
     // Redirect to last project
     $projectId = Cookie::get('curr_project');
     if ($projectId && Project::find($projectId)) {
@@ -62,10 +62,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/profile', Profile::class)->name('settings.profile');
     Route::get('settings/password', Password::class)->name('settings.password');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
-    Route::get('settings/users', Users::class)->middleware('admin')->name('settings.users');
-    Route::get('settings/tags', Tags::class)->middleware('admin')->name('settings.tags');
-    Route::get('settings/transfer', Transfer::class)->middleware('admin')->name('settings.transfer');
-    Route::get('settings/export', [BundleExportController::class, 'everything'])->middleware('admin')->name('settings.export');
+    Route::get('settings/users', Users::class)->can('admin')->name('settings.users');
+    Route::get('settings/tags', Tags::class)->can('admin')->name('settings.tags');
+    Route::get('settings/transfer', Transfer::class)->can('admin')->name('settings.transfer');
+    Route::get('settings/export', [BundleExportController::class, 'everything'])->can('admin')->name('settings.export');
     Route::get('statistics', StatisticsPage::class)->middleware('verified')->name('statistics');
     Route::get('statistics/{question}/export', StudyExportController::class)->middleware('verified')->whereNumber('question')->name('statistics.export');
 

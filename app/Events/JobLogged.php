@@ -15,24 +15,41 @@ class JobLogged implements ShouldBroadcast
 
     public function __construct(public readonly JobLog $log) {}
 
-    public function broadcastOn(): array {
-        return [new PrivateChannel('debug')];
+    /**
+     * A job report carries prompts and answers, so it goes only to the project's
+     * own channel, which its owner and contributors alone may join.
+     */
+    public function broadcastOn(): array
+    {
+        if (! $this->broadcastWhen()) {
+            return [];
+        }
+
+        return [new PrivateChannel('projects.'.$this->log->project_id)];
     }
 
-    public function broadcastAs(): string {
+    /** A job outside any project has no audience. */
+    public function broadcastWhen(): bool
+    {
+        return $this->log->project_id !== null;
+    }
+
+    public function broadcastAs(): string
+    {
         return 'JobLogUpdated';
     }
 
-    public function broadcastWith(): array {
+    public function broadcastWith(): array
+    {
         return [
-            'id'          => $this->log->id,
-            'job_class'   => $this->log->job_class,
-            'project_id'  => $this->log->project_id,
-            'status'      => $this->log->status,
-            'started_at'  => $this->log->started_at?->toISOString(),
+            'id' => $this->log->id,
+            'job_class' => $this->log->job_class,
+            'project_id' => $this->log->project_id,
+            'status' => $this->log->status,
+            'started_at' => $this->log->started_at?->toISOString(),
             'finished_at' => $this->log->finished_at?->toISOString(),
-            'duration'    => $this->log->duration(),
-            'payload'     => $this->log->payload,
+            'duration' => $this->log->duration(),
+            'payload' => $this->log->payload,
         ];
     }
 }

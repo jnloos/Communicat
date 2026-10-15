@@ -20,6 +20,9 @@ class ControlChat extends Component
 
     public bool $isDispatching = false;
 
+    /** Why the last start was refused; shown in the bar until the next start. */
+    public ?string $notice = null;
+
     public function mount(Project $project): void
     {
         $this->projectId = $project->id;
@@ -35,6 +38,16 @@ class ControlChat extends Component
         if ($this->loop()->isTurnRunning($this->projectId)) {
             return;
         }
+
+        // TurnRunner refuses a project without a topic (MissingTopic). In the
+        // queue that failure would go unseen, so the bar refuses it first.
+        if (! Project::findOrFail($this->projectId)->hasTopic()) {
+            $this->notice = __('chat.controls.missing_topic');
+
+            return;
+        }
+
+        $this->notice = null;
 
         // Raise the shared flag FIRST so the self-perpetuating job loop knows to
         // keep going; the per-component flags below are only for this browser's
@@ -117,13 +130,19 @@ class ControlChat extends Component
             $disabledControlsHint = __('chat.controls.waiting_hint');
         }
 
+        $disableGenerate = $jobRunning || $this->isDispatching;
+
         return view('livewire.projects.control-chat', [
             // The START button is disabled while a turn is mid-flight; the STOP
             // button must ALWAYS be clickable (that was the "can't stop" bug).
-            'disableGenerate' => $jobRunning || $this->isDispatching,
+            'disableGenerate' => $disableGenerate,
             'disableStop' => false,
             'showGenerate' => ! $this->keepGenerating,
             'disabledControlsHint' => $disabledControlsHint,
+            // Paused while a turn still runs: that turn broadcasts its end while
+            // it still counts as running, and the heartbeat poll is off once
+            // paused, so nothing else would re-enable the start button.
+            'awaitTurnEnd' => $disableGenerate && ! $this->keepGenerating,
         ]);
     }
 }

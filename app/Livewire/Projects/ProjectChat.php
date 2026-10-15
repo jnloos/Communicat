@@ -5,44 +5,66 @@ namespace App\Livewire\Projects;
 use App\Events\ContributorsChanged;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Project;
+use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 class ProjectChat extends Component
 {
-    use NeedsConfirmation, WithPagination;
+    use NeedsConfirmation;
 
+    /** How many older messages one scroll to the top adds. */
+    public const PAGE_STEP = 5;
+
+    #[Locked]
     public int $pageSize = 10;
-
-    public int $incPageSize = 5;
-
-    public bool $hasMore = true;
 
     #[Locked]
     public int $projectId;
 
-    protected Project $project;
-
     public function mount(Project $project): void
     {
         $this->projectId = $project->id;
-        $this->project = $project;
-        $this->updateHasMore();
     }
 
-    public function hydrate(): void
+    #[Computed]
+    public function project(): Project
     {
-        $this->project = Project::findOrFail($this->projectId);
-        $this->updateHasMore();
+        return Project::findOrFail($this->projectId);
+    }
+
+    /** The newest messages up to the page size, oldest first, with everyone they name. */
+    #[Computed]
+    public function messages(): Collection
+    {
+        return $this->project->messages()
+            ->with(['expert', 'user', 'addressee'])
+            ->latest('id')
+            ->take($this->pageSize)
+            ->get()
+            ->reverse();
+    }
+
+    /** The experts, then the other people on the project, for the header's avatar group. */
+    #[Computed]
+    public function contributors(): Collection
+    {
+        return $this->project->experts()->get()
+            ->concat($this->project->users()->whereKeyNot(auth()->id())->get());
+    }
+
+    #[Computed]
+    public function hasMore(): bool
+    {
+        return $this->pageSize < $this->project->messages()->count();
     }
 
     #[On('loadMore')]
     public function loadMore(): void
     {
-        $this->pageSize += $this->incPageSize;
-        $this->updateHasMore();
+        $this->pageSize += self::PAGE_STEP;
     }
 
     public function leaveProject(): void
@@ -53,60 +75,24 @@ class ProjectChat extends Component
         $this->redirectRoute('project.new');
     }
 
-    #[On('echo-private:projects.{projectId},.UserMessageSent')]
-    public function onUserMessageSent(array $event = []): void
-    {
-        $this->updateHasMore();
-        // Carry projectId + senderId so the browser pop listener can ring for
-        // OTHER users' messages while skipping the sender's own (item 4).
-        $this->dispatch(
-            'message_generated',
-            projectId: $this->projectId,
-            senderId: $event['senderId'] ?? null,
-        );
-    }
-
     #[On('echo-private:projects.{projectId},.MessageGenerated')]
     public function onMessageGenerated(): void
     {
-        $this->updateHasMore();
         $this->dispatch('message_generated', projectId: $this->projectId);
     }
 
     #[On('echo-private:projects.{projectId},.ContributorsChanged')]
     public function onContributorsChanged(): void
     {
-        $this->project = Project::findOrFail($this->projectId);
-        $this->updateHasMore();
         $this->dispatch('contributors_modified');
     }
 
-    private function updateHasMore(): void
-    {
-        $total = $this->project->messages()->count();
-        $this->hasMore = $this->pageSize < $total;
-    }
-
-    public function getMessagesProperty()
-    {
-        return $this->project->messages()->latest('id')
-            ->take($this->pageSize)
-            ->get()
-            ->reverse();
-    }
-
-    #[On(['contributors_modified', 'project_edited', 'message_sent', 'message_generated'])]
-    public function refreshChatState(): void
-    {
-        $this->project = Project::findOrFail($this->projectId);
-        $this->updateHasMore();
-    }
+    /** Re-renders with fresh data: every computed value is read anew per request. */
+    #[On(['contributors_modified', 'project_edited', 'message_generated'])]
+    public function refreshChatState(): void {}
 
     public function render(): mixed
     {
-        return view('livewire.projects.project-chat', [
-            'project' => $this->project,
-            'messages' => $this->messages,
-        ]);
+        return view('livewire.projects.project-chat');
     }
 }

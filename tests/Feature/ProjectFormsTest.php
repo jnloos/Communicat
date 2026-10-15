@@ -65,6 +65,21 @@ class ProjectFormsTest extends TestCase
         $this->assertSame(0, $project->messages()->count());
     }
 
+    /** The description is the topic; without it the prompt has none, and a run refuses to start. */
+    public function test_editing_cannot_empty_the_description(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+        $project = Project::factory()->create(['user_id' => $owner->id, 'description' => 'Handyverbot an Schulen?']);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->set('description', '')
+            ->call('save')
+            ->assertHasErrors(['description' => 'required']);
+
+        $this->assertSame('Handyverbot an Schulen?', $project->fresh()->description);
+    }
+
     public function test_editing_keeps_the_long_term_memory(): void
     {
         $owner = User::factory()->create();

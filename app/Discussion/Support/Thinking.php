@@ -26,7 +26,7 @@ class Thinking
      *
      * @param  iterable<Expert>  $experts
      * @param  class-string<ResponseSchema>  $schema  the shape the answer must have
-     * @return array<int, array<string, mixed>> expert id → the structured answer
+     * @return array<int, Completion> expert id → the answer, read through Completion::field()
      */
     public function ask(TurnPayload $payload, iterable $experts, string $view, string $schema, array $data = []): array
     {
@@ -34,12 +34,13 @@ class Thinking
         $jobLogId = $payload->jobLogId;
         $shared = $data + ['project' => $payload->project] + $this->prompts->participants($payload->project);
 
+        $memories = $this->memory->viewsFor($payload->project, $experts);
         $tasks = [];
 
         foreach ($experts as $expert) {
             $prompt = $this->prompts->render($view, $shared + [
                 'expert' => $expert,
-                'memory' => $this->memory->viewFor($payload->project, $expert),
+                'memory' => $memories[$expert->id],
             ]);
 
             $expertId = $expert->id;
@@ -49,7 +50,7 @@ class Thinking
                 ->ask($prompt);
         }
 
-        return array_map(fn (Completion $completion) => $completion->structured, $this->parallel->run($tasks));
+        return $this->parallel->run($tasks);
     }
 
     /** Short-Term memory is one rolling thought per expert and project. */

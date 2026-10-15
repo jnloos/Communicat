@@ -60,8 +60,8 @@ class BlindJudgeSelector implements SpeakerSelector
             'drafts' => array_map(fn (Expert $expert) => $payload->thoughtOf($expert)->proposal, $drafters),
         ]));
 
-        $reasoning = trim($completion->structured['reasoning'] ?? '');
-        $label = trim($completion->structured['label'] ?? '');
+        $reasoning = $completion->field('reasoning');
+        $label = $completion->field('label');
         $order = $this->order($drafters);
         $speaker = $drafters[$label] ?? null;
 

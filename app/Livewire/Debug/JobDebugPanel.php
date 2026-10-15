@@ -5,6 +5,8 @@ namespace App\Livewire\Debug;
 use App\Livewire\Debug\Concerns\ShowsJobReport;
 use App\Models\Project;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -27,28 +29,44 @@ class JobDebugPanel extends Component
     {
         abort_unless(config('app.debug'), 404);
 
-        if (! $this->accessibleProjects()->contains('id', $this->projectId)) {
-            $this->projectId = $this->accessibleProjects()->first()?->id;
+        if (! $this->accessibleProjects->contains('id', $this->projectId)) {
+            $this->projectId = $this->accessibleProjects->first()?->id;
         }
     }
 
+    /**
+     * The id comes from the client, so every change is checked against the access
+     * rule. The page then reloads for the new project: live updates come over the
+     * project's own channel, and Echo subscriptions are fixed when a component mounts.
+     */
     public function updatedProjectId(): void
     {
-        $this->selectedJobId = null;
+        $this->authorizeProject();
+        $this->redirectRoute('debug.jobs', ['project' => $this->projectId], navigate: true);
     }
 
     /** @return Collection<int, Project> */
-    protected function accessibleProjects(): Collection
+    #[Computed]
+    public function accessibleProjects(): Collection
     {
-        return Project::whereHas('users', fn ($q) => $q->where('users.id', auth()->id()))
+        return Project::accessibleBy(auth()->user())
             ->orderBy('updated_at', 'desc')
             ->get(['id', 'title']);
     }
 
+    private function authorizeProject(): void
+    {
+        if ($this->projectId !== null) {
+            Gate::authorize('access-project', Project::findOrFail($this->projectId));
+        }
+    }
+
     public function render(): mixed
     {
+        $this->authorizeProject();
+
         return view('livewire.debug.job-debug-panel', [
-            'projects' => $this->accessibleProjects(),
+            'projects' => $this->accessibleProjects,
             ...$this->jobReportFor($this->projectId),
         ])->title(__('debug.title'));
     }

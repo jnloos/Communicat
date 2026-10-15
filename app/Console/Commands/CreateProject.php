@@ -7,6 +7,7 @@ use App\Models\Expert;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * Create a discussion from the console, fully specified.
@@ -19,7 +20,7 @@ class CreateProject extends Command
 {
     protected $signature = 'project:create
         {title : The discussion topic}
-        {--description= : The longer framing of the topic}
+        {--description= : The topic the agents discuss (required; the title never reaches a prompt)}
         {--owner= : Owner user id; defaults to the first admin, else the first user}
         {--experts= : Comma-separated expert ids to seat, in seat order}
         {--pipeline= : Short class name from app/Discussion/Pipelines}
@@ -31,6 +32,10 @@ class CreateProject extends Command
 
     public function handle(PipelineRegistry $pipelines): int
     {
+        if (! $this->optionsAreValid()) {
+            return self::FAILURE;
+        }
+
         $owner = $this->resolveOwner();
 
         if ($owner === null) {
@@ -63,7 +68,7 @@ class CreateProject extends Command
 
         $project = Project::create(array_filter([
             'title' => $this->argument('title'),
-            'description' => $this->option('description') ?? '',
+            'description' => trim($this->option('description')),
             'user_id' => $owner->id,
             'pipeline' => $pipeline,
             'model' => $model,
@@ -96,6 +101,33 @@ class CreateProject extends Command
         ]);
 
         return self::SUCCESS;
+    }
+
+    /**
+     * The description is the topic every prompt carries; without one a run
+     * cannot start (see TurnRunner). A budget or seed that is not a whole
+     * number would otherwise be cast to 0 without a word.
+     */
+    private function optionsAreValid(): bool
+    {
+        $validator = Validator::make(
+            [
+                'description' => $this->option('description'),
+                'turns' => $this->option('turns'),
+                'seed' => $this->option('seed'),
+            ],
+            [
+                'description' => ['required', 'string'],
+                'turns' => ['nullable', 'integer', 'min:1'],
+                'seed' => ['nullable', 'integer'],
+            ],
+        );
+
+        foreach ($validator->errors()->all() as $error) {
+            $this->error($error);
+        }
+
+        return $validator->passes();
     }
 
     private function resolveOwner(): ?User

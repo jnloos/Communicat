@@ -205,7 +205,7 @@ class ProjectNavigation extends Component
         // Only the project the page is showing takes the user with it; deleting
         // one from the list while reading another must not move them.
         if ($wasOpen) {
-            Cookie::forget('curr_project');
+            Cookie::expire('curr_project');
             $this->currentProjectId = null;
             $this->redirectRoute('dashboard');
         }

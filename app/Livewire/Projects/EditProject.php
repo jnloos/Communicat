@@ -30,7 +30,7 @@ class EditProject extends Component
     #[Validate('required|string|max:255')]
     public string $title = '';
 
-    #[Validate('nullable|string')]
+    #[Validate('required|string')]
     public string $description = '';
 
     public string $pipeline = '';
@@ -175,7 +175,7 @@ class EditProject extends Component
         $project = Project::findOrFail($this->forProjectId);
         Gate::authorize('manage-project', $project);
         $project->delete();
-        Cookie::forget('curr_project');
+        Cookie::expire('curr_project');
         Flux::modal('edit-project')->close();
         $this->redirectRoute('dashboard');
     }

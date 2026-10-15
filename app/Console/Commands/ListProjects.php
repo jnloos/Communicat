@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Models\JobLog;
+use App\Discussion\Metrics\SpokenTurns;
 use App\Models\Project;
 use Illuminate\Console\Command;
 
@@ -20,9 +20,9 @@ class ListProjects extends Command
 
     protected $description = 'List the discussions with their pipeline, model, seed and progress.';
 
-    public function handle(): int
+    public function handle(SpokenTurns $spokenTurns): int
     {
-        $query = Project::query()->orderBy('id');
+        $query = Project::query()->withCount('experts')->orderBy('id');
 
         if ($this->option('frozen')) {
             $query->whereNotNull('run_config');
@@ -36,10 +36,7 @@ class ListProjects extends Command
             return self::SUCCESS;
         }
 
-        $spoken = JobLog::whereNotNull('words')
-            ->selectRaw('project_id, count(*) as turns')
-            ->groupBy('project_id')
-            ->pluck('turns', 'project_id');
+        $spoken = $spokenTurns->counts($projects);
 
         $this->table(
             ['Id', 'Title', 'Pipeline', 'Model', 'Seed', 'Seats', 'Spoken', 'Started'],
@@ -49,7 +46,7 @@ class ListProjects extends Command
                 $project->pipeline,
                 $project->model,
                 $project->seed,
-                $project->contributingExperts()->count(),
+                $project->experts_count,
                 ($spoken[$project->id] ?? 0).($project->turn_budget === null ? '' : ' / '.$project->turn_budget),
                 $project->run_config === null ? 'no' : 'yes',
             ])->all(),

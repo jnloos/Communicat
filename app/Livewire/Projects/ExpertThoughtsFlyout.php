@@ -4,12 +4,18 @@ namespace App\Livewire\Projects;
 
 use App\Models\Expert;
 use App\Models\Project;
-use App\Services\Text\MemoryFormatter;
+use App\Models\Summary;
 use Flux\Flux;
+use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
+/**
+ * An expert's short-term memory in this project: the one rolling thought the
+ * Think stages overwrite each time that expert thinks. It is prose, so it is
+ * shown as written.
+ */
 class ExpertThoughtsFlyout extends Component
 {
     #[Locked]
@@ -29,46 +35,24 @@ class ExpertThoughtsFlyout extends Component
         Flux::modal('expert-thoughts-flyout')->show();
     }
 
-    public function render(): mixed
+    public function render(): View
     {
-        $expert   = $this->expertId ? Expert::find($this->expertId) : null;
-        $project  = Project::find($this->projectId);
-        $thoughts = $expert && $project ? $expert->thoughtsAbout($project) : null;
-
-        // Map the memory's prompt tokens (E7/U3) back to display names so the
-        // per-participant cards render with names instead of raw tokens.
-        $tokenNames = [];
-        if ($project !== null) {
-            foreach ($project->contributingExperts() as $e) {
-                $tokenNames[$e->promptId] = $e->name;
-            }
-            foreach ($project->users()->get()->push($project->owner)->filter()->unique('id') as $u) {
-                $tokenNames[$u->promptId] = $u->name;
-            }
-        }
-
-        $memory = app(MemoryFormatter::class)->parse($thoughts?->content, $tokenNames);
-
-        // Resolve avatars for the experts mentioned inside the memory so the
-        // view can show a small face next to each "Über X"-card.
-        $expertAvatars = [];
-        if (!empty($memory['experts']) && $project !== null) {
-            $names = array_keys($memory['experts']);
-            $expertAvatars = Expert::whereIn('name', $names)
-                ->whereHas('projects', fn($q) => $q->whereKey($project->id))
-                ->get(['id', 'name', 'avatar_url'])
-                ->mapWithKeys(fn(Expert $e) => [$e->name => [
-                    'id'         => $e->id,
-                    'avatar_url' => $e->avatar_url,
-                ]])
-                ->all();
-        }
+        $expert = $this->expertId === null ? null : Expert::find($this->expertId);
 
         return view('livewire.projects.expert-thoughts-flyout', [
-            'expert'        => $expert,
-            'thoughts'      => $thoughts,
-            'memory'        => $memory,
-            'expertAvatars' => $expertAvatars,
+            'expert' => $expert,
+            'thought' => $expert === null ? null : $this->thoughtOf($expert),
         ]);
+    }
+
+    /** Only reads: opening the flyout must never write a short-term memory. */
+    private function thoughtOf(Expert $expert): ?string
+    {
+        $content = Summary::query()
+            ->where('project_id', $this->projectId)
+            ->where('expert_id', $expert->id)
+            ->value('content');
+
+        return blank($content) ? null : $content;
     }
 }

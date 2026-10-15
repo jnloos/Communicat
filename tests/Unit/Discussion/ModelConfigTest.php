@@ -97,8 +97,39 @@ class ModelConfigTest extends TestCase
         ]);
 
         $this->assertSame(
-            ['key', 'provider', 'model', 'max_output_tokens', 'temperature', 'reasoning_effort'],
+            ['key', 'provider', 'model', 'max_output_tokens', 'temperature', 'reasoning_effort', 'native_structured_output'],
             array_keys(ModelConfig::fromConfig('probe')->toArray()),
         );
+    }
+
+    /**
+     * Whether Anthropic answers through native structured output or the
+     * synthetic tool decides whether the shape is guaranteed or only requested,
+     * so a run's snapshot has to say which path it took.
+     */
+    public function test_the_snapshot_records_the_providers_structured_output_mode(): void
+    {
+        config()->set('ai.providers.anthropic.use_native_structured_output', false);
+        config()->set('ai.models.probe', [
+            'label' => 'Probe', 'provider' => 'anthropic', 'model' => 'claude-opus-5',
+            'max_output_tokens' => 8000, 'temperature' => null, 'reasoning_effort' => 'low',
+        ]);
+
+        $this->assertFalse(ModelConfig::fromConfig('probe')->toArray()['native_structured_output']);
+
+        config()->set('ai.providers.anthropic.use_native_structured_output', true);
+
+        $this->assertTrue(ModelConfig::fromConfig('probe')->toArray()['native_structured_output']);
+    }
+
+    public function test_a_provider_without_the_switch_records_null(): void
+    {
+        config()->set('ai.models.probe', [
+            'label' => 'Probe', 'provider' => 'openai', 'model' => 'gpt-5',
+            'max_output_tokens' => 8000, 'temperature' => null, 'reasoning_effort' => 'low',
+        ]);
+
+        $this->assertArrayNotHasKey('use_native_structured_output', config('ai.providers')['openai']);
+        $this->assertNull(ModelConfig::fromConfig('probe')->toArray()['native_structured_output']);
     }
 }

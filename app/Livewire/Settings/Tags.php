@@ -153,6 +153,17 @@ class Tags extends Component
         TagValue::findOrFail($valueId)->moveTo($position);
     }
 
+    /** Move up/down in the row menu, the way to sort without dragging: negative steps go up. */
+    public function moveCategory(int $categoryId, int $steps): void
+    {
+        TagCategory::findOrFail($categoryId)->moveBy($steps);
+    }
+
+    public function moveValue(int $valueId, int $steps): void
+    {
+        TagValue::findOrFail($valueId)->moveBy($steps);
+    }
+
     private function currentScope(): TagScope
     {
         return TagScope::tryFrom($this->scope) ?? TagScope::Persona;

@@ -55,7 +55,7 @@ class Speak
     /** The contribution is never parsed; it is counted, so it is taken verbatim. */
     private function parse(Completion $completion, Project $project): Contribution
     {
-        $text = trim($completion->structured['contribution'] ?? '');
+        $text = $completion->field('contribution');
 
         // The schema declares the field required. An empty one means the turn
         // produced nothing to show and nothing to count.
@@ -69,9 +69,9 @@ class Speak
     /** Only a contributing expert may be addressed; anything else becomes the group. */
     private function addresseeToken(Completion $completion, Project $project): ?string
     {
-        $token = $completion->structured['addressee'] ?? null;
+        $token = $completion->field('addressee');
 
-        if (! is_string($token) || $token === '') {
+        if ($token === '') {
             return null;
         }
 

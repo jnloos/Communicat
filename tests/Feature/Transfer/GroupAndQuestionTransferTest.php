@@ -289,6 +289,22 @@ class GroupAndQuestionTransferTest extends TestCase
         $this->assertSame((string) $newGroup->id, (new DefinitionNames($user))->toIds($grouped)['baseline']);
     }
 
+    /** Groups match by name as tags do: case and surrounding space do not count. */
+    public function test_group_names_match_like_tag_names(): void
+    {
+        $user = User::factory()->create();
+        $group = ProjectGroup::create(['user_id' => $user->id, 'name' => 'Quality', 'position' => 1]);
+
+        $ids = (new DefinitionNames($user))->toIds([
+            'projects' => ['groups' => [' quality ']],
+            'compare_by' => 'group',
+            'baseline' => 'QUALITY',
+        ]);
+
+        $this->assertSame([$group->id], $ids['projects']['groups']);
+        $this->assertSame((string) $group->id, (string) $ids['baseline']);
+    }
+
     public function test_imported_questions_join_the_end_of_the_importers_list(): void
     {
         $reader = User::factory()->create();

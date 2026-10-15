@@ -6,9 +6,10 @@
      not say what kind of task this is. A topic may be a question to decide, a
      plan to draw up or anything else the description asks for; prescribing one
      shape here would contradict the others. The frame binds the agents to the
-     topic and says nothing about what the topic wants. --}}
+     topic and says nothing about what the topic wants. There is no fallback
+     to the title: TurnRunner refuses a project without a description. --}}
 === THE TOPIC ===
-{{ $project->description ?: $project->title }}
+{{ $project->description }}
 
 This is what the group is here for. Stay with it: everything you contribute
 serves this topic, and nothing else takes its place as the task.

@@ -137,6 +137,16 @@ class BlindJudgeSelectorTest extends TestCase
         $this->assertContains($selection->speaker->id, [$this->experts[0]->id, $this->experts[1]->id]);
     }
 
+    public function test_a_label_that_is_not_a_string_falls_back_to_the_tie_breaker(): void
+    {
+        FakeAgents::always(JudgeAgent::class, ['label' => ['A'], 'reasoning' => '-']);
+
+        $selection = $this->judge(drafting: [0, 1]);
+
+        $this->assertSame('', $selection->signals['label']);
+        $this->assertTrue($selection->signals['fallback']);
+    }
+
     /** Without a single draft there is nothing to judge, so no call is made at all. */
     public function test_no_draft_at_all_skips_the_judge(): void
     {

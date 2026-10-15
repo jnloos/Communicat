@@ -21,4 +21,18 @@ class ImportReportTest extends TestCase
         $this->assertSame('already there', $copy->entries(ImportReport::PROJECTS)[1]['note']);
         $this->assertTrue($copy->hasFailures());
     }
+
+    public function test_failed_entries_come_first_and_each_group_keeps_its_order(): void
+    {
+        $report = new ImportReport;
+        $report->add(ImportReport::PROJECTS, 'A', ImportReport::CREATED);
+        $report->add(ImportReport::PROJECTS, 'B', ImportReport::FAILED);
+        $report->add(ImportReport::PROJECTS, 'C', ImportReport::SKIPPED);
+        $report->add(ImportReport::PROJECTS, 'D', ImportReport::FAILED);
+
+        $names = array_column($report->entriesFailedFirst(ImportReport::PROJECTS), 'name');
+
+        $this->assertSame(['B', 'D', 'A', 'C'], $names);
+        $this->assertSame([], $report->entriesFailedFirst(ImportReport::TAGS));
+    }
 }

@@ -13,6 +13,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Throwable;
 
 /**
  * The interactive UI loop: runs one turn, then queues itself again after a
@@ -22,7 +23,14 @@ class MessageGenerator implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    /** Below GenerationLoop::LOCK_SECONDS and the queue's retry_after (300 s). */
     public int $timeout = 280;
+
+    /**
+     * A retry would run a second turn on top of whatever the first one already
+     * wrote, so a dead job ends the loop instead (see failed()).
+     */
+    public int $tries = 1;
 
     public function __construct(public int $projectId) {}
 
@@ -63,5 +71,16 @@ class MessageGenerator implements ShouldQueue
                 }
             }
         });
+    }
+
+    /**
+     * The job died outside TurnRunner (timeout, worker crash, database gone):
+     * switch the loop off and tell the open chats, or their buttons would keep
+     * showing a discussion that no longer runs.
+     */
+    public function failed(?Throwable $exception): void
+    {
+        app(GenerationLoop::class)->stop($this->projectId);
+        GenerationStopped::dispatch($this->projectId);
     }
 }

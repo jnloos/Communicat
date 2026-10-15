@@ -96,4 +96,19 @@ class MessageGeneratorTest extends TestCase
         Event::assertDispatched(GenerationStopped::class);
         Queue::assertNothingPushed();
     }
+
+    public function test_a_job_that_dies_outside_the_runner_stops_the_loop(): void
+    {
+        $this->loop->start($this->project->id);
+
+        (new MessageGenerator($this->project->id))->failed(new RuntimeException('worker timeout'));
+
+        $this->assertFalse($this->loop->isGenerating($this->project->id));
+        Event::assertDispatched(GenerationStopped::class, fn (GenerationStopped $event) => $event->projectId === $this->project->id);
+    }
+
+    public function test_a_turn_is_never_retried(): void
+    {
+        $this->assertSame(1, (new MessageGenerator($this->project->id))->tries);
+    }
 }

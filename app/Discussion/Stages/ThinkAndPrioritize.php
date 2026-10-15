@@ -6,6 +6,7 @@ use App\Discussion\ParseFailure;
 use App\Discussion\Schemas\ThoughtWithPrioritySchema;
 use App\Discussion\Support\Thinking;
 use App\Discussion\TurnPayload;
+use App\Discussion\Values\Completion;
 use App\Discussion\Values\Thought;
 use App\Events\PipelineStageChanged;
 use Closure;
@@ -28,7 +29,7 @@ class ThinkAndPrioritize
 
         foreach ($experts as $expert) {
             $answer = $answers[$expert->id];
-            $thought = trim($answer['thought'] ?? '');
+            $thought = $answer->field('thought');
 
             if ($thought === '') {
                 throw new ParseFailure(
@@ -49,12 +50,10 @@ class ThinkAndPrioritize
      * signals, so the study can tell a real bid from a replaced one. The schema
      * constrains the range, but a provider that answers through a tool is asked,
      * not forced, so the check stays.
-     *
-     * @param  array<string, mixed>  $answer
      */
-    private function priority(array $answer): ?int
+    private function priority(Completion $answer): ?int
     {
-        $raw = $answer['priority'] ?? null;
+        $raw = $answer->structured['priority'] ?? null;
 
         if (! is_int($raw) && ! (is_string($raw) && ctype_digit($raw))) {
             return null;

@@ -111,4 +111,13 @@ class ThinkAsSpeakerTest extends TestCase
 
         $this->assertSame('bleibt', Summary::sole()->content);
     }
+
+    public function test_a_thought_that_is_not_a_string_is_a_parse_failure(): void
+    {
+        FakeAgents::always(ThinkAgent::class, ['thought' => ['gegliedert']]);
+
+        $this->expectException(ParseFailure::class);
+
+        app(ThinkAsSpeaker::class)->handle($this->payload(), fn (TurnPayload $p) => $p);
+    }
 }

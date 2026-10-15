@@ -13,6 +13,8 @@ return [
         'set_contributors' => 'Set Contributors',
     ],
 
+    'loading_older' => 'Loading older messages …',
+
     'message' => [
         'addressed' => 'Addressed:',
         'show_memory' => 'Show memory: :name',
@@ -31,6 +33,7 @@ return [
         'aria_label' => 'Discussion controls',
         'busy_hint' => 'Another operation is in progress. Try again in a moment.',
         'waiting_hint' => 'Waiting for the current expert message…',
+        'missing_topic' => 'This project has no description. The description is the topic of the discussion; add one in the project settings, then start again.',
     ],
 
     'indicator' => [

@@ -1,33 +1,21 @@
-@props([
-    'project',
-    'experts',
-    'users',
-    'hasFilters' => false,
-    'canAddExpert' => true,
-    'expertLimit' => 5,
-    'limitWarning' => null,
-])
-
 <flux:modal name="select-contributors" variant="flyout" class="w-full p-5! sm:p-8! md:w-[32rem]">
-    <div class="space-y-1 pe-8">
-        <flux:heading size="lg">{{ __('projects.contributors.heading') }}</flux:heading>
-        <flux:text size="sm">{{ trans_choice('projects.contributors.subheading', $expertLimit) }}</flux:text>
-    </div>
+    <x-modal-header
+        :heading="__('projects.contributors.heading')"
+        :subheading="trans_choice('projects.contributors.subheading', $expertLimit)"
+    />
 
     <flux:tab.group class="mt-5 w-full">
         <flux:tabs variant="segmented" class="w-full -mb-5">
             <flux:tab name="experts" selected>{{ __('projects.contributors.tab_experts') }}</flux:tab>
-            @can('manage-contributors', $project)
+            @if ($mayManage)
                 <flux:tab name="users">{{ __('projects.contributors.tab_users') }}</flux:tab>
-            @endcan
+            @endif
         </flux:tabs>
 
         <flux:tab.panel name="experts" selected>
             <div class="space-y-4">
                 @if($limitWarning)
-                    <p class="text-xs rounded-md bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700/60 text-amber-800 dark:text-amber-200 px-3 py-2">
-                        {{ $limitWarning }}
-                    </p>
+                    <flux:callout variant="warning" icon="exclamation-triangle" :text="$limitWarning" />
                 @elseif(!$canAddExpert)
                     <p class="text-xs text-zinc-500 dark:text-zinc-400">
                         {{ trans_choice('projects.contributors.limit_reached', $expertLimit) }}
@@ -46,14 +34,15 @@
                     </x-empty-state>
                 @else
                     @foreach ($experts as $expert)
-                        @php($active = $expert->isContributing($project))
-                        @php($limitBlocked = !$active && !$canAddExpert)
+                        @php($active = isset($seatedExpertIds[$expert->id]))
                         <x-contributors.contributors-card
+                            wire:key="expert-{{ $expert->id }}"
                             :selected="$active"
-                            :dimmed="$limitBlocked"
+                            :dimmed="! $active && ! $canAddExpert"
+                            :disabled="! $mayManage"
                             :name="$expert->name"
                             :role="$expert->role"
-                            :avatar-url="$expert->avatar_url ?? null"
+                            :avatar-url="$expert->avatar_url"
                             wire:loading.attr="disabled"
                             wire:click="{{ $active ? 'removeExpert' : 'addExpert' }}({{ $expert->id }})"
                         />
@@ -62,7 +51,7 @@
             </div>
         </flux:tab.panel>
 
-        @can('manage-contributors', $project)
+        @if ($mayManage)
             <flux:tab.panel name="users">
                 <div class="space-y-4">
                     <flux:input
@@ -82,12 +71,13 @@
                         </x-empty-state>
                     @else
                         @foreach ($users as $user)
-                            @php($active = $project->users()->whereKey($user->id)->exists())
+                            @php($active = isset($invitedUserIds[$user->id]))
                             <x-contributors.contributors-card
+                                wire:key="user-{{ $user->id }}"
                                 :selected="$active"
                                 :name="$user->name"
                                 :role="$user->email"
-                                :avatar-url="$user->avatar_url ?? null"
+                                :avatar-url="$user->avatar_url"
                                 wire:loading.attr="disabled"
                                 wire:click="{{ $active ? 'removeUser' : 'addUser' }}({{ $user->id }})"
                             />
@@ -95,6 +85,6 @@
                     @endif
                 </div>
             </flux:tab.panel>
-        @endcan
+        @endif
     </flux:tab.group>
 </flux:modal>

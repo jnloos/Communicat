@@ -135,35 +135,37 @@ final readonly class QuestionDefinition
     {
         $comparesGroups = $this->compareBy?->type === DimensionType::Group;
 
-        return new self(
-            metric: $this->metric,
-            people: $this->people,
-            aggregate: $this->aggregate,
-            projects: $this->projects->withoutGroups(),
-            turns: $this->turns,
-            compareBy: $comparesGroups ? null : $this->compareBy,
-            splitBy: array_values(array_filter($this->splitBy, fn (Dimension $dimension) => $dimension->type !== DimensionType::Group)),
-            form: $this->form,
-            curve: $this->curve,
-            baseline: $comparesGroups ? null : $this->baseline,
-        );
+        return $this->with([
+            'projects' => $this->projects->withoutGroups(),
+            'compareBy' => $comparesGroups ? null : $this->compareBy,
+            'splitBy' => array_values(array_filter($this->splitBy, fn (Dimension $dimension) => $dimension->type !== DimensionType::Group)),
+            'baseline' => $comparesGroups ? null : $this->baseline,
+        ]);
     }
 
     public function withBaseline(?string $baseline): self
     {
-        return new self($this->metric, $this->people, $this->aggregate, $this->projects, $this->turns,
-            $this->compareBy, $this->splitBy, $this->form, $this->curve, $this->compareBy === null ? null : $baseline);
+        return $this->with(['baseline' => $this->compareBy === null ? null : $baseline]);
     }
 
     public function withForm(ResultForm $form): self
     {
-        return new self($this->metric, $this->people, $this->aggregate, $this->projects, $this->turns,
-            $this->compareBy, $this->splitBy, $form, $this->curve, $this->baseline);
+        return $this->with(['form' => $form]);
     }
 
     public function withTurns(TurnRange $turns): self
     {
-        return new self($this->metric, $this->people, $this->aggregate, $this->projects, $turns,
-            $this->compareBy, $this->splitBy, $this->form, $this->curve, $this->baseline);
+        return $this->with(['turns' => $turns]);
+    }
+
+    /**
+     * A copy with some fields changed, by name: a new field cannot shift the
+     * others, as it could in a positional argument list.
+     *
+     * @param  array<string, mixed>  $changes  constructor parameter => value
+     */
+    private function with(array $changes): self
+    {
+        return new self(...[...get_object_vars($this), ...$changes]);
     }
 }

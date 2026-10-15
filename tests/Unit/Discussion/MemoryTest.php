@@ -9,6 +9,7 @@ use App\Models\Project;
 use App\Models\Summary;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class MemoryTest extends TestCase
@@ -98,6 +99,28 @@ class MemoryTest extends TestCase
         Summary::create(['project_id' => $project->id, 'expert_id' => $expert->id, 'content' => 'Ich will nachhaken.']);
 
         $this->assertSame('Ich will nachhaken.', (new Memory)->viewFor($project, $expert)->shortTerm);
+    }
+
+    /** A Think round asks every expert at once: the shared History is read once, each Short-Term apart. */
+    public function test_views_for_several_experts_share_one_read_of_the_history(): void
+    {
+        [$alice, $bob] = Expert::factory()->count(2)->create()->all();
+        $project = Project::factory()->create(['long_term_memory' => 'Bisher: X.']);
+        $project->addContributingExpert($alice);
+        $project->addContributingExpert($bob);
+        $project->addMessage('Erster Beitrag.', $alice);
+        Summary::create(['project_id' => $project->id, 'expert_id' => $alice->id, 'content' => 'Ich will nachhaken.']);
+
+        DB::enableQueryLog();
+        $views = (new Memory)->viewsFor($project, [$alice, $bob]);
+        $historyReads = array_filter(DB::getQueryLog(), fn (array $query) => str_contains($query['query'], 'from "messages"') && str_contains($query['query'], 'order by'));
+
+        $this->assertCount(1, $historyReads);
+        $this->assertSame('Ich will nachhaken.', $views[$alice->id]->shortTerm);
+        $this->assertSame('', $views[$bob->id]->shortTerm);
+        $this->assertSame($views[$alice->id]->history, $views[$bob->id]->history);
+        $this->assertSame('Bisher: X.', $views[$bob->id]->longTerm);
+        $this->assertSame($views[$alice->id]->history, (new Memory)->viewFor($project, $alice)->history);
     }
 
     public function test_reading_memory_writes_nothing(): void

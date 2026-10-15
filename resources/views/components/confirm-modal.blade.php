@@ -21,14 +21,19 @@
 >
     <flux:modal name="confirm-action" class="md:w-[28rem]">
         <div class="space-y-6">
-            <flux:heading size="lg" x-text="title"></flux:heading>
+            {{-- The title arrives with the event, so it goes in as a slot that Alpine fills. --}}
+            <x-modal-header>
+                <x-slot:heading><span x-text="title"></span></x-slot:heading>
+            </x-modal-header>
+
             <flux:text x-text="message"></flux:text>
-            <div class="flex justify-end gap-2">
+
+            <x-modal-footer padding="dialog">
                 <flux:modal.close>
                     <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
                 </flux:modal.close>
                 <flux:button variant="danger" x-on:click="confirm()">{{ __('common.actions.confirm') }}</flux:button>
-            </div>
+            </x-modal-footer>
         </div>
     </flux:modal>
 </div>

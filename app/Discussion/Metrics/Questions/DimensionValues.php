@@ -39,6 +39,9 @@ final class DimensionValues
     /** @var array<string, array<int, array<int, int>>> morph class => model id => category id => value id */
     private array $tags = [];
 
+    /** @var array<int, string> category id => its label, read once per instance */
+    private array $categoryLabels = [];
+
     public function __construct(private readonly PipelineRegistry $pipelines, private readonly SpokenTurns $spoken) {}
 
     /**
@@ -147,7 +150,8 @@ final class DimensionValues
 
     private function category(Dimension $dimension): string
     {
-        return TagCategory::find($dimension->categoryId)?->label() ?? __('questions.sentence.deleted');
+        return $this->categoryLabels[$dimension->categoryId]
+            ??= TagCategory::find($dimension->categoryId)?->label() ?? __('questions.sentence.deleted');
     }
 
     /**
@@ -159,8 +163,10 @@ final class DimensionValues
         $known = $this->tags[$morphClass] ?? [];
         $unread = array_values(array_diff($ids, array_keys($known)));
 
+        // Kept, misses included (readTags() reads an untagged model as []),
+        // so asking again for the same model costs no second query.
         if ($unread !== []) {
-            $known += $this->readTags($morphClass, $unread);
+            $known = $this->tags[$morphClass] = $known + $this->readTags($morphClass, $unread);
         }
 
         $values = [];

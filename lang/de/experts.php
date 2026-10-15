@@ -43,12 +43,6 @@ return [
     'memory' => [
         'heading' => 'Gedächtnis zur Diskussion',
         'empty' => 'Noch kein Gedächtnis vorhanden. :name hat sich bislang keine Notizen gemacht.',
-        'about_user' => 'Über den Nutzer',
-        'about' => 'Über :name',
-        'thoughts_of' => 'Gedanken von :name',
-        'open_questions' => 'Offene Fragen',
-        'last_state' => 'Letzter Gesprächsstand',
-        'legacy_format' => 'Format wird beim nächsten Update aktualisiert.',
         'none_selected' => 'Kein Experte ausgewählt.',
     ],
 ];

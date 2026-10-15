@@ -4,6 +4,7 @@ namespace App\Services\Transfer;
 
 use App\Models\Expert;
 use App\Services\Tags\TagsByName;
+use App\Services\Transfer\Rows\Timestamp;
 use Illuminate\Support\Str;
 
 /**
@@ -31,7 +32,7 @@ final class ExpertTransfer
             'description' => $expert->description,
             'avatar_url' => $expert->avatar_url,
             'tags' => $this->tags->export($expert),
-            'created_at' => $expert->created_at?->toIso8601String(),
+            'created_at' => Timestamp::export($expert->created_at),
         ];
     }
 

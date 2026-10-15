@@ -1,5 +1,5 @@
 @props([
-    'name' => 'NV',
+    'name',
     'avatarUrl' => null
 ])
 

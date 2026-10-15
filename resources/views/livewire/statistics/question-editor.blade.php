@@ -249,11 +249,11 @@
     @else
         {{-- Legend: one colour per group, the same in every panel. --}}
         @if (count($result->groups) > 1)
-            <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            <div class="flex flex-wrap gap-x-4 gap-y-1">
                 @foreach ($result->groups as $key => $label)
-                    <span class="flex items-center gap-1.5" wire:key="legend-{{ $key }}">
-                        <span class="size-2.5 rounded-full" style="background-color: var(--color-{{ GroupColor::at($loop->index) }})"></span>{{ $label }}
-                    </span>
+                    <flux:chart.legend :label="$label" class="p-0!" wire:key="legend-{{ $key }}">
+                        <flux:chart.legend.indicator style="background-color: var(--color-{{ GroupColor::at($loop->index) }})" />
+                    </flux:chart.legend>
                 @endforeach
             </div>
         @endif

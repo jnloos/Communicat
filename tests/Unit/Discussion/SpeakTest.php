@@ -110,6 +110,15 @@ class SpeakTest extends TestCase
         $this->speak($this->payload());
     }
 
+    public function test_a_contribution_that_is_not_a_string_is_a_parse_failure(): void
+    {
+        FakeAgents::always(SpeakAgent::class, ['contribution' => ['Text.'], 'addressee' => ['E1']]);
+
+        $this->expectException(ParseFailure::class);
+
+        $this->speak($this->payload());
+    }
+
     public function test_the_prompt_carries_a_proposal_when_the_speaker_made_one(): void
     {
         FakeAgents::always(SpeakAgent::class, ['contribution' => 'Text.', 'addressee' => null]);

@@ -5,6 +5,8 @@ namespace Tests\Feature\Settings;
 use App\Livewire\Settings\Users;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -64,5 +66,30 @@ class UsersTest extends TestCase
         Livewire::test(Users::class)->call('delete', $other->id)->assertOk();
 
         $this->assertNull($other->fresh());
+    }
+
+    /** The model's 'hashed' cast hashes the password once; the stored hash checks against the plain text. */
+    public function test_a_new_users_password_is_stored_hashed(): void
+    {
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+
+        Livewire::test(Users::class)
+            ->set('name', 'Neu')
+            ->set('email', 'neu@example.com')
+            ->set('password', 'geheim-genug')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertTrue(Hash::check('geheim-genug', User::where('email', 'neu@example.com')->sole()->password));
+    }
+
+    /** Which user a save edits is set by openEdit() alone, never by the client. */
+    public function test_the_edited_user_cannot_be_set_from_the_client(): void
+    {
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+
+        $this->expectException(CannotUpdateLockedPropertyException::class);
+
+        Livewire::test(Users::class)->set('editingUserId', 1);
     }
 }
