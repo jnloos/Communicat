@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Projects;
 
+use App\Discussion\Values\CurveMode;
+use App\Discussion\Values\ShareUnit;
 use App\Livewire\Projects\StatisticsFlyout;
 use App\Models\Expert;
 use App\Models\JobLog;
@@ -9,6 +11,7 @@ use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class StatisticsFlyoutTest extends TestCase
@@ -54,7 +57,7 @@ class StatisticsFlyoutTest extends TestCase
         Livewire::test(StatisticsFlyout::class, ['project' => $this->project])
             ->assertSet('opened', false)
             ->assertViewHas('report', fn ($report) => $report->isEmpty())
-            ->assertViewHas('turnSectors', []);
+            ->assertViewHas('charts', fn ($charts) => $charts->turnSectors() === []);
     }
 
     public function test_opening_fills_both_charts(): void
@@ -65,8 +68,7 @@ class StatisticsFlyoutTest extends TestCase
         Livewire::test(StatisticsFlyout::class, ['project' => $this->project])
             ->call('open')
             ->assertSet('opened', true)
-            ->assertViewHas('turnSectors', fn ($sectors) => count($sectors) === 2)
-            ->assertViewHas('wordSectors', fn ($sectors) => count($sectors) === 2);
+            ->assertViewHas('charts', fn ($charts) => count($charts->turnSectors()) === 2 && count($charts->wordSectors()) === 2);
     }
 
     /**
@@ -80,8 +82,8 @@ class StatisticsFlyoutTest extends TestCase
 
         $component = Livewire::test(StatisticsFlyout::class, ['project' => $this->project])->call('open');
 
-        $turnColours = collect($component->viewData('turnSectors'))->pluck('color', 'name');
-        $wordColours = collect($component->viewData('wordSectors'))->pluck('color', 'name');
+        $turnColours = collect($component->viewData('charts')->turnSectors())->pluck('color', 'name');
+        $wordColours = collect($component->viewData('charts')->wordSectors())->pluck('color', 'name');
 
         $this->assertSame($turnColours->all(), $wordColours->all());
         $this->assertNotSame($turnColours['Alice'], $turnColours['Bob']);
@@ -97,7 +99,7 @@ class StatisticsFlyoutTest extends TestCase
 
         $sectors = Livewire::test(StatisticsFlyout::class, ['project' => $this->project])
             ->call('open')
-            ->viewData('turnSectors');
+            ->viewData('charts')->turnSectors();
 
         foreach ($sectors as $sector) {
             $this->assertContains($sector['color'], $palette);
@@ -110,7 +112,7 @@ class StatisticsFlyoutTest extends TestCase
 
         $component = Livewire::test(StatisticsFlyout::class, ['project' => $this->project])->call('open');
 
-        $this->assertCount(1, $component->viewData('turnSectors'));
+        $this->assertCount(1, $component->viewData('charts')->turnSectors());
         $this->assertCount(2, $component->viewData('report')->speakers);
     }
 
@@ -123,7 +125,7 @@ class StatisticsFlyoutTest extends TestCase
         $sectors = collect(
             Livewire::test(StatisticsFlyout::class, ['project' => $this->project])
                 ->call('open')
-                ->viewData('turnSectors')
+                ->viewData('charts')->turnSectors()
         )->keyBy('name');
 
         $this->assertSame('66.7 %', $sectors['Alice']['share']);
@@ -188,7 +190,7 @@ class StatisticsFlyoutTest extends TestCase
 
         $component = Livewire::test(StatisticsFlyout::class, ['project' => $this->project])->call('open');
 
-        $pieColours = collect($component->viewData('turnSectors'))->pluck('color', 'name');
+        $pieColours = collect($component->viewData('charts')->turnSectors())->pluck('color', 'name');
         $lineColours = collect($component->viewData('trajectoryLines'))->pluck('color', 'name');
 
         $this->assertSame($pieColours->all(), $lineColours->all());
@@ -237,6 +239,40 @@ class StatisticsFlyoutTest extends TestCase
             ->viewData('trajectoryRows');
 
         $this->assertSame(50.0, $rows[1]['e'.$this->experts['Alice']->id]);
+    }
+
+    /**
+     * Livewire's own enum synthesizer would answer an unknown value with a
+     * ValueError (a 500); DefaultingEnumSynth reads it as the enum's default.
+     *
+     * @return array<string, array{string, mixed}>
+     */
+    public static function unreadableToggles(): array
+    {
+        return [
+            'unknown mode' => ['trajectoryMode', 'sliding'],
+            'empty unit' => ['trajectoryUnit', ''],
+            'null mode' => ['trajectoryMode', null],
+            'array unit' => ['trajectoryUnit', ['words']],
+            'number mode' => ['trajectoryMode', 7],
+        ];
+    }
+
+    #[DataProvider('unreadableToggles')]
+    public function test_an_unreadable_toggle_reads_as_its_default(string $toggle, mixed $value): void
+    {
+        $this->turn('Alice', 10);
+        $this->turn('Bob', 30);
+
+        $component = Livewire::test(StatisticsFlyout::class, ['project' => $this->project])
+            ->call('open')
+            ->set('trajectoryUnit', ShareUnit::Words)
+            ->set('trajectoryMode', CurveMode::Rolling)
+            ->set($toggle, $value)
+            ->assertOk();
+
+        $default = $toggle === 'trajectoryMode' ? CurveMode::Cumulative : ShareUnit::Turns;
+        $this->assertSame($default, $component->get($toggle));
     }
 
     public function test_the_open_panel_renders_the_line_chart(): void

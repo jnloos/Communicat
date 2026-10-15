@@ -21,4 +21,10 @@ enum ShareSeries: string
     case CumulativeWords = 'cumulative_words';
     case RollingTurns = 'rolling_turns';
     case RollingWords = 'rolling_words';
+
+    /** The curve for one aggregation of one unit; every pairing has a case. */
+    public static function of(CurveMode $mode, ShareUnit $unit): self
+    {
+        return self::from("{$mode->value}_{$unit->value}");
+    }
 }

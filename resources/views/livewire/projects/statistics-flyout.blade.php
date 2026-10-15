@@ -14,45 +14,15 @@
                      both, so a slice that is bigger on the right than on the left
                      reads as "speaks rarely, writes at length" without any maths. --}}
                 <div class="grid gap-6 sm:grid-cols-2">
-                    @foreach ([
-                        ['sectors' => $turnSectors, 'label' => __('statistics.turn_share'), 'unit' => __('statistics.columns.turns'), 'gini' => $report->turnGini, 'total' => trans_choice('statistics.turns_total', $report->spokenTurns, ['count' => $report->spokenTurns])],
-                        ['sectors' => $wordSectors, 'label' => __('statistics.word_share'), 'unit' => __('statistics.columns.words'), 'gini' => $report->wordGini, 'total' => trans_choice('statistics.words_total', $report->totalWords, ['count' => LocaleNumber::decimal($report->totalWords, 0)])],
-                    ] as $chart)
-                        <flux:card size="sm">
-                            <flux:heading size="sm">{{ $chart['label'] }}</flux:heading>
-                            <flux:text size="sm" class="mt-0.5">{{ $chart['total'] }}</flux:text>
-
-                            {{-- Hovering a sector: Flux marks the others data-inactive and
-                                 hands the tooltip the sector's own colour through
-                                 --flux-chart-color, which the indicator picks up. --}}
-                            <flux:chart :value="$chart['sectors']" class="mt-4 aspect-square">
-                                <flux:chart.svg>
-                                    <flux:chart.pie
-                                        field="value"
-                                        label-field="name"
-                                        class="origin-center cursor-pointer transition-[opacity,transform] duration-150 data-inactive:opacity-35 data-active:scale-105"
-                                    />
-                                </flux:chart.svg>
-
-                                <flux:chart.tooltip>
-                                    <flux:chart.tooltip.heading field="name" />
-                                    <flux:chart.tooltip.value field="value" :label="$chart['unit']">
-                                        <flux:chart.tooltip.indicator />
-                                    </flux:chart.tooltip.value>
-                                    <flux:chart.tooltip.value field="share" :label="__('statistics.columns.turn_share')" />
-                                </flux:chart.tooltip>
-                            </flux:chart>
-
-                            {{-- The coefficient means nothing without its ceiling: with
-                                 four agents the maximum is 0.75, not 1. --}}
-                            <div class="mt-4 flex items-baseline justify-between border-t border-zinc-200 pt-3 dark:border-zinc-700">
-                                <span class="text-xs uppercase tracking-wide text-zinc-500">{{ __('statistics.gini') }}</span>
-                                <span class="font-mono text-sm text-zinc-700 dark:text-zinc-300">
-                                    {{ LocaleNumber::decimal($chart['gini'], 2) }}
-                                    <span class="text-zinc-400">/ {{ LocaleNumber::decimal($report->giniCeiling, 2) }}</span>
-                                </span>
-                            </div>
-                        </flux:card>
+                    @foreach ($charts->pies() as $pie)
+                        <x-statistics.share-pie
+                            :sectors="$pie['sectors']"
+                            :label="$pie['label']"
+                            :unit="$pie['unit']"
+                            :gini="$pie['gini']"
+                            :ceiling="$report->giniCeiling"
+                            :total="$pie['total']"
+                        />
                     @endforeach
                 </div>
 
@@ -65,7 +35,7 @@
                         <div>
                             <flux:heading size="sm">{{ __('statistics.trajectory.title') }}</flux:heading>
                             <flux:text size="sm" class="mt-0.5">
-                                {{ $trajectoryMode === 'rolling'
+                                {{ $trajectoryMode === \App\Discussion\Values\CurveMode::Rolling
                                     ? trans_choice('statistics.trajectory.rolling_hint', $trajectoryWindow, ['count' => $trajectoryWindow])
                                     : __('statistics.trajectory.cumulative_hint') }}
                             </flux:text>
@@ -87,7 +57,7 @@
                     {{-- Keyed on the toggles: the chart's children are wire:ignore'd, so a
                          new series needs a fresh element rather than a morphed one. --}}
                     <flux:chart
-                        wire:key="trajectory-{{ $trajectoryUnit }}-{{ $trajectoryMode }}-{{ count($trajectoryRows) }}"
+                        wire:key="trajectory-{{ $trajectoryUnit->value }}-{{ $trajectoryMode->value }}-{{ count($trajectoryRows) }}"
                         :value="$trajectoryRows"
                         class="mt-4 aspect-[2/1]"
                     >
@@ -142,7 +112,7 @@
                             <flux:table.row wire:key="share-{{ $share->expertId }}" :class="$share->turns === 0 ? '*:text-zinc-400! dark:*:text-zinc-600!' : ''">
                                 <flux:table.cell variant="strong">
                                     <span class="flex items-center gap-2">
-                                        <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $this->colorFor($index) }}-500)"></span>
+                                        <span class="size-2.5 shrink-0 rounded-full" style="background-color: var(--color-{{ $charts->colorFor($index) }}-500)"></span>
                                         <span class="truncate">{{ $share->name }}</span>
                                     </span>
                                 </flux:table.cell>

@@ -2,6 +2,8 @@
 
 namespace App\Discussion\Values;
 
+use Illuminate\Contracts\Support\Arrayable;
+
 /**
  * One run's speaking shares: the study's two primary measures side by side.
  *
@@ -12,7 +14,8 @@ namespace App\Discussion\Values;
  * Length is counted in words, never in model tokens: the tokenizers of the
  * model families differ, which would bias the very contrast the study draws.
  */
-final readonly class ShareReport
+/** @implements Arrayable<string, array<mixed>> */
+final readonly class ShareReport implements Arrayable
 {
     /**
      * @param  list<SpeakerShare>  $speakers  ordered by seat, so a participant keeps
@@ -44,5 +47,26 @@ final readonly class ShareReport
     public function isEmpty(): bool
     {
         return $this->spokenTurns === 0;
+    }
+
+    /**
+     * The run's totals and one entry per speaker, coefficients rounded to six
+     * places like the shares.
+     *
+     * @return array{run: array<string, int|float>, speakers: list<array<string, int|float|string|null>>}
+     */
+    public function toArray(): array
+    {
+        return [
+            'run' => [
+                'turns_spoken' => $this->spokenTurns,
+                'turns_failed_without_speaking' => $this->failedTurns,
+                'words_total' => $this->totalWords,
+                'gini_turns' => round($this->turnGini, 6),
+                'gini_words' => round($this->wordGini, 6),
+                'gini_ceiling' => round($this->giniCeiling, 6),
+            ],
+            'speakers' => array_map(fn (SpeakerShare $speaker) => $speaker->toArray(), $this->speakers),
+        ];
     }
 }

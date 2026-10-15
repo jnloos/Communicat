@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Discussion\Logging\GuardAgainstFailover;
 use App\Discussion\Logging\RecordPromptLog;
 use App\Discussion\Pipelines\PipelineRegistry;
+use App\Livewire\Synthesizers\DefaultingEnumSynth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Ai\Events\AgentFailed;
@@ -13,6 +14,7 @@ use Laravel\Ai\Events\PromptingAgent;
 use Laravel\Ai\Events\ProviderFailedOver;
 use Laravel\Ai\Events\StepCompleted;
 use Laravel\Ai\Events\StepFailed;
+use Livewire\Livewire;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,5 +38,8 @@ class AppServiceProvider extends ServiceProvider
         // AgentFailedOver extends ProviderFailedOver, but Laravel's dispatcher does not
         // walk parent classes — both have to be named for either one to be heard.
         Event::listen([ProviderFailedOver::class, AgentFailedOver::class], [GuardAgainstFailover::class, 'handle']);
+
+        // An unknown value for an enum with a default reads as that default, not a 500.
+        Livewire::propertySynthesizer(DefaultingEnumSynth::class);
     }
 }

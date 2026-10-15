@@ -3,14 +3,13 @@
 namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\ResolvesProject;
+use App\Console\MetricsFormat;
 use App\Discussion\Metrics\ShareTrajectory;
 use App\Discussion\Metrics\SpeakingShares;
-use App\Discussion\Values\Participant;
+use App\Discussion\Support\LocaleNumber;
 use App\Discussion\Values\ShareReport;
-use App\Discussion\Values\ShareSeries;
 use App\Discussion\Values\SpeakerShare;
 use App\Discussion\Values\Trajectory;
-use App\Discussion\Values\TrajectoryPoint;
 use App\Models\Project;
 use Illuminate\Console\Command;
 
@@ -46,10 +45,10 @@ class ShowProjectMetrics extends Command
             return self::FAILURE;
         }
 
-        $format = $this->option('format');
+        $format = MetricsFormat::tryFrom((string) $this->option('format'));
 
-        if (! in_array($format, ['table', 'json', 'csv'], true)) {
-            $this->error("Unknown format [{$format}]. Use table, json or csv.");
+        if ($format === null) {
+            $this->error("Unknown format [{$this->option('format')}]. Use ".MetricsFormat::listed().'.');
 
             return self::FAILURE;
         }
@@ -61,12 +60,68 @@ class ShowProjectMetrics extends Command
         $report = $shares->forProject($project);
 
         match ($format) {
-            'json' => $this->renderJson($project, $report),
-            'csv' => $this->renderCsv($report),
-            default => $this->renderTable($project, $report),
+            MetricsFormat::Json => $this->writeJson(['project' => $this->projectFields($project), ...$report->toArray()]),
+            MetricsFormat::Csv => $this->writeCsv(SpeakerShare::COLUMNS, $report->toArray()['speakers']),
+            MetricsFormat::Table => $this->renderTable($project, $report),
         };
 
         return self::SUCCESS;
+    }
+
+    private function trajectory(Project $project, ShareTrajectory $trajectories, MetricsFormat $format): int
+    {
+        if ($format === MetricsFormat::Table) {
+            $this->error('A trajectory is data for a script: use --format=csv or --format=json.');
+
+            return self::FAILURE;
+        }
+
+        if (! $this->windowIsValid()) {
+            $this->error("--window must be a whole number of turns, at least 1; got [{$this->option('window')}].");
+
+            return self::FAILURE;
+        }
+
+        $trajectory = $trajectories->forProject($project, $this->window());
+
+        $format === MetricsFormat::Json
+            ? $this->writeJson([
+                'project' => ['id' => $project->id, 'title' => $project->title, 'pipeline' => $project->pipeline],
+                ...$trajectory->toArray(),
+            ])
+            : $this->writeTrajectoryCsv($project, $trajectory);
+
+        return self::SUCCESS;
+    }
+
+    /** Left out, the window falls back to the config; given, it must be a whole number from 1. */
+    private function windowIsValid(): bool
+    {
+        $window = $this->option('window');
+
+        return $window === null
+            || filter_var($window, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) !== false;
+    }
+
+    /** Null leaves the window to ShareTrajectory's default; call windowIsValid() first. */
+    private function window(): ?int
+    {
+        $window = $this->option('window');
+
+        return $window === null ? null : (int) $window;
+    }
+
+    /** @return array<string, int|string|null> */
+    private function projectFields(Project $project): array
+    {
+        return [
+            'id' => $project->id,
+            'title' => $project->title,
+            'pipeline' => $project->pipeline,
+            'model' => $project->model,
+            'seed' => $project->seed,
+            'turn_budget' => $project->turn_budget,
+        ];
     }
 
     private function renderTable(Project $project, ShareReport $report): void
@@ -85,9 +140,9 @@ class ShowProjectMetrics extends Command
             array_map(fn (SpeakerShare $s) => [
                 $s->name,
                 $s->turns,
-                $this->percent($s->turnShare),
+                LocaleNumber::percent($s->turnShare),
                 $s->words,
-                $this->percent($s->wordShare),
+                LocaleNumber::percent($s->wordShare),
                 number_format($s->wordsPerTurn(), 1),
             ], $report->speakers),
         );
@@ -101,137 +156,23 @@ class ShowProjectMetrics extends Command
         ]);
     }
 
-    private function renderJson(Project $project, ShareReport $report): void
-    {
-        $this->output->writeln(json_encode([
-            'project' => [
-                'id' => $project->id,
-                'title' => $project->title,
-                'pipeline' => $project->pipeline,
-                'model' => $project->model,
-                'seed' => $project->seed,
-                'turn_budget' => $project->turn_budget,
-            ],
-            'run' => [
-                'turns_spoken' => $report->spokenTurns,
-                'turns_failed_without_speaking' => $report->failedTurns,
-                'words_total' => $report->totalWords,
-                'gini_turns' => round($report->turnGini, 6),
-                'gini_words' => round($report->wordGini, 6),
-                'gini_ceiling' => round($report->giniCeiling, 6),
-            ],
-            'speakers' => array_map(fn (SpeakerShare $s) => [
-                'expert_id' => $s->expertId,
-                'name' => $s->name,
-                'seat' => $s->seat,
-                'turns' => $s->turns,
-                'turn_share' => round($s->turnShare, 6),
-                'words' => $s->words,
-                'word_share' => round($s->wordShare, 6),
-                'words_per_turn' => round($s->wordsPerTurn(), 6),
-            ], $report->speakers),
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-    }
-
-    /** One row per speaker, so several runs concatenate into one table. */
-    private function renderCsv(ShareReport $report): void
-    {
-        $this->writeCsv(
-            ['expert_id', 'name', 'seat', 'turns', 'turn_share', 'words', 'word_share', 'words_per_turn'],
-            array_map(fn (SpeakerShare $share) => [
-                $share->expertId,
-                $share->name,
-                $share->seat,
-                $share->turns,
-                round($share->turnShare, 6),
-                $share->words,
-                round($share->wordShare, 6),
-                round($share->wordsPerTurn(), 6),
-            ], $report->speakers),
-        );
-    }
-
-    private function trajectory(Project $project, ShareTrajectory $trajectories, string $format): int
-    {
-        if ($format === 'table') {
-            $this->error('A trajectory is data for a script: use --format=csv or --format=json.');
-
-            return self::FAILURE;
-        }
-
-        $window = $this->option('window');
-
-        if ($window !== null) {
-            $window = filter_var($window, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
-
-            if ($window === false) {
-                $this->error("--window must be a whole number of turns, at least 1; got [{$this->option('window')}].");
-
-                return self::FAILURE;
-            }
-        }
-
-        $trajectory = $trajectories->forProject($project, $window);
-
-        $format === 'json'
-            ? $this->renderTrajectoryJson($project, $trajectory)
-            : $this->renderTrajectoryCsv($project, $trajectory);
-
-        return self::SUCCESS;
-    }
-
-    private function renderTrajectoryJson(Project $project, Trajectory $trajectory): void
-    {
-        $this->output->writeln(json_encode([
-            'project' => ['id' => $project->id, 'title' => $project->title, 'pipeline' => $project->pipeline],
-            'window' => $trajectory->window,
-            'participants' => array_map(fn (Participant $p) => [
-                'expert_id' => $p->expertId,
-                'name' => $p->name,
-                'seat' => $p->seat,
-            ], $trajectory->participants),
-            'points' => array_map(fn (TrajectoryPoint $point) => [
-                'turn' => $point->turn,
-                'speaker_id' => $point->speakerId,
-                'shares' => array_map(
-                    fn (array $byExpert) => array_map(fn (float $share) => round($share, 6), $byExpert),
-                    $point->shares,
-                ),
-            ], $trajectory->points),
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-    }
-
     /**
-     * Long format, one row per turn and participant, the shape a plotting or
-     * mixed-model script reads directly. Unlike the totals it carries the
+     * One row per turn and participant. Unlike the totals it carries the
      * project id, because the trajectories of several runs are meant to be
      * concatenated into one file.
      */
-    private function renderTrajectoryCsv(Project $project, Trajectory $trajectory): void
+    private function writeTrajectoryCsv(Project $project, Trajectory $trajectory): void
     {
-        $series = ShareSeries::cases();
-        $rows = [];
-
-        foreach ($trajectory->points as $point) {
-            foreach ($trajectory->participants as $participant) {
-                $rows[] = [
-                    $project->id,
-                    $point->turn,
-                    $point->speakerId,
-                    $participant->expertId,
-                    $participant->name,
-                    $participant->seat,
-                    $trajectory->window,
-                    ...array_map(fn (ShareSeries $s) => round($point->share($s, $participant->expertId), 6), $series),
-                ];
-            }
-        }
-
         $this->writeCsv(
-            ['project_id', 'turn', 'speaker_id', 'expert_id', 'name', 'seat', 'window',
-                ...array_map(fn (ShareSeries $s) => $s->value, $series)],
-            $rows,
+            ['project_id', ...Trajectory::longColumns()],
+            array_map(fn (array $row) => ['project_id' => $project->id, ...$row], $trajectory->longRows()),
         );
+    }
+
+    /** @param  array<string, mixed>  $data */
+    private function writeJson(array $data): void
+    {
+        $this->output->writeln(json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     }
 
     /**
@@ -239,7 +180,7 @@ class ShowProjectMetrics extends Command
      * goes wherever the console output goes — including Artisan::output().
      *
      * @param  list<string>  $header
-     * @param  list<list<scalar|null>>  $rows
+     * @param  list<array<array-key, scalar|null>>  $rows
      */
     private function writeCsv(array $header, array $rows): void
     {
@@ -252,10 +193,5 @@ class ShowProjectMetrics extends Command
         rewind($buffer);
         $this->output->write(stream_get_contents($buffer));
         fclose($buffer);
-    }
-
-    private function percent(float $fraction): string
-    {
-        return number_format($fraction * 100, 1).' %';
     }
 }

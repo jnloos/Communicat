@@ -332,6 +332,36 @@ class ProjectCommandsTest extends TestCase
             ->assertFailed();
     }
 
+    public function test_metrics_names_the_known_formats_when_it_rejects_one(): void
+    {
+        $this->artisan('project:metrics', ['project' => $this->seatedProject()->id, '--format' => 'xml'])
+            ->expectsOutputToContain('Unknown format [xml]. Use table, json or csv.')
+            ->assertFailed();
+    }
+
+    public function test_metrics_refuses_a_window_that_is_not_a_whole_number(): void
+    {
+        $this->artisan('project:metrics', [
+            'project' => $this->seatedProject()->id, '--trajectory' => true, '--window' => '1.5', '--format' => 'csv',
+        ])
+            ->expectsOutputToContain('got [1.5]')
+            ->assertFailed();
+    }
+
+    /** A script concatenating runs still needs the header of a run that never spoke. */
+    public function test_metrics_writes_a_csv_header_for_a_run_that_never_spoke(): void
+    {
+        $project = $this->seatedProject();
+
+        Artisan::call('project:metrics', ['project' => $project->id, '--format' => 'csv']);
+        $this->assertSame("expert_id,name,seat,turns,turn_share,words,word_share,words_per_turn\n"
+            ."{$this->experts['Alice']->id},Alice,1,0,0,0,0,0\n"
+            ."{$this->experts['Bob']->id},Bob,2,0,0,0,0,0\n", Artisan::output());
+
+        Artisan::call('project:metrics', ['project' => $project->id, '--trajectory' => true, '--format' => 'csv']);
+        $this->assertSame("project_id,turn,speaker_id,expert_id,name,seat,window,cumulative_turns,cumulative_words,rolling_turns,rolling_words\n", Artisan::output());
+    }
+
     // --- project:list ---------------------------------------------------
 
     /**

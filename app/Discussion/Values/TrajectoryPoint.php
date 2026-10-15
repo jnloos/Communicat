@@ -2,8 +2,11 @@
 
 namespace App\Discussion\Values;
 
+use Illuminate\Contracts\Support\Arrayable;
+
 /** Every participant's shares right after one spoken turn. */
-final readonly class TrajectoryPoint
+/** @implements Arrayable<string, mixed> */
+final readonly class TrajectoryPoint implements Arrayable
 {
     /**
      * @param  int  $turn  the spoken turn this point follows, counted from 1;
@@ -22,5 +25,18 @@ final readonly class TrajectoryPoint
     public function share(ShareSeries $series, int $expertId): float
     {
         return $this->shares[$series->value][$expertId] ?? 0.0;
+    }
+
+    /** @return array{turn: int, speaker_id: int, shares: array<string, array<int, float>>} */
+    public function toArray(): array
+    {
+        return [
+            'turn' => $this->turn,
+            'speaker_id' => $this->speakerId,
+            'shares' => array_map(
+                fn (array $byExpert) => array_map(fn (float $share) => round($share, 6), $byExpert),
+                $this->shares,
+            ),
+        ];
     }
 }

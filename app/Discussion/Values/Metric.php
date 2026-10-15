@@ -44,9 +44,7 @@ enum Metric: string
     /** The trajectory series holding this metric's curve. */
     public function series(CurveMode $mode): ShareSeries
     {
-        $unit = $this === self::WordShare ? 'words' : 'turns';
-
-        return ShareSeries::from("{$mode->value}_{$unit}");
+        return ShareSeries::of($mode, $this === self::WordShare ? ShareUnit::Words : ShareUnit::Turns);
     }
 
     /**
