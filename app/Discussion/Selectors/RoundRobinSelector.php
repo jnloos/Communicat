@@ -4,6 +4,7 @@ namespace App\Discussion\Selectors;
 
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\Selection;
+use App\Discussion\Values\SelectionRecord;
 use App\Models\Expert;
 
 /** Fixed rotation by seat: the zero point for turn share. */
@@ -26,6 +27,6 @@ class RoundRobinSelector implements SpeakerSelector
         $nextIndex = $lastIndex === false ? 0 : ($lastIndex + 1) % $experts->count();
         $speaker = $experts[$nextIndex];
 
-        return new Selection($speaker, class_basename(static::class), ['seat' => $speaker->pivot->seat]);
+        return new Selection($speaker, class_basename(static::class), SelectionRecord::seatSignals($speaker->pivot->seat));
     }
 }

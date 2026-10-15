@@ -6,6 +6,7 @@ use App\Discussion\Schemas\ThoughtWithPrioritySchema;
 use App\Discussion\Support\TieBreaker;
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\Selection;
+use App\Discussion\Values\SelectionRecord;
 use App\Models\Expert;
 
 /**
@@ -46,7 +47,7 @@ class HighestBidSelector implements SpeakerSelector
         return new Selection(
             speaker: $tie ? $this->tieBreaker->pick($leaders, $payload->project, $payload->turnIndex) : $leaders[0],
             selector: class_basename(static::class),
-            signals: ['bids' => $bids, 'fallbacks' => $fallbacks],
+            signals: SelectionRecord::bidSignals($bids, $fallbacks),
             tieBroken: $tie,
         );
     }

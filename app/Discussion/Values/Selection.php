@@ -9,7 +9,7 @@ final readonly class Selection
 {
     /**
      * @param  string  $selector  short class name of the selector
-     * @param  array  $signals  selector-specific data per agent (bids, judge scores, seat)
+     * @param  array  $signals  selector-specific data, built by SelectionRecord's *Signals() factories
      */
     public function __construct(
         public Expert $speaker,
@@ -22,12 +22,6 @@ final readonly class Selection
     /** Stored in job_logs.selection. */
     public function toArray(): array
     {
-        return [
-            'selector' => $this->selector,
-            'speaker_id' => $this->speaker->id,
-            'signals' => $this->signals,
-            'reasoning' => $this->reasoning,
-            'tie_broken' => $this->tieBroken,
-        ];
+        return SelectionRecord::written($this->selector, $this->speaker->id, $this->signals, $this->reasoning, $this->tieBroken)->toArray();
     }
 }

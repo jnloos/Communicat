@@ -10,6 +10,7 @@ use App\Discussion\Support\TieBreaker;
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\ModelConfig;
 use App\Discussion\Values\Selection;
+use App\Discussion\Values\SelectionRecord;
 use App\Models\Expert;
 use App\Models\Project;
 
@@ -55,7 +56,7 @@ class OrchestratorSelector implements SpeakerSelector
             return new Selection(
                 speaker: $speaker,
                 selector: class_basename(static::class),
-                signals: ['token' => $token, 'fallback' => false],
+                signals: SelectionRecord::pickSignals($token, fallback: false),
                 reasoning: $reasoning,
             );
         }
@@ -63,7 +64,7 @@ class OrchestratorSelector implements SpeakerSelector
         return new Selection(
             speaker: $this->tieBreaker->pick($project->contributingExperts()->values()->all(), $project, $payload->turnIndex),
             selector: class_basename(static::class),
-            signals: ['token' => $token, 'fallback' => true],
+            signals: SelectionRecord::pickSignals($token, fallback: true),
             reasoning: $reasoning,
             tieBroken: true,
         );

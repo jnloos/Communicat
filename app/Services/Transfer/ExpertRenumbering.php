@@ -2,14 +2,14 @@
 
 namespace App\Services\Transfer;
 
+use App\Discussion\Values\SelectionRecord;
 use App\Models\Expert;
 
 /**
  * Where an imported run's experts got different ids than in the source
  * database, this carries the ids stored inside its JSON columns along:
- * a turn's selection (speaker_id, the keys of signals.bids, the tokens in
- * signals.fallbacks and signals.token, the values of signals.order) and the
- * cast frozen in run_config. An id the map does not know stays as it is.
+ * a turn's selection (which ids SelectionRecord::mapExpertIds() knows) and
+ * the cast frozen in run_config. An id the map does not know stays as it is.
  *
  * Every result is built fresh rather than edited in place, so a chain like
  * 1 → 2, 2 → 3 cannot overwrite itself. Texts are never rewritten: E-tokens
@@ -54,15 +54,9 @@ final class ExpertRenumbering
             return $selection;
         }
 
-        if (array_key_exists('speaker_id', $selection)) {
-            $selection['speaker_id'] = $this->id($selection['speaker_id']);
-        }
-
-        if (is_array($selection['signals'] ?? null)) {
-            $selection['signals'] = $this->signals($selection['signals']);
-        }
-
-        return $selection;
+        return SelectionRecord::fromArray($selection)
+            ->mapExpertIds(fn (int $id) => $this->renumbered[$id] ?? $id)
+            ->toArray();
     }
 
     /** run_config with the expert_id of every cast entry renumbered; everything else untouched. */
@@ -83,42 +77,8 @@ final class ExpertRenumbering
         return $runConfig;
     }
 
-    private function signals(array $signals): array
-    {
-        if (is_array($signals['bids'] ?? null)) {
-            $bids = [];
-
-            foreach ($signals['bids'] as $bidder => $bid) {
-                $bids[$this->token((string) $bidder)] = $bid;
-            }
-
-            $signals['bids'] = $bids;
-        }
-
-        if (is_array($signals['fallbacks'] ?? null)) {
-            $signals['fallbacks'] = array_map($this->token(...), $signals['fallbacks']);
-        }
-
-        if (array_key_exists('token', $signals)) {
-            $signals['token'] = $this->token($signals['token']);
-        }
-
-        if (is_array($signals['order'] ?? null)) {
-            $signals['order'] = array_map($this->id(...), $signals['order']);
-        }
-
-        return $signals;
-    }
-
     private function id(mixed $old): mixed
     {
         return is_int($old) || (is_string($old) && ctype_digit($old)) ? ($this->renumbered[(int) $old] ?? $old) : $old;
-    }
-
-    private function token(mixed $old): mixed
-    {
-        return is_string($old) && preg_match('/^E(\d+)$/D', $old, $match) && isset($this->renumbered[(int) $match[1]])
-            ? Expert::tokenFor($this->renumbered[(int) $match[1]])
-            : $old;
     }
 }

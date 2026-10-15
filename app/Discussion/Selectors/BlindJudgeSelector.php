@@ -11,6 +11,7 @@ use App\Discussion\Support\TieBreaker;
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\ModelConfig;
 use App\Discussion\Values\Selection;
+use App\Discussion\Values\SelectionRecord;
 use App\Models\Expert;
 
 /**
@@ -72,7 +73,7 @@ class BlindJudgeSelector implements SpeakerSelector
         return new Selection(
             speaker: $speaker,
             selector: class_basename(static::class),
-            signals: ['label' => $label, 'order' => $order, 'fallback' => false],
+            signals: SelectionRecord::blindPickSignals($label, $order, fallback: false),
             reasoning: $reasoning,
         );
     }
@@ -124,7 +125,7 @@ class BlindJudgeSelector implements SpeakerSelector
         return new Selection(
             speaker: $this->tieBreaker->pick($candidates, $payload->project, $payload->turnIndex),
             selector: class_basename(static::class),
-            signals: ['label' => $label, 'order' => $order, 'fallback' => true],
+            signals: SelectionRecord::blindPickSignals($label, $order, fallback: true),
             reasoning: $reasoning,
             tieBroken: true,
         );

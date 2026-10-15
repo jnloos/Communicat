@@ -3,6 +3,7 @@
 namespace App\Services\StudyExport;
 
 use App\Discussion\Metrics\SpeakingShares;
+use App\Discussion\Values\SelectionRecord;
 use App\Discussion\Values\ShareReport;
 use App\Discussion\Values\SpeakerShare;
 use App\Discussion\Values\TokenTotal;
@@ -253,9 +254,8 @@ final class StudyExport
      */
     private function turnRow(Project $run, JobLog $job, array $tokens, mixed $addresseeId, Collection $expertUuids): array
     {
-        $selection = $job->selection ?? [];
-        $signals = $selection['signals'] ?? [];
-        $bid = $this->speakerBid($signals, $selection['speaker_id'] ?? $job->expert_id);
+        $selection = SelectionRecord::fromArray($job->selection);
+        $bid = $selection->bidOf($selection->speakerId() ?? $job->expert_id);
 
         return [
             'run_uuid' => $run->uuid,
@@ -272,14 +272,14 @@ final class StudyExport
             'tokens_in' => $tokens['tokens_in'] ?? null,
             'tokens_out' => $tokens['tokens_out'] ?? null,
             'tokens_reasoning' => $tokens['tokens_reasoning'] ?? null,
-            'selector' => $selection['selector'] ?? null,
-            'fallback' => self::flag($this->fallbackOf($signals)),
-            'tie_broken' => self::flag($selection['tie_broken'] ?? null),
+            'selector' => $selection->selector(),
+            'fallback' => self::flag($selection->fallback()),
+            'tie_broken' => self::flag($selection->tieBroken()),
             'speaker_bid' => $bid['bid'],
             'speaker_bid_fallback' => self::flag($bid['imputed']),
-            'judge_label' => $signals['label'] ?? null,
-            'selector_reasoning' => $selection['reasoning'] ?? null,
-            'selection_json' => $selection === [] ? null : json_encode($selection, JSON_UNESCAPED_UNICODE),
+            'judge_label' => $selection->label(),
+            'selector_reasoning' => $selection->reasoning(),
+            'selection_json' => $selection->isEmpty() ? null : json_encode($selection->toArray(), JSON_UNESCAPED_UNICODE),
             'error' => $job->error,
         ];
     }
@@ -292,43 +292,6 @@ final class StudyExport
     private static function flag(mixed $value): ?int
     {
         return $value === null ? null : ($value ? 1 : 0);
-    }
-
-    /**
-     * Whether the selector fell back: the flag of Orchestrator and the judges,
-     * or for Score whether any bid was unreadable. Null for a selector that
-     * records neither (round robin).
-     */
-    private function fallbackOf(array $signals): ?bool
-    {
-        if (array_key_exists('fallback', $signals)) {
-            return $signals['fallback'] === null ? null : (bool) $signals['fallback'];
-        }
-
-        return array_key_exists('fallbacks', $signals) ? $signals['fallbacks'] !== [] : null;
-    }
-
-    /**
-     * The speaker's bid in a Score turn. An unreadable bid is stored as the
-     * lowest priority and its token listed in fallbacks: that 1 was never
-     * said, so it stays empty and is flagged as imputed. Not a Score turn:
-     * both null.
-     *
-     * @return array{bid: int|null, imputed: bool|null}
-     */
-    private function speakerBid(array $signals, mixed $speaker): array
-    {
-        if (! is_array($signals['bids'] ?? null) || $speaker === null) {
-            return ['bid' => null, 'imputed' => null];
-        }
-
-        $token = Expert::tokenFor((int) $speaker);
-
-        if (in_array($token, $signals['fallbacks'] ?? [], true)) {
-            return ['bid' => null, 'imputed' => true];
-        }
-
-        return ['bid' => $signals['bids'][$token] ?? null, 'imputed' => false];
     }
 
     /**
