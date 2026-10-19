@@ -6,6 +6,7 @@ use App\Actions\Projects\OpenProject;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Values\ModelConfig;
 use App\Livewire\Forms\ProjectForm;
+use App\Models\PersonaAttribute;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
@@ -38,6 +39,7 @@ class CreateProject extends Component
             'pipelines' => app(PipelineRegistry::class)->options(),
             'providers' => ModelConfig::providers(),
             'models' => ModelConfig::optionsFor($this->form->provider),
+            'attributeCount' => PersonaAttribute::count(),
             'tagCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
             'chosenTags' => TagValue::chosenIn(TagScope::Project, $this->tagSelection),
         ]);

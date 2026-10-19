@@ -29,6 +29,18 @@ class NeedsConfirmationTest extends TestCase
             ->assertSet('pendingMethod', null);
     }
 
+    public function test_the_confirm_button_keeps_its_shared_label_unless_a_component_names_one(): void
+    {
+        Livewire::test(ConfirmingComponent::class)
+            ->call('needsConfirmation', 'remove', 7)
+            ->assertDispatched('open-confirm', label: __('common.actions.confirm'));
+
+        Livewire::test(ConfirmingComponent::class)
+            ->set('confirmLabel', 'Remove it')
+            ->call('needsConfirmation', 'remove', 7)
+            ->assertDispatched('open-confirm', label: 'Remove it');
+    }
+
     public function test_the_pending_action_cannot_be_set_from_the_client(): void
     {
         $this->expectException(CannotUpdateLockedPropertyException::class);

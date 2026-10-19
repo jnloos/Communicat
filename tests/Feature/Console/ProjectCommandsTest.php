@@ -6,6 +6,7 @@ use App\Discussion\Agents\SpeakAgent;
 use App\Discussion\Agents\SummarizeAgent;
 use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\Metrics\SpeakingShares;
+use App\Discussion\Values\AttributeVisibility;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
@@ -44,6 +45,30 @@ class ProjectCommandsTest extends TestCase
     }
 
     // --- project:create -------------------------------------------------
+
+    public function test_create_stores_the_attribute_visibility(): void
+    {
+        $this->artisan('project:create', ['title' => 'T', '--description' => 'Ein Thema.', '--attributes' => 'own'])
+            ->assertSuccessful();
+
+        $this->assertSame(AttributeVisibility::Own, Project::sole()->attribute_visibility);
+    }
+
+    public function test_create_defaults_the_attribute_visibility_to_none(): void
+    {
+        $this->artisan('project:create', ['title' => 'T', '--description' => 'Ein Thema.'])->assertSuccessful();
+
+        $this->assertSame(AttributeVisibility::None, Project::sole()->attribute_visibility);
+    }
+
+    public function test_create_rejects_an_unknown_attribute_visibility(): void
+    {
+        $this->artisan('project:create', ['title' => 'T', '--description' => 'Ein Thema.', '--attributes' => 'everyone'])
+            ->expectsOutputToContain('Unknown attribute visibility [everyone]. Known: none, own, all')
+            ->assertFailed();
+
+        $this->assertSame(0, Project::count());
+    }
 
     public function test_create_seats_the_experts_in_the_given_order(): void
     {

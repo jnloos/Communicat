@@ -2,6 +2,7 @@
 
 namespace App\Services\Transfer;
 
+use App\Discussion\Values\AttributeVisibility;
 use App\Models\JobLog;
 use App\Models\Message;
 use App\Models\Project;
@@ -60,6 +61,7 @@ final class ProjectWriter
             'run_config' => $renumbering->runConfig($data['run_config'] ?? null),
             'summarize_threshold' => $data['summarize_threshold'] ?? null,
             'summarize_oldest' => $data['summarize_oldest'] ?? null,
+            'attribute_visibility' => AttributeVisibility::from($data['attribute_visibility'] ?? AttributeVisibility::default()->value),
             'long_term_memory' => $data['long_term_memory'] ?? null,
             'created_at' => Timestamp::import($data['created_at'] ?? null) ?? now(),
         ])->save();

@@ -3,7 +3,7 @@ You read drafts for the next discussion contribution and decide which one gets s
 
 @include('prompts.partials.project', ['project' => $project])
 
-@include('prompts.partials.participants', ['experts' => $experts])
+@include('prompts.partials.participants', ['experts' => $experts, 'project' => $project])
 
 @include('prompts.partials.memory', ['memory' => $memory])
 

@@ -1,8 +1,8 @@
-@include('prompts.partials.persona', ['expert' => $expert])
+@include('prompts.partials.persona', ['expert' => $expert, 'project' => $project])
 
 @include('prompts.partials.project', ['project' => $project])
 
-@include('prompts.partials.participants', ['experts' => $experts])
+@include('prompts.partials.participants', ['experts' => $experts, 'project' => $project])
 You only need the tokens to enter the addressee of your contribution.
 
 @include('prompts.partials.memory', ['memory' => $memory])

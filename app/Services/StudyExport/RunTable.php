@@ -2,6 +2,7 @@
 
 namespace App\Services\StudyExport;
 
+use App\Discussion\Support\PersonaLines;
 use App\Discussion\Values\ShareReport;
 use App\Models\Project;
 use App\Models\ProjectGroup;
@@ -16,7 +17,7 @@ final class RunTable
     /** The columns before the project tag columns, and those after them. */
     private const HEAD = ['run_uuid', 'title', 'description', 'pipeline', 'model', 'seed', 'turn_budget', 'group'];
 
-    private const TAIL = ['turns_spoken', 'turns_failed_without_speaking'];
+    private const TAIL = ['attribute_visibility', 'turns_spoken', 'turns_failed_without_speaking'];
 
     private readonly TagColumns $tags;
 
@@ -58,6 +59,7 @@ final class RunTable
                 'turn_budget' => $run->turn_budget,
                 'group' => $groupId === null ? null : ($groups[$groupId] ?? null),
             ] + $this->tags->cells($run->tagValues) + [
+                'attribute_visibility' => PersonaLines::visibilityOf($run)->value,
                 'turns_spoken' => $report->spokenTurns,
                 'turns_failed_without_speaking' => $report->failedTurns,
             ];

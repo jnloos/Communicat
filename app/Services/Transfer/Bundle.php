@@ -31,6 +31,8 @@ final class Bundle
 
     public const TAGS = 'tags.json';
 
+    public const PERSONA_ATTRIBUTES = 'persona-attributes.json';
+
     public const EXPERTS = 'experts.json';
 
     public const GROUPS = 'groups.json';
@@ -38,7 +40,7 @@ final class Bundle
     public const QUESTIONS = 'questions.json';
 
     /** Entry names a bundle may contain; anything else is refused. */
-    public const ENTRY_PATTERN = '#^(?:(?:manifest|tags|experts|groups|questions)\.json|projects/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.json)$#D';
+    public const ENTRY_PATTERN = '#^(?:(?:manifest|tags|persona-attributes|experts|groups|questions)\.json|projects/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.json)$#D';
 
     public static function projectEntry(string $uuid): string
     {

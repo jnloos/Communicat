@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Reads a bundle in a fixed order -- tags, experts, projects, groups, questions --
+ * Reads a bundle in a fixed order -- tags, persona attributes, experts, projects, groups, questions --
  * so every part finds what it refers to. The preview runs the same import in a
  * transaction that is rolled back: what it reports is what an import would do.
  */
@@ -16,6 +16,7 @@ final class BundleImporter
 {
     public function __construct(
         private readonly TagTransfer $tags,
+        private readonly PersonaAttributeTransfer $attributes,
         private readonly ExpertTransfer $experts,
         private readonly ProjectTransfer $projects,
         private readonly GroupTransfer $groups,
@@ -44,6 +45,7 @@ final class BundleImporter
         $report = new ImportReport;
 
         $this->section($report, ImportReport::TAGS, Bundle::TAGS, fn () => $this->tags->import($reader->json(Bundle::TAGS), $report));
+        $this->section($report, ImportReport::PERSONA_ATTRIBUTES, Bundle::PERSONA_ATTRIBUTES, fn () => $this->attributes->import($reader->json(Bundle::PERSONA_ATTRIBUTES), $report));
         $this->section($report, ImportReport::EXPERTS, Bundle::EXPERTS, fn () => $this->experts->importAll($reader->json(Bundle::EXPERTS), $report, withRuns: $reader->projectEntries() !== []));
 
         foreach ($reader->projectEntries() as $entry) {

@@ -3,7 +3,7 @@ You are moderating a discussion and alone decide who speaks next. You do not spe
 
 @include('prompts.partials.project', ['project' => $project])
 
-@include('prompts.partials.participants', ['experts' => $experts])
+@include('prompts.partials.participants', ['experts' => $experts, 'project' => $project])
 
 @include('prompts.partials.memory', ['memory' => $memory])
 

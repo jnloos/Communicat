@@ -4,6 +4,7 @@ namespace App\Livewire\Experts;
 
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\Expert;
+use App\Models\PersonaAttribute;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use Flux\Flux;
@@ -46,6 +47,16 @@ class ExpertEditor extends Component
     /** @var array<int|string, int|string|null> bound by x-tags.fields; category id => value id */
     public array $tagSelection = [];
 
+    /** @var array<int|string, string|null> bound by x-attributes.fields; attribute id => value, '' for not set */
+    #[Validate(['attributeValues.*' => ['nullable', 'string', 'max:'.PersonaAttribute::VALUE_MAX, 'regex:/^[^\r\n]*$/']])]
+    public array $attributeValues = [];
+
+    /** @return array<string, string> a value is one line of prompt text; Expert refuses a line break too */
+    protected function messages(): array
+    {
+        return ['attributeValues.*.regex' => __('experts.attributes.single_line')];
+    }
+
     #[On('edit_expert')]
     public function edit($id = null): void
     {
@@ -64,6 +75,7 @@ class ExpertEditor extends Component
         $this->role = $expert->role ?? '';
         $this->description = $expert->description ?? '';
         $this->tagSelection = $expert?->tagSelection() ?? [];
+        $this->attributeValues = $this->attributeValuesOf($expert);
 
         Flux::modal('edit-expert')->show();
     }
@@ -81,6 +93,7 @@ class ExpertEditor extends Component
         DB::transaction(function () use ($expert) {
             $expert->save();
             $expert->syncTags($this->tagSelection);
+            $expert->syncAttributeValues($this->attributeValues);
         });
 
         if (! is_null($this->avatarUpload)) {
@@ -95,6 +108,16 @@ class ExpertEditor extends Component
         $this->resetForm();
         Flux::modal('edit-expert')->close();
         $this->dispatch('expert_modified');
+    }
+
+    /** @return array<int, string> every defined attribute id => the expert's value, '' where it has none */
+    private function attributeValuesOf(?Expert $expert): array
+    {
+        $own = $expert?->personaAttributes->pluck('pivot.value', 'id') ?? collect();
+
+        return PersonaAttribute::ordered()->pluck('id')
+            ->mapWithKeys(fn (int $id) => [$id => (string) $own->get($id, '')])
+            ->all();
     }
 
     private function authorizedForSaving(): Expert
@@ -158,7 +181,7 @@ class ExpertEditor extends Component
 
     protected function resetForm(): void
     {
-        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'role', 'description', 'tagSelection']);
+        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'role', 'description', 'tagSelection', 'attributeValues']);
     }
 
     public function render(): mixed
@@ -169,6 +192,7 @@ class ExpertEditor extends Component
             'isUpdate' => ! is_null($this->expertId),
             'mayEdit' => $expert === null ? Gate::allows('create', Expert::class) : Gate::allows('update', $expert),
             'mayDelete' => $expert !== null && Gate::allows('delete', $expert),
+            'definitions' => PersonaAttribute::ordered()->get(),
             'tagCategories' => TagCategory::ofScope(TagScope::Persona)->with('values')->get(),
         ]);
     }

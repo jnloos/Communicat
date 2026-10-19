@@ -42,6 +42,16 @@ return [
         'read_only' => 'Only administrators change experts.',
     ],
 
+    'attributes' => [
+        'single_line' => 'A value must be a single line.',
+        'empty_hint' => 'Empty = not mentioned in any prompt.',
+        'value_placeholder' => 'Value',
+        'not_set' => 'not set',
+        'persona_reads' => 'Persona reads:',
+        'heading' => 'Attributes',
+        'help' => 'Visible to the model, unlike tags. Whether and to whom it is shown is set per project.',
+    ],
+
     'memory' => [
         'heading' => 'Memory of this discussion',
         'empty' => 'No memory yet. :name has not taken any notes so far.',

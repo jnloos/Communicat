@@ -3,6 +3,7 @@
 namespace App\Services\StudyExport;
 
 use App\Discussion\Metrics\SpeakingShares;
+use App\Models\PersonaAttribute;
 use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\TagScope;
@@ -14,7 +15,8 @@ use Illuminate\Support\Str;
 /**
  * The raw data for an outside analysis: runs, participants and turns as three
  * CSV files joined by uuid, in one ZIP with a README. Tags become one column
- * per category (TagColumns); NULL stays empty and never becomes 0. Each file
+ * per category (TagColumns), persona attributes one per definition
+ * (AttributeColumns); NULL stays empty and never becomes 0. Each file
  * is its own table class; this one gathers what they share and hands the
  * tables to StudyArchive.
  */
@@ -32,7 +34,10 @@ final class StudyExport
         $runs = (new EloquentCollection($runs->values()->all()))->loadMissing('tagValues');
         $reports = $runs->mapWithKeys(fn (Project $run) => [$run->id => $this->shares->forProject($run)]);
         $runTable = new RunTable($this->categoriesOf(TagScope::Project));
-        $participantTable = new ParticipantTable($this->categoriesOf(TagScope::Persona));
+        $participantTable = new ParticipantTable(
+            $this->categoriesOf(TagScope::Persona),
+            PersonaAttribute::ordered()->get(),
+        );
 
         $this->archive->write($path, [
             'runs.csv' => [$runTable->columns(), $runTable->rows($runs, $reports, $viewer)],

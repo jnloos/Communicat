@@ -5,6 +5,7 @@ namespace App\Services\StudyExport;
 use App\Discussion\Values\ShareReport;
 use App\Discussion\Values\SpeakerShare;
 use App\Models\Expert;
+use App\Models\PersonaAttribute;
 use App\Models\Project;
 use App\Models\TagCategory;
 use Illuminate\Support\Collection;
@@ -12,7 +13,8 @@ use Illuminate\Support\Collection;
 /**
  * participants.csv: one row per participant as SpeakingShares reports them,
  * the seated in seat order, then everyone who spoke and has left the run,
- * seat empty. One column per persona tag category.
+ * seat empty. One column per persona tag category, then one per persona
+ * attribute definition.
  */
 final class ParticipantTable
 {
@@ -23,16 +25,23 @@ final class ParticipantTable
 
     private readonly TagColumns $tags;
 
-    /** @param  Collection<int, TagCategory>  $categories  the persona tag categories, in column order */
-    public function __construct(Collection $categories)
+    private readonly AttributeColumns $attributes;
+
+    /**
+     * @param  Collection<int, TagCategory>  $categories  the persona tag categories, in column order
+     * @param  Collection<int, PersonaAttribute>  $attributes  the attribute definitions, in column order
+     */
+    public function __construct(Collection $categories, Collection $attributes)
     {
-        $this->tags = new TagColumns($categories, [...self::HEAD, ...self::TAIL]);
+        $fixed = [...self::HEAD, ...self::TAIL];
+        $this->tags = new TagColumns($categories, $fixed);
+        $this->attributes = new AttributeColumns($attributes, [...$fixed, ...$this->tags->headers()]);
     }
 
     /** @return list<string> */
     public function columns(): array
     {
-        return [...self::HEAD, ...$this->tags->headers(), ...self::TAIL];
+        return [...self::HEAD, ...$this->tags->headers(), ...$this->attributes->headers(), ...self::TAIL];
     }
 
     /**
@@ -51,7 +60,7 @@ final class ParticipantTable
     }
 
     /**
-     * Every participant of every report with its tags, in one query each.
+     * Every participant of every report with its tags and attribute values, in one query each.
      *
      * @param  Collection<int, ShareReport>  $reports
      * @return Collection<int, Expert>
@@ -60,7 +69,7 @@ final class ParticipantTable
     {
         $ids = $reports->flatMap(fn (ShareReport $report) => array_map(fn (SpeakerShare $share) => $share->expertId, $report->speakers))->unique();
 
-        return Expert::with('tagValues')->whereIn('id', $ids)->get()->keyBy('id');
+        return Expert::with(['tagValues', 'personaAttributes'])->whereIn('id', $ids)->get()->keyBy('id');
     }
 
     /** @return array<string, scalar|null> */
@@ -73,7 +82,7 @@ final class ParticipantTable
             'name' => $expert->name,
             'role' => $expert->role,
             'seat' => $share->seat,
-        ] + $this->tags->cells($expert->tagValues) + [
+        ] + $this->tags->cells($expert->tagValues) + $this->attributes->cells($expert) + [
             'turns' => $share->turns,
             'turn_share' => $share->turnShare,
             'words' => $share->words,

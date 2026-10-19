@@ -16,6 +16,7 @@ return [
         'appearance' => 'Darstellung',
         'users' => 'Nutzer',
         'tags' => 'Tags',
+        'attributes' => 'Attribute',
         'transfer' => 'Import/Export',
     ],
 

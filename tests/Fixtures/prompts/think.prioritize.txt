@@ -1,0 +1,39 @@
+=== ABOUT YOU ===
+You are Alice Fixture (your token: E11).
+Your role is Student.
+
+Curious and quick to ask why.
+
+=== THE TOPIC ===
+Should the school ban phones during lessons?
+
+This is what the group is here for. Stay with it: everything you contribute
+serves this topic, and nothing else takes its place as the task.
+
+If you think the group has arrived at a result, say what the result is and
+test it against what you know -- what it costs, whom it fails, what you would
+still have to find out to be sure of it -- instead of starting on something
+new.
+
+=== PARTICIPANTS (reference tokens) ===
+- Alice Fixture [E11] (Student)
+- Bob Fixture [E12] (Teacher)
+- Cleo Fixture [E13] (Parent)
+
+=== HISTORY (most recent messages) ===
+No messages yet.
+
+=== YOUR SHORT-TERM MEMORY (visible only to you) ===
+No thoughts noted yet.
+
+=== TASK ===
+All participants simultaneously consider who should speak next. First continue your short-term memory, then report how urgently you need the floor right now.
+
+Record in the thought:
+- what strikes you about the most recent messages (agreement, contradiction, gaps, open questions directed at you),
+- what you as Alice Fixture would say now if it were your turn,
+- what you intend for later rounds.
+
+Carry over from your previous short-term memory what still applies, and strike what is done. At most six sentences, no conversational contribution, no address.
+
+Urgency is a number from 1 to 5: 1 if you have nothing to contribute, 5 if your contribution is absolutely necessary right now. Do not justify it, just give the number.

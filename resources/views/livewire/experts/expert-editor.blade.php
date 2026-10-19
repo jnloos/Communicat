@@ -73,6 +73,15 @@
             </flux:fieldset>
         @endif
 
+        @if ($definitions->isNotEmpty())
+            <flux:fieldset :legend="__('experts.attributes.heading')" :description="__('experts.attributes.help')">
+                <x-attributes.fields :definitions="$definitions" :disabled="! $mayEdit" />
+                @if ($mayEdit)
+                    <flux:text size="xs" class="mt-3">{{ __('experts.attributes.empty_hint') }}</flux:text>
+                @endif
+            </flux:fieldset>
+        @endif
+
         <x-modal-footer>
             @if ($mayEdit)
                 <flux:modal.close>

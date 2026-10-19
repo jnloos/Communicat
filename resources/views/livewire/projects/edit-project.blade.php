@@ -31,7 +31,7 @@
             @endif
 
             <flux:accordion>
-                <x-projects.run-settings :pipelines="$pipelines" :providers="$providers" :models="$models"/>
+                <x-projects.run-settings :pipelines="$pipelines" :providers="$providers" :models="$models" :attribute-count="$attributeCount" :locked="$runStarted"/>
                 @if ($tagCategories->isNotEmpty())
                     <x-tags.project-accordion-item :values="$chosenTags" :categories="$tagCategories" />
                 @endif

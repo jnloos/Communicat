@@ -19,6 +19,7 @@
         ['route' => 'settings.appearance', 'label' => 'settings.nav.appearance', 'admin' => false],
         ['route' => 'settings.users', 'label' => 'settings.nav.users', 'admin' => true],
         ['route' => 'settings.tags', 'label' => 'settings.nav.tags', 'admin' => true],
+        ['route' => 'settings.attributes', 'label' => 'settings.nav.attributes', 'admin' => true],
         ['route' => 'settings.transfer', 'label' => 'settings.nav.transfer', 'admin' => true],
     ])->filter(fn (array $item): bool => $isAdmin || ! $item['admin']);
 @endphp

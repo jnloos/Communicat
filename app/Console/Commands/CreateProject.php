@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Actions\Projects\OpenProject;
 use App\Discussion\Pipelines\PipelineRegistry;
+use App\Discussion\Values\AttributeVisibility;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\User;
@@ -26,6 +27,7 @@ class CreateProject extends Command
         {--experts= : Comma-separated expert ids to seat, in seat order}
         {--pipeline= : Short class name from app/Discussion/Pipelines}
         {--model= : A key from config ai.models}
+        {--attributes= : How much of persona attributes the prompts show: none (default), own or all}
         {--turns= : Turn budget; omit for unlimited}
         {--seed= : Tie-breaker seed; omit for a random one}';
 
@@ -61,6 +63,14 @@ class CreateProject extends Command
             return self::FAILURE;
         }
 
+        $attributes = $this->option('attributes');
+
+        if ($attributes !== null && AttributeVisibility::tryFrom($attributes) === null) {
+            $this->error("Unknown attribute visibility [{$attributes}]. Known: ".implode(', ', array_column(AttributeVisibility::cases(), 'value')));
+
+            return self::FAILURE;
+        }
+
         $experts = $this->resolveExperts();
 
         if ($experts === null) {
@@ -72,6 +82,7 @@ class CreateProject extends Command
             'description' => trim($this->option('description')),
             'pipeline' => $pipeline,
             'model' => $model,
+            'attribute_visibility' => $attributes,
             'turn_budget' => $this->option('turns') === null ? null : (int) $this->option('turns'),
             'seed' => $this->option('seed') === null ? null : (int) $this->option('seed'),
         ], fn ($value) => $value !== null), $experts);

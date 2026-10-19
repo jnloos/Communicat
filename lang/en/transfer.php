@@ -13,6 +13,7 @@ return [
 
     'notes' => [
         'already_there' => 'Already in the database.',
+        'already_there_templates_unchanged' => 'Already in the database, templates unchanged.',
         'no_uuid' => 'The entry has no uuid.',
         'bad_uuid' => 'The entry has no valid uuid.',
         'unexpected_error' => 'An unexpected error occurred; see the log.',
@@ -21,6 +22,12 @@ return [
         'tag_unreadable' => 'The tag category has no name or an unknown scope.',
         'tag_values_added' => 'Values added: :values',
         'tags_skipped' => 'Tags not set: :tags',
+        'attributes_skipped' => 'Attributes not set: :attributes',
+        'persona_attribute_unreadable' => 'The attribute has no name or a template without :value.',
+        'persona_attribute_too_long' => 'Value too long: the name may have :name characters, a template :template.',
+        'persona_attribute_line_break' => 'The name or a template contains a line break.',
+        'attribute_value_too_long' => 'Value too long (over :max characters), not set: :attributes',
+        'attribute_value_line_break' => 'Value contains a line break, not set: :attributes',
         'new_expert_id' => 'Id :old was taken here, so the expert got id :new.',
         'new_expert_id_runs' => 'The runs in this bundle follow the new id; the texts of their logged prompts and answers still say E:old.',
         'unknown_pipeline' => 'Unknown pipeline :pipeline.',
@@ -34,7 +41,7 @@ return [
     'subheading' => 'Save the study as an archive, or bring projects and experts in from one.',
     'export' => [
         'heading' => 'Export',
-        'description' => 'Every project with its turns and logged calls, every expert, the tags, your sidebar groups and your questions, as one .zip. Prompt texts older than 24 hours are no longer stored and so are not included. An archive larger than the upload limit shown below is imported with php artisan bundle:import.',
+        'description' => 'Every project with its turns and logged calls, every expert, the tags, the attributes, your sidebar groups and your questions, as one .zip. Prompt texts older than 24 hours are no longer stored and so are not included. An archive larger than the upload limit shown below is imported with php artisan bundle:import.',
         'everything' => 'Export everything',
         'building' => 'Building the export …',
     ],
@@ -57,6 +64,7 @@ return [
     ],
     'sections' => [
         'tags' => 'Tags',
+        'persona_attributes' => 'Attributes',
         'experts' => 'Experts',
         'projects' => 'Projects',
         'groups' => 'Groups',

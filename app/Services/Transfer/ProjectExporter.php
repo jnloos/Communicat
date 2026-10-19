@@ -56,6 +56,9 @@ final class ProjectExporter
             'run_config' => $project->run_config,
             'summarize_threshold' => $project->summarize_threshold,
             'summarize_oldest' => $project->summarize_oldest,
+            // The column, not PersonaLines::visibilityOf(): a project file carries the setting
+            // as the researcher left it; the frozen value travels inside run_config.
+            'attribute_visibility' => $project->attribute_visibility->value,
             'long_term_memory' => $project->long_term_memory,
             'summarized_until_message' => $project->summarized_until_message_id,
             'created_at' => Timestamp::export($project->created_at),

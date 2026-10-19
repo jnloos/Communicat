@@ -5,6 +5,7 @@ namespace App\Discussion;
 use App\Discussion\Metrics\SpokenTurns;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Pipelines\TurnPipeline;
+use App\Discussion\Support\PersonaLines;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\Support\TextLength;
 use App\Discussion\Values\JobStatus;
@@ -103,6 +104,7 @@ class TurnRunner
             'summarize_threshold' => $project->summarizeThreshold(),
             'summarize_oldest' => $project->summarizeOldest(),
             'system_prompt' => $this->prompts->system(),
+            'attribute_visibility' => $project->attribute_visibility->value,
 
             // Who sat where, under which role. The role is the study's
             // manipulation -- a run where one seat reads "Teacher" among
@@ -116,6 +118,9 @@ class TurnRunner
                     'expert_id' => $expert->id,
                     'name' => $expert->name,
                     'role' => $expert->role,
+                    // The rendered attribute lines, whatever the visibility, so
+                    // PersonaLines reads these and never a template edited later.
+                    'attributes' => PersonaLines::snapshotFor($expert),
                 ])
                 ->sortBy('seat')
                 ->values()

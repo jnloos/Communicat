@@ -3,6 +3,7 @@
 namespace App\Livewire\Forms;
 
 use App\Discussion\Pipelines\PipelineRegistry;
+use App\Discussion\Values\AttributeVisibility;
 use App\Discussion\Values\ModelConfig;
 use App\Models\Project;
 use Illuminate\Validation\Rule;
@@ -34,6 +35,12 @@ class ProjectForm extends Form
 
     public string $summarizeOldest = '';
 
+    /** How much of the personas' attributes the prompts reveal; fixed once the run has started. */
+    public AttributeVisibility $attributeVisibility = AttributeVisibility::None;
+
+    /** UI state only: the accordion item opens when its field has an error to show. */
+    public bool $attributesOpen = false;
+
     /** A new project starts on the configured pipeline, model and summarization. */
     public function fillDefaults(PipelineRegistry $pipelines): void
     {
@@ -41,6 +48,7 @@ class ProjectForm extends Form
         $this->selectModel((string) config('ai.default_model'));
         $this->summarizeThreshold = (string) config('discussion.summarize_threshold');
         $this->summarizeOldest = (string) config('discussion.summarize_oldest');
+        $this->attributeVisibility = AttributeVisibility::default();
     }
 
     /** The summarization numbers as effective values, so a null column shows its default. */
@@ -52,12 +60,13 @@ class ProjectForm extends Form
         $this->selectModel($project->model);
         $this->summarizeThreshold = (string) $project->summarizeThreshold();
         $this->summarizeOldest = (string) $project->summarizeOldest();
+        $this->attributeVisibility = $project->attribute_visibility ?? AttributeVisibility::default();
     }
 
     /**
      * The project columns this form writes, cast. Call after validate().
      *
-     * @return array{title: string, description: string, pipeline: string, model: string, summarize_threshold: int, summarize_oldest: int}
+     * @return array{title: string, description: string, pipeline: string, model: string, summarize_threshold: int, summarize_oldest: int, attribute_visibility: AttributeVisibility}
      */
     public function attributes(): array
     {
@@ -68,6 +77,7 @@ class ProjectForm extends Form
             'model' => $this->model,
             'summarize_threshold' => (int) $this->summarizeThreshold,
             'summarize_oldest' => (int) $this->summarizeOldest,
+            'attribute_visibility' => $this->attributeVisibility,
         ];
     }
 
@@ -85,6 +95,7 @@ class ProjectForm extends Form
             'summarizeThreshold' => ['required', 'integer', 'min:2'],
             // Folding every pending message would leave no verbatim history at all.
             'summarizeOldest' => ['required', 'integer', 'min:1', 'lt:summarizeThreshold'],
+            'attributeVisibility' => ['required', Rule::enum(AttributeVisibility::class)],
         ];
     }
 

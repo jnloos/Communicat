@@ -21,6 +21,9 @@ trait NeedsConfirmation
 
     public ?string $confirmMessage = null;
 
+    /** Name of the red confirm button; null keeps the shared "Confirm". */
+    public ?string $confirmLabel = null;
+
     #[Locked]
     public ?string $pendingMethod = null;
 
@@ -36,6 +39,7 @@ trait NeedsConfirmation
             componentId: $this->getId(),
             title: $this->confirmTitle ?? __('common.confirm_dialog.title'),
             message: $this->confirmMessage ?? __('common.confirm_dialog.message'),
+            label: $this->confirmLabel ?? __('common.actions.confirm'),
         );
     }
 

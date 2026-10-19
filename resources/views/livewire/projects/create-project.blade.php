@@ -9,7 +9,7 @@
 
 
             <flux:accordion>
-                <x-projects.run-settings :pipelines="$pipelines" :providers="$providers" :models="$models" with-help/>
+                <x-projects.run-settings :pipelines="$pipelines" :providers="$providers" :models="$models" :attribute-count="$attributeCount" with-help/>
                 @if ($tagCategories->isNotEmpty())
                     <x-tags.project-accordion-item :values="$chosenTags" :categories="$tagCategories" />
                 @endif

@@ -4,6 +4,7 @@ use App\Http\Controllers\BundleExportController;
 use App\Http\Controllers\StudyExportController;
 use App\Livewire\Debug\JobDebugPanel;
 use App\Livewire\Settings\Appearance;
+use App\Livewire\Settings\Attributes;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Tags;
@@ -64,6 +65,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
     Route::get('settings/users', Users::class)->can('admin')->name('settings.users');
     Route::get('settings/tags', Tags::class)->can('admin')->name('settings.tags');
+    Route::get('settings/attributes', Attributes::class)->can('admin')->name('settings.attributes');
     Route::get('settings/transfer', Transfer::class)->can('admin')->name('settings.transfer');
     Route::get('settings/export', [BundleExportController::class, 'everything'])->can('admin')->name('settings.export');
     Route::get('statistics', StatisticsPage::class)->middleware('verified')->name('statistics');

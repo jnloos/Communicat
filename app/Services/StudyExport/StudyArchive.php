@@ -23,6 +23,11 @@ final class StudyArchive
         participants.csv  one row per agent of a run, joined to runs by run_uuid
         turns.csv         one row per turn, joined by run_uuid and expert_uuid
 
+        participants.csv has one column per persona tag category and one per persona
+        attribute (its value for that agent, empty when it has none; the name gets
+        the prefix "attribute " when it matches another column). runs.csv has
+        attribute_visibility: none, own or all, what the run's prompts revealed.
+
         Read the files with R (readr::read_csv) or Python (pandas.read_csv): UTF-8,
         comma separated, quoted where needed. An empty cell means "not recorded",
         never 0.

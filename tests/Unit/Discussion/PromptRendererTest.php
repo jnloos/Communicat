@@ -19,7 +19,7 @@ class PromptRendererTest extends TestCase
         $expert = new Expert(['name' => "Devil's Advocate", 'role' => 'Kritiker & Prüfer', 'description' => 'Hinterfragt alles.']);
         $expert->id = 5;
 
-        $prompt = (new PromptRenderer)->render('prompts.partials.persona', ['expert' => $expert]);
+        $prompt = (new PromptRenderer)->render('prompts.partials.persona', ['expert' => $expert, 'project' => new Project]);
 
         $this->assertStringContainsString("Devil's Advocate", $prompt);
         $this->assertStringContainsString('Kritiker & Prüfer', $prompt);
@@ -75,7 +75,7 @@ class PromptRendererTest extends TestCase
 
         $this->assertSame(['experts'], array_keys($roster));
 
-        $rendered = (new PromptRenderer)->render('prompts.partials.participants', $roster);
+        $rendered = (new PromptRenderer)->render('prompts.partials.participants', $roster + ['project' => $project]);
 
         $this->assertStringContainsString('Cleo Expert', $rendered);
         $this->assertStringNotContainsString('Ada Owner', $rendered);

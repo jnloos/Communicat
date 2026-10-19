@@ -2,13 +2,16 @@
 
 namespace Tests\Feature;
 
+use App\Discussion\Values\AttributeVisibility;
 use App\Livewire\Projects\CreateProject;
 use App\Livewire\Projects\EditProject;
 use App\Models\JobLog;
+use App\Models\PersonaAttribute;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ProjectFormsTest extends TestCase
@@ -369,5 +372,138 @@ class ProjectFormsTest extends TestCase
             ->set('form.model', 'gemini-3.8-flash')
             ->call('save')
             ->assertHasErrors('form.model');
+    }
+
+    public function test_creating_a_project_stores_the_attribute_visibility_and_defaults_to_none(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(CreateProject::class)
+            ->assertSet('form.attributeVisibility', AttributeVisibility::None)
+            ->set('form.title', 'A')
+            ->set('form.description', 'B')
+            ->set('form.attributeVisibility', 'all')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame(AttributeVisibility::All, Project::sole()->attribute_visibility);
+    }
+
+    public function test_an_unknown_attribute_visibility_reads_as_none(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(CreateProject::class)
+            ->set('form.title', 'A')
+            ->set('form.description', 'B')
+            ->set('form.attributeVisibility', 'nope')
+            ->assertSet('form.attributeVisibility', AttributeVisibility::None)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame(AttributeVisibility::None, Project::sole()->attribute_visibility);
+    }
+
+    public function test_the_attribute_visibility_can_change_before_the_first_turn(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+        $project = Project::factory()->create(['user_id' => $owner->id]);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->assertSet('form.attributeVisibility', AttributeVisibility::None)
+            ->set('form.attributeVisibility', 'own')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame(AttributeVisibility::Own, $project->fresh()->attribute_visibility);
+    }
+
+    public static function visibilityTexts(): array
+    {
+        return [
+            'en' => ['en', 'What the prompts say about attributes', 'No attributes in the prompt', 'Only the persona itself', 'All participants see everyone\'s attributes', 'the blind judge never does'],
+            'de' => ['de', 'Was die Prompts über Attribute sagen', 'Keine Attribute im Prompt', 'Nur die Persona selbst', 'Alle Teilnehmer sehen die Attribute aller', 'der blinde Judge nie'],
+        ];
+    }
+
+    #[DataProvider('visibilityTexts')]
+    public function test_the_three_visibility_options_are_spelled_out(string $locale, string ...$texts): void
+    {
+        app()->setLocale($locale);
+        $this->actingAs(User::factory()->create());
+        PersonaAttribute::factory()->count(2)->create();
+
+        $component = Livewire::test(CreateProject::class);
+        foreach ($texts as $text) {
+            $component->assertSee($text);
+        }
+        $component->assertSeeHtml('data-attributes-count')
+            ->assertSee($locale === 'en' ? '2 attributes are defined.' : 'Es sind 2 Attribute definiert.')
+            ->assertDontSee('data-attributes-none', false);
+    }
+
+    public function test_without_defined_attributes_the_accordion_shows_only_a_hint(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(CreateProject::class)
+            ->assertSeeHtml('data-attributes-none')
+            ->assertSee(__('projects.attributes.settings_link'))
+            ->assertDontSeeHtml('<a href="'.route('settings.attributes').'"')
+            ->assertDontSee(__('projects.attribute_visibility.own.label'))
+            ->assertDontSeeHtml('data-attributes-count')
+            ->assertSet('form.attributeVisibility', AttributeVisibility::None);
+
+        $this->actingAs(User::factory()->create(['is_admin' => true]));
+
+        Livewire::test(CreateProject::class)
+            ->assertSeeHtml('<a href="'.route('settings.attributes').'"');
+    }
+
+    public function test_the_attribute_visibility_is_locked_once_the_run_has_started(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+        PersonaAttribute::factory()->create();
+        $project = Project::factory()->create([
+            'user_id' => $owner->id,
+            'attribute_visibility' => 'none',
+            'run_config' => ['pipeline' => 'RoundRobinPipeline'],
+        ]);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->assertSee(__('projects.fields.attribute_visibility_locked'))
+            ->assertSeeHtmlInOrder(['form.attributeVisibility', 'disabled'])
+            ->assertSet('form.attributesOpen', false)
+            ->set('form.attributeVisibility', 'all')
+            ->call('save')
+            ->assertHasErrors(['form.attributeVisibility'])
+            ->assertSet('form.attributesOpen', true);
+
+        $project = $project->fresh();
+        $this->assertSame(AttributeVisibility::None, $project->attribute_visibility);
+        $this->assertArrayNotHasKey('changes', $project->run_config);
+    }
+
+    public function test_saving_other_fields_after_the_start_leaves_the_visibility_and_the_log_alone(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+        $project = Project::factory()->create([
+            'user_id' => $owner->id,
+            'attribute_visibility' => 'own',
+            'run_config' => ['pipeline' => 'RoundRobinPipeline'],
+        ]);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->set('form.title', 'Neu')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $project = $project->fresh();
+        $this->assertSame('Neu', $project->title);
+        $this->assertSame(AttributeVisibility::Own, $project->attribute_visibility);
+        $this->assertArrayNotHasKey('changes', $project->run_config);
     }
 }

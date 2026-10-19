@@ -3,6 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\Expert;
+use App\Models\PersonaAttribute;
+use App\Services\PersonaAttributes\AttributesByName;
+use App\Services\PersonaAttributes\SkippedAttributes;
 use App\Services\Tags\TagsByName;
 use Illuminate\Console\Command;
 
@@ -25,7 +28,7 @@ class InitExperts extends Command
     /**
      * Execute the console command.
      */
-    public function handle(TagsByName $tags): int
+    public function handle(TagsByName $tags, AttributesByName $attributes): int
     {
         $file = $this->option('file');
 
@@ -47,6 +50,7 @@ class InitExperts extends Command
         $created = 0;
         $updated = 0;
         $skipped = [];
+        $skippedAttributes = new SkippedAttributes;
 
         foreach ($experts as $expert) {
             $avatarUrl = ! empty($expert['avatar_url']) ? asset($expert['avatar_url']) : null;
@@ -73,6 +77,10 @@ class InitExperts extends Command
                 // Optional {"category": "value"}; only existing persona categories
                 // and values are used, and a value already set stays.
                 $skipped = [...$skipped, ...$tags->assign($model, $expert['tags'] ?? [], overwrite: false)];
+
+                // Optional {"attribute": "value"}, the same rule: only existing
+                // definitions are used, and a value already set stays.
+                $skippedAttributes->merge($attributes->assign($model, $expert['attributes'] ?? [], overwrite: false));
             }
         }
 
@@ -80,6 +88,18 @@ class InitExperts extends Command
 
         foreach (array_unique($skipped) as $pair) {
             $this->warn("Tag does not exist and was skipped: {$pair}");
+        }
+
+        foreach (array_unique($skippedAttributes->unknown) as $pair) {
+            $this->warn("Attribute does not exist and was skipped: {$pair}");
+        }
+
+        foreach (array_unique($skippedAttributes->tooLong) as $pair) {
+            $this->warn('Attribute value too long (over '.PersonaAttribute::VALUE_MAX." characters) and was skipped: {$pair}");
+        }
+
+        foreach (array_unique($skippedAttributes->lineBreak) as $pair) {
+            $this->warn("Attribute value contains a line break and was skipped: {$pair}");
         }
 
         return 0;

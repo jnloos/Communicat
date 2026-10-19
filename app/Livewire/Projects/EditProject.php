@@ -8,6 +8,7 @@ use App\Discussion\Values\ModelConfig;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Livewire\Forms\ProjectForm;
 use App\Models\JobLog;
+use App\Models\PersonaAttribute;
 use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\TagScope;
@@ -15,6 +16,7 @@ use App\Models\TagValue;
 use Flux\Flux;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -53,6 +55,7 @@ class EditProject extends Component
         $project = Project::findOrFail($this->forProjectId);
         Gate::authorize('update', $project);
         $this->form->validate();
+        $this->refuseVisibilityChangeAfterStart($project);
         $attributes = $this->form->attributes();
 
         $this->noteRunConfigChanges($project, $attributes);
@@ -66,6 +69,21 @@ class EditProject extends Component
 
         $this->dispatch('project_edited');
         Flux::modal('edit-project')->close();
+    }
+
+    /**
+     * Unlike pipeline and model, the attribute visibility is not logged but fixed:
+     * it changes what every prompt says, and run_config freezes it with the first turn.
+     */
+    private function refuseVisibilityChangeAfterStart(Project $project): void
+    {
+        if ($project->run_config !== null && $this->form->attributeVisibility !== $project->attribute_visibility) {
+            $this->form->attributesOpen = true;
+
+            throw ValidationException::withMessages([
+                'form.attributeVisibility' => __('projects.fields.attribute_visibility_locked'),
+            ]);
+        }
     }
 
     /**
@@ -139,6 +157,7 @@ class EditProject extends Component
             'pipelines' => app(PipelineRegistry::class)->options(),
             'providers' => ModelConfig::providers(),
             'models' => ModelConfig::optionsFor($this->form->provider),
+            'attributeCount' => PersonaAttribute::count(),
             'tagCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
             'chosenTags' => TagValue::chosenIn(TagScope::Project, $this->tagSelection),
             'savedTags' => Project::findOrFail($this->forProjectId)->tagValues()->with('category')->get(),

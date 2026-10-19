@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Discussion\Support\PromptRenderer;
 use App\Livewire\Experts\ExpertEditor;
 use App\Models\Expert;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
@@ -20,7 +21,7 @@ class ExpertPersonaTest extends TestCase
         $expert = Expert::factory()->create(['description' => 'Pragmatische Architektin.']);
 
         $prompt = app(PromptRenderer::class)
-            ->render('prompts.partials.persona', ['expert' => $expert]);
+            ->render('prompts.partials.persona', ['expert' => $expert, 'project' => Project::factory()->create()]);
 
         $this->assertStringContainsString('Pragmatische Architektin.', $prompt);
     }

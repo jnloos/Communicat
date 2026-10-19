@@ -11,6 +11,7 @@ return [
 
     'groups' => [
         'ai_pipeline' => 'AI Pipeline',
+        'attributes' => 'Attribute',
         'reduction' => 'Reduktion',
     ],
 
@@ -18,6 +19,7 @@ return [
         'openai' => 'OpenAI',
         'anthropic' => 'Anthropic',
         'gemini' => 'Google Gemini',
+        'omniroute' => 'OmniRoute',
     ],
 
     'fields' => [
@@ -33,7 +35,22 @@ return [
         'summarize_threshold_help' => 'Sobald so viele Nachrichten noch nicht verdichtet sind, läuft die Zusammenfassung.',
         'summarize_oldest' => 'Zu verdichtende Nachrichten',
         'summarize_oldest_help' => 'So viele der ältesten Nachrichten wandern dann in das Langzeitgedächtnis; sie muss kleiner als die Schwelle sein.',
+        'attribute_visibility' => 'Was die Prompts über Attribute sagen',
+        'attribute_visibility_help' => 'Was die Prompts von den Attributen der Personas verraten. Nach dem ersten Turn nicht mehr änderbar.',
+        'attribute_visibility_locked' => 'Die Diskussion läuft bereits: Die Sichtbarkeit der Attribute lässt sich nicht mehr ändern.',
         'run_started_help' => 'Die Diskussion läuft bereits. Eine Änderung wird im run_config-Snapshot mit der Turn-Nummer festgehalten.',
+    ],
+
+    'attribute_visibility' => [
+        'none' => ['label' => 'Keine Attribute im Prompt', 'description' => 'Die Agenten sehen nur Namen und Rollen.'],
+        'own' => ['label' => 'Nur die Persona selbst', 'description' => 'Jede Persona liest ihre eigenen Attribute (z. B. „You are a woman.“). Niemand sonst sieht sie.'],
+        'all' => ['label' => 'Alle Teilnehmer sehen die Attribute aller', 'description' => 'Zusätzlich steht in der Teilnehmerliste hinter jeder Rolle der Text (z. B. „Anna Brandt (Student, woman)“). Orchestrator und Judge lesen diese Liste ebenfalls, der blinde Judge nie.'],
+    ],
+
+    'attributes' => [
+        'none_defined' => 'Es sind noch keine Attribute definiert. Admins legen sie unter :link an.',
+        'settings_link' => 'Einstellungen → Attribute',
+        'count' => '{1}Es ist 1 Attribut definiert.|[2,*]Es sind :count Attribute definiert.',
     ],
 
     'create' => [

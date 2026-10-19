@@ -13,6 +13,7 @@ final class BundleExporter
 {
     public function __construct(
         private readonly TagTransfer $tags,
+        private readonly PersonaAttributeTransfer $attributes,
         private readonly ExpertTransfer $experts,
         private readonly ProjectTransfer $projects,
         private readonly GroupTransfer $groups,
@@ -54,6 +55,12 @@ final class BundleExporter
             'counts' => ['projects' => $projects->count(), 'experts' => $experts->count()],
         ]);
         $writer->put(Bundle::TAGS, $this->tags->export());
+        $definitions = $this->attributes->export();
+
+        if ($definitions !== []) {
+            $writer->put(Bundle::PERSONA_ATTRIBUTES, $definitions);
+        }
+
         $writer->put(Bundle::EXPERTS, $experts->map(fn (Expert $expert) => $this->experts->export($expert))->values()->all());
 
         foreach ($projects as $project) {

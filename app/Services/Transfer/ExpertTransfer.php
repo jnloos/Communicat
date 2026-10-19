@@ -3,6 +3,8 @@
 namespace App\Services\Transfer;
 
 use App\Models\Expert;
+use App\Models\PersonaAttribute;
+use App\Services\PersonaAttributes\AttributesByName;
 use App\Services\Tags\TagsByName;
 use App\Services\Transfer\Rows\Timestamp;
 use Illuminate\Support\Str;
@@ -20,10 +22,15 @@ final class ExpertTransfer
     /** @var array<int, mixed> expert ids present here, during importAll() */
     private array $takenIds = [];
 
-    public function __construct(private readonly TagsByName $tags = new TagsByName) {}
+    public function __construct(
+        private readonly TagsByName $tags = new TagsByName,
+        private readonly AttributesByName $attributes = new AttributesByName,
+    ) {}
 
     public function export(Expert $expert): array
     {
+        $attributes = $this->attributes->export($expert);
+
         return [
             'uuid' => $expert->uuid,
             'id' => $expert->id,
@@ -33,7 +40,7 @@ final class ExpertTransfer
             'avatar_url' => $expert->avatar_url,
             'tags' => $this->tags->export($expert),
             'created_at' => Timestamp::export($expert->created_at),
-        ];
+        ] + ($attributes === [] ? [] : ['attributes' => $attributes]);
     }
 
     public function import(array $data, ImportReport $report): void
@@ -104,7 +111,7 @@ final class ExpertTransfer
         };
     }
 
-    /** Every field the import reads has its type; tags are checked by TagsByName itself. */
+    /** Every field the import reads has its type; tags are checked by TagsByName itself, attributes must be an object of texts. */
     private function isReadable(mixed $data): bool
     {
         try {
@@ -115,6 +122,7 @@ final class ExpertTransfer
             }
 
             EntryFields::time($entry, 'created_at');
+            EntryFields::texts($entry, 'attributes');
 
             return true;
         } catch (UnreadableEntry) {
@@ -151,10 +159,14 @@ final class ExpertTransfer
         $this->takenUuids[$expert->uuid] = true;
         $this->takenIds[$expert->id] = true;
         $skippedTags = $this->tags->assign($expert, $data['tags'] ?? []);
+        $skippedAttributes = $this->attributes->assign($expert, $data['attributes'] ?? []);
         $notes = array_filter([
             $keepId || $originalId === 0 ? null : __('transfer.notes.new_expert_id', ['old' => $originalId, 'new' => $expert->id]),
             $keepId || $originalId === 0 || ! $withRuns ? null : __('transfer.notes.new_expert_id_runs', ['old' => $originalId]),
             $skippedTags === [] ? null : __('transfer.notes.tags_skipped', ['tags' => implode(', ', $skippedTags)]),
+            $skippedAttributes->unknown === [] ? null : __('transfer.notes.attributes_skipped', ['attributes' => implode(', ', $skippedAttributes->unknown)]),
+            $skippedAttributes->tooLong === [] ? null : __('transfer.notes.attribute_value_too_long', ['max' => PersonaAttribute::VALUE_MAX, 'attributes' => implode(', ', $skippedAttributes->tooLong)]),
+            $skippedAttributes->lineBreak === [] ? null : __('transfer.notes.attribute_value_line_break', ['attributes' => implode(', ', $skippedAttributes->lineBreak)]),
         ]);
 
         return [ImportReport::CREATED, $notes === [] ? null : implode(' ', $notes)];

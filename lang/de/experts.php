@@ -42,6 +42,16 @@ return [
         'read_only' => 'Nur Administratoren ändern Experten.',
     ],
 
+    'attributes' => [
+        'single_line' => 'Ein Wert muss einzeilig sein.',
+        'empty_hint' => 'Leer = in keinem Prompt erwähnt.',
+        'value_placeholder' => 'Wert',
+        'not_set' => 'nicht gesetzt',
+        'persona_reads' => 'Persona liest:',
+        'heading' => 'Attribute',
+        'help' => 'Für das Modell sichtbar, anders als Tags. Ob und für wen sie gezeigt werden, wird pro Projekt festgelegt.',
+    ],
+
     'memory' => [
         'heading' => 'Gedächtnis zur Diskussion',
         'empty' => 'Noch kein Gedächtnis vorhanden. :name hat sich bislang keine Notizen gemacht.',

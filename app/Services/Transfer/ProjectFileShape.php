@@ -2,6 +2,8 @@
 
 namespace App\Services\Transfer;
 
+use App\Discussion\Values\AttributeVisibility;
+
 /**
  * Checks a project file's fields have the types ProjectWriter reads, before
  * anything decides on or writes the project. A wrong type then fails the
@@ -12,7 +14,7 @@ namespace App\Services\Transfer;
  */
 final class ProjectFileShape
 {
-    private const TEXTS = ['uuid', 'title', 'description', 'pipeline', 'model', 'long_term_memory'];
+    private const TEXTS = ['uuid', 'title', 'description', 'pipeline', 'model', 'long_term_memory', 'attribute_visibility'];
 
     private const NUMBERS = ['seed', 'turn_budget', 'summarize_threshold', 'summarize_oldest', 'summarized_until_message'];
 
@@ -22,9 +24,9 @@ final class ProjectFileShape
 
     private const JOB_NUMBERS = ['turn_index', 'seat', 'words', 'chars', 'thought_words', 'thought_chars', 'reasoning_tokens'];
 
-    private const PROMPT_TEXTS = ['label', 'model', 'prompt', 'response', 'provider', 'checkpoint', 'purpose', 'expert', 'reasoning', 'status', 'error'];
+    private const PROMPT_TEXTS = ['label', 'model', 'prompt', 'response', 'provider', 'checkpoint', 'model_served', 'purpose', 'expert', 'reasoning', 'status', 'error'];
 
-    private const PROMPT_NUMBERS = ['latency_ms', 'tokens_in', 'tokens_out', 'tokens_reasoning'];
+    private const PROMPT_NUMBERS = ['latency_ms', 'tokens_in', 'tokens_out', 'tokens_reasoning', 'tokens_cached'];
 
     /** @throws UnreadableEntry */
     public static function check(mixed $data): void
@@ -37,6 +39,8 @@ final class ProjectFileShape
         }
 
         EntryFields::texts($data, 'expert_ids');
+
+        self::visibility($data);
 
         foreach (EntryFields::map($data, 'seats') as $seat) {
             $seat = EntryFields::entry($seat);
@@ -58,6 +62,15 @@ final class ProjectFileShape
 
         foreach (EntryFields::map($data, 'jobs') as $job) {
             self::job(EntryFields::entry($job));
+        }
+    }
+
+    private static function visibility(array $data): void
+    {
+        $visibility = EntryFields::text($data, 'attribute_visibility');
+
+        if ($visibility !== null && AttributeVisibility::tryFrom($visibility) === null) {
+            throw new UnreadableEntry('The field attribute_visibility is not a known visibility.');
         }
     }
 

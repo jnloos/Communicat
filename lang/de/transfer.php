@@ -13,6 +13,7 @@ return [
 
     'notes' => [
         'already_there' => 'Schon in der Datenbank.',
+        'already_there_templates_unchanged' => 'Schon in der Datenbank, Vorlagen unverändert.',
         'no_uuid' => 'Der Eintrag hat keine UUID.',
         'bad_uuid' => 'Der Eintrag hat keine gültige UUID.',
         'unexpected_error' => 'Ein unerwarteter Fehler ist aufgetreten, siehe Log.',
@@ -21,6 +22,12 @@ return [
         'tag_unreadable' => 'Die Tag-Kategorie hat keinen Namen oder einen unbekannten Bereich.',
         'tag_values_added' => 'Werte ergänzt: :values',
         'tags_skipped' => 'Tags nicht gesetzt: :tags',
+        'attributes_skipped' => 'Attribute nicht gesetzt: :attributes',
+        'persona_attribute_unreadable' => 'Das Attribut hat keinen Namen oder eine Vorlage ohne :value.',
+        'persona_attribute_too_long' => 'Wert zu lang: der Name darf :name Zeichen haben, eine Vorlage :template.',
+        'persona_attribute_line_break' => 'Der Name oder eine Vorlage enthält einen Zeilenumbruch.',
+        'attribute_value_too_long' => 'Wert zu lang (über :max Zeichen), nicht gesetzt: :attributes',
+        'attribute_value_line_break' => 'Wert enthält einen Zeilenumbruch, nicht gesetzt: :attributes',
         'new_expert_id' => 'ID :old war hier vergeben, der Experte hat jetzt ID :new.',
         'new_expert_id_runs' => 'Die Läufe in diesem Bundle folgen der neuen ID; in den Texten ihrer geloggten Prompts und Antworten steht weiter E:old.',
         'unknown_pipeline' => 'Unbekannte Pipeline :pipeline.',
@@ -34,7 +41,7 @@ return [
     'subheading' => 'Sichere die Studie als Archiv oder hole Projekte und Experten aus einem herein.',
     'export' => [
         'heading' => 'Exportieren',
-        'description' => 'Alle Projekte mit Turns und protokollierten Aufrufen, alle Experten, die Tags, deine Sidebar-Gruppen und deine Fragen als eine .zip. Prompt-Texte älter als 24 Stunden sind nicht mehr gespeichert und deshalb nicht enthalten. Ein Archiv über dem unten genannten Upload-Limit importierst du mit php artisan bundle:import.',
+        'description' => 'Alle Projekte mit Turns und protokollierten Aufrufen, alle Experten, die Tags, die Attribute, deine Sidebar-Gruppen und deine Fragen als eine .zip. Prompt-Texte älter als 24 Stunden sind nicht mehr gespeichert und deshalb nicht enthalten. Ein Archiv über dem unten genannten Upload-Limit importierst du mit php artisan bundle:import.',
         'everything' => 'Alles exportieren',
         'building' => 'Export wird erstellt …',
     ],
@@ -57,6 +64,7 @@ return [
     ],
     'sections' => [
         'tags' => 'Tags',
+        'persona_attributes' => 'Attribute',
         'experts' => 'Experten',
         'projects' => 'Projekte',
         'groups' => 'Gruppen',

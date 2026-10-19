@@ -16,6 +16,8 @@ final class ImportReport
 
     public const TAGS = 'tags';
 
+    public const PERSONA_ATTRIBUTES = 'persona_attributes';
+
     public const EXPERTS = 'experts';
 
     public const PROJECTS = 'projects';
@@ -24,7 +26,7 @@ final class ImportReport
 
     public const QUESTIONS = 'questions';
 
-    private const ORDER = [self::TAGS, self::EXPERTS, self::PROJECTS, self::GROUPS, self::QUESTIONS];
+    private const ORDER = [self::TAGS, self::PERSONA_ATTRIBUTES, self::EXPERTS, self::PROJECTS, self::GROUPS, self::QUESTIONS];
 
     /** @var array<string, list<array{name: string, outcome: string, note: ?string}>> */
     private array $entries = [];

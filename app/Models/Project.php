@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Discussion\Values\AttributeVisibility;
 use App\Models\Concerns\HasPublicUuid;
 use App\Models\Concerns\HasTags;
 use Illuminate\Database\Eloquent\Builder;
@@ -20,10 +21,16 @@ class Project extends Model
         'title', 'description', 'user_id',
         'model', 'pipeline', 'turn_budget', 'seed', 'run_config',
         'long_term_memory', 'summarized_until_message_id',
-        'summarize_threshold', 'summarize_oldest',
+        'summarize_threshold', 'summarize_oldest', 'attribute_visibility',
     ];
 
-    protected $casts = ['run_config' => 'array'];
+    /** Mirrors the column default, so a project not yet reloaded reads `none`, not null. */
+    protected $attributes = ['attribute_visibility' => 'none'];
+
+    protected $casts = [
+        'run_config' => 'array',
+        'attribute_visibility' => AttributeVisibility::class,
+    ];
 
     public const MAX_CONTRIBUTING_EXPERTS = 4;
 
