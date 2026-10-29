@@ -67,7 +67,8 @@ class ProjectDialogs extends Component
     public function confirmDeleteProject(Project $project): void
     {
         $this->confirmTitle = __('groups.confirm.delete_project.title');
-        $this->confirmMessage = __('groups.confirm.delete_project.message');
+        $this->confirmLabel = __('groups.confirm.delete_project.action');
+        $this->confirmMessage = __('groups.confirm.delete_project.message', ['name' => $project->title]);
         $this->needsConfirmation('deleteProject', $project->id);
     }
 

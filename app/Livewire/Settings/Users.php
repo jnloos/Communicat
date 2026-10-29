@@ -88,6 +88,16 @@ class Users extends Component
         $this->reset(['editingUserId', 'name', 'email', 'password', 'is_admin']);
     }
 
+    public function confirmDelete(int $userId): void
+    {
+        $user = User::findOrFail($userId);
+
+        $this->confirmTitle = __('settings.users.confirm.title');
+        $this->confirmLabel = __('settings.users.confirm.action');
+        $this->confirmMessage = __('settings.users.confirm.message', ['name' => $user->name, 'email' => $user->email]);
+        $this->needsConfirmation('delete', $userId);
+    }
+
     public function delete(int $userId): void
     {
         User::findOrFail($userId)->delete();

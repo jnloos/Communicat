@@ -37,6 +37,7 @@ return [
         'toggle' => 'Job öffnen oder schließen',
         'toggle_job' => 'Job #:id',
         'prompt_removed' => 'Prompt-Text nach Ablauf der Aufbewahrungsfrist entfernt (PROMPT_RETENTION_HOURS).',
+        'prompt_unreadable' => 'Prompt-Text archiviert, aber nicht lesbar: Möglicherweise fehlt ext-zstd in dieser PHP-Umgebung, oder der Archiv-Eintrag ist defekt.',
         'tab_prompts' => 'Prompts (:count)',
         'tab_messages' => 'Nachrichten (:count)',
         'prompt' => 'Prompt',

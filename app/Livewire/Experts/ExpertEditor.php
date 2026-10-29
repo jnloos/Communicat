@@ -29,6 +29,10 @@ class ExpertEditor extends Component
     #[Locked]
     public ?int $expertId = null;
 
+    /** Counts openings; the view keys its accordion on it so every opening starts folded. */
+    #[Locked]
+    public int $openings = 0;
+
     #[Validate('required|string|max:255')]
     public string $name = '';
 
@@ -37,9 +41,6 @@ class ExpertEditor extends Component
 
     #[Locked]
     public ?string $avatarUrl = null;
-
-    #[Validate('required|string|max:255')]
-    public string $role = '';
 
     #[Validate('nullable|string')]
     public string $description = '';
@@ -61,6 +62,8 @@ class ExpertEditor extends Component
     public function edit($id = null): void
     {
         $this->resetForm();
+        $this->resetValidation();
+        $this->openings++;
 
         $expert = null;
         if (is_null($id)) {
@@ -72,7 +75,6 @@ class ExpertEditor extends Component
 
         $this->name = $expert->name ?? '';
         $this->avatarUrl = $expert->avatar_url ?? null;
-        $this->role = $expert->role ?? '';
         $this->description = $expert->description ?? '';
         $this->tagSelection = $expert?->tagSelection() ?? [];
         $this->attributeValues = $this->attributeValuesOf($expert);
@@ -86,7 +88,6 @@ class ExpertEditor extends Component
         $this->validate();
 
         $expert->name = $this->name;
-        $expert->role = $this->role;
         $expert->description = $this->description;
 
         // One transaction, so a forged tag value leaves no new or half-edited expert behind.
@@ -151,6 +152,20 @@ class ExpertEditor extends Component
         return Storage::url($path);
     }
 
+    public function confirmDelete(): void
+    {
+        $expert = Expert::findOrFail($this->expertId);
+        $this->authorize('delete', $expert);
+
+        $this->confirmTitle = __('experts.confirm.title');
+        $this->confirmLabel = __('experts.confirm.action');
+        $this->confirmMessage = trans_choice('experts.confirm.message', $count = $expert->projects()->count(), [
+            'name' => $expert->name,
+            'count' => $count,
+        ]);
+        $this->needsConfirmation('delete');
+    }
+
     /** Confirmed, so called directly, past Livewire's attributes: it authorizes itself. */
     public function delete(): void
     {
@@ -181,7 +196,7 @@ class ExpertEditor extends Component
 
     protected function resetForm(): void
     {
-        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'role', 'description', 'tagSelection', 'attributeValues']);
+        $this->reset(['expertId', 'name', 'avatarUpload', 'avatarUrl', 'description', 'tagSelection', 'attributeValues']);
     }
 
     public function render(): mixed

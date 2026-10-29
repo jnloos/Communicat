@@ -14,6 +14,14 @@ return [
         'delete' => 'Delete',
         'confirm' => 'Confirm',
         'close' => 'Close',
+        'done' => 'Done',
+    ],
+
+    'discard' => [
+        'title' => 'Discard changes?',
+        'message' => 'Your changes are not saved.',
+        'keep' => 'Keep editing',
+        'discard' => 'Discard',
     ],
 
     'saved' => 'Saved.',

@@ -38,7 +38,11 @@ final readonly class ShareChartData
     /**
      * Both pies with what their card prints around them.
      *
-     * @return list<array{sectors: list<array{name: string, value: int, share: string, color: string}>, label: string, unit: string, gini: float, total: string}>
+     * `shareLabel` names the share in the tooltip, `legend` lists every participant
+     * (a silent one at 0 %) so a slice is never identified by its colour alone, and
+     * `giniTitle` spells the coefficient out with the ceiling of this group size.
+     *
+     * @return list<array{sectors: list<array{name: string, value: int, share: string, color: string}>, legend: list<array{name: string, share: string, color: string}>, label: string, shareLabel: string, unit: string, gini: float, giniTitle: string, total: string}>
      */
     public function pies(): array
     {
@@ -47,19 +51,59 @@ final readonly class ShareChartData
         return [
             [
                 'sectors' => $this->turnSectors(),
+                'legend' => $this->legend(fn (SpeakerShare $s) => $s->turnShare),
                 'label' => __('statistics.turn_share'),
+                'shareLabel' => __('statistics.columns.turn_share'),
                 'unit' => __('statistics.columns.turns'),
                 'gini' => $report->turnGini,
+                'giniTitle' => $this->giniTitle($report->turnGini),
                 'total' => trans_choice('statistics.turns_total', $report->spokenTurns, ['count' => $report->spokenTurns]),
             ],
             [
                 'sectors' => $this->wordSectors(),
+                'legend' => $this->legend(fn (SpeakerShare $s) => $s->wordShare),
                 'label' => __('statistics.word_share'),
+                'shareLabel' => __('statistics.columns.word_share'),
                 'unit' => __('statistics.columns.words'),
                 'gini' => $report->wordGini,
+                'giniTitle' => $this->giniTitle($report->wordGini),
                 'total' => trans_choice('statistics.words_total', $report->totalWords, ['count' => LocaleNumber::decimal($report->totalWords, 0)]),
             ],
         ];
+    }
+
+    /**
+     * One line per participant under a pie: colour, name, share. Unlike the
+     * sectors it keeps someone who never spoke, at 0 %.
+     *
+     * @param  Closure(SpeakerShare): float  $fraction
+     * @return list<array{name: string, share: string, color: string}>
+     */
+    public function legend(Closure $fraction): array
+    {
+        $rows = [];
+
+        foreach ($this->report->speakers as $index => $share) {
+            $rows[] = [
+                'name' => $share->name,
+                'share' => LocaleNumber::percent($fraction($share)),
+                'color' => self::colorFor($index),
+            ];
+        }
+
+        return $rows;
+    }
+
+    /** The Gini with its meaning and the ceiling of this group size, e.g. "Gini 0.18 (0 = equal, max 0.75 with 4 people)". */
+    private function giniTitle(float $gini): string
+    {
+        $people = count($this->report->speakers);
+
+        return trans_choice('statistics.gini_title', $people, [
+            'gini' => LocaleNumber::decimal($gini, 2),
+            'max' => LocaleNumber::decimal($this->report->giniCeiling, 2),
+            'count' => $people,
+        ]);
     }
 
     /** @return list<array{name: string, value: int, share: string, color: string}> */

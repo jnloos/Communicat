@@ -92,7 +92,7 @@ final class DimensionValues
     {
         return match ($dimension->type) {
             DimensionType::Pipeline => $this->pipelines->options(),
-            DimensionType::Model => ModelConfig::options(),
+            DimensionType::Model => ModelConfig::qualifiedOptions(),
             DimensionType::Group => $this->user?->projectGroups()->pluck('name', 'id')->all() ?? [],
             DimensionType::ProjectTag => $this->tagLabels($dimension),
             DimensionType::PersonaTag => $this->tagLabels($dimension) + [self::NONE => $this->category($dimension).': '.__('questions.result.no_value')],

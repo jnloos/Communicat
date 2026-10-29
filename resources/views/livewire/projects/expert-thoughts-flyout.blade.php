@@ -10,7 +10,7 @@
                     />
                     <div>
                         <flux:heading size="lg">{{ $expert->name }}</flux:heading>
-                        <flux:text>{{ $expert->role }}</flux:text>
+                        <flux:text>{{ $expert->attributeSummary }}</flux:text>
                     </div>
                 </div>
 

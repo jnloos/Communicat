@@ -1,4 +1,5 @@
-<x-flyout name="edit-expert" width="40rem">
+<x-flyout name="edit-expert" width="40rem" guard>
+    <x-unsaved-guard modal="edit-expert" :fields="['name', 'description', 'avatarUpload', 'tagSelection', 'attributeValues']" />
     <form wire:submit.prevent="save" class="flex flex-1 flex-col gap-6">
         <x-modal-header
             :heading="! $mayEdit ? __('experts.editor.view') : ($isUpdate ? __('experts.editor.update') : __('experts.editor.create'))"
@@ -15,7 +16,7 @@
                             </flux:menu.item>
                             @if ($mayDelete)
                                 <flux:menu.separator/>
-                                <flux:menu.item variant="danger" icon="trash" wire:click="needsConfirmation('delete')">
+                                <flux:menu.item variant="danger" icon="trash" wire:click="confirmDelete">
                                     {{ __('experts.editor.delete') }}
                                 </flux:menu.item>
                             @endif
@@ -54,8 +55,7 @@
 
             {{-- Identity --}}
             <div class="min-w-0 flex-1 space-y-4">
-                <flux:input :label="__('common.fields.name')" wire:model.defer="name" :disabled="! $mayEdit" />
-                <flux:input :label="__('experts.editor.role')" wire:model.defer="role" :disabled="! $mayEdit" />
+                <flux:input :label="__('common.fields.name')" wire:model.defer="name" required label:class="after:ms-1 after:text-red-600 after:content-['*'] dark:after:text-red-400" :disabled="! $mayEdit" />
             </div>
         </div>
 
@@ -67,26 +67,55 @@
             :disabled="! $mayEdit"
         />
 
-        @if ($tagCategories->isNotEmpty())
-            <flux:fieldset :legend="__('tags.form.heading')" :description="__('tags.form.help')">
-                <x-tags.fields :categories="$tagCategories" :disabled="! $mayEdit" />
-            </flux:fieldset>
-        @endif
-
-        @if ($definitions->isNotEmpty())
-            <flux:fieldset :legend="__('experts.attributes.heading')" :description="__('experts.attributes.help')">
-                <x-attributes.fields :definitions="$definitions" :disabled="! $mayEdit" />
-                @if ($mayEdit)
-                    <flux:text size="xs" class="mt-3">{{ __('experts.attributes.empty_hint') }}</flux:text>
+        {{-- Sections like the project forms: name, avatar and description stay in view,
+             the rest folds. Both sections start closed. --}}
+        @php
+            $chosenTags = $tagCategories->flatMap->values->filter(fn ($value) => in_array($value->id, array_map('intval', array_filter($tagSelection ?? [])), true));
+        @endphp
+        @if ($definitions->isNotEmpty() || $tagCategories->isNotEmpty())
+            {{-- Keyed per opening: a new key replaces the accordion, so both sections start closed for every expert. --}}
+            <flux:accordion wire:key="sections-{{ $openings }}">
+                @if ($definitions->isNotEmpty())
+                    <flux:accordion.item transition="true">
+                        <flux:accordion.heading>
+                            {{-- Like the tags header: what is set shows while the section is folded, live as it is typed. --}}
+                            <div
+                                x-data="{
+                                    ids: @js($definitions->pluck('id')->all()),
+                                    get summary() { return this.ids.map((id) => String($wire.attributeValues?.[id] ?? '').trim()).filter(Boolean).join(' · ') },
+                                }"
+                                class="flex min-w-0 flex-1 items-center gap-2"
+                            >
+                                <div class="flex shrink-0 gap-2 {{ $errors->has('attributeValues.*') ? 'text-red-500 dark:text-red-400' : '' }}">
+                                    <flux:icon.identification class="size-5"/> {{ __('experts.attributes.heading') }}
+                                </div>
+                                <span
+                                    class="ms-auto me-2 min-w-0 truncate text-sm font-normal"
+                                    x-bind:class="summary === '' ? 'text-zinc-500 dark:text-zinc-400' : 'text-zinc-800 dark:text-white'"
+                                    x-bind:title="summary"
+                                    x-text="summary === '' ? @js(__('experts.attributes.summary_none')) : summary"
+                                    data-attribute-summary
+                                >{{ __('experts.attributes.summary_none') }}</span>
+                            </div>
+                        </flux:accordion.heading>
+                        <flux:accordion.content class="my-4">
+                            <flux:fieldset>
+                                <flux:description class="mb-4">{{ __('experts.attributes.help') }}</flux:description>
+                                <x-attributes.fields :definitions="$definitions" :disabled="! $mayEdit" />
+                            </flux:fieldset>
+                        </flux:accordion.content>
+                    </flux:accordion.item>
                 @endif
-            </flux:fieldset>
+
+                @if ($tagCategories->isNotEmpty())
+                    <x-tags.project-accordion-item :values="$chosenTags" :categories="$tagCategories" :disabled="! $mayEdit" />
+                @endif
+            </flux:accordion>
         @endif
 
         <x-modal-footer>
             @if ($mayEdit)
-                <flux:modal.close>
-                    <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
-                </flux:modal.close>
+                <flux:button variant="filled" x-on:click="$store.unsaved.request('edit-expert')">{{ __('common.actions.cancel') }}</flux:button>
                 <flux:button type="submit" variant="primary">
                     {{ $isUpdate ? __('experts.editor.update') : __('experts.editor.create') }}
                 </flux:button>

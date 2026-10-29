@@ -9,6 +9,7 @@
 return [
     'heading' => 'Tags',
     'subheading' => 'Categories with fixed values for experts and projects. The models never see them.',
+    'help' => 'Tags sort, filter and compare: the statistics split and compare runs by them, e.g. “Title-holder: true”. What the models should read belongs in :link.',
     'empty' => 'No category yet. Add the first one below.',
 
     'scopes' => [

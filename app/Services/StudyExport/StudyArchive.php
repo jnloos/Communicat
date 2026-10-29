@@ -26,7 +26,25 @@ final class StudyArchive
         participants.csv has one column per persona tag category and one per persona
         attribute (its value for that agent, empty when it has none; the name gets
         the prefix "attribute " when it matches another column). runs.csv has
-        attribute_visibility: none, own or all, what the run's prompts revealed.
+        attribute_visibility: one cell like "Role=all; gender=own", per attribute
+        none, own or all, what the run's prompts revealed of it (the setting frozen
+        when the run started; empty when no attribute is defined).
+
+        turns.csv, selector columns: fallback is 1 when the selector could not read
+        its decision and drew the speaker instead (Orchestrator and the judges: the
+        pick; Score: any agent's bid; the Jev selectors: the Jev request failed or
+        its answer was unreadable; a Jev Score turn: any agent's Jev bid), empty for
+        round robin. The Jev columns are filled only for the Jev pipelines and say
+        two different things, so they are two columns. speaker_probability (0 to 1):
+        the probability a Jev pick (Jev Orchestrator, Jev Quality, Jev Blind
+        Quality) gave the agent who spoke; for the blind judge, the one it gave the
+        speaker's letter. speaker_jev_score (1 to 5, unrounded): in Jev Score, the
+        expected urgency level Jev gave the agent who spoke (speaker_bid holds the
+        rounded bid the selector read). Both are empty when Jev gave nothing
+        readable or was not asked (one candidate, or no draft handed in). A Jev run
+        stops when Jev has not answered for several turns in a row (ai.jev.max_fallback_turns,
+        every Jev request of each turn failed): the turn that stopped it is a row with
+        spoken 0 and the draw it made, and nobody spoke in it.
 
         Read the files with R (readr::read_csv) or Python (pandas.read_csv): UTF-8,
         comma separated, quoted where needed. An empty cell means "not recorded",

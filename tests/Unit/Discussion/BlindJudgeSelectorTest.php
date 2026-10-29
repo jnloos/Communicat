@@ -6,9 +6,11 @@ use App\Discussion\Agents\JudgeAgent;
 use App\Discussion\Schemas\DraftChoiceSchema;
 use App\Discussion\Selectors\BlindJudgeSelector;
 use App\Discussion\TurnPayload;
+use App\Discussion\Values\AttributeVisibility;
 use App\Discussion\Values\Selection;
 use App\Discussion\Values\Thought;
 use App\Models\Expert;
+use App\Models\PersonaAttribute;
 use App\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Fakes\FakeAgents;
@@ -165,7 +167,8 @@ class BlindJudgeSelectorTest extends TestCase
      */
     public function test_the_prompt_names_nobody(): void
     {
-        $this->experts[0]->update(['role' => 'Chief Executive Officer']);
+        $this->project->setAttributeVisibilities([PersonaAttribute::role()->id => AttributeVisibility::All]);
+        $this->experts[0]->setAttributeValue(PersonaAttribute::role(), 'Chief Executive Officer');
         $message = $this->project->addMessage('Ein früherer Beitrag.', $this->experts[0]);
         $message->forceFill(['addressee_expert_id' => $this->experts[1]->id])->save();
         FakeAgents::always(JudgeAgent::class, ['label' => 'A', 'reasoning' => '-']);
@@ -175,7 +178,7 @@ class BlindJudgeSelectorTest extends TestCase
         JudgeAgent::assertPrompted(function ($prompt) {
             foreach ($this->experts as $expert) {
                 if (str_contains($prompt->prompt, $expert->name)
-                    || str_contains($prompt->prompt, $expert->role)
+                    || str_contains($prompt->prompt, 'Chief Executive Officer')
                     || preg_match('/\bE'.$expert->id.'\b/', $prompt->prompt)) {
                     return false;
                 }

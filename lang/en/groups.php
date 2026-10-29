@@ -44,8 +44,9 @@ return [
 
     'confirm' => [
         'delete_project' => [
-            'title' => 'Delete this project?',
-            'message' => 'Every contribution of the discussion goes with it, as do this project\'s job and prompt logs. This cannot be undone.',
+            'title' => 'Delete project?',
+            'action' => 'Delete project',
+            'message' => 'The project “:name” is deleted with every contribution and its job and prompt logs. This cannot be undone.',
         ],
         'delete_group' => [
             'title' => 'Delete this group?',

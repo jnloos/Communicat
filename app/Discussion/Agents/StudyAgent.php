@@ -78,9 +78,14 @@ abstract class StudyAgent implements Agent, HasProviderOptions, HasStructuredOut
         return app(PromptRenderer::class)->system();
     }
 
+    /**
+     * Null for openai-compatible: the SDK would send it as `max_tokens`, which
+     * OpenAI's reasoning models refuse ("use max_completion_tokens"). The cap
+     * goes out through providerOptions() instead.
+     */
     public function maxTokens(): ?int
     {
-        return $this->model->maxOutputTokens;
+        return $this->model->lab() === Lab::OpenAICompatible ? null : $this->model->maxOutputTokens;
     }
 
     public function temperature(): ?float
@@ -110,11 +115,18 @@ abstract class StudyAgent implements Agent, HasProviderOptions, HasStructuredOut
      *   is the only part of it the study records.
      * - **OpenAI** keeps `reasoning.effort`; untested against the live API
      *   because the account has no credit.
+     * - **openai-compatible** (the OmniRoute gateway) speaks Chat Completions,
+     *   where the effort is the flat `reasoning_effort` and the output cap is
+     *   `max_completion_tokens`. Not yet seen against a live gateway; whether
+     *   OmniRoute forwards `reasoning_effort` upstream is unverified.
+     *
+     * The SDK passes the provider's configured *name* ('omniroute'), not its
+     * driver, so a name that is no Lab is resolved through the model's driver.
      */
     public function providerOptions(Lab|string $provider): array
     {
         $effort = $this->model->reasoningEffort;
-        $lab = $provider instanceof Lab ? $provider : Lab::tryFrom($provider);
+        $lab = $provider instanceof Lab ? $provider : (Lab::tryFrom($provider) ?? $this->driverNamed($provider));
 
         if ($lab === null) {
             throw new InvalidArgumentException(
@@ -135,12 +147,21 @@ abstract class StudyAgent implements Agent, HasProviderOptions, HasStructuredOut
 
         return match ($lab) {
             Lab::Gemini => [],
-            Lab::Anthropic => ['thinking' => ['type' => 'adaptive', 'display' => 'summarized']],
+            // Haiku 4.5 answers adaptive thinking with a 400; its entry sets adaptive_thinking false.
+            Lab::Anthropic => $this->model->adaptiveThinking ? ['thinking' => ['type' => 'adaptive', 'display' => 'summarized']] : [],
             Lab::OpenAI => $effort === null ? [] : ['reasoning' => ['effort' => $effort, 'summary' => 'auto']],
+            Lab::OpenAICompatible => ['max_completion_tokens' => $this->model->maxOutputTokens]
+                + ($effort === null ? [] : ['reasoning_effort' => $effort]),
             default => $effort === null ? [] : throw new InvalidArgumentException(
                 "No reasoning-effort mapping for lab [{$lab->value}]; model key [{$this->model->key}] sets one."
             ),
         };
+    }
+
+    /** The driver of this model's own provider when `$name` is that provider; null for any other name. */
+    private function driverNamed(string $name): ?Lab
+    {
+        return $name === $this->model->provider ? $this->model->lab() : null;
     }
 
     /**
@@ -161,14 +182,16 @@ abstract class StudyAgent implements Agent, HasProviderOptions, HasStructuredOut
         ?string $model = null,
         ?int $timeout = null): AgentResponse
     {
-        if ($provider !== $this->model->lab() || $model !== $this->model->model) {
+        $expected = $this->model->sdkProvider();
+
+        if ($provider !== $expected || $model !== $this->model->model) {
             throw new InvalidArgumentException(sprintf(
                 'Prompt %s through ask(): prompt() was called with provider [%s] and model [%s], but model key [%s] expects [%s] and [%s].',
                 static::class,
-                is_object($provider) ? $provider->value : var_export($provider, true),
+                $provider instanceof Lab ? $provider->value : var_export($provider, true),
                 var_export($model, true),
                 $this->model->key,
-                $this->model->lab()->value,
+                $expected instanceof Lab ? $expected->value : $expected,
                 $this->model->model,
             ));
         }
@@ -179,7 +202,7 @@ abstract class StudyAgent implements Agent, HasProviderOptions, HasStructuredOut
     /** One call, one Completion. Never returns an AgentResponse: it is not serializable. */
     public function ask(string $prompt): Completion
     {
-        $response = $this->prompt($prompt, provider: $this->model->lab(), model: $this->model->model);
+        $response = $this->prompt($prompt, provider: $this->model->sdkProvider(), model: $this->model->model);
 
         $this->ensureAnswered($response);
 

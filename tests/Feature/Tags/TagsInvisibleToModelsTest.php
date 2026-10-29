@@ -19,6 +19,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Fakes\FakeAgents;
+use Tests\Fakes\FakeJev;
 use Tests\Feature\Discussion\PipelineSmokeTest;
 use Tests\TestCase;
 
@@ -46,6 +47,7 @@ class TagsInvisibleToModelsTest extends TestCase
         FakeAgents::always(SummarizeAgent::class, ['summary' => 'Zusammenfassung.']);
         FakeAgents::always(SelectorAgent::class, ['speaker' => 'E1', 'reasoning' => 'Weil.']);
         FakeAgents::always(JudgeAgent::class, ['speaker' => 'E1', 'label' => 'A', 'reasoning' => 'Weil.']);
+        FakeJev::randomly();
     }
 
     #[DataProvider('pipelineNames')]

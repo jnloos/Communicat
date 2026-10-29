@@ -1,6 +1,6 @@
 @props([
     'name',
-    'role',
+    'subtitle',
     'description' => null,
     'avatarUrl' => null,
     'selected' => null, {{-- null: plain card; bool: selectable card with state indicator --}}
@@ -23,10 +23,10 @@
 
             <div class="min-w-0 flex-1">
                 <div class="truncate text-sm font-medium text-zinc-900 dark:text-white">{{ $name }}</div>
-                <div class="line-clamp-2 text-sm text-zinc-500 dark:text-zinc-400">{{ $role }}</div>
+                <div class="line-clamp-2 text-sm text-zinc-500 dark:text-zinc-400">{{ $subtitle }}</div>
             </div>
 
-            {{-- Tags sit in the header row, beside name and role, so the card's
+            {{-- Tags sit in the header row, beside name and subtitle, so the card's
                  bottom does not jump between cards with and without them. --}}
             @isset($badges)
                 <div class="flex max-w-[45%] shrink-0 justify-end self-start">{{ $badges }}</div>

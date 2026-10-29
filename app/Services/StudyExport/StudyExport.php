@@ -31,13 +31,11 @@ final class StudyExport
     /** @param  Collection<int, Project>  $runs */
     public function write(Collection $runs, User $viewer, string $path): void
     {
-        $runs = (new EloquentCollection($runs->values()->all()))->loadMissing('tagValues');
+        $runs = (new EloquentCollection($runs->values()->all()))->loadMissing(['tagValues', 'attributeVisibilityRows']);
         $reports = $runs->mapWithKeys(fn (Project $run) => [$run->id => $this->shares->forProject($run)]);
-        $runTable = new RunTable($this->categoriesOf(TagScope::Project));
-        $participantTable = new ParticipantTable(
-            $this->categoriesOf(TagScope::Persona),
-            PersonaAttribute::ordered()->get(),
-        );
+        $definitions = PersonaAttribute::ordered()->get();
+        $runTable = new RunTable($this->categoriesOf(TagScope::Project), $definitions);
+        $participantTable = new ParticipantTable($this->categoriesOf(TagScope::Persona), $definitions);
 
         $this->archive->write($path, [
             'runs.csv' => [$runTable->columns(), $runTable->rows($runs, $reports, $viewer)],

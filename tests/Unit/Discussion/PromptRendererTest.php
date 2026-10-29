@@ -3,8 +3,10 @@
 namespace Tests\Unit\Discussion;
 
 use App\Discussion\Support\PromptRenderer;
+use App\Discussion\Values\AttributeVisibility;
 use App\Discussion\Values\MemoryView;
 use App\Models\Expert;
+use App\Models\PersonaAttribute;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -16,10 +18,11 @@ class PromptRendererTest extends TestCase
 
     public function test_decodes_html_entities_blade_escaped(): void
     {
-        $expert = new Expert(['name' => "Devil's Advocate", 'role' => 'Kritiker & Prüfer', 'description' => 'Hinterfragt alles.']);
-        $expert->id = 5;
+        $expert = Expert::factory()->withRole('Kritiker & Prüfer')->create(['name' => "Devil's Advocate", 'description' => 'Hinterfragt alles.']);
+        $project = Project::factory()->create();
+        $project->setAttributeVisibilities([PersonaAttribute::role()->id => AttributeVisibility::Own]);
 
-        $prompt = (new PromptRenderer)->render('prompts.partials.persona', ['expert' => $expert, 'project' => new Project]);
+        $prompt = (new PromptRenderer)->render('prompts.partials.persona', ['expert' => $expert, 'project' => $project]);
 
         $this->assertStringContainsString("Devil's Advocate", $prompt);
         $this->assertStringContainsString('Kritiker & Prüfer', $prompt);
@@ -69,7 +72,8 @@ class PromptRendererTest extends TestCase
         $project = Project::factory()->create(['user_id' => $owner->id]);
         $project->addContributingUser($owner);
         $project->addContributingUser($reader);
-        $project->addContributingExpert(Expert::factory()->create(['name' => 'Cleo Expert', 'role' => 'Teacher']));
+        $project->addContributingExpert(Expert::factory()->withRole('Teacher')->create(['name' => 'Cleo Expert']));
+        $project->setAttributeVisibilities([PersonaAttribute::role()->id => AttributeVisibility::All]);
 
         $roster = (new PromptRenderer)->participants($project);
 
@@ -78,6 +82,7 @@ class PromptRendererTest extends TestCase
         $rendered = (new PromptRenderer)->render('prompts.partials.participants', $roster + ['project' => $project]);
 
         $this->assertStringContainsString('Cleo Expert', $rendered);
+        $this->assertStringContainsString('(Teacher)', $rendered);
         $this->assertStringNotContainsString('Ada Owner', $rendered);
         $this->assertStringNotContainsString('Bo Reader', $rendered);
         $this->assertStringNotContainsString($owner->promptId, $rendered);

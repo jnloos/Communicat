@@ -1,10 +1,4 @@
-@include('prompts.partials.persona', ['expert' => $expert, 'project' => $project])
-
-@include('prompts.partials.project', ['project' => $project])
-
-@include('prompts.partials.participants', ['experts' => $experts, 'project' => $project])
-
-@include('prompts.partials.memory', ['memory' => $memory])
+@include('prompts.think.prioritize-state')
 
 === TASK ===
 All participants simultaneously consider who should speak next. First continue your short-term memory, then report how urgently you need the floor right now.

@@ -28,7 +28,7 @@
                 :tooltip="__('chat.header.leave_project')"
                 tooltip:position="bottom"
                 :aria-label="__('chat.header.leave_project')"
-                wire:click="needsConfirmation('leaveProject')"
+                wire:click="confirmLeave"
             />
         @endcan
 

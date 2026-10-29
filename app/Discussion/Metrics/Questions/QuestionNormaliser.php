@@ -4,7 +4,6 @@ namespace App\Discussion\Metrics\Questions;
 
 use App\Discussion\Values\QuestionDefinition;
 use App\Discussion\Values\TagFilter;
-use App\Discussion\Values\TurnRange;
 use App\Models\TagValue;
 use App\Models\User;
 
@@ -34,23 +33,6 @@ final class QuestionNormaliser
         $first = array_key_first($this->dimensionValues->forUser($viewer)->labels($definition->compareBy));
 
         return $first === null ? $definition : $definition->withBaseline((string) $first);
-    }
-
-    /**
-     * A bound typed beyond the shortest run is stored as that run, so the field
-     * shows the maximum instead of a number the answer would silently cap.
-     * Costs one evaluation.
-     */
-    public function withinShortestRun(User $viewer, QuestionDefinition $definition): QuestionDefinition
-    {
-        $shortest = $this->evaluator->evaluate($viewer, $definition)->shortestRun;
-        $turns = $definition->turns;
-
-        if ($shortest === null || ($turns->from <= $shortest && ($turns->to ?? 0) <= $shortest)) {
-            return $definition;
-        }
-
-        return $definition->withTurns(new TurnRange(min($turns->from, $shortest), min($turns->to ?? $shortest, $shortest)));
     }
 
     /**

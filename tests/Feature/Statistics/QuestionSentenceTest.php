@@ -115,10 +115,12 @@ class QuestionSentenceTest extends TestCase
         $this->assertSame('Turn-Anteil von allen ab Turn 5', app(QuestionSentence::class)->of(QuestionDefinition::fromArray(['turns' => ['from' => 5]])));
     }
 
-    public function test_a_bound_set_by_the_shortest_run_reads_like_any_other(): void
+    public function test_an_open_bound_reads_from_the_answer_but_a_typed_one_stays_as_typed(): void
     {
         $this->assertSame('over turns 1 to 3', $this->turns([], $this->resultOver(new TurnRange(1, 3), true)));
         $this->assertSame('over turns 1 to 3', $this->turns(['to' => 3], $this->resultOver(new TurnRange(1, 3), false)));
+        // Typed 60, cut to 3: the chip shows the setting, the warning under the builder the cut.
+        $this->assertSame('over turns 1 to 60', $this->turns(['to' => 60], $this->resultOver(new TurnRange(1, 3), true)));
     }
 
     public function test_a_name_stays_put_when_runs_come_and_go(): void
@@ -137,11 +139,11 @@ class QuestionSentenceTest extends TestCase
         $this->assertSame('Gini of turns', $sentence->of(QuestionDefinition::fromArray(['metric' => 'turn_gini'])));
     }
 
-    public function test_a_start_beyond_the_shortest_run_says_why_the_answer_is_empty(): void
+    public function test_a_start_beyond_the_shortest_run_stays_as_typed(): void
     {
         $result = new QuestionResult([], [], 2, 2, new TurnRange(4, 4), true, 3);
 
-        $this->assertSame('from turn 4, beyond the shortest run of 3 turns', $this->turns(['from' => 4], $result));
+        $this->assertSame('from turn 4 onwards', $this->turns(['from' => 4], $result));
     }
 
     public function test_a_persona_tag_dimension_reads_as_its_category_and_has_no_source_in_the_sentence(): void

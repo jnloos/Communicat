@@ -41,7 +41,7 @@
                             :dimmed="! $active && ! $canAddExpert"
                             :disabled="! $mayManage"
                             :name="$expert->name"
-                            :role="$expert->role"
+                            :subtitle="$expert->attributeSummary"
                             :avatar-url="$expert->avatar_url"
                             wire:loading.attr="disabled"
                             wire:click="{{ $active ? 'removeExpert' : 'addExpert' }}({{ $expert->id }})"
@@ -76,7 +76,7 @@
                                 wire:key="user-{{ $user->id }}"
                                 :selected="$active"
                                 :name="$user->name"
-                                :role="$user->email"
+                                :subtitle="$user->email"
                                 :avatar-url="$user->avatar_url"
                                 wire:loading.attr="disabled"
                                 wire:click="{{ $active ? 'removeUser' : 'addUser' }}({{ $user->id }})"
@@ -87,4 +87,10 @@
             </flux:tab.panel>
         @endif
     </flux:tab.group>
+
+    <x-modal-footer class="sticky bottom-0 z-10 mt-6 dark:bg-zinc-800!">
+        <flux:modal.close>
+            <flux:button variant="primary">{{ __('common.actions.done') }}</flux:button>
+        </flux:modal.close>
+    </x-modal-footer>
 </x-flyout>

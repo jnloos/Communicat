@@ -1,4 +1,10 @@
 <x-settings.layout :heading="__('tags.heading')" :subheading="__('tags.subheading')" wide>
+    <flux:callout icon="information-circle" class="mb-6">
+        <flux:callout.text>
+            <x-link-sentence key="tags.help" :href="route('settings.attributes')" :label="__('attributes.heading')" />
+        </flux:callout.text>
+    </flux:callout>
+
     {{-- Tabs, not a segmented switch: this navigates between two lists,
          while the segmented controls elsewhere switch a mode. Without
          panels, the group is only there because Flux's tabs expect one. --}}

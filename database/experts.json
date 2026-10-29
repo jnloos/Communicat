@@ -112,7 +112,8 @@
         "name": "Sam Delius",
         "roles": {
             "status": "Manager",
-            "equal": "Employee"
+            "equal": "Employee",
+            "inverted": "Intern"
         },
         "description": "You know how the work actually gets done here: which tasks need people in one room at the same time, which run better with nobody interrupting, and which only look collaborative. You do not know what the office costs, you have no view of anyone's commute, and you cannot say how new colleagues pick the job up."
     },

@@ -9,6 +9,7 @@
 return [
     'heading' => 'Tags',
     'subheading' => 'Kategorien mit festen Werten für Experten und Projekte. Die Modelle sehen sie nie.',
+    'help' => 'Tags sortieren, filtern und vergleichen: Die Statistik teilt und vergleicht Läufe danach, z. B. „Title-holder: true“. Was die Modelle lesen sollen, gehört in :link.',
     'empty' => 'Noch keine Kategorie. Lege unten die erste an.',
 
     'scopes' => [

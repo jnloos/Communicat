@@ -35,6 +35,14 @@ class StudyAgentTest extends TestCase
         );
     }
 
+    private function gateway(?string $effort): ModelConfig
+    {
+        return new ModelConfig(
+            key: 'probe-or', label: 'Probe', provider: 'omniroute', model: 'openai/probe',
+            maxOutputTokens: 8000, temperature: null, reasoningEffort: $effort,
+        );
+    }
+
     public function test_each_agent_carries_its_purpose(): void
     {
         $this->assertSame(Purpose::Think, (new ThinkAgent($this->model('openai')))->purpose());
@@ -100,6 +108,39 @@ class StudyAgentTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         (new SpeakAgent($this->model('gemini', effort: 'low')))->providerOptions(Lab::Gemini);
+    }
+
+    /** The SDK hands over the provider's configured name ('omniroute'), not a Lab. */
+    public function test_a_gateway_name_resolves_through_its_driver_to_flat_chat_completions_options(): void
+    {
+        $agent = new SpeakAgent($this->gateway(effort: 'low'));
+
+        $this->assertSame(
+            ['max_completion_tokens' => 8000, 'reasoning_effort' => 'low'],
+            $agent->providerOptions('omniroute'),
+        );
+        $this->assertSame($agent->providerOptions('omniroute'), $agent->providerOptions(Lab::OpenAICompatible));
+    }
+
+    public function test_a_gateway_without_effort_still_sends_the_output_cap(): void
+    {
+        $this->assertSame(
+            ['max_completion_tokens' => 8000],
+            (new SpeakAgent($this->gateway(effort: null)))->providerOptions('omniroute'),
+        );
+    }
+
+    /** The cap travels in providerOptions; the SDK's own max_tokens would be refused by gpt-5. */
+    public function test_a_gateway_agent_leaves_the_sdks_max_tokens_empty(): void
+    {
+        $this->assertNull((new SpeakAgent($this->gateway(effort: 'low')))->maxTokens());
+    }
+
+    public function test_a_name_that_is_neither_a_lab_nor_the_models_own_provider_is_rejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        (new SpeakAgent($this->gateway(effort: 'low')))->providerOptions('some-other-gateway');
     }
 
     public function test_a_null_effort_sends_no_reasoning_options_at_all(): void

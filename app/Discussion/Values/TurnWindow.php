@@ -15,14 +15,25 @@ final readonly class TurnWindow
         public TurnRange $asked,
         /** Turns the shortest contributing run has; null when no run spoke. */
         public ?int $shortestRun,
+        /** Turns the longest contributing run has; null when unknown, which counts as "may be longer". */
+        public ?int $longestRun = null,
     ) {
         $this->turns = $shortestRun === null ? $asked : $asked->cappedAt($shortestRun);
     }
 
-    /** The upper bound is the shortest run's length, not what was asked. */
+    /**
+     * The upper bound is the shortest run's length, not what was asked. Without a typed
+     * bound the whole run was asked, which only loses turns when a longer run exists.
+     */
     public function isCapped(): bool
     {
-        return $this->shortestRun !== null && ($this->asked->to === null || $this->asked->to > $this->shortestRun);
+        if ($this->shortestRun === null) {
+            return false;
+        }
+
+        return $this->asked->to === null
+            ? $this->longestRun === null || $this->longestRun > $this->shortestRun
+            : $this->asked->to > $this->shortestRun;
     }
 
     /**

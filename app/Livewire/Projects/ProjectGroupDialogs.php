@@ -51,7 +51,6 @@ class ProjectGroupDialogs extends Component
 
         $group = $this->user()->projectGroups()->create([
             'name' => $this->form->validatedName(),
-            'position' => (int) $this->user()->projectGroups()->max('position') + 1,
         ]);
         $project->fileInGroupFor($this->user(), $group->id);
 

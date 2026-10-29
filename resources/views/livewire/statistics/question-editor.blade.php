@@ -4,13 +4,17 @@
 
 <div class="space-y-6">
     {{-- The question's title heads it, with the autosave state and the page's actions. --}}
-    <div class="flex items-start gap-3">
+    {{-- "Saved" shows only after a real save (the question-saved event) and fades after 3 s; nothing on open. --}}
+    <div class="flex items-start gap-3" x-data="{ saved: false, timer: null }"
+        x-init="$wire.on('question-saved', () => { saved = true; clearTimeout(timer); timer = setTimeout(() => saved = false, 3000) })">
         <flux:heading size="xl" level="2" @class(['min-w-0 flex-1 break-words', 'italic text-zinc-400! dark:text-zinc-500!' => $title === null])>{{ $title ?? __('questions.untitled') }}</flux:heading>
 
         @unless ($readOnly)
-            <flux:text size="sm" class="flex shrink-0 items-center gap-1 pt-1.5" wire:loading.remove>
-                <flux:icon.check variant="micro" />{{ __('questions.autosave.saved') }}
-            </flux:text>
+            <span wire:loading.remove>
+                <flux:text size="sm" class="flex shrink-0 items-center gap-1 pt-1.5" role="status" x-show="saved" x-cloak x-transition.opacity.duration.500ms>
+                    <flux:icon.check variant="micro" />{{ __('questions.autosave.saved') }}
+                </flux:text>
+            </span>
             <flux:text size="sm" class="shrink-0 pt-1.5" wire:loading>{{ __('questions.autosave.saving') }}</flux:text>
         @endunless
 
@@ -108,32 +112,38 @@
             <x-statistics.sentence-part :connector="__('questions.sentence.in')">
                 <x-statistics.chip :read-only="$readOnly" :label="$parts['projects']" :muted="$current->projects->isEmpty()">
                     <flux:menu keep-open>
-                        <x-statistics.tag-checkbox-groups :categories="$this->projectCategories" :source="$this->sources['project']" model="definition.projects.tags" />
+                        {{-- One native submenu per kind, so the menu stays a short list of what can be filtered. --}}
+                        <x-statistics.tag-checkbox-groups :categories="$this->projectCategories" :source="$this->sources['project']" model="definition.projects.tags" submenu />
 
-                        <flux:menu.group :heading="$this->sources['run']->named(__('questions.controls.pipelines'))">
+                        <flux:menu.submenu :heading="$this->sources['run']->named(__('questions.controls.pipelines'))">
                             <flux:menu.checkbox.group wire:model.live="definition.projects.pipelines">
                                 @foreach ($this->pipelines as $pipelineName => $label)
-                                    <flux:menu.checkbox :value="$pipelineName">{{ $label }}</flux:menu.checkbox>
+                                    <flux:menu.checkbox :value="$pipelineName" keep-open>{{ $label }}</flux:menu.checkbox>
                                 @endforeach
                             </flux:menu.checkbox.group>
-                        </flux:menu.group>
+                        </flux:menu.submenu>
 
-                        <flux:menu.group :heading="$this->sources['run']->named(__('questions.controls.models'))">
+                        {{-- By provider: the same model name can sit behind two of them. --}}
+                        <flux:menu.submenu :heading="$this->sources['run']->named(__('questions.controls.models'))">
                             <flux:menu.checkbox.group wire:model.live="definition.projects.models">
-                                @foreach ($this->models as $key => $label)
-                                    <flux:menu.checkbox :value="$key">{{ $label }}</flux:menu.checkbox>
+                                @foreach ($this->modelsByProvider as $providerLabel => $models)
+                                    <flux:menu.group :heading="$providerLabel" wire:key="models-{{ $providerLabel }}">
+                                        @foreach ($models as $key => $label)
+                                            <flux:menu.checkbox :value="$key" keep-open>{{ $label }}</flux:menu.checkbox>
+                                        @endforeach
+                                    </flux:menu.group>
                                 @endforeach
                             </flux:menu.checkbox.group>
-                        </flux:menu.group>
+                        </flux:menu.submenu>
 
                         @if ($this->groups->isNotEmpty())
-                            <flux:menu.group :heading="$this->sources['group']->named(__('questions.controls.groups'))">
+                            <flux:menu.submenu :heading="$this->sources['group']->named(__('questions.controls.groups'))">
                                 <flux:menu.checkbox.group wire:model.live="definition.projects.groups">
                                     @foreach ($this->groups as $groupId => $groupName)
-                                        <flux:menu.checkbox :value="(string) $groupId" wire:key="group-{{ $groupId }}">{{ $groupName }}</flux:menu.checkbox>
+                                        <flux:menu.checkbox :value="(string) $groupId" keep-open wire:key="group-{{ $groupId }}">{{ $groupName }}</flux:menu.checkbox>
                                     @endforeach
                                 </flux:menu.checkbox.group>
-                            </flux:menu.group>
+                            </flux:menu.submenu>
                         @endif
                     </flux:menu>
                 </x-statistics.chip>
@@ -142,11 +152,15 @@
             {{-- Menus cannot hold input fields, so the window is the one part that opens a popover. --}}
             <x-statistics.sentence-part>
                 <x-statistics.chip :read-only="$readOnly" :label="$parts['turns']" :muted="$current->turns->isWholeRun() && ! $result->cappedByShortestRun">
-                    <flux:popover class="w-80 max-w-[calc(100vw-2rem)] space-y-4">
+                    <flux:popover class="w-80 max-w-[calc(100vw-2rem)] space-y-3" x-on:toggle="if ($event.newState === 'open') $nextTick(() => $el.querySelector('input')?.focus())">
                         <div class="grid grid-cols-2 gap-3">
-                            {{-- Empty fields are not "nothing": the placeholders show the window the answer is read over; max stops the spinner at the shortest run. --}}
-                            <flux:input type="number" min="1" :max="$result->shortestRun" wire:model.live.debounce.500ms="definition.turns.from" :label="__('questions.controls.turn_from')" :placeholder="$result->turns->from" />
-                            <flux:input type="number" min="1" :max="$result->shortestRun" wire:model.live.debounce.500ms="definition.turns.to" :label="__('questions.controls.turn_to')" :placeholder="$result->turns->to" />
+                            {{-- Empty fields are not "nothing": the placeholders show the window the answer is read over. A bound beyond the shortest run is allowed and cut with a warning. --}}
+                            <flux:input type="number" min="1" wire:model.live.debounce.500ms="definition.turns.from" :label="__('questions.controls.turn_from')" :placeholder="$result->turns->from" />
+                            <flux:input type="number" min="1" wire:model.live.debounce.500ms="definition.turns.to" :label="__('questions.controls.turn_to')" :placeholder="$result->turns->to" />
+                        </div>
+                        <flux:text size="sm">{{ __('questions.controls.turns_empty_hint') }}</flux:text>
+                        <div class="flex justify-end">
+                            <flux:button size="sm" variant="ghost" wire:click="resetTurns" :disabled="$current->turns->isWholeRun()">{{ __('questions.controls.turns_reset') }}</flux:button>
                         </div>
                     </flux:popover>
                 </x-statistics.chip>
@@ -195,7 +209,15 @@
                 </x-statistics.chip>
             </x-statistics.sentence-part>
         </div>
+
     </flux:card>
+
+    {{-- A window cut to the shortest run says so right under the builder, as a warning (the number only, never the run's name). --}}
+    @if ($capNote !== null)
+        <flux:callout variant="warning" icon="exclamation-triangle" data-turns-capped>
+            <flux:callout.text>{{ $capNote }}</flux:callout.text>
+        </flux:callout>
+    @endif
 
     {{-- The answer's form, centred above the answer. --}}
     <div class="flex justify-center">

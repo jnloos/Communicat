@@ -10,7 +10,7 @@
      authorization. Under each field the sentence the persona reads is built
      in the browser from the self template and the typed value (no round trip).
      An empty field means the attribute is not set. --}}
-<div class="grid gap-4 sm:grid-cols-2">
+<div class="space-y-4">
     @foreach ($definitions as $attribute)
         <div
             wire:key="attribute-field-{{ $attribute->id }}"

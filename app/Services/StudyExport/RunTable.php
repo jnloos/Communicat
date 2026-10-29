@@ -4,6 +4,7 @@ namespace App\Services\StudyExport;
 
 use App\Discussion\Support\PersonaLines;
 use App\Discussion\Values\ShareReport;
+use App\Models\PersonaAttribute;
 use App\Models\Project;
 use App\Models\ProjectGroup;
 use App\Models\TagCategory;
@@ -21,8 +22,11 @@ final class RunTable
 
     private readonly TagColumns $tags;
 
-    /** @param  Collection<int, TagCategory>  $categories  the project tag categories, in column order */
-    public function __construct(Collection $categories)
+    /**
+     * @param  Collection<int, TagCategory>  $categories  the project tag categories, in column order
+     * @param  Collection<int, PersonaAttribute>  $definitions  every attribute definition, read once for all runs
+     */
+    public function __construct(Collection $categories, private readonly Collection $definitions)
     {
         $this->tags = new TagColumns($categories, [...self::HEAD, ...self::TAIL]);
     }
@@ -36,7 +40,7 @@ final class RunTable
     /**
      * The group is the viewer's own sidebar drawer for the run.
      *
-     * @param  Collection<int, Project>  $runs  with tagValues loaded
+     * @param  Collection<int, Project>  $runs  with tagValues and attributeVisibilityRows loaded
      * @param  Collection<int, ShareReport>  $reports  by project id
      * @return list<array<string, scalar|null>>
      */
@@ -59,11 +63,19 @@ final class RunTable
                 'turn_budget' => $run->turn_budget,
                 'group' => $groupId === null ? null : ($groups[$groupId] ?? null),
             ] + $this->tags->cells($run->tagValues) + [
-                'attribute_visibility' => PersonaLines::visibilityOf($run)->value,
+                'attribute_visibility' => $this->visibilityCell($run),
                 'turns_spoken' => $report->spokenTurns,
                 'turns_failed_without_speaking' => $report->failedTurns,
             ];
         })->values()->all();
+    }
+
+    /** `Role=all; gender=own` in the order of the definitions; empty when none is defined. */
+    private function visibilityCell(Project $run): string
+    {
+        return collect(PersonaLines::visibilitiesOf($run, $this->definitions))
+            ->map(fn ($level, $name) => "{$name}={$level->value}")
+            ->implode('; ');
     }
 
     /**

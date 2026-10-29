@@ -27,6 +27,18 @@ class AttributesPageTest extends TestCase
         $this->actingAs($this->admin())->get(route('settings.attributes'))->assertOk();
     }
 
+    public function test_the_info_box_links_to_tags_in_both_languages(): void
+    {
+        $this->actingAs($this->admin());
+
+        foreach (['en', 'de'] as $locale) {
+            app()->setLocale($locale);
+            $this->get(route('settings.attributes'))
+                ->assertSeeHtml('<a href="'.route('settings.tags').'" wire:navigate class="underline underline-offset-2">'.__('tags.heading').'</a>')
+                ->assertDontSee(':link');
+        }
+    }
+
     public function test_a_non_admin_cannot_mount_the_component(): void
     {
         $this->actingAs(User::factory()->create());
@@ -156,6 +168,54 @@ class AttributesPageTest extends TestCase
             ->set('name', 'ORIGIN')
             ->call('save')
             ->assertHasErrors(['name']);
+    }
+
+    public function test_the_role_cannot_be_renamed_but_its_templates_can_change(): void
+    {
+        $this->actingAs($this->admin());
+        $role = PersonaAttribute::role();
+
+        Livewire::test(Attributes::class)
+            ->call('edit', $role->id)
+            ->assertSet('name', PersonaAttribute::ROLE)
+            ->set('name', 'Position')
+            ->call('save')
+            ->assertHasErrors(['name']);
+
+        $this->assertSame(PersonaAttribute::ROLE, $role->fresh()->name);
+
+        Livewire::test(Attributes::class)
+            ->call('edit', $role->id)
+            ->set('name', ' role ')
+            ->set('selfTemplate', 'You work as :value.')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame('You work as :value.', $role->fresh()->self_template);
+    }
+
+    public function test_the_role_cannot_be_deleted_not_even_past_the_confirmation(): void
+    {
+        $this->actingAs($this->admin());
+        $role = PersonaAttribute::role();
+
+        Livewire::test(Attributes::class)
+            ->call('confirmDelete', $role->id)
+            ->assertForbidden();
+        Livewire::test(Attributes::class)
+            ->call('delete', $role->id)
+            ->assertForbidden();
+
+        $this->assertTrue($role->fresh()->exists);
+    }
+
+    public function test_the_role_templates_have_one_definition(): void
+    {
+        $role = PersonaAttribute::role();
+
+        $this->assertSame(PersonaAttribute::ROLE_SELF_TEMPLATE, $role->self_template);
+        $this->assertSame(PersonaAttribute::ROLE_ROSTER_TEMPLATE, $role->roster_template);
+        $this->assertSame('Your role is Teacher.', $role->selfLine('Teacher'));
     }
 
     public function test_sorting_and_moving_write_the_position(): void

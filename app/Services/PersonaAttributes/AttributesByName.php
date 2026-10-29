@@ -28,6 +28,20 @@ class AttributesByName
             ->all();
     }
 
+    /**
+     * The Role definition, which exists afterwards: it is created (in front of the
+     * others) when this database has none yet. For callers that bring a role from
+     * outside the attribute system -- an old bundle's `role` field, init:experts'
+     * role labels.
+     */
+    public function ensureRole(): PersonaAttribute
+    {
+        $role = PersonaAttribute::role();
+        $this->definitions = null;
+
+        return $role;
+    }
+
     /** @param  bool  $overwrite  false keeps a value the expert already has for an attribute */
     public function assign(Expert $expert, mixed $values, bool $overwrite = true): SkippedAttributes
     {

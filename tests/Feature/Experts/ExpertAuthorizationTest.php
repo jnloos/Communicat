@@ -30,10 +30,10 @@ class ExpertAuthorizationTest extends TestCase
     public function test_a_non_admin_can_neither_create_change_nor_delete_an_expert(): void
     {
         $this->actingAs(User::factory()->create());
-        $expert = Expert::factory()->create(['name' => 'Ada', 'role' => 'Rolle']);
+        $expert = Expert::factory()->create(['name' => 'Ada']);
 
         Livewire::test(ExpertEditor::class)->call('edit')->assertForbidden();
-        Livewire::test(ExpertEditor::class)->set('name', 'Neu')->set('role', 'Rolle')->call('save')->assertForbidden();
+        Livewire::test(ExpertEditor::class)->set('name', 'Neu')->call('save')->assertForbidden();
 
         Livewire::test(ExpertEditor::class)
             ->call('edit', $expert->id)
@@ -58,7 +58,6 @@ class ExpertAuthorizationTest extends TestCase
         Livewire::test(ExpertEditor::class)
             ->call('edit')
             ->set('name', 'Neu')
-            ->set('role', 'Rolle')
             ->call('save')
             ->assertHasNoErrors();
         $expert = Expert::where('name', 'Neu')->sole();

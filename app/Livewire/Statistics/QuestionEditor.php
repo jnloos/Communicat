@@ -14,6 +14,7 @@ use App\Discussion\Values\DimensionType;
 use App\Discussion\Values\Metric;
 use App\Discussion\Values\ModelConfig;
 use App\Discussion\Values\QuestionDefinition;
+use App\Discussion\Values\QuestionResult;
 use App\Discussion\Values\ResultForm;
 use App\Models\Expert;
 use App\Models\ProjectGroup;
@@ -67,6 +68,10 @@ class QuestionEditor extends Component
 
     /** The question of this request; not a property Livewire keeps between requests. */
     private ?Question $loaded = null;
+
+    private ?QuestionEvaluator $evaluator = null;
+
+    private ?QuestionNormaliser $normaliser = null;
 
     public function mount(int $questionId): void
     {
@@ -141,16 +146,25 @@ class QuestionEditor extends Component
 
         $definition = $this->normaliser()->withBaseline($this->user(), $this->currentDefinition());
 
-        // Costs one evaluation per turn edit; the render evaluates again.
-        if (str_starts_with((string) $key, 'turns')) {
-            $definition = $this->normaliser()->withinShortestRun($this->user(), $definition);
-        }
-
+        // A typed turn window is kept as typed, even beyond the shortest run: the answer is
+        // read over the shortest run's length and says so, and it widens by itself when
+        // the shorter runs grow (e.g. while cells are still running).
         $this->definition = $definition->toArray();
         $this->question($this->questionId)->update(['definition' => $this->definition]);
         $this->syncBaselineChoice();
 
         $this->dispatch('question-saved');
+    }
+
+    /** The turn window back to the whole run: both fields empty. */
+    public function resetTurns(): void
+    {
+        if ($this->readOnly) {
+            return;
+        }
+
+        $this->definition['turns'] = ['from' => null, 'to' => null];
+        $this->saveDefinition('turns');
     }
 
     /** An own question shows the baseline the evaluator uses: store the fallback instead of leaving it implicit. */
@@ -208,9 +222,15 @@ class QuestionEditor extends Component
         return $baseline === DimensionValues::NONE ? self::NO_VALUE : (string) $baseline;
     }
 
+    /** One evaluator per request, so the normaliser, the save and the render share its answers. */
+    private function evaluator(): QuestionEvaluator
+    {
+        return $this->evaluator ??= app(QuestionEvaluator::class);
+    }
+
     private function normaliser(): QuestionNormaliser
     {
-        return app(QuestionNormaliser::class);
+        return $this->normaliser ??= new QuestionNormaliser($this->evaluator(), app(DimensionValues::class));
     }
 
     private function user(): User
@@ -230,7 +250,7 @@ class QuestionEditor extends Component
     public function render(): mixed
     {
         $definition = $this->currentDefinition();
-        $result = app(QuestionEvaluator::class)->evaluate($this->user(), $definition);
+        $result = $this->evaluator()->evaluate($this->user(), $definition);
 
         return view('livewire.statistics.question-editor', [
             'title' => $this->question($this->questionId)->name,
@@ -239,7 +259,27 @@ class QuestionEditor extends Component
             'mayShare' => Gate::allows('manageTemplates', Question::class),
             'parts' => $this->sentence()->prime([$definition])->parts($definition, $result),
             'result' => $result,
+            'capNote' => $this->capNote($result),
         ]);
+    }
+
+    /**
+     * Says the window was cut to the shortest run, or that no run reaches its start.
+     * Only the number, never the run: naming it was dropped on purpose (12.10.2026).
+     */
+    private function capNote(QuestionResult $result): ?string
+    {
+        $shortest = $result->shortestRun;
+
+        if (! $result->cappedByShortestRun || $shortest === null) {
+            return null;
+        }
+
+        if ($result->turns->from > $shortest) {
+            return __('questions.controls.turns_beyond', ['from' => $result->turns->from, 'count' => $shortest]);
+        }
+
+        return trans_choice('questions.controls.turns_capped', $shortest, ['count' => $shortest]);
     }
 
     /** @return list<Metric> */
@@ -300,18 +340,28 @@ class QuestionEditor extends Component
         return app(PipelineRegistry::class)->options();
     }
 
-    /** @return array<string, string> model key => label */
+    /**
+     * The models by provider, as the filter menu shows them: provider label => (model key => label).
+     *
+     * @return array<string, array<string, string>>
+     */
     #[Computed]
-    public function models(): array
+    public function modelsByProvider(): array
     {
-        return ModelConfig::options();
+        $groups = [];
+
+        foreach (ModelConfig::providers() as $provider => $providerLabel) {
+            $groups[$providerLabel] = ModelConfig::optionsFor($provider);
+        }
+
+        return $groups;
     }
 
     /** @return Collection<int, string> the viewer's group id => name, in sidebar order */
     #[Computed]
     public function groups(): Collection
     {
-        return ProjectGroup::where('user_id', $this->user()->id)->orderBy('position')->orderBy('name')->pluck('name', 'id');
+        return ProjectGroup::where('user_id', $this->user()->id)->orderBy('position')->orderBy('id')->pluck('name', 'id');
     }
 
     /** @return Collection<int, string> */

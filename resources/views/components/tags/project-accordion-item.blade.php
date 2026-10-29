@@ -1,6 +1,7 @@
 @props([
     'values', {{-- Collection<TagValue> the form currently has chosen, with category loaded --}}
     'categories', {{-- Collection<TagCategory> of the project scope, values loaded --}}
+    'disabled' => false, {{-- read only, e.g. the expert flyout for a non-admin --}}
 ])
 
 {{-- The tag section of the project forms (create and edit), inside their
@@ -23,7 +24,7 @@
     <flux:accordion.content class="my-4">
         <flux:fieldset>
             <flux:description class="mb-4">{{ __('tags.form.help') }}</flux:description>
-            <x-tags.fields :categories="$categories" />
+            <x-tags.fields :categories="$categories" :disabled="$disabled" />
         </flux:fieldset>
     </flux:accordion.content>
 </flux:accordion.item>

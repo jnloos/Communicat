@@ -20,6 +20,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -370,6 +371,17 @@ class QuestionEvaluatorTest extends TestCase
         $this->assertSame(2, $result->panels[0]->groups[0]->n());
     }
 
+    public function test_runs_of_equal_length_are_not_capped_when_no_bound_was_asked(): void
+    {
+        $this->makeRun(['A'], [['A', 10], ['A', 10], ['A', 10]]);
+        $this->makeRun(['A'], [['A', 10], ['A', 10], ['A', 10]]);
+
+        $result = $this->answer([]);
+
+        $this->assertSame(3, $result->turns->to);
+        $this->assertFalse($result->cappedByShortestRun, 'nothing is lost: every run is read in full');
+    }
+
     public function test_a_given_upper_bound_below_the_shortest_run_is_kept_and_not_capped(): void
     {
         $this->makeRun(['A', 'B'], [['A', 10], ['B', 10], ['A', 10]]);
@@ -614,5 +626,34 @@ class QuestionEvaluatorTest extends TestCase
 
         $this->expectException(\LogicException::class);
         $this->answer([])->groupIndex('missing');
+    }
+
+    public function test_asking_the_same_question_twice_reads_the_data_once_per_instance(): void
+    {
+        $this->makeRun(['Ann', 'Ben'], [['Ann', 10], ['Ben', 20]]);
+        $evaluator = app(QuestionEvaluator::class);
+        $question = QuestionDefinition::fromArray([]);
+
+        DB::enableQueryLog();
+        $first = $evaluator->evaluate($this->user, $question);
+        $queries = count(DB::getQueryLog());
+        DB::flushQueryLog();
+        $second = $evaluator->evaluate($this->user, $question);
+
+        $this->assertGreaterThan(0, $queries);
+        $this->assertCount(0, DB::getQueryLog());
+        $this->assertSame($first, $second);
+
+        // The next request, a new instance, reads afresh.
+        $this->assertNotSame($first, app(QuestionEvaluator::class)->evaluate($this->user, $question));
+    }
+
+    public function test_the_tables_the_statistics_read_by_project_have_an_index_on_it(): void
+    {
+        foreach (['job_logs' => 'project_id', 'messages' => 'project_id', 'project_contributors' => 'project_id'] as $table => $column) {
+            $leading = collect(Schema::getIndexes($table))->contains(fn (array $index) => ($index['columns'][0] ?? null) === $column);
+
+            $this->assertTrue($leading, "{$table} has no index starting with {$column}");
+        }
     }
 }

@@ -67,6 +67,16 @@ class ProjectChat extends Component
         $this->pageSize += self::PAGE_STEP;
     }
 
+    public function confirmLeave(): void
+    {
+        $this->authorize('leave', $this->project);
+
+        $this->confirmTitle = __('chat.confirm_leave.title');
+        $this->confirmLabel = __('chat.confirm_leave.action');
+        $this->confirmMessage = __('chat.confirm_leave.message', ['name' => $this->project->title]);
+        $this->needsConfirmation('leaveProject');
+    }
+
     public function leaveProject(): void
     {
         $this->authorize('leave', $this->project);

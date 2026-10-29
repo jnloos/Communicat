@@ -23,8 +23,13 @@ use Symfony\Component\Process\Exception\ProcessStartFailedException;
 class ParallelPrompts
 {
     /**
-     * @param  array<array-key, Closure(): Completion>  $tasks
-     * @return array<array-key, Completion>
+     * Whatever a task returns must survive serialisation: a Completion for an agent
+     * call, a JevBid for a Jev request -- scalars, never an SDK response object.
+     *
+     * @template T
+     *
+     * @param  array<array-key, Closure(): T>  $tasks
+     * @return array<array-key, T>
      */
     public function run(array $tasks): array
     {
@@ -56,11 +61,13 @@ class ParallelPrompts
      *
      * Falling back costs wall-clock time and nothing else. The tasks are
      * independent, every prompt is rendered before any call goes out, and a
-     * task returns the same Completion whichever process runs it. A study run
+     * task returns the same result whichever process runs it. A study run
      * that slows down is worth having; one that dies at turn 39 is not.
      *
-     * @param  list<Closure(): Completion>  $tasks
-     * @return list<Completion>
+     * @template T
+     *
+     * @param  list<Closure(): T>  $tasks
+     * @return list<T>
      */
     private function oneAfterAnother(array $tasks, ProcessStartFailedException $reason): array
     {

@@ -57,7 +57,7 @@ class ModelConfigTest extends TestCase
 
         $this->assertSame(__('projects.providers.openai'), $providers['openai']);
         $this->assertNotSame('projects.providers.openai', $providers['openai']);
-        $this->assertSame(['openai', 'anthropic', 'gemini'], array_keys($providers));
+        $this->assertSame(['openai', 'anthropic', 'gemini', 'omniroute'], array_keys($providers));
     }
 
     public function test_lists_only_the_models_of_one_provider(): void
@@ -77,6 +77,23 @@ class ModelConfigTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
 
         ModelConfig::fromConfig('does-not-exist');
+    }
+
+    public function test_a_named_gateway_maps_onto_its_driver_but_is_passed_to_the_sdk_by_name(): void
+    {
+        $config = ModelConfig::fromConfig('omniroute-gpt-5.6-luna');
+
+        $this->assertSame(Lab::OpenAICompatible, $config->lab());
+        $this->assertSame('omniroute', $config->sdkProvider());
+        $this->assertSame(Lab::OpenAI, ModelConfig::fromConfig('openai-gpt-5-mini')->sdkProvider());
+    }
+
+    public function test_only_openai_style_responses_report_the_served_model(): void
+    {
+        $this->assertTrue(ModelConfig::fromConfig('omniroute-gpt-5.6-luna')->reportsServedModel());
+        $this->assertTrue(ModelConfig::fromConfig('openai-gpt-5-mini')->reportsServedModel());
+        $this->assertFalse(ModelConfig::fromConfig('anthropic-opus-5')->reportsServedModel());
+        $this->assertFalse(ModelConfig::fromConfig('gemini-3.8-flash')->reportsServedModel());
     }
 
     public function test_the_provider_string_maps_onto_the_sdk_lab_enum(): void

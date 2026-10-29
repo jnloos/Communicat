@@ -60,7 +60,6 @@ final class GroupTransfer
         $group ??= ProjectGroup::create([
             'user_id' => $user->id,
             'name' => $name,
-            'position' => (int) ProjectGroup::where('user_id', $user->id)->max('position') + 1,
         ]);
         // Only projects the user contributes to (Project::hasContributor()), found in one query.
         $own = Project::whereIn('uuid', $projects)

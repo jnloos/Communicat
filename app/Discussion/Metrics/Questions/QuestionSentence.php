@@ -96,7 +96,7 @@ final class QuestionSentence
             'people' => $question->metric->isRunLevel() ? null : $this->people($question->people),
             'aggregate' => $question->metric->isShare() ? $question->aggregate->label() : null,
             'projects' => $this->projects($question->projects),
-            'turns' => $this->turns($result?->turns ?? $question->turns, $result),
+            'turns' => $this->turns($question->turns, $result),
             'compare_by' => $question->compareBy === null ? null : $this->dimension($question->compareBy),
             'split_by' => $question->splitBy === [] ? null : $this->dimensions($question->splitBy),
         ];
@@ -153,7 +153,7 @@ final class QuestionSentence
             return __('questions.sentence.all_runs');
         }
 
-        $models = ModelConfig::options();
+        $models = ModelConfig::qualifiedOptions();
 
         return implode(', ', [
             ...$this->tags($projects->tags->valueIds()),
@@ -163,12 +163,13 @@ final class QuestionSentence
         ]);
     }
 
-    private function turns(TurnRange $turns, ?QuestionResult $result): string
+    /**
+     * The window as set. A typed bound is shown as typed even when the answer had to cut it
+     * (the warning under the builder says so); only the untouched whole run reads from the answer.
+     */
+    private function turns(TurnRange $asked, ?QuestionResult $result): string
     {
-        // A start past the shortest run: no run has such a turn, so say why the answer is empty.
-        if ($result?->shortestRun !== null && $turns->from > $result->shortestRun) {
-            return __('questions.sentence.beyond_shortest_run', ['from' => $turns->from, 'count' => $result->shortestRun]);
-        }
+        $turns = $asked->isWholeRun() && $result !== null ? $result->turns : $asked;
 
         return match (true) {
             $turns->isWholeRun() => __('questions.sentence.all_turns'),

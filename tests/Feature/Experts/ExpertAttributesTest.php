@@ -125,9 +125,7 @@ class ExpertAttributesTest extends TestCase
             ->assertSee(__('experts.attributes.persona_reads'))
             ->assertSeeHtml('placeholder="'.__('experts.attributes.value_placeholder').'"')
             ->assertSeeHtml('maxlength="'.PersonaAttribute::VALUE_MAX.'"')
-            ->assertSee(__('experts.attributes.empty_hint'));
-
-        $this->assertNotSame('experts.attributes.empty_hint', __('experts.attributes.empty_hint', [], 'de'));
+            ->assertSee(__('experts.attributes.help'));
     }
 
     public function test_the_read_only_view_shows_not_set_instead_of_the_placeholder(): void
@@ -138,8 +136,7 @@ class ExpertAttributesTest extends TestCase
 
         Livewire::test(ExpertEditor::class)
             ->call('edit', $expert->id)
-            ->assertSeeHtml('placeholder="'.__('experts.attributes.not_set').'"')
-            ->assertDontSee(__('experts.attributes.empty_hint'));
+            ->assertSeeHtml('placeholder="'.__('experts.attributes.not_set').'"');
     }
 
     public function test_a_value_with_a_line_break_is_refused_before_saving(): void

@@ -15,7 +15,7 @@ use Illuminate\Support\Collection;
  */
 final class TurnTable
 {
-    private const COLUMNS = ['run_uuid', 'turn_index', 'status', 'spoken', 'expert_uuid', 'seat', 'addressee_expert_uuid', 'words', 'chars', 'thought_words', 'thought_chars', 'tokens_in', 'tokens_out', 'tokens_reasoning', 'selector', 'fallback', 'tie_broken', 'speaker_bid', 'speaker_bid_fallback', 'judge_label', 'selector_reasoning', 'selection_json', 'error'];
+    private const COLUMNS = ['run_uuid', 'turn_index', 'status', 'spoken', 'expert_uuid', 'seat', 'addressee_expert_uuid', 'words', 'chars', 'thought_words', 'thought_chars', 'tokens_in', 'tokens_out', 'tokens_reasoning', 'selector', 'fallback', 'tie_broken', 'speaker_bid', 'speaker_bid_fallback', 'speaker_probability', 'speaker_jev_score', 'judge_label', 'selector_reasoning', 'selection_json', 'error'];
 
     public function __construct(private readonly TurnTokenSums $tokenSums) {}
 
@@ -57,7 +57,8 @@ final class TurnTable
     private function row(Project $run, JobLog $job, array $tokens, mixed $addresseeId, Collection $expertUuids): array
     {
         $selection = SelectionRecord::fromArray($job->selection);
-        $bid = $selection->bidOf($selection->speakerId() ?? $job->expert_id);
+        $speakerId = $selection->speakerId() ?? $job->expert_id;
+        $bid = $selection->bidOf($speakerId);
 
         return [
             'run_uuid' => $run->uuid,
@@ -79,6 +80,8 @@ final class TurnTable
             'tie_broken' => self::flag($selection->tieBroken()),
             'speaker_bid' => $bid['bid'],
             'speaker_bid_fallback' => self::flag($bid['imputed']),
+            'speaker_probability' => $selection->speakerProbability($speakerId),
+            'speaker_jev_score' => $selection->speakerJevScore($speakerId),
             'judge_label' => $selection->label(),
             'selector_reasoning' => $selection->reasoning(),
             'selection_json' => $selection->isEmpty() ? null : json_encode($selection->toArray(), JSON_UNESCAPED_UNICODE),

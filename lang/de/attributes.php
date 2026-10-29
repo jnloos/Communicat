@@ -9,7 +9,7 @@
 return [
     'heading' => 'Attribute',
     'subheading' => 'Fakten über einen Experten (Herkunft, Geschlecht, …) und wie sie im Prompt klingen.',
-    'help' => 'Anders als Tags können die Modelle Attribute lesen. Ob und wem sie gezeigt werden, wählt das Projekt: gar nicht, nur dem Experten selbst oder allen.',
+    'help' => 'Anders als :link lesen die Modelle Attribute. Jedes Projekt legt je Attribut fest, wer es sieht: niemand, nur der Experte selbst oder alle Experten und der Selektor.',
     'empty' => 'Noch kein Attribut. Fügen Sie unten das erste hinzu.',
 
     'rows' => [
@@ -27,7 +27,7 @@ return [
 
     'descriptions' => [
         'self_template' => 'Das liest der Experte über sich selbst.',
-        'roster_template' => 'Das lesen die anderen hinter der Rolle des Experten.',
+        'roster_template' => 'Das lesen die anderen in der Teilnehmerliste.',
     ],
 
     'placeholders' => [
@@ -64,6 +64,7 @@ return [
     ],
 
     'errors' => [
+        'role_locked' => 'Das Attribut Role gehört zur Studie und lässt sich weder umbenennen noch löschen.',
         'missing_value' => ':attribute muss :placeholder enthalten.',
     ],
 ];

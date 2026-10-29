@@ -5,6 +5,7 @@ namespace App\Livewire\Forms;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Values\AttributeVisibility;
 use App\Discussion\Values\ModelConfig;
+use App\Models\PersonaAttribute;
 use App\Models\Project;
 use Illuminate\Validation\Rule;
 use Livewire\Form;
@@ -35,8 +36,13 @@ class ProjectForm extends Form
 
     public string $summarizeOldest = '';
 
-    /** How much of the personas' attributes the prompts reveal; fixed once the run has started. */
-    public AttributeVisibility $attributeVisibility = AttributeVisibility::None;
+    /**
+     * How much of each persona attribute the prompts reveal, by attribute id
+     * ('none'|'own'|'all'); fixed once the run has started.
+     *
+     * @var array<int, string>
+     */
+    public array $attributeVisibility = [];
 
     /** UI state only: the accordion item opens when its field has an error to show. */
     public bool $attributesOpen = false;
@@ -48,7 +54,7 @@ class ProjectForm extends Form
         $this->selectModel((string) config('ai.default_model'));
         $this->summarizeThreshold = (string) config('discussion.summarize_threshold');
         $this->summarizeOldest = (string) config('discussion.summarize_oldest');
-        $this->attributeVisibility = AttributeVisibility::default();
+        $this->attributeVisibility = self::asValues(Project::defaultAttributeVisibilities());
     }
 
     /** The summarization numbers as effective values, so a null column shows its default. */
@@ -60,13 +66,13 @@ class ProjectForm extends Form
         $this->selectModel($project->model);
         $this->summarizeThreshold = (string) $project->summarizeThreshold();
         $this->summarizeOldest = (string) $project->summarizeOldest();
-        $this->attributeVisibility = $project->attribute_visibility ?? AttributeVisibility::default();
+        $this->attributeVisibility = self::asValues($project->attributeVisibilities());
     }
 
     /**
      * The project columns this form writes, cast. Call after validate().
      *
-     * @return array{title: string, description: string, pipeline: string, model: string, summarize_threshold: int, summarize_oldest: int, attribute_visibility: AttributeVisibility}
+     * @return array{title: string, description: string, pipeline: string, model: string, summarize_threshold: int, summarize_oldest: int}
      */
     public function attributes(): array
     {
@@ -77,7 +83,6 @@ class ProjectForm extends Form
             'model' => $this->model,
             'summarize_threshold' => (int) $this->summarizeThreshold,
             'summarize_oldest' => (int) $this->summarizeOldest,
-            'attribute_visibility' => $this->attributeVisibility,
         ];
     }
 
@@ -95,8 +100,33 @@ class ProjectForm extends Form
             'summarizeThreshold' => ['required', 'integer', 'min:2'],
             // Folding every pending message would leave no verbatim history at all.
             'summarizeOldest' => ['required', 'integer', 'min:1', 'lt:summarizeThreshold'],
-            'attributeVisibility' => ['required', Rule::enum(AttributeVisibility::class)],
+            'attributeVisibility' => ['array', function (string $attribute, mixed $value, \Closure $fail) {
+                $unknown = array_diff(array_keys((array) $value), PersonaAttribute::pluck('id')->all());
+                if ($unknown !== []) {
+                    $fail('The attribute visibility names an attribute that does not exist.');
+                }
+            }],
+            'attributeVisibility.*' => ['required', Rule::enum(AttributeVisibility::class)],
         ];
+    }
+
+    /**
+     * The levels as enum cases, for the defined attributes only. Call after validate().
+     *
+     * @return array<int, AttributeVisibility>
+     */
+    public function attributeLevels(): array
+    {
+        return array_map(AttributeVisibility::from(...), $this->attributeVisibility);
+    }
+
+    /**
+     * @param  array<int, AttributeVisibility>  $levels
+     * @return array<int, string>
+     */
+    private static function asValues(array $levels): array
+    {
+        return array_map(fn (AttributeVisibility $level) => $level->value, $levels);
     }
 
     /** A new provider invalidates the chosen model: move to its first one. Livewire calls this hook on the form itself. */

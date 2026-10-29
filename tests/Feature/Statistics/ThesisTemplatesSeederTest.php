@@ -18,8 +18,8 @@ class ThesisTemplatesSeederTest extends TestCase
     private function studyTags(): void
     {
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
-        $condition->values()->create(['name' => 'status']);
-        $condition->values()->create(['name' => 'no-status']);
+        $condition->values()->create(['name' => 'pos-status']);
+        $condition->values()->create(['name' => 'eq-status']);
         $titleHolder = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
         $titleHolder->values()->create(['name' => 'true']);
         $titleHolder->values()->create(['name' => 'false']);
@@ -38,15 +38,15 @@ class ThesisTemplatesSeederTest extends TestCase
         $this->assertTrue(Question::templates()->get()->every(fn (Question $template) => $template->user_id === $admin->id));
         $statusEffect = Question::templates()->where('name', 'Status effect on turn share by pipeline')->sole()->definition();
         $this->assertSame(['pipeline'], $statusEffect->toArray()['split_by']);
-        $this->assertSame(60, $statusEffect->turns->to);
+        $this->assertSame(30, $statusEffect->turns->to);
     }
 
     public function test_a_template_whose_tags_are_missing_is_skipped(): void
     {
         User::factory()->create(['is_admin' => true]);
         $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
-        $condition->values()->create(['name' => 'status']);
-        $condition->values()->create(['name' => 'no-status']);
+        $condition->values()->create(['name' => 'pos-status']);
+        $condition->values()->create(['name' => 'eq-status']);
 
         $this->seed(ThesisTemplatesSeeder::class);
 
@@ -70,7 +70,7 @@ class ThesisTemplatesSeederTest extends TestCase
     {
         User::factory()->create(['is_admin' => true]);
         $this->studyTags();
-        $noStatus = TagValue::where('name', 'no-status')->sole();
+        $noStatus = TagValue::where('name', 'eq-status')->sole();
         $notTitled = TagValue::where('name', 'false')->sole();
 
         $this->seed(ThesisTemplatesSeeder::class);
@@ -96,5 +96,26 @@ class ThesisTemplatesSeederTest extends TestCase
         $this->assertSame(['pipeline'], $definition->toArray()['split_by']);
         $this->assertSame(['QualityPipeline', 'BlindQualityPipeline'], $definition->projects->pipelines);
         $this->assertTrue($definition->projects->tags->isEmpty(), 'Both status conditions are compared, so neither may be filtered out.');
+    }
+
+    public function test_every_template_reads_the_gpt_5_mini_series_only(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $focus = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'focus persona']);
+        $focus->values()->create(['name' => 'true']);
+        $condition = TagCategory::create(['scope' => TagScope::Project, 'name' => 'status condition']);
+        $condition->values()->create(['name' => 'pos-status']);
+        $condition->values()->create(['name' => 'eq-status']);
+        $holder = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
+        $holder->values()->create(['name' => 'true']);
+        $holder->values()->create(['name' => 'false']);
+
+        $this->seed(ThesisTemplatesSeeder::class);
+
+        $templates = $admin->questions()->where('is_template', true)->get();
+        $this->assertNotEmpty($templates);
+        foreach ($templates as $template) {
+            $this->assertSame(['openai-gpt-5-mini'], $template->definition()->toArray()['projects']['models'], $template->name);
+        }
     }
 }

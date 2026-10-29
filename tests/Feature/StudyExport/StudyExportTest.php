@@ -2,6 +2,11 @@
 
 namespace Tests\Feature\StudyExport;
 
+use App\Discussion\Values\BidResolution;
+use App\Discussion\Values\JevAgentBid;
+use App\Discussion\Values\JevBid;
+use App\Discussion\Values\JevPick;
+use App\Discussion\Values\SelectionRecord;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Message;
@@ -377,5 +382,52 @@ class StudyExportTest extends TestCase
 
         $this->assertSame(array_search('expert_uuid', $header) + 1, array_search('expert_token', $header));
         $this->assertSame(["E{$alex->id}", "E{$kim->id}"], array_column($participants, 'expert_token'));
+    }
+
+    private function jevPick(?string $key, array $probabilities, bool $fallback = false, bool $asked = true): JevPick
+    {
+        return new JevPick((new Expert)->forceFill(['id' => 1]), $key, tieBroken: $fallback, fallback: $fallback, asked: $asked, probabilities: $probabilities, confidence: 0.8, model: 'jev-1.13.0', latencyMs: 100);
+    }
+
+    public function test_jev_turns_export_the_probability_and_the_jev_score_in_two_columns_and_the_fallback(): void
+    {
+        [$viewer, $run, $alex, $kim] = $this->makeRun();
+        $this->log($run, 1, ['expert_id' => $alex->id, 'words' => 5, 'chars' => 20, 'selection' => [
+            'selector' => 'JevSpeakerSelector', 'speaker_id' => $alex->id, 'tie_broken' => false,
+            'signals' => SelectionRecord::jevPickSignals($this->jevPick("E{$alex->id}", ["E{$alex->id}" => 0.75, "E{$kim->id}" => 0.25])),
+        ]]);
+        $this->log($run, 2, ['expert_id' => $kim->id, 'words' => 5, 'chars' => 20, 'selection' => [
+            'selector' => 'JevJudgeSelector', 'speaker_id' => $kim->id, 'tie_broken' => true,
+            'signals' => SelectionRecord::jevPickSignals($this->jevPick(null, [], fallback: true)),
+        ]]);
+        $this->log($run, 3, ['expert_id' => $kim->id, 'words' => 5, 'chars' => 20, 'selection' => [
+            'selector' => 'JevBlindJudgeSelector', 'speaker_id' => $kim->id, 'tie_broken' => false,
+            'signals' => SelectionRecord::jevBlindPickSignals($this->jevPick('B', ['A' => 0.4, 'B' => 0.6]), ['A' => $alex->id, 'B' => $kim->id]),
+        ]]);
+        $this->log($run, 4, ['expert_id' => $alex->id, 'words' => 5, 'chars' => 20, 'selection' => [
+            'selector' => 'HighestBidSelector', 'speaker_id' => $alex->id, 'tie_broken' => false,
+            'signals' => SelectionRecord::bidSignals(["E{$alex->id}" => 4, "E{$kim->id}" => 1], ["E{$kim->id}"])
+                + SelectionRecord::jevBidSignals([
+                    new JevAgentBid("E{$alex->id}", 5, new JevBid(3.6, 0.7, 'jev-1.13.0', 80)),
+                    new JevAgentBid("E{$kim->id}", 3, new JevBid(null, null, null, 95)),
+                ], BidResolution::Rounded),
+        ]]);
+        $this->log($run, 5, ['expert_id' => $kim->id, 'words' => 5, 'chars' => 20, 'selection' => [
+            'selector' => 'RoundRobinSelector', 'speaker_id' => $kim->id, 'tie_broken' => false, 'signals' => SelectionRecord::seatSignals(2),
+        ]]);
+        $this->log($run, 6, ['expert_id' => $alex->id, 'words' => 5, 'chars' => 20, 'selection' => [
+            'selector' => 'JevSpeakerSelector', 'speaker_id' => $alex->id, 'tie_broken' => false,
+            'signals' => SelectionRecord::jevPickSignals($this->jevPick("E{$alex->id}", [], asked: false)),
+        ]]);
+
+        $turns = $this->export($run, $viewer)['turns.csv'];
+        $header = array_keys($turns[0]);
+
+        $this->assertSame(array_search('speaker_bid_fallback', $header) + 1, array_search('speaker_probability', $header));
+        $this->assertSame(array_search('speaker_probability', $header) + 1, array_search('speaker_jev_score', $header));
+        $this->assertSame(['0.75', '', '0.6', '', '', ''], array_column($turns, 'speaker_probability'), 'pickers only, 0 to 1');
+        $this->assertSame(['', '', '', '3.6', '', ''], array_column($turns, 'speaker_jev_score'), 'the Jev Score bidder only, unrounded');
+        $this->assertSame(['0', '1', '0', '1', '', '0'], array_column($turns, 'fallback'));
+        $this->assertSame('4', $turns[3]['speaker_bid'], 'the Jev bid that HighestBidSelector read');
     }
 }

@@ -8,6 +8,7 @@ use App\Services\PersonaAttributes\AttributesByName;
 use App\Services\PersonaAttributes\SkippedAttributes;
 use App\Services\Tags\TagsByName;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class InitExperts extends Command
 {
@@ -47,6 +48,7 @@ class InitExperts extends Command
             return 1;
         }
 
+        $roleAttribute = $attributes->ensureRole();
         $created = 0;
         $updated = 0;
         $skipped = [];
@@ -64,23 +66,32 @@ class InitExperts extends Command
             // conditions -- a rank-and-file seat in a graded scenario -- is one
             // persona, not two, which is why the labels are deduplicated.
             foreach (array_unique($expert['roles']) as $role) {
-                $model = Expert::updateOrCreate(
-                    ['name' => $expert['name'], 'role' => $role],
-                    [
-                        'description' => $expert['description'],
-                        'avatar_url' => $avatarUrl,
-                    ],
-                );
+                // Find or create the persona, its role and its optional tags and
+                // attributes as one unit: a failure half way leaves no persona
+                // without its role, which a rerun would then no longer find.
+                [$model, $unknownTags, $placed] = DB::transaction(function () use ($expert, $role, $avatarUrl, $roleAttribute, $tags, $attributes) {
+                    $model = Expert::query()
+                        ->where('name', $expert['name'])
+                        ->whereHas('personaAttributes', fn ($values) => $values
+                            ->where('persona_attributes.id', $roleAttribute->id)
+                            ->where('expert_persona_attribute.value', $role))
+                        ->first() ?? new Expert(['name' => $expert['name']]);
+
+                    $model->fill(['description' => $expert['description'], 'avatar_url' => $avatarUrl])->save();
+                    $model->setAttributeValue($roleAttribute, $role);
+
+                    // Optional {"category": "value"}; only existing persona categories
+                    // and values are used, and a value already set stays.
+                    $unknownTags = $tags->assign($model, $expert['tags'] ?? [], overwrite: false);
+
+                    // Optional {"attribute": "value"}, the same rule: only existing
+                    // definitions are used, and a value already set stays.
+                    return [$model, $unknownTags, $attributes->assign($model, $expert['attributes'] ?? [], overwrite: false)];
+                });
 
                 $model->wasRecentlyCreated ? $created++ : $updated++;
-
-                // Optional {"category": "value"}; only existing persona categories
-                // and values are used, and a value already set stays.
-                $skipped = [...$skipped, ...$tags->assign($model, $expert['tags'] ?? [], overwrite: false)];
-
-                // Optional {"attribute": "value"}, the same rule: only existing
-                // definitions are used, and a value already set stays.
-                $skippedAttributes->merge($attributes->assign($model, $expert['attributes'] ?? [], overwrite: false));
+                $skipped = [...$skipped, ...$unknownTags];
+                $skippedAttributes->merge($placed);
             }
         }
 

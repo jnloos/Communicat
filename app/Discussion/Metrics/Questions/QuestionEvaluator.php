@@ -39,6 +39,15 @@ final class QuestionEvaluator
 
     private readonly RunReader $reader;
 
+    /**
+     * Answers by viewer and definition, for the life of this instance. One request asks the same
+     * question several times (the editor normalises, saves and renders it); a new instance, i.e.
+     * the next request, reads the data afresh.
+     *
+     * @var array<string, QuestionResult>
+     */
+    private array $answers = [];
+
     public function __construct(
         private readonly QuestionRuns $runs,
         private readonly DimensionValues $dimensions,
@@ -52,6 +61,11 @@ final class QuestionEvaluator
     }
 
     public function evaluate(User $user, QuestionDefinition $question): QuestionResult
+    {
+        return $this->answers[$user->id.'|'.json_encode($question->toArray())] ??= $this->read($user, $question);
+    }
+
+    private function read(User $user, QuestionDefinition $question): QuestionResult
     {
         $projects = $this->runs->for($user, $question->projects);
         // Groups belong to the viewer, and the tags of all runs are read ahead, so this copy serves this answer only.
@@ -86,6 +100,6 @@ final class QuestionEvaluator
     {
         $lengths = array_filter($this->spoken->counts($contributing), fn (int $length) => $length > 0);
 
-        return new TurnWindow($asked, $lengths === [] ? null : min($lengths));
+        return new TurnWindow($asked, $lengths === [] ? null : min($lengths), $lengths === [] ? null : max($lengths));
     }
 }

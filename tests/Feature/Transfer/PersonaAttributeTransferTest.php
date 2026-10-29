@@ -54,8 +54,9 @@ class PersonaAttributeTransferTest extends TestCase
         $origin->moveTo(1);
         $expert = Expert::factory()->create();
         $expert->setAttributeValue($origin, 'Owerri, Nigeria');
-        $project = Project::factory()->create(['user_id' => $admin->id, 'attribute_visibility' => AttributeVisibility::All, 'run_config' => ['pipeline' => 'RoundRobinPipeline', 'attribute_visibility' => 'all', 'cast' => [['seat' => 1, 'expert_id' => $expert->id, 'name' => 'A', 'role' => 'R', 'attributes' => [['name' => 'origin', 'value' => 'Owerri, Nigeria', 'self_line' => 'You grew up in Owerri, Nigeria.', 'roster' => 'from Owerri, Nigeria']]]]]]);
+        $project = Project::factory()->create(['user_id' => $admin->id, 'run_config' => ['pipeline' => 'RoundRobinPipeline', 'attribute_visibility' => ['origin' => 'all'], 'cast' => [['seat' => 1, 'expert_id' => $expert->id, 'name' => 'A', 'role' => 'R', 'attributes' => [['name' => 'origin', 'value' => 'Owerri, Nigeria', 'self_line' => 'You grew up in Owerri, Nigeria.', 'roster' => 'from Owerri, Nigeria']]]]]]);
         $project->addContributingExpert($expert);
+        $project->setAttributeVisibilities([$origin->id => AttributeVisibility::All, $gender->id => AttributeVisibility::Own]);
         $path = $this->temporaryPath();
         app(BundleExporter::class)->everything($admin, $path);
         $this->assertContains(Bundle::PERSONA_ATTRIBUTES, $this->entries($path));
@@ -70,7 +71,7 @@ class PersonaAttributeTransferTest extends TestCase
         $copy = Expert::sole();
         $this->assertSame(['origin' => 'Owerri, Nigeria'], $copy->personaAttributes->mapWithKeys(fn ($a) => [$a->name => $a->pivot->value])->all());
         $imported = Project::where('uuid', $project->uuid)->sole();
-        $this->assertSame(AttributeVisibility::All, $imported->attribute_visibility);
+        $this->assertEquals(['origin' => AttributeVisibility::All, 'gender' => AttributeVisibility::Own], $this->levelsByName($imported));
         $this->assertSame($project->run_config, $imported->run_config);
     }
 
@@ -79,7 +80,7 @@ class PersonaAttributeTransferTest extends TestCase
         $owner = User::factory()->create();
         $expert = Expert::factory()->create();
         $cast = [['seat' => 1, 'expert_id' => $expert->id, 'name' => 'A', 'role' => 'R', 'attributes' => [['name' => 'origin', 'value' => 'E1 town', 'self_line' => 'You live in E1 town.', 'roster' => 'E1 town']]]];
-        $project = Project::factory()->create(['user_id' => $owner->id, 'run_config' => ['pipeline' => 'ScorePipeline', 'attribute_visibility' => 'own', 'cast' => $cast]]);
+        $project = Project::factory()->create(['user_id' => $owner->id, 'run_config' => ['pipeline' => 'ScorePipeline', 'attribute_visibility' => ['origin' => 'own'], 'cast' => $cast]]);
         $project->addContributingExpert($expert);
         $data = (new ProjectTransfer)->export($project->fresh());
         $experts = [(new ExpertTransfer)->export($expert)];
@@ -95,7 +96,7 @@ class PersonaAttributeTransferTest extends TestCase
         $frozen = $copy->run_config['cast'][0];
         $this->assertSame($newId, $frozen['expert_id']);
         $this->assertSame($cast[0]['attributes'], $frozen['attributes']);
-        $this->assertSame('own', $copy->run_config['attribute_visibility']);
+        $this->assertSame(['origin' => 'own'], $copy->run_config['attribute_visibility']);
     }
 
     public function test_a_bundle_without_definitions_has_no_entry_and_an_old_bundle_imports_unchanged(): void
@@ -114,30 +115,93 @@ class PersonaAttributeTransferTest extends TestCase
         $this->assertSame(1, Expert::count());
     }
 
-    public function test_an_old_project_file_without_visibility_imports_as_none(): void
+    /** @return array<string, AttributeVisibility> */
+    private function levelsByName(Project $project): array
+    {
+        $byId = $project->attributeVisibilities();
+
+        return PersonaAttribute::ordered()->get()->mapWithKeys(fn ($a) => [$a->name => $byId[$a->id]])->all();
+    }
+
+    private function projectFile(User $owner, array $levels): array
+    {
+        [$origin, $gender] = $this->attributes();
+        $project = Project::factory()->create(['user_id' => $owner->id]);
+        $project->setAttributeVisibilities([$origin->id => $levels['origin'] ?? AttributeVisibility::None, $gender->id => $levels['gender'] ?? AttributeVisibility::None]);
+        $data = (new ProjectTransfer)->export($project->fresh());
+        Project::query()->delete();
+
+        return $data;
+    }
+
+    public function test_the_project_file_carries_the_live_levels_by_attribute_name(): void
+    {
+        $data = $this->projectFile(User::factory()->create(), ['origin' => AttributeVisibility::All, 'gender' => AttributeVisibility::Own]);
+
+        $this->assertSame(['origin' => 'all', 'gender' => 'own'], $data['attribute_visibility']);
+    }
+
+    public function test_levels_are_matched_by_name_ignoring_case_and_unknown_names_are_skipped(): void
     {
         $owner = User::factory()->create();
-        $data = (new ProjectTransfer)->export(Project::factory()->create(['user_id' => $owner->id, 'attribute_visibility' => AttributeVisibility::Own]));
-        unset($data['attribute_visibility']);
-        Project::query()->delete();
+        $data = $this->projectFile($owner, []);
+        $data['attribute_visibility'] = [' Origin ' => 'own', 'shoe size' => 'all'];
+
+        $copy = (new ProjectTransfer)->import($data, $owner, $report = new ImportReport);
+
+        $this->assertSame(['origin' => AttributeVisibility::Own, 'gender' => AttributeVisibility::None], $this->levelsByName($copy));
+        $this->assertSame(0, $report->count(ImportReport::PROJECTS, ImportReport::FAILED));
+    }
+
+    public function test_a_single_level_from_an_early_bundle_counts_for_every_attribute(): void
+    {
+        $owner = User::factory()->create();
+        $data = $this->projectFile($owner, []);
+        $data['attribute_visibility'] = 'own';
 
         $copy = (new ProjectTransfer)->import($data, $owner, new ImportReport);
 
-        $this->assertSame(AttributeVisibility::None, $copy->attribute_visibility);
+        $this->assertSame(['origin' => AttributeVisibility::Own, 'gender' => AttributeVisibility::Own], $this->levelsByName($copy));
+    }
+
+    public function test_a_single_level_from_an_early_bundle_keeps_the_role_at_all(): void
+    {
+        $owner = User::factory()->create();
+        $data = $this->projectFile($owner, []);
+        PersonaAttribute::role();
+        $data['attribute_visibility'] = 'none';
+
+        $copy = (new ProjectTransfer)->import($data, $owner, new ImportReport);
+
+        $this->assertSame(
+            ['Role' => AttributeVisibility::All, 'origin' => AttributeVisibility::None, 'gender' => AttributeVisibility::None],
+            $this->levelsByName($copy),
+            'in those bundles the role was a fixed prompt line shown to everyone',
+        );
+    }
+
+    public function test_a_project_file_without_visibility_imports_every_attribute_as_none(): void
+    {
+        $owner = User::factory()->create();
+        $data = $this->projectFile($owner, ['origin' => AttributeVisibility::All]);
+        unset($data['attribute_visibility']);
+
+        $copy = (new ProjectTransfer)->import($data, $owner, new ImportReport);
+
+        $this->assertSame(['origin' => AttributeVisibility::None, 'gender' => AttributeVisibility::None], $this->levelsByName($copy));
     }
 
     public function test_an_unknown_visibility_fails_that_project_only(): void
     {
         $owner = User::factory()->create();
-        $data = (new ProjectTransfer)->export(Project::factory()->create(['user_id' => $owner->id]));
-        Project::query()->delete();
+        $data = $this->projectFile($owner, []);
         $report = new ImportReport;
 
-        foreach (['everything', ['all']] as $bad) {
+        foreach (['everything', ['all'], ['origin' => 'everything'], ['origin' => ['all']]] as $bad) {
             $this->assertNull((new ProjectTransfer)->import(['attribute_visibility' => $bad] + $data, $owner, $report));
         }
 
-        $this->assertSame(2, $report->count(ImportReport::PROJECTS, ImportReport::FAILED));
+        $this->assertSame(4, $report->count(ImportReport::PROJECTS, ImportReport::FAILED));
         $this->assertSame(0, Project::count());
     }
 
@@ -174,7 +238,7 @@ class PersonaAttributeTransferTest extends TestCase
 
     private function expertData(array $attributes): array
     {
-        return ['uuid' => '0b9f2d4c-1a3e-4f5b-8c6d-7e8f9a0b1c2d', 'id' => 501, 'name' => 'Kim', 'role' => 'Lead', 'description' => 'd', 'attributes' => $attributes];
+        return ['uuid' => '0b9f2d4c-1a3e-4f5b-8c6d-7e8f9a0b1c2d', 'id' => 501, 'name' => 'Kim', 'description' => 'd', 'attributes' => $attributes];
     }
 
     public function test_an_empty_value_is_skipped_silently(): void
@@ -281,7 +345,7 @@ class PersonaAttributeTransferTest extends TestCase
     {
         $this->attributes();
         $data = [
-            'uuid' => '0b9f2d4c-1a3e-4f5b-8c6d-7e8f9a0b1c2d', 'id' => 501, 'name' => 'Kim', 'role' => 'Lead', 'description' => 'd',
+            'uuid' => '0b9f2d4c-1a3e-4f5b-8c6d-7e8f9a0b1c2d', 'id' => 501, 'name' => 'Kim', 'description' => 'd',
             'attributes' => ['Origin' => 'Lagos', 'religion' => 'none'],
         ];
         $report = new ImportReport;
@@ -297,8 +361,8 @@ class PersonaAttributeTransferTest extends TestCase
     {
         $report = new ImportReport;
 
-        (new ExpertTransfer)->import(['uuid' => '0b9f2d4c-1a3e-4f5b-8c6d-7e8f9a0b1c2d', 'name' => 'Kim', 'role' => 'x', 'attributes' => 'Lagos'], $report);
-        (new ExpertTransfer)->import(['uuid' => '1b9f2d4c-1a3e-4f5b-8c6d-7e8f9a0b1c2d', 'name' => 'Kim', 'role' => 'x', 'attributes' => ['origin' => ['Lagos']]], $report);
+        (new ExpertTransfer)->import(['uuid' => '0b9f2d4c-1a3e-4f5b-8c6d-7e8f9a0b1c2d', 'name' => 'Kim', 'attributes' => 'Lagos'], $report);
+        (new ExpertTransfer)->import(['uuid' => '1b9f2d4c-1a3e-4f5b-8c6d-7e8f9a0b1c2d', 'name' => 'Kim', 'attributes' => ['origin' => ['Lagos']]], $report);
 
         $this->assertSame(2, $report->count(ImportReport::EXPERTS, ImportReport::FAILED));
         $this->assertSame(0, Expert::count());
@@ -334,5 +398,46 @@ class PersonaAttributeTransferTest extends TestCase
         $this->assertSame(0, PersonaAttribute::count());
         $this->assertSame(0, DB::table('expert_persona_attribute')->count());
         $this->assertSame(0, Expert::count());
+    }
+
+    public function test_an_old_bundle_role_becomes_the_role_attribute_and_creates_the_definition(): void
+    {
+        $this->assertSame(0, PersonaAttribute::where('name', PersonaAttribute::ROLE)->count());
+        $report = new ImportReport;
+
+        (new ExpertTransfer)->import($this->expertData([]) + ['role' => 'Lead'], $report);
+
+        $this->assertSame(1, $report->count(ImportReport::EXPERTS, ImportReport::CREATED));
+        $this->assertSame(1, PersonaAttribute::where('name', PersonaAttribute::ROLE)->count());
+        $this->assertSame(['Role' => 'Lead'], Expert::sole()->personaAttributes->mapWithKeys(fn ($a) => [$a->name => $a->pivot->value])->all());
+    }
+
+    public function test_an_old_bundle_role_reuses_an_existing_definition_ignoring_case(): void
+    {
+        $existing = PersonaAttribute::create(['name' => 'role', 'self_template' => 'You are :value.', 'roster_template' => ':value']);
+
+        (new ExpertTransfer)->import($this->expertData([]) + ['role' => 'Lead'], new ImportReport);
+
+        $this->assertSame([$existing->id], PersonaAttribute::pluck('id')->all());
+        $this->assertSame('Lead', Expert::sole()->personaAttributes->sole()->pivot->value);
+    }
+
+    public function test_the_entrys_own_role_attribute_wins_over_the_old_role_field(): void
+    {
+        PersonaAttribute::role();
+
+        (new ExpertTransfer)->import($this->expertData(['Role' => 'Captain']) + ['role' => 'Lead'], new ImportReport);
+
+        $this->assertSame(['Role' => 'Captain'], Expert::sole()->personaAttributes->mapWithKeys(fn ($a) => [$a->name => $a->pivot->value])->all());
+    }
+
+    public function test_an_export_carries_the_role_as_an_attribute_and_no_role_field(): void
+    {
+        $expert = Expert::factory()->withRole('Teacher')->create();
+
+        $data = (new ExpertTransfer)->export($expert);
+
+        $this->assertArrayNotHasKey('role', $data);
+        $this->assertSame(['Role' => 'Teacher'], $data['attributes']);
     }
 }

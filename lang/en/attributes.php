@@ -9,7 +9,7 @@
 return [
     'heading' => 'Attributes',
     'subheading' => 'Facts about an expert (origin, gender, …) and how they read in a prompt.',
-    'help' => 'Unlike tags, the models can read attributes. Whether they are shown, and to whom, is chosen per project: not at all, only to the expert itself, or to everyone.',
+    'help' => 'Unlike :link, the models read attributes. Each project chooses per attribute who sees it: nobody, only that expert, or all experts and the selector.',
     'empty' => 'No attribute yet. Add the first one below.',
 
     'rows' => [
@@ -27,7 +27,7 @@ return [
 
     'descriptions' => [
         'self_template' => 'What the expert reads about itself.',
-        'roster_template' => 'What the others read behind the expert’s role.',
+        'roster_template' => 'What the others read in the participants list.',
     ],
 
     'placeholders' => [
@@ -64,6 +64,7 @@ return [
     ],
 
     'errors' => [
+        'role_locked' => 'The Role attribute is part of the study and cannot be renamed or deleted.',
         'missing_value' => 'The :attribute must contain :placeholder.',
     ],
 ];

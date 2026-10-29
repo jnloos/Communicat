@@ -9,6 +9,7 @@ use App\Discussion\Metrics\SpeakingShares;
 use App\Discussion\Values\AttributeVisibility;
 use App\Models\Expert;
 use App\Models\JobLog;
+use App\Models\PersonaAttribute;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -46,25 +47,59 @@ class ProjectCommandsTest extends TestCase
 
     // --- project:create -------------------------------------------------
 
-    public function test_create_stores_the_attribute_visibility(): void
+    public function test_create_defaults_to_the_role_shown_to_everyone(): void
     {
-        $this->artisan('project:create', ['title' => 'T', '--description' => 'Ein Thema.', '--attributes' => 'own'])
-            ->assertSuccessful();
+        $role = PersonaAttribute::factory()->create(['name' => 'Role']);
+        $gender = PersonaAttribute::factory()->create(['name' => 'gender']);
 
-        $this->assertSame(AttributeVisibility::Own, Project::sole()->attribute_visibility);
-    }
-
-    public function test_create_defaults_the_attribute_visibility_to_none(): void
-    {
         $this->artisan('project:create', ['title' => 'T', '--description' => 'Ein Thema.'])->assertSuccessful();
 
-        $this->assertSame(AttributeVisibility::None, Project::sole()->attribute_visibility);
+        $this->assertSame([$role->id => AttributeVisibility::All, $gender->id => AttributeVisibility::None], Project::sole()->attributeVisibilities());
     }
 
-    public function test_create_rejects_an_unknown_attribute_visibility(): void
+    public function test_create_applies_one_level_to_every_attribute(): void
+    {
+        $a = PersonaAttribute::factory()->create(['name' => 'Role']);
+        $b = PersonaAttribute::factory()->create(['name' => 'gender']);
+
+        $this->artisan('project:create', ['title' => 'T', '--description' => 'Ein Thema.', '--attributes' => 'own'])->assertSuccessful();
+
+        $this->assertSame([$a->id => AttributeVisibility::Own, $b->id => AttributeVisibility::Own], Project::sole()->attributeVisibilities());
+    }
+
+    public function test_create_reads_levels_by_attribute_name_and_leaves_the_rest_none(): void
+    {
+        $role = PersonaAttribute::factory()->create(['name' => 'Role']);
+        $gender = PersonaAttribute::factory()->create(['name' => 'Gender']);
+        $origin = PersonaAttribute::factory()->create(['name' => 'Origin']);
+
+        $this->artisan('project:create', ['title' => 'T', '--description' => 'Ein Thema.', '--attributes' => ' role=all, gender = own'])->assertSuccessful();
+
+        $this->assertSame([
+            $role->id => AttributeVisibility::All,
+            $gender->id => AttributeVisibility::Own,
+            $origin->id => AttributeVisibility::None,
+        ], Project::sole()->attributeVisibilities());
+    }
+
+    public function test_create_rejects_an_unknown_level(): void
     {
         $this->artisan('project:create', ['title' => 'T', '--description' => 'Ein Thema.', '--attributes' => 'everyone'])
             ->expectsOutputToContain('Unknown attribute visibility [everyone]. Known: none, own, all')
+            ->assertFailed();
+
+        $this->assertSame(0, Project::count());
+    }
+
+    public function test_create_rejects_an_unknown_attribute_name_or_level_in_a_list(): void
+    {
+        PersonaAttribute::factory()->create(['name' => 'Role']);
+
+        $this->artisan('project:create', ['title' => 'T', '--description' => 'Ein Thema.', '--attributes' => 'Colour=all'])
+            ->expectsOutputToContain('Unknown attribute [Colour]')
+            ->assertFailed();
+        $this->artisan('project:create', ['title' => 'T', '--description' => 'Ein Thema.', '--attributes' => 'Role=some'])
+            ->expectsOutputToContain('Unknown attribute visibility [some] for [Role]')
             ->assertFailed();
 
         $this->assertSame(0, Project::count());

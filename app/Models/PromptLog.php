@@ -11,9 +11,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PromptLog extends Model
 {
     protected $fillable = [
-        'job_log_id', 'label', 'model', 'prompt', 'response', 'latency_ms',
-        'provider', 'checkpoint', 'config', 'purpose', 'expert_id', 'reasoning',
-        'tokens_in', 'tokens_out', 'tokens_reasoning', 'status', 'error',
+        'job_log_id', 'prompt_archive_id', 'label', 'model', 'prompt', 'response', 'latency_ms',
+        'provider', 'checkpoint', 'model_served', 'config', 'purpose', 'expert_id', 'reasoning',
+        'tokens_in', 'tokens_out', 'tokens_reasoning', 'tokens_cached', 'status', 'error',
     ];
 
     protected $casts = [
@@ -27,10 +27,21 @@ class PromptLog extends Model
         return $this->belongsTo(JobLog::class);
     }
 
+    public function archive(): BelongsTo
+    {
+        return $this->belongsTo(PromptArchive::class, 'prompt_archive_id');
+    }
+
+    /** The prompt text wherever it lives: the column, or the archive once prompts:prune packed it. */
+    protected function promptText(): Attribute
+    {
+        return Attribute::get(fn (): string => $this->archive?->textOf($this->id) ?? (string) $this->prompt);
+    }
+
     /** The prompt as the debug report shows it: JSON indented, anything else as sent. */
     protected function readablePrompt(): Attribute
     {
-        return Attribute::get(fn (): ?string => self::readable($this->prompt));
+        return Attribute::get(fn (): ?string => self::readable($this->prompt_text));
     }
 
     /** The response as the debug report shows it: structured output indented, plain text as is. */

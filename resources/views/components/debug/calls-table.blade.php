@@ -60,7 +60,9 @@
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
                                 <flux:heading size="sm" class="mb-1">{{ __('debug.detail.prompt') }}</flux:heading>
-                                @if (PrunePrompts::removed((string) $call->prompt))
+                                @if ($call->prompt_archive_id !== null && $call->prompt_text === '')
+                                    <flux:text size="sm" class="italic">{{ __('debug.detail.prompt_unreadable') }}</flux:text>
+                                @elseif ($call->prompt_text === '' || PrunePrompts::removed($call->prompt_text))
                                     <flux:text size="sm" class="italic">{{ __('debug.detail.prompt_removed') }}</flux:text>
                                 @else
                                     <pre class="max-h-80 overflow-auto whitespace-pre-wrap font-mono text-xs text-zinc-700 dark:text-zinc-300">{{ $call->readable_prompt }}</pre>

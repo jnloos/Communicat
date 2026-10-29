@@ -1,0 +1,172 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "JevScorePipeline: Jev gibt die Gebote",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto",
+      "entries": {
+        "backend": {
+          "label": "Team-Modell (Luna)"
+        },
+        "messagebus": {
+          "label": "Regel und Messung, kein Modellaufruf"
+        },
+        "cloud": {
+          "label": "Jev (TypeSafe)"
+        },
+        "database": {
+          "label": "JobLog (Messung)"
+        }
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "team",
+      "label": "Team-Modell (Luna)"
+    },
+    {
+      "id": "rule",
+      "label": "Regel und Messung, kein Modellaufruf"
+    },
+    {
+      "id": "jev",
+      "label": "Jev (TypeSafe)"
+    }
+  ],
+  "mainPath": [
+    "s0",
+    "s1",
+    "s2",
+    "s3",
+    "s4",
+    "s5",
+    "log"
+  ],
+  "nodes": [
+    {
+      "id": "s0",
+      "lane": "team",
+      "col": 0,
+      "type": "backend",
+      "label": "ThinkOnly",
+      "sublabel": "alle denken",
+      "width": 132
+    },
+    {
+      "id": "s1",
+      "lane": "jev",
+      "col": 1,
+      "type": "cloud",
+      "label": "JevBids",
+      "sublabel": "Jev gibt Gebote",
+      "width": 132,
+      "tag": "wer entscheidet"
+    },
+    {
+      "id": "s2",
+      "lane": "rule",
+      "col": 2,
+      "type": "messagebus",
+      "label": "SelectSpeaker",
+      "sublabel": "höchstes Gebot",
+      "width": 132,
+      "tag": "wer entscheidet"
+    },
+    {
+      "id": "s3",
+      "lane": "team",
+      "col": 3,
+      "type": "backend",
+      "label": "Speak",
+      "sublabel": "öffentlicher Beitrag",
+      "width": 132
+    },
+    {
+      "id": "s4",
+      "lane": "rule",
+      "col": 4,
+      "type": "messagebus",
+      "label": "PersistMessage",
+      "sublabel": "Beitrag speichern",
+      "width": 132
+    },
+    {
+      "id": "s5",
+      "lane": "team",
+      "col": 5,
+      "type": "backend",
+      "label": "Summarize",
+      "sublabel": "faltet Verlauf ein",
+      "width": 132
+    },
+    {
+      "id": "log",
+      "lane": "rule",
+      "col": 5,
+      "type": "database",
+      "label": "JobLog",
+      "sublabel": "misst jeden Turn",
+      "width": 132
+    }
+  ],
+  "edges": [
+    {
+      "id": "e0",
+      "to": "s1",
+      "role": "main",
+      "from": "s0"
+    },
+    {
+      "id": "e1",
+      "to": "s2",
+      "role": "main",
+      "from": "s1"
+    },
+    {
+      "id": "e2",
+      "to": "s3",
+      "role": "main",
+      "from": "s2"
+    },
+    {
+      "id": "e3",
+      "to": "s4",
+      "role": "main",
+      "from": "s3"
+    },
+    {
+      "id": "e4",
+      "to": "s5",
+      "role": "main",
+      "from": "s4"
+    },
+    {
+      "id": "elog",
+      "to": "log",
+      "role": "main",
+      "label": "misst",
+      "from": "s5"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Wer entscheidet",
+      "items": [
+        "Jev bewertet je Agent aus dessen Gedanken, wie dringend er das Wort will; das Team-Modell wird nie nach einer Zahl gefragt."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Signale in job_logs.selection",
+      "items": [
+        "bids (Jevs, gerundet) und jev_scores (ungerundet)",
+        "jev_own_bids: bei allen null",
+        "jev_confidences, fallbacks, tie_broken"
+      ]
+    }
+  ]
+}

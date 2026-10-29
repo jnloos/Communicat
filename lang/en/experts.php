@@ -10,7 +10,7 @@ return [
     'page_title' => 'Experts',
 
     'filter' => [
-        'search_placeholder' => 'Search experts by name, role, or description...',
+        'search_placeholder' => 'Search experts by name, description, or attribute...',
         'tags' => 'Tags',
         'tags_active' => 'Tags (:count)',
         'button' => 'Filter experts by tag',
@@ -35,21 +35,26 @@ return [
         'subheading' => 'Define this expert\'s identity.',
         'change_avatar' => 'Click to change avatar',
         'uploading' => 'Uploading…',
-        'role' => 'Role',
         'description_help' => 'Shown in the UI and used as the persona core in the prompt.',
         'delete' => 'Delete Expert',
         'view' => 'Expert',
         'read_only' => 'Only administrators change experts.',
     ],
 
+    'confirm' => [
+        'title' => 'Delete expert?',
+        'action' => 'Delete expert',
+        'message' => '{0}“:name” sits in no project and is deleted. This cannot be undone.|{1}“:name” sits in 1 project and is deleted. Their turns there leave the turn budget and the metrics. This cannot be undone.|[2,*]“:name” sits in :count projects and is deleted. Their turns there leave the turn budget and the metrics. This cannot be undone.',
+    ],
+
     'attributes' => [
         'single_line' => 'A value must be a single line.',
-        'empty_hint' => 'Empty = not mentioned in any prompt.',
         'value_placeholder' => 'Value',
+        'summary_none' => 'Not set',
         'not_set' => 'not set',
         'persona_reads' => 'Persona reads:',
         'heading' => 'Attributes',
-        'help' => 'Visible to the model, unlike tags. Whether and to whom it is shown is set per project.',
+        'help' => 'The models read these; each project sets who sees them. Blank fields are left out of the prompts.',
     ],
 
     'memory' => [

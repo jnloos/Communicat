@@ -41,7 +41,10 @@ class TurnRunnerTest extends TestCase
         FakeAgents::always(SummarizeAgent::class, ['summary' => 'Zusammenfassung.']);
 
         $this->project = Project::factory()->create(['pipeline' => 'RoundRobinPipeline']);
-        $this->experts = Expert::factory()->count(2)->create()->all();
+        $this->experts = [
+            Expert::factory()->withRole('Lehrerin')->create(),
+            Expert::factory()->withRole('Schüler')->create(),
+        ];
 
         foreach ($this->experts as $expert) {
             $this->project->addContributingExpert($expert);
@@ -61,9 +64,10 @@ class TurnRunnerTest extends TestCase
 
         $this->assertCount(2, $cast);
         $this->assertSame([1, 2], array_column($cast, 'seat'), 'ordered by seat');
+        $this->assertArrayNotHasKey('role', $cast[0]);
         $this->assertSame(
-            $this->project->contributingExperts()->pluck('role')->all(),
-            array_column($cast, 'role'),
+            [['Role', 'Lehrerin'], ['Role', 'Schüler']],
+            array_map(fn (array $entry) => [$entry['attributes'][0]['attribute'], $entry['attributes'][0]['value']], $cast),
         );
         $this->assertSame(
             $this->project->contributingExperts()->pluck('name')->all(),

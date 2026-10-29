@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Discussion\Support\PromptRenderer;
 use App\Livewire\Experts\ExpertEditor;
 use App\Models\Expert;
+use App\Models\PersonaAttribute;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,25 +30,34 @@ class ExpertPersonaTest extends TestCase
     public function test_experts_table_only_has_identity_columns(): void
     {
         $this->assertSame(
-            ['avatar_url', 'created_at', 'description', 'id', 'name', 'role', 'updated_at', 'uuid'],
+            ['avatar_url', 'created_at', 'description', 'id', 'name', 'updated_at', 'uuid'],
             collect(Schema::getColumnListing('experts'))->sort()->values()->all()
         );
     }
 
-    public function test_editor_saves_name_role_and_description(): void
+    public function test_editor_saves_name_role_attribute_and_description(): void
     {
         $this->actingAs(User::factory()->create(['is_admin' => true]));
+        $role = PersonaAttribute::role();
 
         Livewire::test(ExpertEditor::class)
             ->call('edit')
             ->set('name', 'Test Persona')
-            ->set('role', 'Tester')
+            ->set('attributeValues.'.$role->id, 'Tester')
             ->set('description', 'Prüft alles.')
             ->call('save')
             ->assertHasNoErrors();
 
         $expert = Expert::where('name', 'Test Persona')->firstOrFail();
-        $this->assertSame('Tester', $expert->role);
+        $this->assertSame('Tester', $expert->personaAttributes->firstWhere('id', $role->id)?->pivot->value);
         $this->assertSame('Prüft alles.', $expert->description);
+    }
+
+    public function test_search_finds_an_expert_by_an_attribute_value(): void
+    {
+        $teacher = Expert::factory()->withRole('Quantenschmied')->create(['name' => 'Ada']);
+        Expert::factory()->withRole('Teacher')->create(['name' => 'Bob']);
+
+        $this->assertSame([$teacher->id], Expert::search('Quantenschmied')->pluck('id')->all());
     }
 }

@@ -30,6 +30,19 @@ class TagsTest extends TestCase
         $this->actingAs($this->admin())->get(route('settings.tags'))->assertOk();
     }
 
+    public function test_the_info_box_links_to_attributes_in_both_languages(): void
+    {
+        $this->actingAs($this->admin());
+
+        foreach (['en', 'de'] as $locale) {
+            app()->setLocale($locale);
+            $this->get(route('settings.tags'))
+                ->assertSeeHtml('<a href="'.route('settings.attributes').'" wire:navigate class="underline underline-offset-2">'.__('attributes.heading').'</a>')
+                ->assertSee('Title-holder: true')
+                ->assertDontSee(':link');
+        }
+    }
+
     public function test_a_non_admin_cannot_mount_the_component(): void
     {
         $this->actingAs(User::factory()->create());

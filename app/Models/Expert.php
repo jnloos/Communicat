@@ -37,7 +37,6 @@ class Expert extends Model
     protected $fillable = [
         'name',
         'avatar_url',
-        'role',
         'description',
     ];
 
@@ -106,7 +105,13 @@ class Expert extends Model
         return $this->morphToMany(Project::class, 'contributor', 'project_contributors');
     }
 
-    /** Experts whose name, role or description contains the term; a blank term matches everyone. */
+    /** The expert's attribute values on one line ("Teacher · woman"), for cards and lists. */
+    protected function attributeSummary(): Attribute
+    {
+        return Attribute::get(fn () => $this->personaAttributes->pluck('pivot.value')->implode(' · '));
+    }
+
+    /** Experts whose name, description or any attribute value contains the term; a blank term matches everyone. */
     public function scopeSearch(Builder $query, string $term): void
     {
         $term = trim($term);
@@ -117,7 +122,7 @@ class Expert extends Model
         $like = '%'.$term.'%';
         $query->where(fn (Builder $q) => $q
             ->where('name', 'like', $like)
-            ->orWhere('role', 'like', $like)
-            ->orWhere('description', 'like', $like));
+            ->orWhere('description', 'like', $like)
+            ->orWhereHas('personaAttributes', fn (Builder $values) => $values->where('expert_persona_attribute.value', 'like', $like)));
     }
 }

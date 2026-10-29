@@ -2,7 +2,12 @@
 
 namespace Tests\Unit\Discussion;
 
+use App\Discussion\Values\BidResolution;
+use App\Discussion\Values\JevAgentBid;
+use App\Discussion\Values\JevBid;
+use App\Discussion\Values\JevPick;
 use App\Discussion\Values\SelectionRecord;
+use App\Models\Expert;
 use PHPUnit\Framework\TestCase;
 
 class SelectionRecordTest extends TestCase
@@ -100,5 +105,117 @@ class SelectionRecordTest extends TestCase
         $this->assertSame(['E9'], $mapped['signals']['fallbacks']);
         $this->assertSame('E2', $mapped['signals']['token']);
         $this->assertSame(['A' => 2, 'B' => '9', 'C' => 'n/a'], $mapped['signals']['order']);
+    }
+
+    private function pick(?string $key, array $probabilities, bool $fallback = false, bool $asked = true, ?float $confidence = 0.8, ?string $model = 'jev-1.13.0', ?int $latencyMs = 120): JevPick
+    {
+        return new JevPick((new Expert)->forceFill(['id' => 5]), $key, tieBroken: $fallback, fallback: $fallback, asked: $asked, probabilities: $probabilities, confidence: $confidence, model: $model, latencyMs: $latencyMs);
+    }
+
+    /** @param  array<string, array{?int, ?float}>  $bids  token => [own bid, jev value] */
+    private function bids(array $bids): array
+    {
+        return array_map(fn (string $token, array $bid) => new JevAgentBid($token, $bid[0], new JevBid($bid[1], $bid[1] === null ? null : 0.7, $bid[1] === null ? null : 'jev-1.13.0', 80)), array_keys($bids), $bids);
+    }
+
+    public function test_a_jev_pick_carries_what_jev_said_and_reads_the_speakers_probability(): void
+    {
+        $signals = SelectionRecord::jevPickSignals($this->pick('E5', ['E4' => 0.25, 'E5' => 0.75]));
+        $record = SelectionRecord::written('JevSpeakerSelector', 5, $signals, '', false);
+
+        $this->assertSame([
+            'token' => 'E5', 'fallback' => false,
+            'jev_kind' => 'pick', 'jev_asked' => true, 'jev_probabilities' => ['E4' => 0.25, 'E5' => 0.75],
+            'jev_confidence' => 0.8, 'jev_model' => 'jev-1.13.0', 'jev_latency_ms' => 120,
+        ], $signals);
+        $this->assertFalse($record->fallback());
+        $this->assertSame(0.75, $record->speakerProbability(5));
+        $this->assertSame(0.25, $record->speakerProbability(4));
+        $this->assertNull($record->speakerProbability(9));
+        $this->assertNull($record->speakerProbability(null));
+        $this->assertNull($record->speakerJevScore(5), 'a pick has a probability, not a score');
+    }
+
+    public function test_a_blind_jev_pick_reads_the_probability_of_the_speakers_letter(): void
+    {
+        $signals = SelectionRecord::jevBlindPickSignals($this->pick('B', ['A' => 0.3, 'B' => 0.7], confidence: null, latencyMs: 90), ['A' => 4, 'B' => 5]);
+        $record = SelectionRecord::written('JevBlindJudgeSelector', 5, $signals, '', false);
+
+        $this->assertSame('B', $record->label());
+        $this->assertSame(0.7, $record->speakerProbability(5));
+        $this->assertSame(0.3, $record->speakerProbability(4));
+    }
+
+    public function test_a_failed_jev_pick_is_a_fallback_without_a_probability_and_counts_as_a_fallen_back_call(): void
+    {
+        $record = SelectionRecord::written('JevSpeakerSelector', 5, SelectionRecord::jevPickSignals($this->pick(null, [], fallback: true, confidence: null, model: null, latencyMs: 30)), '', true);
+
+        $this->assertTrue($record->fallback());
+        $this->assertNull($record->speakerProbability(5));
+        $this->assertTrue($record->everyJevCallFellBack());
+    }
+
+    public function test_a_pick_jev_was_never_asked_about_has_no_probability_and_is_no_fallen_back_call(): void
+    {
+        $lone = SelectionRecord::written('JevSpeakerSelector', 5, SelectionRecord::jevPickSignals($this->pick('E5', [], asked: false, confidence: null, model: null, latencyMs: null)), '', false);
+        $noDrafts = SelectionRecord::written('JevJudgeSelector', 5, SelectionRecord::jevPickSignals($this->pick(null, [], fallback: true, asked: false, confidence: null, model: null, latencyMs: null)), '', true);
+
+        $this->assertNull($lone->speakerProbability(5));
+        $this->assertFalse($lone->everyJevCallFellBack());
+        $this->assertTrue($noDrafts->fallback());
+        $this->assertFalse($noDrafts->everyJevCallFellBack(), 'nothing was asked, so Jev did not fail');
+    }
+
+    public function test_jev_bids_sit_next_to_the_bids_they_became_and_the_speakers_score_is_not_a_probability(): void
+    {
+        $signals = SelectionRecord::bidSignals(['E1' => 4, 'E2' => 1], ['E2'])
+            + SelectionRecord::jevBidSignals($this->bids(['E1' => [5, 3.6], 'E2' => [3, null]]), BidResolution::Rounded);
+        $record = SelectionRecord::written('HighestBidSelector', 1, $signals, '', false);
+
+        $this->assertTrue($record->fallback(), 'a Jev bid was unreadable');
+        $this->assertSame(['bid' => 4, 'imputed' => false], $record->bidOf(1));
+        $this->assertSame(3.6, $record->speakerJevScore(1));
+        $this->assertNull($record->speakerJevScore(2));
+        $this->assertNull($record->speakerProbability(1), 'the unrounded score is its own column');
+        $this->assertFalse($record->everyJevCallFellBack(), 'one Jev bid was readable');
+        $this->assertSame('bid', $signals['jev_kind']);
+        $this->assertSame('rounded', $signals['jev_bid_resolution']);
+    }
+
+    public function test_a_turn_in_which_every_jev_bid_was_unreadable_counts_as_fallen_back(): void
+    {
+        $signals = SelectionRecord::jevBidSignals($this->bids(['E1' => [5, null], 'E2' => [3, null]]), BidResolution::Rounded);
+
+        $this->assertTrue(SelectionRecord::written('HighestBidSelector', 1, $signals, '', false)->everyJevCallFellBack());
+        $this->assertFalse(SelectionRecord::fromArray(['signals' => SelectionRecord::bidSignals(['E1' => 4], [])])->everyJevCallFellBack(), 'not a Jev turn');
+        $this->assertFalse(SelectionRecord::fromArray(null)->everyJevCallFellBack());
+    }
+
+    public function test_the_unrounded_scores_are_read_back_from_the_signals(): void
+    {
+        $signals = SelectionRecord::jevBidSignals($this->bids(['E1' => [5, 3.6], 'E2' => [3, null]]), BidResolution::Unrounded);
+
+        $this->assertSame(['E1' => 3.6, 'E2' => null], SelectionRecord::jevScoresIn($signals));
+        $this->assertSame([], SelectionRecord::jevScoresIn([]));
+        $this->assertSame(['bids' => ['E1' => 4], 'fallbacks' => [], 'jev_tie_pool' => 2], SelectionRecord::jevBidPickSignals(['E1' => 4], [], 2));
+    }
+
+    public function test_a_renumbering_reaches_every_jev_map(): void
+    {
+        $record = SelectionRecord::fromArray([
+            'speaker_id' => 1,
+            'signals' => SelectionRecord::bidSignals(['E1' => 4], [])
+                + SelectionRecord::jevBidSignals($this->bids(['E1' => [5, 3.6]]), BidResolution::Rounded)
+                + ['jev_probabilities' => ['E1' => 1.0, 'A' => 0.5]],
+        ]);
+
+        $signals = $record->mapExpertIds(fn (int $id) => $id + 10)->toArray()['signals'];
+
+        $this->assertSame(['E11' => 5], $signals['jev_own_bids']);
+        $this->assertSame(['E11' => 3.6], $signals['jev_scores']);
+        $this->assertSame(['E11' => 0.7], $signals['jev_confidences']);
+        $this->assertSame(['E11' => 'jev-1.13.0'], $signals['jev_models']);
+        $this->assertSame(['E11' => 80], $signals['jev_latencies_ms']);
+        $this->assertSame(['E11' => 1.0, 'A' => 0.5], $signals['jev_probabilities']);
     }
 }

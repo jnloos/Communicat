@@ -16,5 +16,7 @@ return [
     'dashboard' => 'Dashboard',
     'platform' => 'Platform',
     'search' => 'Search',
+    'resize_sidebar' => 'Resize sidebar',
+    'resize_hint' => 'Drag to resize the sidebar (double-click: reset)',
     'statistics' => 'Statistics',
 ];

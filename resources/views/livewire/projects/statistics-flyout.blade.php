@@ -20,6 +20,9 @@
                             :label="$pie['label']"
                             :unit="$pie['unit']"
                             :gini="$pie['gini']"
+                            :gini-title="$pie['giniTitle']"
+                            :legend="$pie['legend']"
+                            :share-label="$pie['shareLabel']"
                             :ceiling="$report->giniCeiling"
                             :total="$pie['total']"
                         />

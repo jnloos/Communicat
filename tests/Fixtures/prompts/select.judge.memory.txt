@@ -1,0 +1,38 @@
+=== TASK ===
+You read drafts for the next discussion contribution and decide which one gets spoken. You do not write a contribution yourself.
+
+=== THE TOPIC ===
+Should the school ban phones during lessons?
+
+This is what the group is here for. Stay with it: everything you contribute
+serves this topic, and nothing else takes its place as the task.
+
+If you think the group has arrived at a result, say what the result is and
+test it against what you know -- what it costs, whom it fails, what you would
+still have to find out to be sure of it -- instead of starting on something
+new.
+
+=== PARTICIPANTS (reference tokens) ===
+- Alice Fixture [E11] (Student)
+- Bob Fixture [E12] (Teacher)
+- Cleo Fixture [E13] (Parent)
+
+=== LONG-TERM MEMORY (summary of the discussion so far) ===
+Earlier: the group weighed focus against safety.
+
+=== HISTORY (most recent messages) ===
+(Proposal) Alice Fixture [E11] -> Bob Fixture [E12]: Phones distract.
+Bob Fixture [E12]: Not always.
+
+=== YOUR SHORT-TERM MEMORY (visible only to you) ===
+A private thought.
+
+=== DRAFTS ===
+[E11] Alice Fixture:
+First draft.
+
+[E12] Bob Fixture:
+Second draft.
+
+=== DECISION ===
+Choose exactly one draft that contributes the most to the conversation right now.

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Projects;
 
+use App\Discussion\Values\AttributeVisibility;
 use App\Models\Expert;
 use App\Models\Project;
 use App\Models\User;
@@ -18,13 +19,15 @@ class OpenProject
      * @param  array<string, mixed>  $attributes  project columns; unset ones fall back in Project::booted()
      * @param  list<Expert>  $experts  seated in the given order
      * @param  array<int|string, int|string|null>  $tags  category id => value id, as syncTags() takes it
+     * @param  array<int, AttributeVisibility|string>|null  $visibilities  attribute id => level; null = Project::defaultAttributeVisibilities()
      */
-    public function handle(User $owner, array $attributes, array $experts = [], array $tags = []): Project
+    public function handle(User $owner, array $attributes, array $experts = [], array $tags = [], ?array $visibilities = null): Project
     {
         // One transaction, so a forged tag value does not leave a half-created project behind.
-        $project = DB::transaction(function () use ($owner, $attributes, $tags) {
+        $project = DB::transaction(function () use ($owner, $attributes, $tags, $visibilities) {
             $project = Project::create(['user_id' => $owner->id] + $attributes);
             $project->syncTags($tags);
+            $project->setAttributeVisibilities($visibilities ?? Project::defaultAttributeVisibilities());
 
             return $project;
         });

@@ -53,11 +53,15 @@ return [
     | Aufbewahrung der Prompt-Texte
     |--------------------------------------------------------------------------
     | prompt_retention_hours — wie lange prompt_logs.prompt den vollen Text
-    |                          behält, in Stunden. Danach ersetzt prompts:prune
-    |                          ihn durch einen kurzen Vermerk; Antwort, Reasoning,
-    |                          Tokens, Status und Fehler bleiben. 0 behält alle
-    |                          Prompts. Die Texte sind Debug-Material und waren
-    |                          95 % der Datenbank (709 von 815 MB am 13.10.2026).
+    |                          behält, in Stunden. Danach packt prompts:prune
+    |                          die Texte pro Projekt mit zstd (Level 19,
+    |                          braucht ext-zstd) komprimiert in
+    |                          prompt_archives (lesbar über PromptLog::prompt_text,
+    |                          Debug-Panel und Bundle-Export entpacken selbst);
+    |                          Antwort, Reasoning, Tokens, Status und Fehler
+    |                          bleiben. 0 behält alle Prompts. Die Texte sind
+    |                          Debug-Material und waren 95 % der Datenbank
+    |                          (709 von 815 MB am 13.10.2026).
     */
     'prompt_retention_hours' => (int) env('PROMPT_RETENTION_HOURS', 24),
 

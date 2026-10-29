@@ -14,6 +14,14 @@ return [
         'delete' => 'Löschen',
         'confirm' => 'Bestätigen',
         'close' => 'Schließen',
+        'done' => 'Fertig',
+    ],
+
+    'discard' => [
+        'title' => 'Änderungen verwerfen?',
+        'message' => 'Ihre Änderungen sind nicht gespeichert.',
+        'keep' => 'Weiter bearbeiten',
+        'discard' => 'Verwerfen',
     ],
 
     'saved' => 'Gespeichert.',

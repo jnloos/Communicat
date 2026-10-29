@@ -5,9 +5,11 @@ namespace Tests\Unit\Discussion;
 use App\Discussion\Agents\JudgeAgent;
 use App\Discussion\Selectors\JudgeSelector;
 use App\Discussion\TurnPayload;
+use App\Discussion\Values\AttributeVisibility;
 use App\Discussion\Values\Selection;
 use App\Discussion\Values\Thought;
 use App\Models\Expert;
+use App\Models\PersonaAttribute;
 use App\Models\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Fakes\FakeAgents;
@@ -130,15 +132,27 @@ class JudgeSelectorTest extends TestCase
      * study's manipulation, and a judge that only met it through the drafts could
      * not show whether it favours a title itself.
      */
-    public function test_the_prompt_lists_the_participants_with_their_roles(): void
+    public function test_the_prompt_lists_the_participants_with_their_roles_at_visibility_all(): void
     {
-        $this->experts[0]->update(['role' => 'Teacher']);
+        $this->project->setAttributeVisibilities([PersonaAttribute::role()->id => AttributeVisibility::All]);
+        $this->experts[0]->setAttributeValue(PersonaAttribute::role(), 'Teacher');
         FakeAgents::always(JudgeAgent::class, ['speaker' => $this->experts[0]->promptId, 'reasoning' => '-']);
 
         $this->judge();
 
         JudgeAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, '=== PARTICIPANTS')
             && str_contains($prompt->prompt, "{$this->experts[0]->name} [{$this->experts[0]->promptId}] (Teacher)"));
+    }
+
+    public function test_the_prompt_lists_names_without_roles_at_visibility_none(): void
+    {
+        $this->experts[0]->setAttributeValue(PersonaAttribute::role(), 'Teacher');
+        FakeAgents::always(JudgeAgent::class, ['speaker' => $this->experts[0]->promptId, 'reasoning' => '-']);
+
+        $this->judge();
+
+        JudgeAgent::assertPrompted(fn ($prompt) => str_contains($prompt->prompt, "{$this->experts[0]->name} [{$this->experts[0]->promptId}]")
+            && ! str_contains($prompt->prompt, 'Teacher'));
     }
 
     public function test_the_prompt_shows_the_drafts_with_their_author(): void

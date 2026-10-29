@@ -14,7 +14,7 @@ use App\Discussion\Values\AttributeVisibility;
  */
 final class ProjectFileShape
 {
-    private const TEXTS = ['uuid', 'title', 'description', 'pipeline', 'model', 'long_term_memory', 'attribute_visibility'];
+    private const TEXTS = ['uuid', 'title', 'description', 'pipeline', 'model', 'long_term_memory'];
 
     private const NUMBERS = ['seed', 'turn_budget', 'summarize_threshold', 'summarize_oldest', 'summarized_until_message'];
 
@@ -65,12 +65,30 @@ final class ProjectFileShape
         }
     }
 
+    /**
+     * The visibility is an object {attribute name: level}; a single level as
+     * text is the format of the first bundles and means every attribute.
+     */
     private static function visibility(array $data): void
     {
-        $visibility = EntryFields::text($data, 'attribute_visibility');
+        $visibility = $data['attribute_visibility'] ?? null;
 
-        if ($visibility !== null && AttributeVisibility::tryFrom($visibility) === null) {
-            throw new UnreadableEntry('The field attribute_visibility is not a known visibility.');
+        if ($visibility === null) {
+            return;
+        }
+
+        if (is_string($visibility)) {
+            $levels = [$visibility];
+        } elseif (! is_array($visibility) || ($visibility !== [] && array_is_list($visibility))) {
+            throw new UnreadableEntry('The field attribute_visibility is not an object of attribute names and levels.');
+        } else {
+            $levels = $visibility;
+        }
+
+        foreach ($levels as $level) {
+            if (! is_string($level) || AttributeVisibility::tryFrom($level) === null) {
+                throw new UnreadableEntry('The field attribute_visibility is not a known visibility.');
+            }
         }
     }
 

@@ -28,7 +28,7 @@ class CreateProject extends Component
     {
         $this->form->validate();
 
-        $project = $openProject->handle(auth()->user(), $this->form->attributes(), tags: $this->tagSelection);
+        $project = $openProject->handle(auth()->user(), $this->form->attributes(), tags: $this->tagSelection, visibilities: $this->form->attributeLevels());
 
         $this->redirect(route('project.show', $project), navigate: true);
     }
@@ -39,7 +39,7 @@ class CreateProject extends Component
             'pipelines' => app(PipelineRegistry::class)->options(),
             'providers' => ModelConfig::providers(),
             'models' => ModelConfig::optionsFor($this->form->provider),
-            'attributeCount' => PersonaAttribute::count(),
+            'definitions' => PersonaAttribute::ordered()->pluck('name', 'id')->all(),
             'tagCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
             'chosenTags' => TagValue::chosenIn(TagScope::Project, $this->tagSelection),
         ]);

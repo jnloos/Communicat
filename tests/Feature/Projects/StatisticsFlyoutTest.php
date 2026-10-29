@@ -132,6 +132,48 @@ class StatisticsFlyoutTest extends TestCase
         $this->assertSame('33.3 %', $sectors['Bob']['share']);
     }
 
+    public function test_each_pie_lists_every_participant_with_colour_and_share_even_a_silent_one(): void
+    {
+        $this->turn('Alice', 10);
+        $this->turn('Alice', 10);
+        $this->turn('Alice', 10);
+        $this->turn('Alice', 10);
+
+        $component = Livewire::test(StatisticsFlyout::class, ['project' => $this->project])->call('open');
+
+        foreach ($component->viewData('charts')->pies() as $pie) {
+            $this->assertSame(['Alice', 'Bob'], array_column($pie['legend'], 'name'));
+            $this->assertSame(['100.0 %', '0.0 %'], array_column($pie['legend'], 'share'));
+        }
+
+        $component->assertSeeHtml('data-pie-legend');
+    }
+
+    public function test_the_share_columns_and_tooltips_name_their_measure(): void
+    {
+        app()->setLocale('en');
+        $this->turn('Alice', 10);
+
+        $component = Livewire::test(StatisticsFlyout::class, ['project' => $this->project])->call('open');
+
+        $this->assertSame(['Turn share', 'Word share'], array_column($component->viewData('charts')->pies(), 'shareLabel'));
+        $component->assertSee('Turn share')->assertSee('Word share');
+    }
+
+    public function test_the_gini_title_is_built_from_the_real_values(): void
+    {
+        app()->setLocale('en');
+        $this->turn('Alice', 10);
+        $this->turn('Bob', 10);
+
+        $pies = Livewire::test(StatisticsFlyout::class, ['project' => $this->project])
+            ->call('open')
+            ->viewData('charts')->pies();
+
+        // Two people: the ceiling is (n - 1) / n = 0.50, not a fixed 0.75.
+        $this->assertSame('Gini 0.00 (0 = equal, max 0.50 with 2 people)', $pies[0]['giniTitle']);
+    }
+
     /**
      * MessageGenerator broadcasts MessageGenerated once per turn on the
      * project's channel. An open panel must pick that up, or the shares freeze

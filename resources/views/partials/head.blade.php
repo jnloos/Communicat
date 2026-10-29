@@ -9,6 +9,8 @@
 
 <link rel="icon" type="image/svg+xml" href="{{ url('/static/img/discussicat-logo-inverted.svg') }}">
 
+@include('partials.sidebar-width')
+
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @stack('scripts')
 @fluxAppearance

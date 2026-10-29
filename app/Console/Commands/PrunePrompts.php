@@ -2,12 +2,16 @@
 
 namespace App\Console\Commands;
 
+use App\Discussion\Logging\PromptArchiver;
 use App\Models\PromptLog;
 use Illuminate\Console\Command;
 use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
+use RuntimeException;
 
 /**
- * Replaces prompt texts older than the retention window with a note, and
+ * Packs prompt texts older than the retention window into one zstd archive per
+ * project (readable again through PromptLog::$prompt_text); calls without a
+ * project get a note instead. Also
  * deletes uploads left behind for as long (an uploaded bundle holds prompt
  * texts too, and Livewire only clears old uploads on the next upload). Hourly.
  */
@@ -15,9 +19,9 @@ class PrunePrompts extends Command
 {
     protected $signature = 'prompts:prune';
 
-    protected $description = 'Remove prompt texts older than PROMPT_RETENTION_HOURS, keeping responses and tokens.';
+    protected $description = 'Archive prompt texts older than PROMPT_RETENTION_HOURS with zstd (calls without a project get a note), keeping responses and tokens.';
 
-    private const MARKER_PREFIX = '[prompt removed after ';
+    public const MARKER_PREFIX = '[prompt removed after ';
 
     public static function marker(int $hours): string
     {
@@ -30,7 +34,7 @@ class PrunePrompts extends Command
         return str_starts_with($prompt, self::MARKER_PREFIX);
     }
 
-    public function handle(): int
+    public function handle(PromptArchiver $archiver): int
     {
         $hours = (int) config('discussion.prompt_retention_hours');
 
@@ -40,13 +44,34 @@ class PrunePrompts extends Command
             return self::SUCCESS;
         }
 
+        $cutoff = now()->subHours($hours);
+
+        try {
+            $archived = $archiver->archiveOlderThan($cutoff);
+        } catch (RuntimeException $e) {
+            $this->error($e->getMessage());
+
+            return self::FAILURE;
+        }
+
+        $this->info("{$archived} prompt texts archived.");
+
+        // Only calls without a project get the note; a project whose archiving failed keeps its texts.
         $removed = PromptLog::query()
-            ->where('created_at', '<', now()->subHours($hours))
+            ->whereDoesntHave('jobLog', fn ($job) => $job->whereNotNull('project_id'))
+            ->where('created_at', '<', $cutoff)
+            ->whereNull('prompt_archive_id')
             ->where('prompt', 'not like', self::MARKER_PREFIX.'%')
             ->update(['prompt' => self::marker($hours)]);
 
         $this->info("{$removed} prompt texts removed.");
         $this->info("{$this->pruneUploads($hours)} left-behind uploads deleted.");
+
+        if ($archiver->failedProjects > 0) {
+            $this->warn("{$archiver->failedProjects} projects could not be archived; their prompt texts were kept (see the log).");
+
+            return self::FAILURE;
+        }
 
         return self::SUCCESS;
     }

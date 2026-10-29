@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Expert;
+use App\Models\PersonaAttribute;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -28,6 +29,21 @@ class InitExpertsCommandTest extends TestCase
         }
     }
 
+    /** @return list<string> the Role attribute values of the given personas, sorted */
+    private function rolesOf(iterable $personas): array
+    {
+        return collect($personas)
+            ->map(fn (Expert $expert) => (string) $expert->personaAttributes()->where('persona_attributes.name', PersonaAttribute::ROLE)->first()?->pivot->value)
+            ->sort()->values()->all();
+    }
+
+    private function personaWithRole(string $name, string $role): Expert
+    {
+        return Expert::where('name', $name)
+            ->whereHas('personaAttributes', fn ($q) => $q->where('persona_attributes.name', PersonaAttribute::ROLE)->where('expert_persona_attribute.value', $role))
+            ->sole();
+    }
+
     /**
      * One entry is one knowledge profile and becomes one persona per role label:
      * the same description under the label it wears in the status condition and
@@ -44,14 +60,25 @@ class InitExpertsCommandTest extends TestCase
             'description' => 'Knows how attention works.',
         ]]));
 
-        $personas = Expert::where('name', 'Alex Brandt')->orderBy('role')->get();
+        $personas = Expert::where('name', 'Alex Brandt')->get();
 
-        $this->assertSame(['Student', 'Teacher'], $personas->pluck('role')->all());
+        $this->assertSame(['Student', 'Teacher'], $this->rolesOf($personas));
         $this->assertSame(
             ['Knows how attention works.', 'Knows how attention works.'],
             $personas->pluck('description')->all(),
             'both personas must carry the identical description',
         );
+    }
+
+    public function test_a_second_run_does_not_duplicate_the_role_definition(): void
+    {
+        $entry = ['scenario' => 'school', 'name' => 'Alex Brandt', 'avatar_url' => '', 'roles' => ['status' => 'Teacher'], 'description' => 'd'];
+
+        $this->runOn([$entry]);
+        $this->runOn([$entry]);
+
+        $this->assertSame(1, PersonaAttribute::where('name', PersonaAttribute::ROLE)->count());
+        $this->assertSame(1, Expert::count());
     }
 
     public function test_a_second_run_updates_instead_of_duplicating(): void
@@ -76,7 +103,7 @@ class InitExpertsCommandTest extends TestCase
     /** A name alone is not the key: the same person exists under two roles. */
     public function test_it_keys_on_name_and_role_together(): void
     {
-        Expert::factory()->create(['name' => 'Alex Brandt', 'role' => 'Teacher', 'description' => 'Stale.']);
+        Expert::factory()->withRole('Teacher')->create(['name' => 'Alex Brandt', 'description' => 'Stale.']);
 
         $this->runOn([[
             'scenario' => 'school',
@@ -86,8 +113,9 @@ class InitExpertsCommandTest extends TestCase
             'description' => 'Fresh.',
         ]]);
 
-        $this->assertSame('Fresh.', Expert::where(['name' => 'Alex Brandt', 'role' => 'Teacher'])->sole()->description);
-        $this->assertSame('Fresh.', Expert::where(['name' => 'Alex Brandt', 'role' => 'Student'])->sole()->description);
+        $this->assertSame('Fresh.', $this->personaWithRole('Alex Brandt', 'Teacher')->description);
+        $this->assertSame('Fresh.', $this->personaWithRole('Alex Brandt', 'Student')->description);
+        $this->assertSame(2, Expert::where('name', 'Alex Brandt')->count());
     }
 
     /**
@@ -104,7 +132,7 @@ class InitExpertsCommandTest extends TestCase
             'description' => 'Knows what getting here costs.',
         ]]));
 
-        $this->assertSame(['Employee'], Expert::where('name', 'Noor Kessler')->pluck('role')->all());
+        $this->assertSame(['Employee'], $this->rolesOf(Expert::where('name', 'Noor Kessler')->get()));
     }
 
     /**
@@ -126,7 +154,7 @@ class InitExpertsCommandTest extends TestCase
         $this->assertNotEmpty($configured);
 
         foreach (Expert::all()->groupBy('name') as $name => $personas) {
-            $roles = $personas->pluck('role')->sort()->values()->all();
+            $roles = $this->rolesOf($personas);
 
             $this->assertSame($configured[$name] ?? [], $roles, "{$name} must carry exactly its configured labels");
             $this->assertCount(1, $personas->pluck('description')->unique(), "{$name}'s descriptions must be identical");

@@ -1,4 +1,5 @@
-<x-flyout name="edit-project" width="32rem">
+<x-flyout name="edit-project" width="32rem" guard>
+    <x-unsaved-guard modal="edit-project" :fields="['form', 'tagSelection']" />
     <div class="flex flex-1 flex-col gap-6">
         <x-modal-header :heading="__('projects.edit.heading')" :subheading="__('projects.edit.subheading')">
             {{-- What this modal does to the project, as opposed to what the form
@@ -12,7 +13,7 @@
                             {{ __('transfer.actions.export') }}
                         </flux:menu.item>
                         <flux:menu.separator/>
-                        <flux:menu.item variant="danger" icon="trash" wire:click="needsConfirmation('delete')">
+                        <flux:menu.item variant="danger" icon="trash" wire:click="confirmDelete">
                             {{ __('projects.edit.delete') }}
                         </flux:menu.item>
                     </flux:menu>
@@ -31,16 +32,14 @@
             @endif
 
             <flux:accordion>
-                <x-projects.run-settings :pipelines="$pipelines" :providers="$providers" :models="$models" :attribute-count="$attributeCount" :locked="$runStarted"/>
+                <x-projects.run-settings :pipelines="$pipelines" :providers="$providers" :models="$models" :definitions="$definitions" :locked="$runStarted"/>
                 @if ($tagCategories->isNotEmpty())
                     <x-tags.project-accordion-item :values="$chosenTags" :categories="$tagCategories" />
                 @endif
             </flux:accordion>
 
             <x-modal-footer>
-                <flux:modal.close>
-                    <flux:button variant="filled">{{ __('common.actions.cancel') }}</flux:button>
-                </flux:modal.close>
+                <flux:button variant="filled" x-on:click="$store.unsaved.request('edit-project')">{{ __('common.actions.cancel') }}</flux:button>
                 <flux:button type="submit" variant="primary">
                     {{ __('projects.edit.submit') }}
                 </flux:button>

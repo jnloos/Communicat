@@ -62,5 +62,10 @@ return [
         'edit' => 'Edit User',
         'password_keep' => 'Password (leave empty to keep)',
         'administrator' => 'Administrator',
+        'confirm' => [
+            'title' => 'Delete user?',
+            'action' => 'Delete user',
+            'message' => 'The user “:name” (:email) is deleted. This cannot be undone.',
+        ],
     ],
 ];

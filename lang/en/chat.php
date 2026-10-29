@@ -13,10 +13,16 @@ return [
         'set_contributors' => 'Set Contributors',
     ],
 
+    'confirm_leave' => [
+        'title' => 'Leave project?',
+        'action' => 'Leave project',
+        'message' => 'You leave “:name” and no longer see it. The owner can invite you again.',
+    ],
+
     'loading_older' => 'Loading older messages …',
 
     'message' => [
-        'addressed' => 'Addressed:',
+        'addressed' => 'To',
         'show_memory' => 'Show memory: :name',
         'open_thoughts' => 'Open thoughts',
     ],

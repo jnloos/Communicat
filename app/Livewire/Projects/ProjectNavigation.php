@@ -77,6 +77,37 @@ class ProjectNavigation extends Component
         $project->fileInGroupFor($user, $project->groupIdFor($user) === $group->id ? null : $group->id);
     }
 
+    /**
+     * wire:sort hands over the dragged group and its new 0-based index.
+     *
+     * The index counts the groups the sidebar shows, and a tag filter hides
+     * drawers, so it would not point into the user's full list. Groups are
+     * therefore sorted only while no filter is on: the view leaves wire:sort
+     * and the menu's move items out, and this refuses a request that comes
+     * anyway (a stale tab) without changing anything.
+     */
+    #[Authorize('update', 'group')]
+    public function sortGroup(ProjectGroup $group, int $position): void
+    {
+        if ($this->sortingAllowed()) {
+            $group->moveTo($position);
+        }
+    }
+
+    /** @param  int  $steps  -1 moves the group one place up, 1 one place down; same rule as sortGroup() */
+    #[Authorize('update', 'group')]
+    public function moveGroup(ProjectGroup $group, int $steps): void
+    {
+        if ($this->sortingAllowed()) {
+            $group->moveBy($steps);
+        }
+    }
+
+    private function sortingAllowed(): bool
+    {
+        return $this->activeTagFilter(TagCategory::ofScope(TagScope::Project)->with('values')->get())->isEmpty();
+    }
+
     private function user(): User
     {
         return auth()->user();
@@ -112,6 +143,7 @@ class ProjectNavigation extends Component
 
         return view('livewire.projects.project-navigation', [
             'groups' => $groups,
+            'sortable' => $filter->isEmpty(),
             'grouped' => $groups
                 ->mapWithKeys(fn (ProjectGroup $group) => [$group->id => $byGroup->get($group->id, new Collection)])
                 ->all(),

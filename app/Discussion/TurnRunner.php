@@ -3,6 +3,7 @@
 namespace App\Discussion;
 
 use App\Discussion\Metrics\SpokenTurns;
+use App\Discussion\Pipelines\DeclaresDecisionModel;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Pipelines\TurnPipeline;
 use App\Discussion\Support\PersonaLines;
@@ -49,6 +50,14 @@ class TurnRunner
         }
 
         $pipeline = $this->pipelines->resolve($project->pipeline);
+
+        // A fixed decision maker that cannot be reached (no key) fails here, before a job log
+        // exists and before the team model is paid for a turn that could never be decided:
+        // it is a configuration error, not a failed turn, and it stays out of the failure rate.
+        if ($pipeline instanceof DeclaresDecisionModel) {
+            $pipeline->assertDecisionModelReady();
+        }
+
         $this->snapshotRunConfig($project, $pipeline);
 
         $log = JobLog::create([
@@ -68,6 +77,11 @@ class TurnRunner
             Log::error(sprintf('Turn %d of project %d failed: %s', $log->turn_index, $project->id, $e->getMessage()), ['exception' => $e]);
 
             $this->finish($log, $payload, JobStatus::Failed, class_basename($e).': '.$e->getMessage());
+
+            // The turn is on record; an error no later turn can get past ends the run instead.
+            if ($e instanceof AbortsRun) {
+                throw $e;
+            }
 
             return TurnResult::stop('failed');
         }
@@ -101,13 +115,17 @@ class TurnRunner
             'pipeline' => $project->pipeline,
             'stages' => $pipeline->stages(),
             'model' => ModelConfig::fromConfig($project->model)->toArray(),
+            // A fixed decision maker that is not the team's model (the Jev pipelines): which one,
+            // what it decides, and the settings that shape what it answers. Every later request
+            // reads this and not the live config. Absent for every other pipeline.
+            ...($pipeline instanceof DeclaresDecisionModel ? ['decision_model' => $pipeline->decisionModel()->toArray()] : []),
             'summarize_threshold' => $project->summarizeThreshold(),
             'summarize_oldest' => $project->summarizeOldest(),
             'system_prompt' => $this->prompts->system(),
-            'attribute_visibility' => $project->attribute_visibility->value,
+            'attribute_visibility' => array_map(fn ($level) => $level->value, PersonaLines::liveVisibilitiesOf($project)),
 
-            // Who sat where, under which role. The role is the study's
-            // manipulation -- a run where one seat reads "Teacher" among
+            // Who sat where, with which attributes. The role is one of them and the
+            // study's manipulation -- a run where one seat reads "Teacher" among
             // "Student" is the status condition, one where all four read
             // "Student" is its control. Recording it here rather than
             // reconstructing it later from the personas matters because a
@@ -117,7 +135,6 @@ class TurnRunner
                     'seat' => $expert->pivot?->seat,
                     'expert_id' => $expert->id,
                     'name' => $expert->name,
-                    'role' => $expert->role,
                     // The rendered attribute lines, whatever the visibility, so
                     // PersonaLines reads these and never a template edited later.
                     'attributes' => PersonaLines::snapshotFor($expert),

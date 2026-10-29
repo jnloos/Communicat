@@ -5,10 +5,12 @@ namespace App\Services\Transfer;
 use App\Discussion\Values\AttributeVisibility;
 use App\Models\JobLog;
 use App\Models\Message;
+use App\Models\PersonaAttribute;
 use App\Models\Project;
 use App\Models\PromptLog;
 use App\Models\Summary;
 use App\Models\User;
+use App\Services\Tags\TagNames;
 use App\Services\Tags\TagsByName;
 use App\Services\Transfer\Rows\JobLogRow;
 use App\Services\Transfer\Rows\PromptLogRow;
@@ -35,6 +37,7 @@ final class ProjectWriter
 
         $project = $this->createProject($data, $owner, $renumbering);
         $skippedTags = $this->tags->assign($project, $data['tags'] ?? []);
+        $this->writeVisibilities($project, $data['attribute_visibility'] ?? null);
         $this->attachSeats($project, $data['seats'] ?? [], $expert);
         $jobIds = $this->writeJobs($project, $data['jobs'] ?? [], $expert, $renumbering);
         $messageIds = $this->writeMessages($project, $data['messages'] ?? [], $owner, $expert, $jobIds);
@@ -61,13 +64,51 @@ final class ProjectWriter
             'run_config' => $renumbering->runConfig($data['run_config'] ?? null),
             'summarize_threshold' => $data['summarize_threshold'] ?? null,
             'summarize_oldest' => $data['summarize_oldest'] ?? null,
-            'attribute_visibility' => AttributeVisibility::from($data['attribute_visibility'] ?? AttributeVisibility::default()->value),
             'long_term_memory' => $data['long_term_memory'] ?? null,
             'created_at' => Timestamp::import($data['created_at'] ?? null) ?? now(),
         ])->save();
         $project->addContributingUser($owner);
 
         return $project;
+    }
+
+    /**
+     * Matches the file's levels to this database's definitions by name; a name
+     * without a definition is skipped. A single level as text (first bundles)
+     * counts for every definition except the Role, which in those bundles was a
+     * fixed prompt line shown to everyone and so stays at `all`; no field leaves
+     * every attribute at none.
+     */
+    private function writeVisibilities(Project $project, array|string|null $visibility): void
+    {
+        if ($visibility === null) {
+            return;
+        }
+
+        $definitions = PersonaAttribute::ordered()->get();
+        $levels = [];
+
+        foreach ($definitions as $definition) {
+            $level = is_string($visibility) ? ($definition->isRole() ? AttributeVisibility::All->value : $visibility) : $this->levelByName($visibility, $definition->name);
+
+            if ($level !== null) {
+                $levels[$definition->id] = AttributeVisibility::from($level);
+            }
+        }
+
+        $project->setAttributeVisibilities($levels);
+    }
+
+    /** @param  array<string, string>  $levels */
+    private function levelByName(array $levels, string $name): ?string
+    {
+        foreach ($levels as $candidate => $level) {
+            if (TagNames::same((string) $candidate, $name)) {
+                return $level;
+            }
+        }
+
+        return null;
     }
 
     /** @param  Closure(?string): ?int  $expert  uuid => expert id here */

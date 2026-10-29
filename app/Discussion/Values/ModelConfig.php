@@ -16,6 +16,7 @@ final readonly class ModelConfig
         public ?float $temperature = null,
         public ?string $reasoningEffort = null,
         public ?bool $nativeStructuredOutput = null,
+        public bool $adaptiveThinking = true,
     ) {}
 
     public static function fromConfig(string $key): self
@@ -37,6 +38,7 @@ final readonly class ModelConfig
             temperature: isset($entry['temperature']) ? (float) $entry['temperature'] : null,
             reasoningEffort: $entry['reasoning_effort'] ?? null,
             nativeStructuredOutput: self::nativeStructuredOutputOf($entry['provider']),
+            adaptiveThinking: (bool) ($entry['adaptive_thinking'] ?? true),
         );
     }
 
@@ -71,6 +73,19 @@ final readonly class ModelConfig
     }
 
     /**
+     * Every model with its provider in the label ("Claude Opus 5 (OmniRoute)"), for lists
+     * that mix providers: the same model name can sit behind two of them.
+     *
+     * @return array<string, string> model key → label
+     */
+    public static function qualifiedOptions(): array
+    {
+        return collect(config('ai.models', []))
+            ->map(fn (array $entry, string $key) => ($entry['label'] ?? $key).' ('.__('projects.providers.'.($entry['provider'] ?? '')).')')
+            ->all();
+    }
+
+    /**
      * The providers the registry actually offers, each exactly once, in registry order.
      * Labels are UI text and live in lang/{de,en}/projects.php.
      *
@@ -98,10 +113,40 @@ final readonly class ModelConfig
             ->all();
     }
 
+    /**
+     * The SDK driver behind this model's provider. For openai, anthropic and gemini
+     * the provider name is the driver; a named gateway such as omniroute points at
+     * one in config('ai.providers.<name>.driver') -- which is what
+     * StudyAgent::providerOptions() has to branch on, not the name.
+     */
     public function lab(): Lab
     {
-        return Lab::tryFrom($this->provider)
-            ?? throw new InvalidArgumentException("Provider [{$this->provider}] is unknown to the AI SDK.");
+        $driver = (config('ai.providers')[$this->provider] ?? [])['driver'] ?? $this->provider;
+        $lab = $driver instanceof Lab ? $driver : Lab::tryFrom($driver);
+
+        return $lab ?? throw new InvalidArgumentException("Provider [{$this->provider}] is unknown to the AI SDK.");
+    }
+
+    /**
+     * What goes into prompt()'s provider argument: the Lab for the SDK's own labs,
+     * otherwise the configured provider name. Exactly one provider either way, so
+     * the SDK has nothing to fail over to.
+     */
+    public function sdkProvider(): Lab|string
+    {
+        $this->lab(); // fails early on a provider whose driver the SDK does not know
+
+        return Lab::tryFrom($this->provider) ?? $this->provider;
+    }
+
+    /**
+     * Whether the response names the model that answered. OpenAI and the
+     * openai-compatible gateways copy it from the response body; Anthropic and
+     * Gemini only echo the requested id, which would read as a match by construction.
+     */
+    public function reportsServedModel(): bool
+    {
+        return in_array($this->lab(), [Lab::OpenAI, Lab::OpenAICompatible], true);
     }
 
     /** Snapshot for prompt_logs.config and projects.run_config. */

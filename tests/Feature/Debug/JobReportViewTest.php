@@ -5,6 +5,7 @@ namespace Tests\Feature\Debug;
 use App\Console\Commands\PrunePrompts;
 use App\Models\JobLog;
 use App\Models\Project;
+use App\Models\PromptArchive;
 use App\Models\PromptLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -72,6 +73,24 @@ class JobReportViewTest extends TestCase
         $this->assertStringContainsString("{\n    &quot;thought&quot;: &quot;Ja&quot;,\n    &quot;priority&quot;: 4\n}", $html);
         $this->assertStringContainsString(__('debug.detail.prompt_removed'), $html);
         $this->assertStringNotContainsString(e(PrunePrompts::marker(24)), $html);
+    }
+
+    public function test_an_archived_prompt_shows_its_text_and_a_broken_archive_says_unreadable(): void
+    {
+        $job = $this->job();
+        $archive = PromptArchive::packing($job->project_id, []);
+        $archive->save();
+        $call = PromptLog::create(['job_log_id' => $job->id, 'model' => 'm', 'prompt' => '', 'response' => 'A', 'prompt_archive_id' => $archive->id]);
+        $archive->update(['payload' => PromptArchive::packing($job->project_id, [$call->id => 'Archived words'])->payload]);
+
+        $this->assertStringContainsString('Archived words', $this->render($job));
+
+        $archive->update(['payload' => 'broken']);
+
+        $html = $this->render($job->fresh());
+        $this->assertStringNotContainsString('Archived words', $html);
+        $this->assertStringContainsString(__('debug.detail.prompt_unreadable'), $html);
+        $this->assertStringNotContainsString(__('debug.detail.prompt_removed'), $html);
     }
 
     public function test_a_failed_job_shows_its_error_in_a_callout(): void

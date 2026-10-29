@@ -223,7 +223,6 @@ class TagFieldsTest extends TestCase
                 Livewire::test(ExpertEditor::class)
                     ->call('edit', $id)
                     ->set('name', 'Gefälscht')
-                    ->set('role', 'Rolle')
                     ->set('tagSelection', $forged)
                     ->call('save');
                 $this->fail('A forged value must be refused.');

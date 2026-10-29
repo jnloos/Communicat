@@ -17,7 +17,66 @@ if (reverbKey) {
     });
 }
 
+document.addEventListener('livewire:navigated', () => window.applyStoredSidebarWidth?.());
+
 document.addEventListener('alpine:init', () => {
+    // Unsaved-changes guard for flyouts (x-flyout guard + x-unsaved-guard): each
+    // guarded flyout registers a reader of its form's state when it opens; any
+    // way out (Escape, a click outside, X, Cancel) asks here first, and only a
+    // dirty form opens the shared "Discard changes?" dialog.
+    window.Alpine.store('unsaved', {
+        readers: {},
+        baselines: {},
+        pending: null,
+        escapeClosedPopover: false,
+
+        // Escape with a "..." menu open must close only the menu. The browser closes
+        // the popover and still sends the dialog its cancel event, so note at keydown
+        // (capture, before anything closes) whether a popover was open in a dialog.
+        init() {
+            document.addEventListener('keydown', (event) => {
+                if (event.key !== 'Escape') return;
+                this.escapeClosedPopover = document.querySelector('dialog[open] :popover-open') !== null;
+                setTimeout(() => (this.escapeClosedPopover = false));
+            }, true);
+        },
+
+        track(name, read) {
+            this.readers[name] = read;
+            this.baselines[name] = JSON.stringify(read());
+        },
+
+        isDirty(name) {
+            const read = this.readers[name];
+            return !!read && JSON.stringify(read()) !== this.baselines[name];
+        },
+
+        // With an event (the dialog's cancel) a clean form is left alone, so the
+        // browser closes the dialog itself; without one a clean form is closed here.
+        request(name, event = null) {
+            if (event && this.escapeClosedPopover) {
+                event.preventDefault();
+                return;
+            }
+
+            if (!this.isDirty(name)) {
+                if (!event) window.Flux.modal(name).close();
+                return;
+            }
+
+            event?.preventDefault();
+            this.pending = name;
+            window.Flux.modal('discard-changes').show();
+        },
+
+        discard() {
+            const name = this.pending;
+            this.pending = null;
+            window.Flux.modal('discard-changes').close();
+            if (name) window.Flux.modal(name).close();
+        },
+    });
+
     // Pipeline indicator: only the visible "writing" step and the post-message
     // reading countdown. Routing/thinking stages still broadcast server-side but
     // are intentionally hidden so the bubble never overlaps the info button area.
@@ -222,6 +281,91 @@ document.addEventListener('alpine:init', () => {
                 this.loading = false;
                 this.locked = false;
             });
+        },
+    }));
+
+    // Sidebar width: dragged on the handle, kept as --sidebar-width on <html>.
+    // Limits come from app.css (--sidebar-min/-max), measured through a probe so
+    // rem and vw resolve like the layout does. Only a drag's end touches storage;
+    // no Livewire request is made.
+    window.Alpine.data('sidebarResize', (storageKey) => ({
+        now: 0,
+        min: 0,
+        max: 0,
+        step: 16,
+        dragging: false,
+
+        init() {
+            this.sync();
+        },
+
+        px(cssValue) {
+            const probe = document.createElement('div');
+            probe.style.cssText = `position:absolute;visibility:hidden;width:${cssValue}`;
+            document.body.appendChild(probe);
+            const width = probe.getBoundingClientRect().width;
+            probe.remove();
+            return Math.round(width);
+        },
+
+        sync() {
+            this.min = this.px('var(--sidebar-min)');
+            this.max = Math.max(this.min, this.px('var(--sidebar-max)'));
+            const sidebar = document.querySelector('[data-flux-sidebar]');
+            this.now = sidebar ? Math.round(sidebar.getBoundingClientRect().width) : this.min;
+        },
+
+        set(width, persist) {
+            this.now = Math.round(Math.min(this.max, Math.max(this.min, width)));
+            document.documentElement.style.setProperty('--sidebar-width', `${this.now}px`);
+            if (persist) this.save();
+        },
+
+        save() {
+            try {
+                if (this.now <= this.min) localStorage.removeItem(storageKey);
+                else localStorage.setItem(storageKey, String(this.now));
+            } catch (e) {}
+        },
+
+        reset() {
+            this.sync();
+            this.set(this.min, true);
+        },
+
+        start(event) {
+            if (event.button !== 0) return;
+            this.sync();
+            this.dragging = true;
+            this.$el.setPointerCapture(event.pointerId);
+            this.$el.dataset.dragging = '';
+            document.documentElement.dataset.sidebarResizing = '';
+            event.preventDefault();
+        },
+
+        drag(event) {
+            if (this.dragging) this.set(event.clientX, false);
+        },
+
+        stop(event) {
+            if (!this.dragging) return;
+            this.dragging = false;
+            delete this.$el.dataset.dragging;
+            delete document.documentElement.dataset.sidebarResizing;
+            if (this.$el.hasPointerCapture(event.pointerId)) this.$el.releasePointerCapture(event.pointerId);
+            this.save();
+        },
+
+        key(event) {
+            const target = {
+                ArrowLeft: this.now - this.step,
+                ArrowRight: this.now + this.step,
+                Home: this.min,
+                End: this.max,
+            }[event.key];
+            if (target === undefined) return;
+            event.preventDefault();
+            this.set(target, true);
         },
     }));
 });

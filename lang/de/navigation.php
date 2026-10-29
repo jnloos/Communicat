@@ -16,5 +16,7 @@ return [
     'dashboard' => 'Dashboard',
     'platform' => 'Plattform',
     'search' => 'Suche',
+    'resize_sidebar' => 'Seitenleiste in der Breite ändern',
+    'resize_hint' => 'Zum Ändern der Breite ziehen (Doppelklick: zurücksetzen)',
     'statistics' => 'Statistik',
 ];

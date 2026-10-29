@@ -17,6 +17,7 @@ return [
     'words_total' => '{0}keine Wörter|{1}1 Wort insgesamt|[2,*]:count Wörter insgesamt',
 
     'gini' => 'Gini',
+    'gini_title' => '{1}Gini :gini (0 = gleich verteilt, max. :max bei 1 Person)|[0,*]Gini :gini (0 = gleich verteilt, max. :max bei :count Personen)',
 
     'trajectory' => [
         'title' => 'Im Verlauf des Laufs',
@@ -34,9 +35,9 @@ return [
     'columns' => [
         'participant' => 'Teilnehmer',
         'turns' => 'Turns',
-        'turn_share' => 'Anteil',
+        'turn_share' => 'Turn-Anteil',
         'words' => 'Wörter',
-        'word_share' => 'Anteil',
+        'word_share' => 'Wortanteil',
         'words_per_turn' => 'Ø Wörter',
     ],
 ];

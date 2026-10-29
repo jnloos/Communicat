@@ -20,6 +20,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Fakes\FakeAgents;
+use Tests\Fakes\FakeJev;
 use Tests\TestCase;
 
 /**
@@ -75,6 +76,9 @@ class PipelineSmokeTest extends TestCase
             'label' => 'A',
             'reasoning' => 'Der Entwurf ist konkret.',
         ]);
+
+        // The Jev pipelines ask Jev instead; shape-valid random answers are enough here.
+        FakeJev::randomly();
     }
 
     #[DataProvider('pipelineNames')]

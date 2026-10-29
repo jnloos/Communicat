@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Collection;
@@ -21,15 +22,11 @@ class Project extends Model
         'title', 'description', 'user_id',
         'model', 'pipeline', 'turn_budget', 'seed', 'run_config',
         'long_term_memory', 'summarized_until_message_id',
-        'summarize_threshold', 'summarize_oldest', 'attribute_visibility',
+        'summarize_threshold', 'summarize_oldest',
     ];
-
-    /** Mirrors the column default, so a project not yet reloaded reads `none`, not null. */
-    protected $attributes = ['attribute_visibility' => 'none'];
 
     protected $casts = [
         'run_config' => 'array',
-        'attribute_visibility' => AttributeVisibility::class,
     ];
 
     public const MAX_CONTRIBUTING_EXPERTS = 4;
@@ -40,6 +37,69 @@ class Project extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+
+    /** The attributes this project has a visibility row for; the level is `pivot->visibility`. */
+    public function attributeVisibilityRows(): BelongsToMany
+    {
+        return $this->belongsToMany(PersonaAttribute::class, 'project_attribute_visibility')
+            ->withPivot('visibility')
+            ->ordered();
+    }
+
+    /**
+     * What the prompts reveal of every defined attribute, by attribute id -- the one
+     * place that turns the rows into levels. An attribute without a row reads `none`,
+     * so a definition added later is hidden in the projects that already exist.
+     *
+     * At most two queries (the definitions, this project's rows); a caller that
+     * resolves many projects passes the definitions once and eager-loads the
+     * `attributeVisibilityRows` relation, and then pays nothing per project.
+     *
+     * @param  Collection<int, PersonaAttribute>|null  $definitions  every definition, in order
+     * @return array<int, AttributeVisibility>
+     */
+    public function attributeVisibilities(?Collection $definitions = null): array
+    {
+        $definitions ??= PersonaAttribute::ordered()->get();
+        $rows = $this->relationLoaded('attributeVisibilityRows') ? $this->attributeVisibilityRows : $this->attributeVisibilityRows()->get();
+        $stored = $rows->mapWithKeys(fn (PersonaAttribute $attribute) => [
+            $attribute->id => AttributeVisibility::tryFrom((string) $attribute->pivot->visibility) ?? AttributeVisibility::default(),
+        ]);
+
+        return $definitions
+            ->mapWithKeys(fn (PersonaAttribute $definition) => [$definition->id => $stored->get($definition->id, AttributeVisibility::default())])
+            ->all();
+    }
+
+    /**
+     * Writes the levels for the attributes that appear as keys; others stay as
+     * they are, unknown ids are ignored. Values may be enum cases or their strings.
+     *
+     * @param  array<int|string, AttributeVisibility|string>  $levelsByAttributeId
+     */
+    public function setAttributeVisibilities(array $levelsByAttributeId): void
+    {
+        $known = PersonaAttribute::whereKey(array_keys($levelsByAttributeId))->pluck('id');
+        $sync = [];
+
+        foreach ($known as $id) {
+            $level = $levelsByAttributeId[$id];
+            $sync[$id] = ['visibility' => ($level instanceof AttributeVisibility ? $level : AttributeVisibility::from($level))->value];
+        }
+
+        $this->attributeVisibilityRows()->syncWithoutDetaching($sync);
+        $this->unsetRelation('attributeVisibilityRows');
+    }
+
+    /** What a new project reveals: the role to everyone, every other attribute nothing. */
+    public static function defaultAttributeVisibilities(): array
+    {
+        return PersonaAttribute::ordered()->get()
+            ->mapWithKeys(fn (PersonaAttribute $attribute) => [
+                $attribute->id => $attribute->isRole() ? AttributeVisibility::All : AttributeVisibility::None,
+            ])
+            ->all();
     }
 
     public function summaries(): HasMany

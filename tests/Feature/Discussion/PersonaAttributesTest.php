@@ -46,8 +46,8 @@ class PersonaAttributesTest extends TestCase
             'pipeline' => 'RoundRobinPipeline',
             'seed' => 1,
         ]);
-        $this->alice = Expert::factory()->create(['name' => 'Alice', 'role' => 'Student', 'description' => 'Curious.']);
-        $this->bob = Expert::factory()->create(['name' => 'Bob', 'role' => 'Teacher', 'description' => 'Strict.']);
+        $this->alice = Expert::factory()->create(['name' => 'Alice', 'description' => 'Curious.']);
+        $this->bob = Expert::factory()->create(['name' => 'Bob', 'description' => 'Strict.']);
         $this->project->addContributingExpert($this->alice);
         $this->project->addContributingExpert($this->bob);
 
@@ -93,18 +93,35 @@ class PersonaAttributesTest extends TestCase
         ];
     }
 
-    public function test_none_renders_exactly_the_text_from_before_the_feature(): void
+    public function test_none_shows_no_role_and_no_attribute_anywhere(): void
     {
-        $this->assertSame(AttributeVisibility::None, $this->project->fresh()->attribute_visibility);
+        $this->assertSame([AttributeVisibility::None], array_values(array_unique($this->project->fresh()->attributeVisibilities(), SORT_REGULAR)));
 
         $this->assertSame(
-            "=== ABOUT YOU ===\nYou are Alice (your token: {$this->alice->promptId}).\nYour role is Student.\n\nCurious.",
+            "=== ABOUT YOU ===\nYou are Alice (your token: {$this->alice->promptId}).\n\nCurious.",
             $this->persona(),
         );
         $this->assertSame(
-            "=== PARTICIPANTS (reference tokens) ===\n- Alice [{$this->alice->promptId}] (Student)\n- Bob [{$this->bob->promptId}] (Teacher)",
+            "=== PARTICIPANTS (reference tokens) ===\n- Alice [{$this->alice->promptId}]\n- Bob [{$this->bob->promptId}]",
             $this->roster(),
         );
+    }
+
+    public function test_the_role_is_an_ordinary_attribute_first_in_line_and_only_as_visible_as_the_level(): void
+    {
+        $this->alice->setAttributeValue(PersonaAttribute::role(), 'Student');
+        $this->bob->setAttributeValue(PersonaAttribute::role(), 'Teacher');
+
+        $this->assertStringNotContainsString('Student', $this->persona());
+        $this->assertStringNotContainsString('Teacher', $this->roster());
+
+        $this->reveal(AttributeVisibility::Own);
+        $this->assertStringContainsString("Your role is Student.\nYou are a woman.\nYou grew up in Owerri, Nigeria.", $this->persona());
+        $this->assertStringNotContainsString('Teacher', $this->roster());
+
+        $this->reveal(AttributeVisibility::All);
+        $this->assertStringContainsString("- Alice [{$this->alice->promptId}] (Student, woman, from Owerri, Nigeria)", $this->roster());
+        $this->assertStringContainsString("- Bob [{$this->bob->promptId}] (Teacher)", $this->roster());
     }
 
     public function test_none_equals_a_project_whose_experts_have_no_attributes(): void
@@ -124,28 +141,29 @@ class PersonaAttributesTest extends TestCase
 
     public function test_own_shows_self_lines_in_position_order_and_nothing_in_the_roster(): void
     {
-        $this->project->update(['attribute_visibility' => AttributeVisibility::Own]);
+        $this->reveal(AttributeVisibility::Own);
 
         $this->assertSame(
-            "=== ABOUT YOU ===\nYou are Alice (your token: {$this->alice->promptId}).\nYour role is Student.\nYou are a woman.\nYou grew up in Owerri, Nigeria.\n\nCurious.",
+            "=== ABOUT YOU ===\nYou are Alice (your token: {$this->alice->promptId}).\nYou are a woman.\nYou grew up in Owerri, Nigeria.\n\nCurious.",
             $this->persona(),
         );
         $this->assertStringNotContainsString('Nigeria', $this->roster());
-        $this->assertStringContainsString('(Student)', $this->roster());
+        $this->assertStringNotContainsString('] (', $this->roster());
     }
 
-    public function test_all_adds_the_roster_text_behind_the_role(): void
+    public function test_all_adds_the_roster_texts_behind_the_name(): void
     {
-        $this->project->update(['attribute_visibility' => AttributeVisibility::All]);
+        $this->reveal(AttributeVisibility::All);
 
-        $this->assertStringContainsString('(Student, woman, from Owerri, Nigeria)', $this->roster());
-        $this->assertStringContainsString("- Bob [{$this->bob->promptId}] (Teacher)", $this->roster(), 'no value, no suffix');
+        $this->assertStringContainsString("- Alice [{$this->alice->promptId}] (woman, from Owerri, Nigeria)", $this->roster());
+        $this->assertStringContainsString("- Bob [{$this->bob->promptId}]", $this->roster());
+        $this->assertStringNotContainsString("- Bob [{$this->bob->promptId}] (", $this->roster(), 'no value, no suffix');
         $this->assertStringContainsString('You are a woman.', $this->persona());
     }
 
     public function test_every_prompt_carries_the_attribute_only_as_far_as_the_visibility_reveals_it(): void
     {
-        $this->project->update(['attribute_visibility' => AttributeVisibility::Own]);
+        $this->reveal(AttributeVisibility::Own);
         foreach ($this->prompts($this->project) as $name => $prompt) {
             if (in_array($name, ['orchestrator', 'judge'], true)) {
                 $this->assertStringNotContainsString('Nigeria', $prompt, $name);
@@ -155,7 +173,7 @@ class PersonaAttributesTest extends TestCase
             }
         }
 
-        $this->project->update(['attribute_visibility' => AttributeVisibility::All]);
+        $this->reveal(AttributeVisibility::All);
         foreach ($this->prompts($this->project) as $name => $prompt) {
             $this->assertStringContainsString('from Owerri, Nigeria', $prompt, $name);
         }
@@ -163,7 +181,7 @@ class PersonaAttributesTest extends TestCase
 
     public function test_the_blind_judge_never_sees_an_attribute(): void
     {
-        $this->project->update(['attribute_visibility' => AttributeVisibility::All]);
+        $this->reveal(AttributeVisibility::All);
 
         $prompt = app(PromptRenderer::class)->render('prompts.select.blind-judge', [
             'project' => $this->project->fresh(),
@@ -180,12 +198,12 @@ class PersonaAttributesTest extends TestCase
     {
         Event::fake([PipelineStageChanged::class, JobLogged::class]);
         $this->fakeModels();
-        $this->project->update(['attribute_visibility' => AttributeVisibility::All]);
+        $this->reveal(AttributeVisibility::All);
 
         app(TurnRunner::class)->run($this->project);
 
         $config = $this->project->fresh()->run_config;
-        $this->assertSame('all', $config['attribute_visibility']);
+        $this->assertSame(['gender' => 'all', 'origin' => 'all'], $config['attribute_visibility']);
         $this->assertSame([
             ['attribute' => 'gender', 'value' => 'woman', 'self_line' => 'You are a woman.', 'roster' => 'woman'],
             ['attribute' => 'origin', 'value' => 'Owerri, Nigeria', 'self_line' => 'You grew up in Owerri, Nigeria.', 'roster' => 'from Owerri, Nigeria'],
@@ -201,7 +219,7 @@ class PersonaAttributesTest extends TestCase
         app(TurnRunner::class)->run($this->project);
 
         $config = $this->project->fresh()->run_config;
-        $this->assertSame('none', $config['attribute_visibility']);
+        $this->assertSame(['gender' => 'none', 'origin' => 'none'], $config['attribute_visibility']);
         $this->assertCount(2, $config['cast'][0]['attributes']);
     }
 
@@ -209,7 +227,7 @@ class PersonaAttributesTest extends TestCase
     {
         Event::fake([PipelineStageChanged::class, JobLogged::class]);
         $this->fakeModels();
-        $this->project->update(['attribute_visibility' => AttributeVisibility::All]);
+        $this->reveal(AttributeVisibility::All);
         app(TurnRunner::class)->run($this->project);
 
         $this->gender->update(['self_template' => 'Edited: :value.', 'roster_template' => 'edited :value']);
@@ -226,7 +244,7 @@ class PersonaAttributesTest extends TestCase
     {
         Event::fake([PipelineStageChanged::class, JobLogged::class]);
         $this->fakeModels();
-        $this->project->update(['attribute_visibility' => AttributeVisibility::All]);
+        $this->reveal(AttributeVisibility::All);
         app(TurnRunner::class)->run($this->project);
 
         $late = Expert::factory()->create();
@@ -246,19 +264,19 @@ class PersonaAttributesTest extends TestCase
         $this->assertSame([], $none->selfLines());
         $this->assertNull($none->rosterText());
 
-        $this->project->update(['attribute_visibility' => AttributeVisibility::Own]);
+        $this->reveal(AttributeVisibility::Own);
         $own = PersonaLines::for($this->project->fresh(), $this->alice);
         $this->assertCount(2, $own->selfLines());
         $this->assertNull($own->rosterText());
 
-        $this->project->update(['attribute_visibility' => AttributeVisibility::All]);
+        $this->reveal(AttributeVisibility::All);
         $this->assertNull(PersonaLines::for($this->project->fresh(), $this->bob)->rosterText());
     }
 
     public function test_a_template_is_plain_text_and_runs_no_code(): void
     {
         $this->origin->update(['self_template' => '{{ 1 + 1 }} <?php echo 7; ?> :value']);
-        $this->project->update(['attribute_visibility' => AttributeVisibility::Own]);
+        $this->reveal(AttributeVisibility::Own);
 
         $this->assertSame('{{ 1 + 1 }} <?php echo 7; ?> Owerri, Nigeria', $this->origin->selfLine('Owerri, Nigeria'));
         $this->assertStringContainsString('{{ 1 + 1 }}', PersonaLines::for($this->project->fresh(), $this->alice->fresh())->selfLines()[1]);
@@ -266,20 +284,110 @@ class PersonaAttributesTest extends TestCase
 
     public function test_an_unknown_frozen_visibility_reads_as_none_and_does_not_throw(): void
     {
-        $this->project->update(['attribute_visibility' => AttributeVisibility::All, 'run_config' => ['pipeline' => 'RoundRobinPipeline']]);
+        $this->reveal(AttributeVisibility::All);
+        $this->project->update(['run_config' => ['pipeline' => 'RoundRobinPipeline']]);
 
-        foreach (['bogus', '', 7, ['all'], true] as $bad) {
+        foreach (['bogus', '', ['gender' => 'bogus', 'origin' => 7]] as $bad) {
             $this->project->update(['run_config' => ['pipeline' => 'RoundRobinPipeline', 'attribute_visibility' => $bad]]);
             $project = $this->project->fresh();
 
-            $this->assertSame(AttributeVisibility::None, PersonaLines::visibilityOf($project), json_encode($bad));
+            foreach (PersonaLines::visibilitiesOf($project) as $level) {
+                $this->assertSame(AttributeVisibility::None, $level, json_encode($bad));
+            }
             $this->assertSame([], PersonaLines::for($project, $this->alice)->selfLines());
-            $this->assertSame('', PersonaLines::for($project, $this->alice)->rosterSuffix());
+            $this->assertSame('', PersonaLines::for($project, $this->alice)->rosterLabel());
         }
 
-        // Without a frozen value the project's own column decides.
+        // Without a frozen value the project's own levels decide.
         $this->project->update(['run_config' => ['pipeline' => 'RoundRobinPipeline']]);
-        $this->assertSame(AttributeVisibility::All, PersonaLines::visibilityOf($this->project->fresh()));
+        $this->assertSame(['gender' => AttributeVisibility::All, 'origin' => AttributeVisibility::All], PersonaLines::visibilitiesOf($this->project->fresh()));
+    }
+
+    public function test_a_legacy_frozen_string_counts_for_every_attribute(): void
+    {
+        $this->project->update(['run_config' => ['pipeline' => 'RoundRobinPipeline', 'attribute_visibility' => 'all']]);
+        $lines = PersonaLines::for($this->project->fresh(), $this->alice);
+        $this->assertSame(['You are a woman.', 'You grew up in Owerri, Nigeria.'], $lines->selfLines());
+        $this->assertSame('woman, from Owerri, Nigeria', $lines->rosterText());
+
+        $this->project->update(['run_config' => ['pipeline' => 'RoundRobinPipeline', 'attribute_visibility' => 'none']]);
+        $lines = PersonaLines::for($this->project->fresh(), $this->alice);
+        $this->assertSame([], $lines->selfLines());
+        $this->assertNull($lines->rosterText());
+    }
+
+    public function test_role_all_with_gender_own_shows_the_role_to_everyone_and_the_gender_only_to_its_owner(): void
+    {
+        $this->alice->setAttributeValue(PersonaAttribute::role(), 'Student');
+        $this->bob->setAttributeValue(PersonaAttribute::role(), 'Teacher');
+        $this->bob->setAttributeValue($this->gender, 'man');
+        $this->project->setAttributeVisibilities([
+            PersonaAttribute::role()->id => AttributeVisibility::All,
+            $this->gender->id => AttributeVisibility::Own,
+        ]);
+
+        $this->assertStringContainsString("Your role is Student.\nYou are a woman.", $this->persona());
+        $this->assertStringNotContainsString('Nigeria', $this->persona());
+        $roster = $this->roster();
+        $this->assertStringContainsString("- Alice [{$this->alice->promptId}] (Student)", $roster);
+        $this->assertStringContainsString("- Bob [{$this->bob->promptId}] (Teacher)", $roster);
+        $this->assertStringNotContainsString('woman', $roster);
+        $this->assertStringNotContainsString('man', str_replace('woman', '', $roster));
+    }
+
+    public function test_role_none_with_gender_all_shows_the_gender_roster_only(): void
+    {
+        $this->alice->setAttributeValue(PersonaAttribute::role(), 'Student');
+        $this->project->setAttributeVisibilities([
+            PersonaAttribute::role()->id => AttributeVisibility::None,
+            $this->gender->id => AttributeVisibility::All,
+        ]);
+
+        $this->assertStringContainsString("- Alice [{$this->alice->promptId}] (woman)", $this->roster());
+        $this->assertStringNotContainsString('Student', $this->roster());
+        $this->assertStringNotContainsString('Student', $this->persona());
+        $this->assertStringContainsString('You are a woman.', $this->persona());
+        $this->assertStringNotContainsString('Nigeria', $this->persona().$this->roster());
+    }
+
+    public function test_the_first_turn_freezes_a_map_and_later_edits_change_no_started_run(): void
+    {
+        Event::fake([PipelineStageChanged::class, JobLogged::class]);
+        $this->fakeModels();
+        $this->project->setAttributeVisibilities([$this->gender->id => AttributeVisibility::All, $this->origin->id => AttributeVisibility::Own]);
+
+        app(TurnRunner::class)->run($this->project);
+
+        $this->assertSame(['gender' => 'all', 'origin' => 'own'], $this->project->fresh()->run_config['attribute_visibility']);
+
+        $this->project->setAttributeVisibilities([$this->gender->id => AttributeVisibility::None, $this->origin->id => AttributeVisibility::All]);
+        $project = $this->project->fresh();
+
+        $this->assertSame(['gender' => AttributeVisibility::All, 'origin' => AttributeVisibility::Own], PersonaLines::visibilitiesOf($project));
+        $lines = PersonaLines::for($project, $this->alice->fresh());
+        $this->assertSame(['You are a woman.', 'You grew up in Owerri, Nigeria.'], $lines->selfLines());
+        $this->assertSame('woman', $lines->rosterText(), 'the frozen map wins: origin stays out of the roster');
+    }
+
+    public function test_an_attribute_added_after_the_freeze_is_hidden(): void
+    {
+        Event::fake([PipelineStageChanged::class, JobLogged::class]);
+        $this->fakeModels();
+        $this->reveal(AttributeVisibility::All);
+        app(TurnRunner::class)->run($this->project);
+
+        $age = PersonaAttribute::factory()->create(['name' => 'age', 'self_template' => 'You are :value.', 'roster_template' => 'aged :value']);
+        $this->project->setAttributeVisibilities([$age->id => AttributeVisibility::All]);
+        $this->alice->setAttributeValue($age, '30');
+        $late = Expert::factory()->create();
+        $late->setAttributeValue($age, '40');
+        $this->project->addContributingExpert($late);
+
+        $project = $this->project->fresh();
+        $this->assertArrayNotHasKey('age', PersonaLines::visibilitiesOf($project));
+        $this->assertStringNotContainsString('30', implode(' ', PersonaLines::for($project, $this->alice->fresh())->selfLines()));
+        $this->assertNull(PersonaLines::for($project, $late->fresh())->rosterText());
+        $this->assertSame([], PersonaLines::for($project, $late->fresh())->selfLines());
     }
 
     public function test_visibility_is_a_defaulting_enum(): void
@@ -295,8 +403,14 @@ class PersonaAttributesTest extends TestCase
 
     public function test_a_new_project_defaults_to_none(): void
     {
-        $this->assertSame(AttributeVisibility::None, (new Project)->attribute_visibility);
-        $this->assertSame('none', DB::table('projects')->value('attribute_visibility'));
+        $levels = $this->project->fresh()->attributeVisibilities();
+        $this->assertSame([$this->gender->id, $this->origin->id], array_keys($levels));
+        $this->assertSame([AttributeVisibility::None], array_values(array_unique($levels, SORT_REGULAR)));
+
+        $role = PersonaAttribute::role();
+        $defaults = Project::defaultAttributeVisibilities();
+        $this->assertSame(AttributeVisibility::All, $defaults[$role->id]);
+        $this->assertSame(AttributeVisibility::None, $defaults[$this->gender->id]);
     }
 
     public function test_setting_a_blank_value_removes_the_row_and_sync_sets_several(): void
@@ -337,7 +451,7 @@ class PersonaAttributesTest extends TestCase
 
     public function test_special_characters_in_a_value_reach_the_prompt_as_typed(): void
     {
-        $this->project->update(['attribute_visibility' => AttributeVisibility::All]);
+        $this->reveal(AttributeVisibility::All);
         $this->alice->setAttributeValue($this->origin, 'Zürich & "Bern" <b>5 > 3</b>');
 
         $persona = $this->persona();
@@ -351,7 +465,7 @@ class PersonaAttributesTest extends TestCase
 
     public function test_an_entity_typed_in_a_value_is_not_decoded_a_second_time(): void
     {
-        $this->project->update(['attribute_visibility' => AttributeVisibility::Own]);
+        $this->reveal(AttributeVisibility::Own);
         $this->alice->setAttributeValue($this->origin, 'R&amp;D &lt;lab&gt;');
 
         // Blade double-encodes the ampersand, the renderer decodes once: the literal text survives.
@@ -361,7 +475,7 @@ class PersonaAttributesTest extends TestCase
     public function test_a_value_that_contains_the_placeholder_is_not_substituted_again(): void
     {
         $this->origin->update(['self_template' => ':value / :value / again :value']);
-        $this->project->update(['attribute_visibility' => AttributeVisibility::Own]);
+        $this->reveal(AttributeVisibility::Own);
         $this->alice->setAttributeValue($this->origin, 'the :value token');
 
         $this->assertStringContainsString('the :value token / the :value token / again the :value token', $this->persona());
@@ -370,16 +484,16 @@ class PersonaAttributesTest extends TestCase
     public function test_a_template_with_several_placeholders_fills_each(): void
     {
         $this->gender->update(['roster_template' => ':value (really :value)']);
-        $this->project->update(['attribute_visibility' => AttributeVisibility::All]);
+        $this->reveal(AttributeVisibility::All);
 
-        $this->assertStringContainsString('(Student, woman (really woman), from Owerri, Nigeria)', $this->roster());
+        $this->assertStringContainsString('(woman (really woman), from Owerri, Nigeria)', $this->roster());
     }
 
     public function test_an_attribute_deleted_after_the_first_turn_still_reaches_the_prompts_of_that_run(): void
     {
         Event::fake([PipelineStageChanged::class, JobLogged::class]);
         $this->fakeModels();
-        $this->project->update(['attribute_visibility' => AttributeVisibility::All]);
+        $this->reveal(AttributeVisibility::All);
         app(TurnRunner::class)->run($this->project);
 
         $this->gender->delete();
@@ -387,22 +501,22 @@ class PersonaAttributesTest extends TestCase
         $project = $this->project->fresh();
         $this->assertSame(['You are a woman.', 'You grew up in Owerri, Nigeria.'], PersonaLines::for($project, $this->alice->fresh())->selfLines());
         $this->assertStringContainsString('You are a woman.', $this->persona());
-        $this->assertStringContainsString('(Student, woman, from Owerri, Nigeria)', $this->roster());
+        $this->assertStringContainsString('(woman, from Owerri, Nigeria)', $this->roster());
     }
 
     public function test_a_run_from_before_the_feature_has_no_attributes_key_and_reads_the_live_values(): void
     {
+        $this->reveal(AttributeVisibility::All);
         $this->project->update([
-            'attribute_visibility' => AttributeVisibility::All,
             'run_config' => ['pipeline' => 'RoundRobinPipeline', 'cast' => [
-                ['seat' => 1, 'expert_id' => $this->alice->id, 'name' => 'Alice', 'role' => 'Student'],
+                ['seat' => 1, 'expert_id' => $this->alice->id, 'name' => 'Alice'],
             ]],
         ]);
 
         $lines = PersonaLines::for($this->project->fresh(), $this->alice);
 
         $this->assertSame(['You are a woman.', 'You grew up in Owerri, Nigeria.'], $lines->selfLines());
-        $this->assertSame(', woman, from Owerri, Nigeria', $lines->rosterSuffix());
+        $this->assertSame(' (woman, from Owerri, Nigeria)', $lines->rosterLabel());
     }
 
     public function test_the_model_accepts_a_value_of_exactly_the_limit_and_trims_before_counting(): void
@@ -440,6 +554,11 @@ class PersonaAttributesTest extends TestCase
         } catch (InvalidArgumentException) {
             $this->assertSame('woman', $this->alice->fresh()->personaAttributes->firstWhere('name', 'gender')->pivot->value);
         }
+    }
+
+    private function reveal(AttributeVisibility $level): void
+    {
+        $this->project->setAttributeVisibilities(PersonaAttribute::pluck('id')->mapWithKeys(fn (int $id) => [$id => $level])->all());
     }
 
     private function fakeModels(): void

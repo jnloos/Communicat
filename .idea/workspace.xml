@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="6482c7b2-24b5-4a9c-8edd-15bf704d4f2b" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.claude/settings.json" beforeDir="false" afterPath="$PROJECT_DIR$/.claude/settings.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/NPHP-Communicat.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/commandlinetools/Laravel_03_03_26__11_47.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/php.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/php.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/phpunit.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/phpunit.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Actions/Projects/OpenProject.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Actions/Projects/OpenProject.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Console/Commands/CreateProject.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Console/Commands/CreateProject.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Console/Commands/InitExperts.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Console/Commands/InitExperts.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Console/Commands/SetProjectContributors.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Console/Commands/SetProjectContributors.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Agents/StudyAgent.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Agents/StudyAgent.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Logging/GuardAgainstFailover.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Logging/GuardAgainstFailover.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Logging/RecordPromptLog.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Logging/RecordPromptLog.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Metrics/Questions/DimensionValues.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Metrics/Questions/DimensionValues.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Metrics/Questions/QuestionEvaluator.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Metrics/Questions/QuestionEvaluator.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Metrics/Questions/QuestionNormaliser.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Metrics/Questions/QuestionNormaliser.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Metrics/Questions/QuestionSentence.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Metrics/Questions/QuestionSentence.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Pipelines/BlindQualityPipeline.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Pipelines/BlindQualityPipeline.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Pipelines/OrchestratorPipeline.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Pipelines/OrchestratorPipeline.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Pipelines/QualityPipeline.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Pipelines/QualityPipeline.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Pipelines/ScorePipeline.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Pipelines/ScorePipeline.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Stages/SelectSpeaker.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Stages/SelectSpeaker.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Support/ParallelPrompts.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Support/ParallelPrompts.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Support/PersonaLines.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Support/PersonaLines.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/TurnPayload.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/TurnPayload.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/TurnRunner.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/TurnRunner.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Values/ModelConfig.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Values/ModelConfig.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Values/Selection.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Values/Selection.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Values/SelectionRecord.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Values/SelectionRecord.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Values/ShareChartData.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Values/ShareChartData.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Values/Thought.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Values/Thought.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Discussion/Values/TurnWindow.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Discussion/Values/TurnWindow.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Livewire/Experts/ExpertEditor.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Experts/ExpertEditor.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Livewire/Experts/ExpertList.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Experts/ExpertList.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Livewire/Forms/ProjectForm.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Forms/ProjectForm.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Livewire/Projects/CreateProject.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Projects/CreateProject.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Livewire/Projects/EditProject.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Projects/EditProject.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Livewire/Projects/ProjectChat.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Projects/ProjectChat.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Livewire/Projects/ProjectDialogs.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Projects/ProjectDialogs.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Livewire/Projects/ProjectGroupDialogs.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Projects/ProjectGroupDialogs.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Livewire/Projects/ProjectNavigation.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Projects/ProjectNavigation.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Livewire/Projects/SelectContributors.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Projects/SelectContributors.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Livewire/Settings/Attributes.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Settings/Attributes.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Livewire/Settings/Users.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Settings/Users.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Livewire/Statistics/QuestionEditor.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Statistics/QuestionEditor.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/Expert.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Expert.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/PersonaAttribute.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/PersonaAttribute.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/Project.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Project.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/ProjectGroup.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/ProjectGroup.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/PromptLog.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/PromptLog.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/User.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/User.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Providers/AppServiceProvider.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Providers/AppServiceProvider.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Services/PersonaAttributes/AttributesByName.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Services/PersonaAttributes/AttributesByName.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Services/StudyExport/ParticipantTable.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Services/StudyExport/ParticipantTable.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Services/StudyExport/RunTable.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Services/StudyExport/RunTable.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Services/StudyExport/StudyArchive.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Services/StudyExport/StudyArchive.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Services/StudyExport/StudyExport.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Services/StudyExport/StudyExport.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Services/StudyExport/TurnTable.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Services/StudyExport/TurnTable.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Services/Transfer/ExpertTransfer.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Services/Transfer/ExpertTransfer.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Services/Transfer/GroupTransfer.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Services/Transfer/GroupTransfer.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Services/Transfer/ProjectExporter.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Services/Transfer/ProjectExporter.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Services/Transfer/ProjectFileShape.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Services/Transfer/ProjectFileShape.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Services/Transfer/ProjectWriter.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Services/Transfer/ProjectWriter.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Services/Transfer/Rows/PromptLogRow.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Services/Transfer/Rows/PromptLogRow.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/ai.php" beforeDir="false" afterPath="$PROJECT_DIR$/config/ai.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/experts.json" beforeDir="false" afterPath="$PROJECT_DIR$/database/experts.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/factories/ExpertFactory.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/factories/ExpertFactory.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/migrations/2025_05_30_132453_create_experts_table.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/migrations/2025_05_30_132453_create_experts_table.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/migrations/2026_10_18_000001_create_persona_attribute_tables.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/migrations/2026_10_18_000001_create_persona_attribute_tables.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/migrations/2026_10_18_000002_projects_add_attribute_visibility.php" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/seeders/ThesisTemplatesSeeder.php" beforeDir="false" afterPath="$PROJECT_DIR$/database/seeders/ThesisTemplatesSeeder.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/architektur.architecture.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/architektur.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/architektur.visual-check.1440x900.dark.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/architektur.visual-check.1440x900.light.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/architektur.visual-check.2048x1320.dark.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/architektur.visual-check.2048x1320.light.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/architektur.visual-check.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/architektur.visual-check.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/turn-datenfluss.dataflow.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/turn-datenfluss.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/turn-datenfluss.visual-check.1440x900.dark.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/turn-datenfluss.visual-check.1440x900.light.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/turn-datenfluss.visual-check.2048x1320.dark.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/turn-datenfluss.visual-check.2048x1320.light.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/turn-datenfluss.visual-check.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/turn-datenfluss.visual-check.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-architektur.architecture.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-architektur.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-architektur.visual-check.1440x900.dark.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-architektur.visual-check.1440x900.light.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-architektur.visual-check.2048x1320.dark.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-architektur.visual-check.2048x1320.light.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-architektur.visual-check.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-architektur.visual-check.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-pipelines.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-pipelines.visual-check.1440x900.dark.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-pipelines.visual-check.1440x900.light.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-pipelines.visual-check.2048x1320.dark.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-pipelines.visual-check.2048x1320.light.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-pipelines.visual-check.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-pipelines.visual-check.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archify/ziel-pipelines.workflow.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/pipeline.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/pipeline.puml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/plans/Bildschirmfoto_20260920_144237.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/plans/relevanz-einschaetzung-statuseffekt.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/plans/vorhabensuebersicht.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-09-27-pilot-selbstselektion-daten.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-09-27-pilot-selbstselektion.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-abb-57-score-school.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-abb-57-score-school.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-abb-58-score-office.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-abb-58-score-office.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-abb-59-orchestrator-school.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-abb-59-orchestrator-school.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-abb-60-orchestrator-office.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-abb-60-orchestrator-office.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-abb-61-quality-school.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-abb-61-quality-school.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-abb-62-quality-office.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-abb-62-quality-office.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-daten.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge-trajektorien.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/studie/2026-10-08-chatlaenge.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/to-do.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/ui-improvements.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/de/attributes.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/attributes.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/de/chat.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/chat.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/de/common.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/common.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/de/experts.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/experts.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/de/groups.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/groups.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/de/navigation.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/navigation.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/de/pipelines.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/pipelines.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/de/projects.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/projects.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/de/questions.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/questions.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/de/settings.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/settings.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/de/statistics.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/statistics.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/de/tags.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/tags.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/en/attributes.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/attributes.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/en/chat.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/chat.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/en/common.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/common.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/en/experts.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/experts.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/en/groups.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/groups.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/en/navigation.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/navigation.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/en/pipelines.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/pipelines.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/en/projects.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/projects.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/en/questions.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/questions.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/en/settings.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/settings.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/en/statistics.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/statistics.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/lang/en/tags.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/tags.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/phpunit.xml" beforeDir="false" afterPath="$PROJECT_DIR$/phpunit.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/css/app.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/css/app.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/resources/js/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/components/attributes/fields.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/components/attributes/fields.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/components/contributors/contributors-card.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/components/contributors/contributors-card.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/components/flyout.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/components/flyout.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/components/layouts/app/sidebar.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/components/layouts/app/sidebar.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/components/projects/run-settings.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/components/projects/run-settings.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/components/statistics/panel-grid.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/components/statistics/panel-grid.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/components/statistics/share-pie.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/components/statistics/share-pie.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/components/statistics/tag-checkbox-groups.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/components/statistics/tag-checkbox-groups.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/components/tags/project-accordion-item.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/components/tags/project-accordion-item.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/livewire/experts/expert-editor.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/experts/expert-editor.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/livewire/experts/expert-list.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/experts/expert-list.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/livewire/projects/create-project.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/projects/create-project.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/livewire/projects/edit-project.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/projects/edit-project.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/livewire/projects/expert-thoughts-flyout.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/projects/expert-thoughts-flyout.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/livewire/projects/project-chat.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/projects/project-chat.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/livewire/projects/project-navigation.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/projects/project-navigation.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/livewire/projects/select-contributors.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/projects/select-contributors.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/livewire/projects/statistics-flyout.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/projects/statistics-flyout.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/livewire/settings/attributes.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/settings/attributes.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/livewire/settings/tags.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/settings/tags.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/livewire/settings/users.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/settings/users.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/livewire/statistics/question-editor.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/statistics/question-editor.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/partials/head.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/partials/head.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/prompts/partials/participants.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/prompts/partials/participants.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/prompts/partials/persona.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/prompts/partials/persona.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/prompts/select/blind-judge.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/prompts/select/blind-judge.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/prompts/select/judge.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/prompts/select/judge.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/prompts/select/orchestrator.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/prompts/select/orchestrator.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/prompts/think/prioritize.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/prompts/think/prioritize.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Concerns/PromptFixtures.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Concerns/PromptFixtures.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Console/ProjectCommandsTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Console/ProjectCommandsTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Discussion/PersonaAttributesTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Discussion/PersonaAttributesTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Discussion/PipelineSmokeTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Discussion/PipelineSmokeTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Discussion/PromptGoldenTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Discussion/PromptGoldenTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Discussion/TurnRunnerTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Discussion/TurnRunnerTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/ExpertPersonaTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/ExpertPersonaTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Experts/ExpertAttributesTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Experts/ExpertAttributesTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Experts/ExpertAuthorizationTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Experts/ExpertAuthorizationTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/InitExpertsAttributesTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/InitExpertsAttributesTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/InitExpertsCommandTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/InitExpertsCommandTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/ProjectFormsTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/ProjectFormsTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Projects/StatisticsFlyoutTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Projects/StatisticsFlyoutTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Settings/AttributesPageTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Settings/AttributesPageTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Settings/TagsTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Settings/TagsTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Statistics/QuestionEditorTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Statistics/QuestionEditorTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Statistics/QuestionSentenceTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Statistics/QuestionSentenceTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Statistics/ThesisTemplatesSeederTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Statistics/ThesisTemplatesSeederTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/StudyExport/StudyExportAttributesTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/StudyExport/StudyExportAttributesTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/StudyExport/StudyExportTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/StudyExport/StudyExportTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Tags/TagFieldsTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Tags/TagFieldsTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Tags/TagsInvisibleToModelsTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Tags/TagsInvisibleToModelsTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Transfer/PersonaAttributeTransferTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Transfer/PersonaAttributeTransferTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Feature/Transfer/TagAndExpertTransferTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Transfer/TagAndExpertTransferTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Unit/Discussion/BlindJudgeSelectorTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Unit/Discussion/BlindJudgeSelectorTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Unit/Discussion/JudgeSelectorTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Unit/Discussion/JudgeSelectorTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Unit/Discussion/ModelConfigTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Unit/Discussion/ModelConfigTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Unit/Discussion/ModelRegistryTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Unit/Discussion/ModelRegistryTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Unit/Discussion/PromptRendererTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Unit/Discussion/PromptRendererTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Unit/Discussion/QuestionEvaluatorTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Unit/Discussion/QuestionEvaluatorTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Unit/Discussion/QuestionNormaliserTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Unit/Discussion/QuestionNormaliserTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Unit/Discussion/RecordPromptLogTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Unit/Discussion/RecordPromptLogTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Unit/Discussion/SelectionRecordTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Unit/Discussion/SelectionRecordTest.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/Unit/Discussion/StudyAgentTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Unit/Discussion/StudyAgentTest.php" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings" synchronizationState="SYNCHRONIZE">
+    <pharConfigPath>$PROJECT_DIR$/composer.json</pharConfigPath>
+    <execution />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="978" />
+    <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0000004696101559" />
+      <entry key="S2" value="1.0776829399080656" />
+      <entry key="S5" value="2.1442437379938486" />
+      <entry key="S10" value="4.677010279239213" />
+      <entry key="S30" value="13.41241009828907" />
+      <entry key="S60" value="19.930360376974466" />
+      <entry key="M2" value="24.987236992694047" />
+      <entry key="M5" value="28.907806652159877" />
+      <entry key="M10" value="30.40075006249962" />
+      <entry key="M15" value="30.921588538011665" />
+      <entry key="M30" value="31.45455938532908" />
+      <entry key="H1" value="31.725699474680436" />
+      <entry key="H2" value="31.86245195918549" />
+      <entry key="H4" value="31.931126192285063" />
+      <entry key="D1" value="31.988507143498044" />
+      <entry key="W1" value="31.998357822847613" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.9265880618903709" />
+      <entry key="MS500" value="0.9848668742844212" />
+      <entry key="S2" value="1.07280469195202" />
+      <entry key="S5" value="2.137929173352584" />
+      <entry key="S10" value="4.669841112329166" />
+      <entry key="S30" value="13.402985620145364" />
+      <entry key="S60" value="19.920539486270854" />
+      <entry key="M2" value="24.97963826092006" />
+      <entry key="M5" value="28.903784345565384" />
+      <entry key="M10" value="30.398536226885362" />
+      <entry key="M15" value="30.920064233564396" />
+      <entry key="M30" value="31.453772128704166" />
+      <entry key="H1" value="31.725299396677265" />
+      <entry key="H2" value="31.862250285583663" />
+      <entry key="H4" value="31.931024944031446" />
+      <entry key="D1" value="31.988490211403576" />
+      <entry key="W1" value="31.998355402568492" />
+    </decayedShown>
+  </component>
+  <component name="PhpWorkspaceProjectConfiguration" interpreter_name="/bin/php">
+    <include_path>
+      <path value="$PROJECT_DIR$/vendor/brick/math" />
+      <path value="$PROJECT_DIR$/vendor/carbonphp/carbon-doctrine-types" />
+      <path value="$PROJECT_DIR$/vendor/composer" />
+      <path value="$PROJECT_DIR$/vendor/dflydev/dot-access-data" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/inflector" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/lexer" />
+      <path value="$PROJECT_DIR$/vendor/dragonmantank/cron-expression" />
+      <path value="$PROJECT_DIR$/vendor/egulias/email-validator" />
+      <path value="$PROJECT_DIR$/vendor/erusev/parsedown" />
+      <path value="$PROJECT_DIR$/vendor/fakerphp/faker" />
+      <path value="$PROJECT_DIR$/vendor/filp/whoops" />
+      <path value="$PROJECT_DIR$/vendor/fruitcake/php-cors" />
+      <path value="$PROJECT_DIR$/vendor/graham-campbell/result-type" />
+      <path value="$PROJECT_DIR$/vendor/guzzlehttp/guzzle" />
+      <path value="$PROJECT_DIR$/vendor/guzzlehttp/promises" />
+      <path value="$PROJECT_DIR$/vendor/guzzlehttp/psr7" />
+      <path value="$PROJECT_DIR$/vendor/guzzlehttp/uri-template" />
+      <path value="$PROJECT_DIR$/vendor/hamcrest/hamcrest-php" />
+      <path value="$PROJECT_DIR$/vendor/laravel/framework" />
+      <path value="$PROJECT_DIR$/vendor/laravel/pail" />
+      <path value="$PROJECT_DIR$/vendor/laravel/pint" />
+      <path value="$PROJECT_DIR$/vendor/laravel/prompts" />
+      <path value="$PROJECT_DIR$/vendor/laravel/sail" />
+      <path value="$PROJECT_DIR$/vendor/laravel/serializable-closure" />
+      <path value="$PROJECT_DIR$/vendor/laravel/tinker" />
+      <path value="$PROJECT_DIR$/vendor/league/commonmark" />
+      <path value="$PROJECT_DIR$/vendor/league/config" />
+      <path value="$PROJECT_DIR$/vendor/league/flysystem" />
+      <path value="$PROJECT_DIR$/vendor/league/flysystem-local" />
+      <path value="$PROJECT_DIR$/vendor/league/mime-type-detection" />
+      <path value="$PROJECT_DIR$/vendor/league/uri" />
+      <path value="$PROJECT_DIR$/vendor/league/uri-interfaces" />
+      <path value="$PROJECT_DIR$/vendor/livewire/flux" />
+      <path value="$PROJECT_DIR$/vendor/livewire/flux-pro" />
+      <path value="$PROJECT_DIR$/vendor/livewire/livewire" />
+      <path value="$PROJECT_DIR$/vendor/livewire/volt" />
+      <path value="$PROJECT_DIR$/vendor/mockery/mockery" />
+      <path value="$PROJECT_DIR$/vendor/monolog/monolog" />
+      <path value="$PROJECT_DIR$/vendor/myclabs/deep-copy" />
+      <path value="$PROJECT_DIR$/vendor/nesbot/carbon" />
+      <path value="$PROJECT_DIR$/vendor/nette/schema" />
+      <path value="$PROJECT_DIR$/vendor/nette/utils" />
+      <path value="$PROJECT_DIR$/vendor/nikic/php-parser" />
+      <path value="$PROJECT_DIR$/vendor/nunomaduro/collision" />
+      <path value="$PROJECT_DIR$/vendor/nunomaduro/termwind" />
+      <path value="$PROJECT_DIR$/vendor/phar-io/manifest" />
+      <path value="$PROJECT_DIR$/vendor/phar-io/version" />
+      <path value="$PROJECT_DIR$/vendor/phpoption/phpoption" />
+      <path value="$PROJECT_DIR$/vendor/phpunit/php-code-coverage" />
+      <path value="$PROJECT_DIR$/vendor/phpunit/php-file-iterator" />
+      <path value="$PROJECT_DIR$/vendor/phpunit/php-invoker" />
+      <path value="$PROJECT_DIR$/vendor/phpunit/php-text-template" />
+      <path value="$PROJECT_DIR$/vendor/phpunit/php-timer" />
+      <path value="$PROJECT_DIR$/vendor/phpunit/phpunit" />
+      <path value="$PROJECT_DIR$/vendor/psr/clock" />
+      <path value="$PROJECT_DIR$/vendor/psr/container" />
+      <path value="$PROJECT_DIR$/vendor/psr/event-dispatcher" />
+      <path value="$PROJECT_DIR$/vendor/psr/http-client" />
+      <path value="$PROJECT_DIR$/vendor/psr/http-factory" />
+      <path value="$PROJECT_DIR$/vendor/psr/http-message" />
+      <path value="$PROJECT_DIR$/vendor/psr/log" />
+      <path value="$PROJECT_DIR$/vendor/psr/simple-cache" />
+      <path value="$PROJECT_DIR$/vendor/psy/psysh" />
+      <path value="$PROJECT_DIR$/vendor/laravel/ai" />
+      <path value="$PROJECT_DIR$/vendor/ralouphie/getallheaders" />
+      <path value="$PROJECT_DIR$/vendor/ramsey/collection" />
+      <path value="$PROJECT_DIR$/vendor/ramsey/uuid" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/cli-parser" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/code-unit" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/code-unit-reverse-lookup" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/comparator" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/complexity" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/diff" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/environment" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/exporter" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/global-state" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/lines-of-code" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/object-enumerator" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/object-reflector" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/recursion-context" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/type" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/version" />
+      <path value="$PROJECT_DIR$/vendor/staabm/side-effects-detector" />
+      <path value="$PROJECT_DIR$/vendor/symfony/clock" />
+      <path value="$PROJECT_DIR$/vendor/symfony/console" />
+      <path value="$PROJECT_DIR$/vendor/symfony/css-selector" />
+      <path value="$PROJECT_DIR$/vendor/symfony/deprecation-contracts" />
+      <path value="$PROJECT_DIR$/vendor/symfony/error-handler" />
+      <path value="$PROJECT_DIR$/vendor/symfony/event-dispatcher" />
+      <path value="$PROJECT_DIR$/vendor/symfony/event-dispatcher-contracts" />
+      <path value="$PROJECT_DIR$/vendor/symfony/finder" />
+      <path value="$PROJECT_DIR$/vendor/symfony/http-foundation" />
+      <path value="$PROJECT_DIR$/vendor/symfony/http-kernel" />
+      <path value="$PROJECT_DIR$/vendor/symfony/mailer" />
+      <path value="$PROJECT_DIR$/vendor/symfony/mime" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-ctype" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-intl-grapheme" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-intl-idn" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-intl-normalizer" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-mbstring" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php80" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php83" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php84" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php85" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-uuid" />
+      <path value="$PROJECT_DIR$/vendor/symfony/process" />
+      <path value="$PROJECT_DIR$/vendor/symfony/routing" />
+      <path value="$PROJECT_DIR$/vendor/symfony/service-contracts" />
+      <path value="$PROJECT_DIR$/vendor/symfony/string" />
+      <path value="$PROJECT_DIR$/vendor/symfony/translation" />
+      <path value="$PROJECT_DIR$/vendor/symfony/translation-contracts" />
+      <path value="$PROJECT_DIR$/vendor/symfony/uid" />
+      <path value="$PROJECT_DIR$/vendor/symfony/var-dumper" />
+      <path value="$PROJECT_DIR$/vendor/symfony/yaml" />
+      <path value="$PROJECT_DIR$/vendor/theseer/tokenizer" />
+      <path value="$PROJECT_DIR$/vendor/tijsverkoyen/css-to-inline-styles" />
+      <path value="$PROJECT_DIR$/vendor/vlucas/phpdotenv" />
+      <path value="$PROJECT_DIR$/vendor/voku/portable-ascii" />
+      <path value="$PROJECT_DIR$/vendor/clue/redis-protocol" />
+      <path value="$PROJECT_DIR$/vendor/clue/redis-react" />
+      <path value="$PROJECT_DIR$/vendor/evenement/evenement" />
+      <path value="$PROJECT_DIR$/vendor/laravel/reverb" />
+      <path value="$PROJECT_DIR$/vendor/pusher/pusher-php-server" />
+      <path value="$PROJECT_DIR$/vendor/ratchet/rfc6455" />
+      <path value="$PROJECT_DIR$/vendor/react/cache" />
+      <path value="$PROJECT_DIR$/vendor/react/dns" />
+      <path value="$PROJECT_DIR$/vendor/react/event-loop" />
+      <path value="$PROJECT_DIR$/vendor/react/promise" />
+      <path value="$PROJECT_DIR$/vendor/react/promise-timer" />
+      <path value="$PROJECT_DIR$/vendor/react/socket" />
+      <path value="$PROJECT_DIR$/vendor/react/stream" />
+    </include_path>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3Kj7ARW342njWxRyqChRTdgJVBu" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Studie-JanNiclas-Loosen&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/janniclas/Projekte/LA-Communicat&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RunManager">
+    <configuration name="Main" type="PHPUnitRunConfigurationType" factoryName="PHPUnit">
+      <TestRunner configuration_file="$PROJECT_DIR$/phpunit.xml" scope="XML" use_alternative_configuration_file="true" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-PS-261.25134.104" />
+        <option value="bundled-php-predefined-a98d8de5180a-6bbb74dbab74-com.jetbrains.php.sharedIndexes-PS-261.25134.104" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="6482c7b2-24b5-4a9c-8edd-15bf704d4f2b" name="Changes" comment="" />
+      <created>1792058979933</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1792058979933</updated>
+      <workItem from="1792058980950" duration="10000" />
+      <workItem from="1792059003743" duration="40000" />
+      <workItem from="1792400618735" duration="77000" />
+      <workItem from="1792400733700" duration="762000" />
+      <workItem from="1792444514397" duration="1366000" />
+      <workItem from="1792487591632" duration="3000" />
+      <workItem from="1792499290499" duration="32000" />
+      <workItem from="1792499890357" duration="747000" />
+      <workItem from="1792567132710" duration="4000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

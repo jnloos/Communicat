@@ -38,6 +38,10 @@
                 @if ($addressed)
                     <x-projects.addressed-chip :addressed="$addressed" />
                 @endif
+
+                @if ($msg->created_at)
+                    <time datetime="{{ $msg->created_at->toIso8601String() }}" title="{{ $msg->created_at->isoFormat('LLL') }}" class="ms-auto shrink-0 text-xs tabular-nums text-zinc-500 dark:text-white/70">{{ $msg->created_at->format('H:i') }}</time>
+                @endif
             </div>
 
             <div class="markdown-html rounded-2xl rounded-tl-md bg-zinc-100 px-4 py-3 break-words dark:bg-zinc-700">

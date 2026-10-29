@@ -5,6 +5,7 @@ namespace App\Services\Transfer;
 use App\Models\Expert;
 use App\Models\PersonaAttribute;
 use App\Services\PersonaAttributes\AttributesByName;
+use App\Services\Tags\TagNames;
 use App\Services\Tags\TagsByName;
 use App\Services\Transfer\Rows\Timestamp;
 use Illuminate\Support\Str;
@@ -35,7 +36,6 @@ final class ExpertTransfer
             'uuid' => $expert->uuid,
             'id' => $expert->id,
             'name' => $expert->name,
-            'role' => $expert->role,
             'description' => $expert->description,
             'avatar_url' => $expert->avatar_url,
             'tags' => $this->tags->export($expert),
@@ -130,6 +130,25 @@ final class ExpertTransfer
         }
     }
 
+    /**
+     * Bundles written before the role became an attribute carry it as `role`.
+     * It becomes the Role attribute unless the entry names that attribute itself;
+     * the definition is created if this database has none, like the bundle's own.
+     *
+     * @return array<string, mixed>
+     */
+    private function withLegacyRole(array $data): array
+    {
+        $attributes = is_array($data['attributes'] ?? null) ? $data['attributes'] : [];
+        $legacy = trim((string) ($data['role'] ?? ''));
+
+        if ($legacy === '' || collect($attributes)->keys()->contains(fn ($name) => TagNames::same((string) $name, PersonaAttribute::ROLE))) {
+            return $attributes;
+        }
+
+        return [$this->attributes->ensureRole()->name => $legacy] + $attributes;
+    }
+
     private function originalIdIsFree(array $data): bool
     {
         $originalId = (int) ($data['id'] ?? 0);
@@ -150,7 +169,6 @@ final class ExpertTransfer
         $expert->forceFill([
             'uuid' => (string) $data['uuid'],
             'name' => (string) ($data['name'] ?? ''),
-            'role' => (string) ($data['role'] ?? ''),
             'description' => (string) ($data['description'] ?? ''),
             'avatar_url' => $data['avatar_url'] ?? null,
             'created_at' => EntryFields::time($data, 'created_at') ?? now(),
@@ -159,7 +177,7 @@ final class ExpertTransfer
         $this->takenUuids[$expert->uuid] = true;
         $this->takenIds[$expert->id] = true;
         $skippedTags = $this->tags->assign($expert, $data['tags'] ?? []);
-        $skippedAttributes = $this->attributes->assign($expert, $data['attributes'] ?? []);
+        $skippedAttributes = $this->attributes->assign($expert, $this->withLegacyRole($data));
         $notes = array_filter([
             $keepId || $originalId === 0 ? null : __('transfer.notes.new_expert_id', ['old' => $originalId, 'new' => $expert->id]),
             $keepId || $originalId === 0 || ! $withRuns ? null : __('transfer.notes.new_expert_id_runs', ['old' => $originalId]),

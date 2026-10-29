@@ -2,6 +2,8 @@
 
 namespace App\Services\Transfer;
 
+use App\Discussion\Support\PersonaLines;
+use App\Discussion\Values\AttributeVisibility;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Message;
@@ -56,9 +58,9 @@ final class ProjectExporter
             'run_config' => $project->run_config,
             'summarize_threshold' => $project->summarize_threshold,
             'summarize_oldest' => $project->summarize_oldest,
-            // The column, not PersonaLines::visibilityOf(): a project file carries the setting
-            // as the researcher left it; the frozen value travels inside run_config.
-            'attribute_visibility' => $project->attribute_visibility->value,
+            // The live settings by attribute name, as the researcher left them; the frozen
+            // value travels inside run_config.
+            'attribute_visibility' => array_map(fn (AttributeVisibility $level) => $level->value, PersonaLines::liveVisibilitiesOf($project)),
             'long_term_memory' => $project->long_term_memory,
             'summarized_until_message' => $project->summarized_until_message_id,
             'created_at' => Timestamp::export($project->created_at),
@@ -83,7 +85,7 @@ final class ProjectExporter
                     'content' => $summary->content,
                     'updated_at' => Timestamp::export($summary->updated_at),
                 ])->values()->all(),
-            'jobs' => JobLog::with(['promptLogs' => fn ($query) => $query->orderBy('id')])
+            'jobs' => JobLog::with(['promptLogs' => fn ($query) => $query->orderBy('id'), 'promptLogs.archive'])
                 ->where('project_id', $project->id)->orderBy('id')->get()
                 ->map(fn (JobLog $job) => JobLogRow::toArray($job, $uuid) + [
                     'prompts' => $job->promptLogs->map(fn (PromptLog $log) => PromptLogRow::toArray($log, $uuid))->values()->all(),

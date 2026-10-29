@@ -39,7 +39,7 @@ class ExpertList extends Component
         $filter = $this->normaliseFilterState($tagCategories);
 
         $experts = Expert::query()
-            ->with('tagValues.category')
+            ->with(['tagValues.category', 'personaAttributes'])
             ->search($search)
             ->where(fn ($q) => $this->applyTagFilter($q, $filter))
             ->orderBy('name')

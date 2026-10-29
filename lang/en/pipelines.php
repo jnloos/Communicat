@@ -7,4 +7,8 @@ return [
     'OrchestratorPipeline' => 'Orchestrator',
     'QualityPipeline' => 'Quality',
     'BlindQualityPipeline' => 'Blind Quality',
+    'JevOrchestratorPipeline' => 'Jev Orchestrator',
+    'JevScorePipeline' => 'Jev Score',
+    'JevQualityPipeline' => 'Jev Quality',
+    'JevBlindQualityPipeline' => 'Jev Blind Quality',
 ];

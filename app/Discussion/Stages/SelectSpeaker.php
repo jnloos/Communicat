@@ -26,7 +26,13 @@ class SelectSpeaker
             throw new InvalidArgumentException("[{$selectorClass}] does not implement SpeakerSelector.");
         }
 
-        $payload->select($selector->select($payload));
+        $payload->select($selector->select($payload)->withSignals($payload->selectionSignals()));
+
+        // A selector or an earlier stage may end the turn (the Jev outage guard): the choice is
+        // recorded, nobody speaks. No base selector halts, so for them this never applies.
+        if ($payload->stop) {
+            return $payload;
+        }
 
         return $next($payload);
     }

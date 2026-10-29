@@ -45,7 +45,8 @@ return [
     'confirm' => [
         'delete_project' => [
             'title' => 'Projekt löschen?',
-            'message' => 'Damit verschwinden auch alle Beiträge der Diskussion sowie die Job- und Prompt-Logs dieses Projekts. Das lässt sich nicht rückgängig machen.',
+            'action' => 'Projekt löschen',
+            'message' => 'Das Projekt „:name“ wird mit allen Beiträgen sowie seinen Job- und Prompt-Logs gelöscht. Das lässt sich nicht rückgängig machen.',
         ],
         'delete_group' => [
             'title' => 'Gruppe löschen?',

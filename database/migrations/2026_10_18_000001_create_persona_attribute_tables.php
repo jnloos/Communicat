@@ -7,9 +7,11 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Managed persona attributes (origin, gender, ...) and the value each expert
-     * carries. Name uniqueness ignoring case and surrounding space is checked in
-     * the application (PersonaAttribute::nameTaken()), like the tag names.
+     * Managed persona attributes (role, origin, gender, ...), the value each expert
+     * carries and what each project reveals of each attribute (none | own | all;
+     * a missing row reads as none). Name uniqueness ignoring case and surrounding
+     * space is checked in the application (PersonaAttribute::nameTaken()), like the
+     * tag names. The role is an attribute too: PersonaAttribute::role() creates it.
      */
     public function up(): void
     {
@@ -29,10 +31,20 @@ return new class extends Migration
             $table->string('value');
             $table->unique(['expert_id', 'persona_attribute_id']);
         });
+
+        Schema::create('project_attribute_visibility', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('project_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('persona_attribute_id')->constrained()->cascadeOnDelete();
+            $table->string('visibility');
+            // The generated name is 67 characters; MySQL allows 64.
+            $table->unique(['project_id', 'persona_attribute_id'], 'project_attribute_visibility_unique');
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('project_attribute_visibility');
         Schema::dropIfExists('expert_persona_attribute');
         Schema::dropIfExists('persona_attributes');
     }

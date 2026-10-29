@@ -26,12 +26,14 @@ class QuestionEditorTest extends TestCase
         app()->setLocale('en');
     }
 
-    private function spokenRun(User $user): Project
+    private function spokenRun(User $user, int $turns = 1): Project
     {
         $project = Project::factory()->create(['user_id' => $user->id, 'title' => 'School | with status | 60']);
         $expert = Expert::factory()->create(['name' => 'Alex Brandt']);
         $project->addContributingExpert($expert);
-        JobLog::create(['job_class' => 'x', 'project_id' => $project->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => 1, 'expert_id' => $expert->id, 'words' => 12]);
+        foreach (range(1, $turns) as $turn) {
+            JobLog::create(['job_class' => 'x', 'project_id' => $project->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => $turn, 'expert_id' => $expert->id, 'words' => 12]);
+        }
 
         return $project;
     }
@@ -344,21 +346,7 @@ class QuestionEditorTest extends TestCase
         $this->assertSame(['from' => 5, 'to' => 5], $question->fresh()->definition['turns']);
     }
 
-    public function test_a_turn_bound_beyond_the_shortest_run_is_stored_as_that_run(): void
-    {
-        $user = User::factory()->create();
-        $this->actingAs($user);
-        $this->spokenRun($user);
-        $question = $user->questions()->create([]);
-
-        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
-            ->set('definition.turns.to', '99')
-            ->assertSet('definition.turns.to', 1);
-
-        $this->assertSame(1, $question->fresh()->definition['turns']['to']);
-    }
-
-    public function test_a_first_turn_beyond_the_shortest_run_is_clamped_too(): void
+    public function test_a_first_turn_beyond_the_shortest_run_is_kept_as_typed_too(): void
     {
         $user = User::factory()->create();
         $this->actingAs($user);
@@ -369,10 +357,9 @@ class QuestionEditorTest extends TestCase
 
         Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->set('definition.turns.from', '50')
-            ->assertSet('definition.turns.from', 2)
-            ->assertSet('definition.turns.to', 2);
+            ->assertSet('definition.turns.from', 50);
 
-        $this->assertSame(['from' => 2, 'to' => 2], $question->fresh()->definition['turns']);
+        $this->assertSame(50, $question->fresh()->definition['turns']['from']);
     }
 
     public function test_a_template_never_saves_a_turn_bound(): void
@@ -399,6 +386,93 @@ class QuestionEditorTest extends TestCase
         Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
             ->assertSee('over turns 1 to 1')
             ->assertDontSee('The upper bound is at most the shortest selected run', false);
+    }
+
+    public function test_a_window_cut_to_the_shortest_run_says_so_with_the_number_only(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $this->spokenRun($user);
+        $this->spokenRun($user, 3);
+        $question = $user->questions()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertSeeHtml('data-turns-capped')
+            ->assertSee('Cut to 1 turn: the shortest run has 1.')
+            ->assertDontSee('the shortest selected run');
+    }
+
+    public function test_runs_of_equal_length_are_not_cut_and_say_nothing(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $this->spokenRun($user, 3);
+        $this->spokenRun($user, 3);
+        $question = $user->questions()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertDontSeeHtml('data-turns-capped');
+    }
+
+    public function test_a_turn_bound_beyond_the_shortest_run_is_kept_as_typed_and_cut_with_a_warning(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $this->spokenRun($user);
+        $question = $user->questions()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->set('definition.turns.to', 60)
+            ->assertSet('definition.turns.to', 60)
+            ->assertSeeHtml('data-turns-capped')
+            ->assertSeeHtml('data-flux-callout')
+            ->assertSee('Cut to 1 turn: the shortest run has 1.');
+
+        $this->assertSame(60, $question->fresh()->definition['turns']['to']);
+    }
+
+    public function test_the_turn_popover_explains_empty_and_resets_both_fields(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $run = $this->spokenRun($user);
+        $expert = $run->contributingExperts()->first();
+        JobLog::create(['job_class' => 'x', 'project_id' => $run->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => 2, 'expert_id' => $expert->id, 'words' => 12]);
+        $question = $user->questions()->create(['definition' => ['turns' => ['from' => 2, 'to' => 2]]]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertSee('Leave blank to use the whole run.')
+            ->call('resetTurns')
+            ->assertSet('definition.turns.from', null)
+            ->assertSet('definition.turns.to', null);
+
+        $this->assertSame(['from' => null, 'to' => null], $question->fresh()->definition['turns']);
+    }
+
+    public function test_a_template_cannot_reset_its_turn_window(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $template = $user->questions()->create(['is_template' => true, 'definition' => ['turns' => ['from' => 2, 'to' => 5]]]);
+
+        $before = $template->fresh()->definition;
+        Livewire::test(QuestionEditor::class, ['questionId' => $template->id])->call('resetTurns');
+
+        $this->assertSame($before, $template->fresh()->definition);
+    }
+
+    public function test_the_saved_notice_follows_a_real_save_and_not_the_opening(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $question = $user->questions()->create([]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertNotDispatched('question-saved')
+            ->assertSeeHtml('x-show="saved"')
+            ->assertSeeHtml("\$wire.on('question-saved'")
+            ->set('definition.metric', 'word_share')
+            ->assertDispatched('question-saved');
     }
 
     public function test_the_turn_fields_show_the_effective_window_as_placeholders(): void
@@ -745,6 +819,30 @@ class QuestionEditorTest extends TestCase
             ->assertSee('seat 3')
             ->set('definition.form', 'trajectory')
             ->assertSeeHtml('curves-row-');
+    }
+
+    public function test_a_row_of_more_than_three_cards_becomes_a_carousel_and_three_stay_a_grid(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $seat = TagCategory::create(['scope' => TagScope::Project, 'name' => 'seat test']);
+
+        foreach (range(1, 3) as $position) {
+            $this->spokenRun($user)->setTag($seat, $seat->values()->create(['name' => "seat {$position}", 'position' => $position]));
+        }
+        $question = $user->questions()->create(['definition' => ['split_by' => ['pipeline', "project_tag:{$seat->id}"]]]);
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertSeeHtml('--columns: 3')
+            ->assertDontSeeHtml('data-panel-carousel');
+
+        $this->spokenRun($user)->setTag($seat, $seat->values()->create(['name' => 'seat 4', 'position' => 4]));
+
+        Livewire::test(QuestionEditor::class, ['questionId' => $question->id])
+            ->assertSeeHtml('--columns: 4')
+            ->assertSeeHtml('data-panel-carousel')
+            ->assertSeeHtml('data-flux-carousel-slide')
+            ->assertSee('seat 4');
     }
 
     public function test_the_split_menu_takes_two_dimensions_and_names_both(): void

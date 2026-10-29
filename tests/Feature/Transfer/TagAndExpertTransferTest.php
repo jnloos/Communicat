@@ -39,7 +39,7 @@ class TagAndExpertTransferTest extends TestCase
     {
         $category = TagCategory::create(['scope' => TagScope::Persona, 'name' => 'title-holder']);
         $value = $category->values()->create(['name' => 'true']);
-        $expert = Expert::factory()->create(['name' => 'Alex Brandt', 'role' => 'CEO']);
+        $expert = Expert::factory()->withRole('CEO')->create(['name' => 'Alex Brandt']);
         $expert->setTag($category, $value);
         $data = (new ExpertTransfer)->export($expert);
         $expert->delete();
@@ -49,7 +49,7 @@ class TagAndExpertTransferTest extends TestCase
 
         $copy = Expert::where('uuid', $data['uuid'])->sole();
         $this->assertSame($data['id'], $copy->id);
-        $this->assertSame('CEO', $copy->role);
+        $this->assertSame('CEO', $copy->personaAttributes->sole()->pivot->value);
         $this->assertSame(['title-holder' => 'true'], $data['tags']);
         $this->assertTrue($copy->tagValues()->whereKey($value->id)->exists());
         $this->assertSame(1, $report->count(ImportReport::EXPERTS, ImportReport::CREATED));
@@ -74,10 +74,10 @@ class TagAndExpertTransferTest extends TestCase
 
     public function test_skipping_an_existing_expert_leaves_it_untouched(): void
     {
-        $expert = Expert::factory()->create(['name' => 'Alex Brandt', 'role' => 'CEO']);
+        $expert = Expert::factory()->withRole('CEO')->create(['name' => 'Alex Brandt']);
         $data = (new ExpertTransfer)->export($expert);
         $data['name'] = 'Changed';
-        $data['role'] = 'Intern';
+        $data['attributes'] = ['Role' => 'Intern'];
         $report = new ImportReport;
 
         (new ExpertTransfer)->import($data, $report);
@@ -85,7 +85,7 @@ class TagAndExpertTransferTest extends TestCase
         $this->assertSame(1, $report->count(ImportReport::EXPERTS, ImportReport::SKIPPED));
         $expert->refresh();
         $this->assertSame('Alex Brandt', $expert->name);
-        $this->assertSame('CEO', $expert->role);
+        $this->assertSame('CEO', $expert->personaAttributes->sole()->pivot->value);
     }
 
     public function test_tag_names_match_ignoring_case_and_surrounding_space(): void

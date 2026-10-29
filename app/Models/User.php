@@ -64,14 +64,14 @@ class User extends Authenticatable
     }
 
     /**
-     * This user's sidebar drawers. Ordered by position first so a future
-     * reordering UI has something to write to; the name only breaks ties.
+     * This user's sidebar drawers in the order they were arranged (the id only
+     * breaks ties, as in HasPosition::moveTo(), so a dragged index and this list agree).
      */
     public function projectGroups(): HasMany
     {
         return $this->hasMany(ProjectGroup::class)
             ->orderBy('position')
-            ->orderBy('name');
+            ->orderBy('id');
     }
 
     public function ownedProjects(): HasMany

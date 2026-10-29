@@ -265,3 +265,33 @@ select:focus[data-flux-control] {
 @supports not selector(::-webkit-scrollbar) {
     [data-project-list] { scrollbar-width: thin; }
 }
+
+/* Resizable sidebar (components/sidebar-resize-handle). Flux sets the width with
+   a zero-specificity `w-64` (16rem) and no variable, so on desktop this rule
+   overrides it from outside. --sidebar-min is that 16rem, the width before
+   dragging existed; --sidebar-max is half the window, so the content keeps at
+   least as much room as the sidebar. --sidebar-width is set on <html> by the
+   handle and, before first paint, by partials/sidebar-width; --sidebar-current is
+   the clamped result that the sidebar and the handle position both read. Below lg
+   the sidebar is an overlay and keeps Flux's own width. */
+:root {
+    --sidebar-min: 16rem;
+    --sidebar-max: 50vw;
+    --sidebar-current: min(max(var(--sidebar-width, var(--sidebar-min)), var(--sidebar-min)), var(--sidebar-max));
+}
+
+@media (min-width: 1024px) {
+    [data-flux-sidebar]:not([data-flux-sidebar-collapsed-desktop]) {
+        width: var(--sidebar-current);
+    }
+
+    [data-flux-sidebar][data-flux-sidebar-collapsed-desktop] [data-sidebar-resize-handle] {
+        display: none;
+    }
+}
+
+html[data-sidebar-resizing],
+html[data-sidebar-resizing] * {
+    cursor: col-resize !important;
+    user-select: none !important;
+}

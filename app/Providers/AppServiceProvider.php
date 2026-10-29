@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Discussion\Logging\GuardAgainstFailover;
+use App\Discussion\Logging\GuardAgainstModelDrift;
 use App\Discussion\Logging\RecordPromptLog;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Livewire\Synthesizers\DefaultingEnumSynth;
@@ -34,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(StepCompleted::class, [RecordPromptLog::class, 'whenCompleted']);
         Event::listen(StepFailed::class, [RecordPromptLog::class, 'whenStepFailed']);
         Event::listen(AgentFailed::class, [RecordPromptLog::class, 'whenAgentFailed']);
+
+        Event::listen(StepCompleted::class, [GuardAgainstModelDrift::class, 'handle']);
 
         // AgentFailedOver extends ProviderFailedOver, but Laravel's dispatcher does not
         // walk parent classes — both have to be named for either one to be heard.

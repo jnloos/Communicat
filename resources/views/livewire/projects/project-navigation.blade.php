@@ -53,6 +53,17 @@
          Flux's my-px on each header already gives them the rhythm of the nav
          items above. Only the ungrouped block is set apart, as its own section. --}}
     <div class="flex flex-col">
+        {{-- The groups sort among themselves by dragging their header (wire:sort);
+             the ungrouped block below is outside this container, so a group can
+             never be dropped under it. Only while no filter hides drawers: the
+             dragged index would not point into the user's full list (see
+             ProjectNavigation::sortGroup()). The key makes the container a new
+             element when that switches, so Alpine starts or stops the sorting.
+             The handle is the header button, passed as Sortable config, since
+             flux:sidebar.group has no slot to put a wire:sort:handle in; a
+             click on it still folds the drawer, only a drag moves it. --}}
+        <div class="flex flex-col" wire:key="nav-groups-{{ $sortable ? 'sortable' : 'fixed' }}"
+            @if ($sortable) wire:sort="sortGroup" wire:sort:config="{ handle: 'ui-disclosure > button', delay: 200, delayOnTouchOnly: true }" @endif>
         @foreach ($groups as $group)
             {{-- Flux's expandable sidebar.group brings the chevron and the
                  disclosure, but has no slot beside its heading, so the group's menu
@@ -70,7 +81,8 @@
                  found. Flux keeps a disclosure's open state across a morph, so
                  the filter state is part of the key: switching it on or off
                  rebuilds the group with the new default. --}}
-            <div class="group/navgroup relative" wire:key="nav-group-{{ $group->id }}-{{ $activeFilterCount > 0 ? 'filtered' : 'all' }}">
+            <div class="group/navgroup relative" wire:key="nav-group-{{ $group->id }}-{{ $activeFilterCount > 0 ? 'filtered' : 'all' }}"
+                @if ($sortable) wire:sort:item="{{ $group->id }}" @endif>
                 <flux:sidebar.group
                     expandable
                     :expanded="$activeFilterCount > 0 || $grouped[$group->id]->contains('id', $currentProjectId)"
@@ -94,11 +106,17 @@
                      up while the pointer is three rows down on a project — which
                      has a menu of its own. The button sits over the header and
                      takes its own hover, hence the second condition. --}}
-                <div class="absolute end-1 top-0 flex h-8 items-center opacity-0 transition-opacity hover:opacity-100 has-[:focus-visible]:opacity-100 group-has-[>ui-disclosure>button:hover]/navgroup:opacity-100 has-[[data-open]]:opacity-100">
+                <div wire:sort:ignore class="absolute end-1 top-0 flex h-8 items-center opacity-0 transition-opacity hover:opacity-100 has-[:focus-visible]:opacity-100 group-has-[>ui-disclosure>button:hover]/navgroup:opacity-100 has-[[data-open]]:opacity-100">
                     <flux:dropdown position="bottom" align="start">
                         <x-more-button :label="__('groups.menus.group')" />
 
                         <flux:menu>
+                            @if ($sortable)
+                                <x-statistics.move-items :action="'moveGroup('.$group->id.', %d)'" :first="$loop->first" :last="$loop->last" />
+
+                                <flux:menu.separator />
+                            @endif
+
                             <flux:menu.item icon="pencil-square" wire:click="$dispatchTo('projects.project-group-dialogs', 'rename-group', { group: {{ $group->id }} })">
                                 {{ __('groups.actions.rename') }}
                             </flux:menu.item>
@@ -111,6 +129,7 @@
                 </div>
             </div>
         @endforeach
+        </div>
 
         @if ($ungrouped->isNotEmpty())
             <flux:sidebar.group :heading="__('groups.ungrouped')" @class(['mt-4' => $groups->isNotEmpty()])>

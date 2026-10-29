@@ -5,7 +5,6 @@ namespace Tests\Unit\Discussion;
 use App\Discussion\Metrics\Questions\DimensionValues;
 use App\Discussion\Metrics\Questions\QuestionNormaliser;
 use App\Discussion\Values\QuestionDefinition;
-use App\Discussion\Values\TurnRange;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
@@ -78,32 +77,6 @@ class QuestionNormaliserTest extends TestCase
         $definition = $this->normaliser()->withBaseline($user, QuestionDefinition::fromArray(['compare_by' => "persona_tag:{$category->id}"]));
 
         $this->assertSame(DimensionValues::NONE, $definition->baseline);
-    }
-
-    public function test_bounds_beyond_the_shortest_run_become_that_run(): void
-    {
-        $user = User::factory()->create();
-        $this->runWithTurns($user, 3);
-        $this->runWithTurns($user, 5);
-
-        $capped = $this->normaliser()->withinShortestRun($user, QuestionDefinition::fromArray(['turns' => ['from' => 9, 'to' => 99]]));
-        $openEnded = $this->normaliser()->withinShortestRun($user, QuestionDefinition::fromArray(['turns' => ['from' => 4]]));
-
-        $this->assertEquals(new TurnRange(3, 3), $capped->turns);
-        $this->assertEquals(new TurnRange(3, 3), $openEnded->turns);
-    }
-
-    public function test_a_window_inside_the_shortest_run_and_a_question_without_runs_stay_as_they_are(): void
-    {
-        $user = User::factory()->create();
-        $inside = QuestionDefinition::fromArray(['turns' => ['from' => 2, 'to' => 9]]);
-
-        $this->assertSame($inside, $this->normaliser()->withinShortestRun($user, $inside));
-
-        $this->runWithTurns($user, 3);
-        $within = QuestionDefinition::fromArray(['turns' => ['from' => 2, 'to' => 3]]);
-
-        $this->assertSame($within, $this->normaliser()->withinShortestRun($user, $within));
     }
 
     public function test_deleted_tag_values_are_dropped_and_counted_but_a_category_never_empties(): void

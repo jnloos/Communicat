@@ -8,6 +8,7 @@ use App\Discussion\Values\Thought;
 use App\Models\Expert;
 use App\Models\Message;
 use App\Models\Project;
+use LogicException;
 
 /**
  * The one carrier every pipeline sends through its stages. Stages write their
@@ -22,6 +23,9 @@ class TurnPayload
 
     /** @var array<int, Thought> expert id → thought */
     private array $thoughts = [];
+
+    /** @var array<string, mixed> signals a stage before the selector adds to job_logs.selection */
+    private array $selectionSignals = [];
 
     private ?Selection $selection = null;
 
@@ -49,6 +53,38 @@ class TurnPayload
     public function thoughtOf(Expert $expert): ?Thought
     {
         return $this->thoughts[$expert->id] ?? null;
+    }
+
+    /**
+     * For a stage that decides part of what the selector will read (Jev's bids)
+     * and so owns the record of it. SelectSpeaker merges these into the selection,
+     * so they must be added before it runs, and under keys no other stage or the
+     * selector uses.
+     *
+     * @param  array<string, mixed>  $signals
+     *
+     * @throws LateSelectionSignals when the selection has been made already
+     * @throws LogicException when a key was added before
+     */
+    public function addSelectionSignals(array $signals): void
+    {
+        if ($this->selection !== null) {
+            throw new LateSelectionSignals('The speaker is selected already; selection signals added now would never be recorded. Put the stage that adds them before SelectSpeaker.');
+        }
+
+        $clash = array_keys(array_intersect_key($this->selectionSignals, $signals));
+
+        if ($clash !== []) {
+            throw new LogicException(sprintf('Two stages added the selection signal(s) [%s].', implode(', ', $clash)));
+        }
+
+        $this->selectionSignals += $signals;
+    }
+
+    /** @return array<string, mixed> */
+    public function selectionSignals(): array
+    {
+        return $this->selectionSignals;
     }
 
     public function select(Selection $selection): void

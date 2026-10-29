@@ -4,6 +4,7 @@ namespace App\Livewire\Settings;
 
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\PersonaAttribute;
+use App\Services\Tags\TagNames;
 use Closure;
 use Flux\Flux;
 use Illuminate\Support\Facades\Gate;
@@ -15,6 +16,12 @@ use Livewire\Component;
  * (origin, gender, …) with the two sentence templates that turn a value into
  * prompt text. Admins only, checked in boot() so it covers every request, not
  * just the first one the route middleware sees.
+ *
+ * The Role definition is part of the study's manipulation (title or none) and is
+ * referenced by name in code, bundles and runs, so it can be neither renamed nor
+ * deleted here. Its two templates stay editable: they are frozen into a run's
+ * run_config at its first turn, so a changed wording touches no run that has
+ * started, and `:value` is required like for every other definition.
  */
 class Attributes extends Component
 {
@@ -81,6 +88,12 @@ class Attributes extends Component
             'rosterTemplate' => __('attributes.fields.roster_template'),
         ]);
 
+        if ($this->editingIsRole() && ! TagNames::same($this->name, PersonaAttribute::ROLE)) {
+            $this->addError('name', __('attributes.errors.role_locked'));
+
+            return;
+        }
+
         $fields = ['name' => $this->name, 'self_template' => $this->selfTemplate, 'roster_template' => $this->rosterTemplate];
 
         if ($this->editingId === null) {
@@ -96,6 +109,7 @@ class Attributes extends Component
     public function confirmDelete(int $attributeId): void
     {
         $attribute = PersonaAttribute::withCount('experts')->findOrFail($attributeId);
+        $this->refuseRoleDeletion($attribute);
 
         $this->confirmTitle = __('attributes.confirm.title');
         $this->confirmLabel = __('attributes.confirm.action');
@@ -111,7 +125,22 @@ class Attributes extends Component
     {
         Gate::authorize('admin');
 
-        PersonaAttribute::findOrFail($attributeId)->delete();
+        $attribute = PersonaAttribute::findOrFail($attributeId);
+        $this->refuseRoleDeletion($attribute);
+
+        $attribute->delete();
+    }
+
+    /** Answered 403 whatever the client sends: the UI offers no delete for the Role, so this is never a normal path. */
+    private function refuseRoleDeletion(PersonaAttribute $attribute): void
+    {
+        abort_if($attribute->isRole(), 403, __('attributes.errors.role_locked'));
+    }
+
+    /** Whether the dialog edits the Role definition (read by the view to lock the name field). */
+    public function editingIsRole(): bool
+    {
+        return $this->editingId !== null && PersonaAttribute::find($this->editingId)?->isRole() === true;
     }
 
     /** wire:sort hands over the item key and its new 0-based position. */

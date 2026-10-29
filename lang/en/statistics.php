@@ -17,6 +17,7 @@ return [
     'words_total' => '{0}no words|{1}1 word in total|[2,*]:count words in total',
 
     'gini' => 'Gini',
+    'gini_title' => '{1}Gini :gini (0 = equal, max :max with 1 person)|[0,*]Gini :gini (0 = equal, max :max with :count people)',
 
     'trajectory' => [
         'title' => 'Over the course of the run',
@@ -34,9 +35,9 @@ return [
     'columns' => [
         'participant' => 'Participant',
         'turns' => 'Turns',
-        'turn_share' => 'Share',
+        'turn_share' => 'Turn share',
         'words' => 'Words',
-        'word_share' => 'Share',
+        'word_share' => 'Word share',
         'words_per_turn' => 'Avg words',
     ],
 ];

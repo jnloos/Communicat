@@ -47,6 +47,12 @@ class EditProject extends Component
     #[On('edit_project')]
     public function select(): void
     {
+        // Every opening starts from what is saved: edits dropped with "Discard" must not come back.
+        $project = Project::findOrFail($this->forProjectId);
+        $this->form->fillFrom($project);
+        $this->tagSelection = $project->tagSelection();
+        $this->resetValidation();
+
         Flux::modal('edit-project')->show();
     }
 
@@ -64,6 +70,7 @@ class EditProject extends Component
         // One transaction, so a forged tag value leaves the project as it was.
         DB::transaction(function () use ($project) {
             $project->save();
+            $project->setAttributeVisibilities($this->form->attributeLevels());
             $project->syncTags($this->tagSelection);
         });
 
@@ -77,7 +84,10 @@ class EditProject extends Component
      */
     private function refuseVisibilityChangeAfterStart(Project $project): void
     {
-        if ($project->run_config !== null && $this->form->attributeVisibility !== $project->attribute_visibility) {
+        $saved = array_map(fn ($level) => $level->value, $project->attributeVisibilities());
+        $changed = array_diff_assoc($this->form->attributeVisibility, $saved) !== [];
+
+        if ($project->run_config !== null && $changed) {
             $this->form->attributesOpen = true;
 
             throw ValidationException::withMessages([
@@ -142,6 +152,18 @@ class EditProject extends Component
         $project->run_config = $snapshot;
     }
 
+    /** The same texts as the sidebar's delete (groups.confirm.delete_project). */
+    public function confirmDelete(): void
+    {
+        $project = Project::findOrFail($this->forProjectId);
+        Gate::authorize('delete', $project);
+
+        $this->confirmTitle = __('groups.confirm.delete_project.title');
+        $this->confirmLabel = __('groups.confirm.delete_project.action');
+        $this->confirmMessage = __('groups.confirm.delete_project.message', ['name' => $project->title]);
+        $this->needsConfirmation('delete');
+    }
+
     public function delete(): void
     {
         $project = Project::findOrFail($this->forProjectId);
@@ -157,7 +179,7 @@ class EditProject extends Component
             'pipelines' => app(PipelineRegistry::class)->options(),
             'providers' => ModelConfig::providers(),
             'models' => ModelConfig::optionsFor($this->form->provider),
-            'attributeCount' => PersonaAttribute::count(),
+            'definitions' => PersonaAttribute::ordered()->pluck('name', 'id')->all(),
             'tagCategories' => TagCategory::ofScope(TagScope::Project)->with('values')->get(),
             'chosenTags' => TagValue::chosenIn(TagScope::Project, $this->tagSelection),
             'savedTags' => Project::findOrFail($this->forProjectId)->tagValues()->with('category')->get(),

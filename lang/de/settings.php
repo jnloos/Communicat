@@ -62,5 +62,10 @@ return [
         'edit' => 'Nutzer bearbeiten',
         'password_keep' => 'Passwort (leer lassen, um es beizubehalten)',
         'administrator' => 'Administrator',
+        'confirm' => [
+            'title' => 'Nutzer löschen?',
+            'action' => 'Nutzer löschen',
+            'message' => 'Der Nutzer „:name“ (:email) wird gelöscht. Das lässt sich nicht rückgängig machen.',
+        ],
     ],
 ];

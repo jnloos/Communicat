@@ -40,7 +40,7 @@
                                 class="text-red-600! dark:text-red-400!"
                                 :tooltip="__('common.actions.delete')"
                                 :aria-label="__('common.actions.delete')"
-                                wire:click="needsConfirmation('delete', {{ $user->id }})"
+                                wire:click="confirmDelete({{ $user->id }})"
                                 :disabled="$user->id === auth()->id()"
                             />
                         </div>

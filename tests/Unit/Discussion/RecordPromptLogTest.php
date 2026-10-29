@@ -54,6 +54,8 @@ class RecordPromptLogTest extends TestCase
         $this->assertNull($row->error);
         $this->assertSame('probe-model', $row->model);
         $this->assertSame('probe-model-001', $row->checkpoint);
+        $this->assertSame('probe-model-001', $row->model_served);
+        $this->assertNull($row->tokens_cached, 'not reported is NULL, never 0');
         $this->assertSame(11, $row->tokens_in);
         $this->assertSame(22, $row->tokens_out);
         $this->assertSame(3, $row->tokens_reasoning);
@@ -90,6 +92,8 @@ class RecordPromptLogTest extends TestCase
         $this->assertSame('', $row->response);
         $this->assertNull($row->tokens_in);
         $this->assertNull($row->tokens_reasoning);
+        $this->assertNull($row->tokens_cached);
+        $this->assertNull($row->model_served);
         $this->assertSame('speak', $row->label);
     }
 

@@ -11,4 +11,10 @@ final readonly class Thought
         public ?int $priority = null,
         public ?string $proposal = null,
     ) {}
+
+    /** The same thought with another bid (the Jev bidder replaces the agent's own). */
+    public function withPriority(?int $priority): self
+    {
+        return new self($this->expertId, $this->text, $priority, $this->proposal);
+    }
 }

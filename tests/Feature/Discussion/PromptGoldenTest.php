@@ -15,10 +15,12 @@ use Tests\TestCase;
 use Throwable;
 
 /**
- * The prompts of the study must not move when attributes are off. The files in
- * tests/Fixtures/prompts are the output of the views of the commit before the
- * attributes feature (rendered from `git show`, for the fixed project of
- * PromptFixtures); this renders the current views and compares byte for byte.
+ * The prompts of the study must not move. The files in tests/Fixtures/prompts are
+ * the output of the views of the commit before the attributes feature, when the
+ * role was a fixed line (rendered from `git show`, for the fixed project of
+ * PromptFixtures). The role is now the Role attribute, so the same text appears
+ * with visibility `all` and only Role defined; with `own` the role is a self line
+ * only, with `none` it is gone.
  */
 class PromptGoldenTest extends TestCase
 {
@@ -29,7 +31,7 @@ class PromptGoldenTest extends TestCase
         return File::get(base_path("tests/Fixtures/prompts/{$name}.txt"));
     }
 
-    public function test_with_visibility_none_every_prompt_equals_the_pre_feature_text(): void
+    public function test_with_visibility_all_and_only_the_role_every_prompt_equals_the_pre_feature_text(): void
     {
         $rendered = $this->renderFixturePrompts($this->fixtureProject());
 
@@ -39,20 +41,43 @@ class PromptGoldenTest extends TestCase
         }
     }
 
-    public function test_with_attributes_defined_and_valued_but_visibility_none_the_prompts_stay_the_same(): void
+    public function test_with_visibility_none_the_role_appears_in_no_prompt(): void
     {
-        $project = $this->fixtureProject();
+        $rendered = $this->renderFixturePrompts($this->fixtureProject(AttributeVisibility::None));
+
+        foreach ($rendered as $name => $text) {
+            foreach (['Student', 'Teacher', 'Parent', 'Your role is'] as $role) {
+                $this->assertStringNotContainsString($role, $text, "{$name}: {$role}");
+            }
+        }
+    }
+
+    public function test_with_visibility_own_the_role_is_a_self_line_and_not_in_the_roster(): void
+    {
+        $rendered = $this->renderFixturePrompts($this->fixtureProject(AttributeVisibility::Own));
+
+        $this->assertStringContainsString("Your role is Student.\n", $rendered['speak']);
+        $this->assertStringContainsString('Your role is Student.', $rendered['think.speaker']);
+        foreach ($rendered as $name => $text) {
+            foreach (['(Student)', '(Teacher)', '(Parent)'] as $roster) {
+                $this->assertStringNotContainsString($roster, $text, "{$name}: {$roster}");
+            }
+        }
+        foreach (['select.orchestrator', 'select.judge'] as $name) {
+            $this->assertStringNotContainsString('Teacher', $rendered[$name], $name);
+        }
+    }
+
+    public function test_with_attributes_defined_and_valued_but_visibility_none_the_other_attributes_stay_out(): void
+    {
+        $project = $this->fixtureProject(AttributeVisibility::None);
+        $before = $this->renderFixturePrompts($project);
         $gender = PersonaAttribute::factory()->create(['name' => 'gender', 'self_template' => 'You are a :value.', 'roster_template' => ':value']);
-        $origin = PersonaAttribute::factory()->create(['name' => 'origin', 'self_template' => 'You grew up in :value.', 'roster_template' => 'from :value']);
         foreach ($project->contributingExperts() as $expert) {
             $expert->setAttributeValue($gender, 'woman');
-            $expert->setAttributeValue($origin, 'Owerri, Nigeria');
         }
 
-        $this->assertSame(AttributeVisibility::None, $project->attribute_visibility);
-        foreach ($this->renderFixturePrompts($project->fresh()) as $name => $text) {
-            $this->assertSame($this->fixture($name), $text, $name);
-        }
+        $this->assertSame($before, $this->renderFixturePrompts($project->fresh()));
     }
 
     /**
@@ -62,10 +87,10 @@ class PromptGoldenTest extends TestCase
     public function test_every_template_with_a_persona_or_participants_partial_shows_the_attribute_at_all(): void
     {
         $project = $this->fixtureProject();
-        $project->update(['attribute_visibility' => AttributeVisibility::All]);
-        $project = $project->fresh();
         $alice = Expert::findOrFail(11);
         $alice->setAttributeValue(PersonaAttribute::factory()->create(['name' => 'origin', 'self_template' => 'SELF-MARK :value.', 'roster_template' => 'ROSTER-MARK :value']), 'Owerri');
+        $this->revealAll($project, AttributeVisibility::All);
+        $project = $project->fresh();
         $data = ['expert' => $alice->fresh()] + $this->promptData($project);
 
         $root = resource_path('views/prompts');
@@ -86,8 +111,16 @@ class PromptGoldenTest extends TestCase
             $checked[] = $relative;
         }
 
-        // The two partials themselves hold no include; the six prompts of the study do.
-        $this->assertEqualsCanonicalizing(['speak', 'think.speaker', 'think.prioritize', 'think.propose', 'select.orchestrator', 'select.judge'], $checked);
+        // The two partials themselves hold no include. The prompts of the study reach them either directly or
+        // through a shared state view (think/prioritize-state, select/orchestrator-state, select/judge-state),
+        // which the team prompts and the states Jev reads both include; the blind judge has neither, by design.
+        $this->assertEqualsCanonicalizing(['speak', 'think.speaker', 'think.propose', 'think.prioritize-state', 'select.orchestrator-state', 'select.judge-state'], $checked);
+
+        // ...so everything built on those states shows the attribute as well, Jev's views included.
+        foreach (['think.prioritize', 'select.orchestrator', 'select.judge', 'jev.bid', 'jev.orchestrator', 'jev.judge'] as $view) {
+            $text = app(PromptRenderer::class)->render('prompts.'.$view, $data);
+            $this->assertStringContainsString('(Student, ROSTER-MARK Owerri)', $text, $view);
+        }
     }
 
     public function test_a_partial_rendered_without_its_project_fails_instead_of_dropping_the_attributes(): void

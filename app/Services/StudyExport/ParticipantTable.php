@@ -19,7 +19,7 @@ use Illuminate\Support\Collection;
 final class ParticipantTable
 {
     /** The columns before the persona tag columns, and those after them. */
-    private const HEAD = ['run_uuid', 'expert_uuid', 'expert_token', 'name', 'role', 'seat'];
+    private const HEAD = ['run_uuid', 'expert_uuid', 'expert_token', 'name', 'seat'];
 
     private const TAIL = ['turns', 'turn_share', 'words', 'word_share', 'words_per_turn'];
 
@@ -80,7 +80,6 @@ final class ParticipantTable
             'expert_uuid' => $expert->uuid,
             'expert_token' => $expert->promptId,
             'name' => $expert->name,
-            'role' => $expert->role,
             'seat' => $share->seat,
         ] + $this->tags->cells($expert->tagValues) + $this->attributes->cells($expert) + [
             'turns' => $share->turns,

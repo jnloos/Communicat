@@ -45,11 +45,13 @@ class RecordPromptLog
 
         $this->write($event->agent, $prompt, [
             'checkpoint' => $event->response->meta->model,
+            'model_served' => $this->servedModel($event->agent, $event->response->meta->model),
             'response' => $event->response->text,
             'reasoning' => $event->response->reasoning,
             'tokens_in' => $event->response->usage->inputTokens,
             'tokens_out' => $event->response->usage->outputTokens,
             'tokens_reasoning' => $event->response->usage->reasoningTokens,
+            'tokens_cached' => $event->response->usage->cacheReadInputTokens,
             'latency_ms' => (int) $event->time,
             'status' => $rejection === null ? CallStatus::Ok : CallStatus::Failed,
             'error' => $rejection,
@@ -90,6 +92,12 @@ class RecordPromptLog
             'status' => CallStatus::Failed,
             'error' => $this->describe($event->exception),
         ]);
+    }
+
+    /** Only where the response names the answering model; NULL (not reported) elsewhere, never the echoed request. */
+    private function servedModel(StudyAgent $agent, ?string $named): ?string
+    {
+        return $agent->model->reportsServedModel() && filled($named) ? $named : null;
     }
 
     private function take(string $invocationId): ?string

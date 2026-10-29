@@ -28,35 +28,33 @@ return [
         'provider' => 'Provider',
         'provider_help' => 'Determines which models you can choose from. Only the model is stored.',
         'pipeline' => 'Pipeline',
-        'pipeline_help' => 'Determines how the next speaker is chosen.',
         'model' => 'Model',
         'model_help' => 'Every agent in this project runs on this one model.',
         'summarize_threshold' => 'Summarization threshold',
         'summarize_threshold_help' => 'Once this many messages are still unsummarized, the summarization runs.',
         'summarize_oldest' => 'Messages to summarize',
         'summarize_oldest_help' => 'That many of the oldest messages then move into the long-term memory; it must be smaller than the threshold.',
-        'attribute_visibility' => 'What the prompts say about attributes',
-        'attribute_visibility_help' => 'What the prompts reveal of the personas\' attributes. Fixed once the first turn has run.',
         'attribute_visibility_locked' => 'The discussion has already started: the attribute visibility can no longer be changed.',
         'run_started_help' => 'The discussion has already started. A change is recorded in the run_config snapshot with the turn number.',
     ],
 
     'attribute_visibility' => [
-        'none' => ['label' => 'No attributes in the prompt', 'description' => 'The agents only see names and roles.'],
-        'own' => ['label' => 'Only the persona itself', 'description' => 'Each persona reads its own attributes (e.g. “You are a woman.”). Nobody else sees them.'],
-        'all' => ['label' => 'All participants see everyone\'s attributes', 'description' => 'In addition, the participants list shows them behind each role (e.g. “Anna Brandt (Student, woman)”). The orchestrator and the judge read that list too; the blind judge never does.'],
+        'none' => 'Not shown',
+        'own' => 'Only itself',
+        'all' => 'Everyone',
     ],
 
     'attributes' => [
+        'shown_to' => ':name: shown to',
+        'intro' => 'What the prompts reveal of each attribute.',
         'none_defined' => 'No attributes are defined yet. Admins define them under :link.',
         'settings_link' => 'Settings → Attributes',
-        'count' => '{1}1 attribute is defined.|[2,*]:count attributes are defined.',
     ],
 
     'create' => [
         'heading' => 'Create Project',
         'subheading' => 'Set the topic the experts will discuss.',
-        'submit' => 'Start Discussion',
+        'submit' => 'Create project',
     ],
 
     'edit' => [

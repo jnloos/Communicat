@@ -9,14 +9,14 @@
 
 
             <flux:accordion>
-                <x-projects.run-settings :pipelines="$pipelines" :providers="$providers" :models="$models" :attribute-count="$attributeCount" with-help/>
+                <x-projects.run-settings :pipelines="$pipelines" :providers="$providers" :models="$models" :definitions="$definitions" with-help/>
                 @if ($tagCategories->isNotEmpty())
                     <x-tags.project-accordion-item :values="$chosenTags" :categories="$tagCategories" />
                 @endif
             </flux:accordion>
 
             <div class="flex justify-end">
-                <flux:button type="submit" variant="primary" icon="chat-bubble-left-right" class="w-full sm:w-auto">
+                <flux:button type="submit" variant="primary" icon="plus" class="w-full sm:w-auto">
                     {{ __('projects.create.submit') }}
                 </flux:button>
             </div>

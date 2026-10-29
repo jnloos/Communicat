@@ -13,10 +13,16 @@ return [
         'set_contributors' => 'Teilnehmende festlegen',
     ],
 
+    'confirm_leave' => [
+        'title' => 'Projekt verlassen?',
+        'action' => 'Projekt verlassen',
+        'message' => 'Sie verlassen „:name“ und sehen es nicht mehr. Der Besitzer kann Sie wieder einladen.',
+    ],
+
     'loading_older' => 'Ältere Nachrichten werden geladen …',
 
     'message' => [
-        'addressed' => 'Angesprochen:',
+        'addressed' => 'An',
         'show_memory' => 'Gedächtnis anzeigen: :name',
         'open_thoughts' => 'Gedanken öffnen',
     ],

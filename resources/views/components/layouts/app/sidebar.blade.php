@@ -48,6 +48,8 @@
                     </flux:sidebar.item>
                 </form>
             </flux:sidebar.nav>
+
+            <x-sidebar-resize-handle />
         </flux:sidebar>
 
         {{-- Mobile Header --}}
@@ -91,6 +93,7 @@
         {{ $slot }}
 
         <x-confirm-modal />
+        <x-discard-modal />
         @fluxScripts
     </body>
 </html>

@@ -1,6 +1,8 @@
 <x-settings.layout :heading="__('attributes.heading')" :subheading="__('attributes.subheading')" wide>
     <flux:callout icon="information-circle" class="mb-6">
-        <flux:callout.text>{{ __('attributes.help') }}</flux:callout.text>
+        <flux:callout.text>
+            <x-link-sentence key="attributes.help" :href="route('settings.tags')" :label="__('tags.heading')" />
+        </flux:callout.text>
     </flux:callout>
 
     @if ($definitions->isEmpty())
@@ -33,8 +35,11 @@
                             <flux:menu.item icon="pencil-square" wire:click="edit({{ $attribute->id }})">{{ __('attributes.actions.edit') }}</flux:menu.item>
                             <flux:menu.separator />
                             <x-statistics.move-items :action="'move('.$attribute->id.', %d)'" :first="$loop->first" :last="$loop->last" />
-                            <flux:menu.separator />
-                            <flux:menu.item variant="danger" icon="trash" wire:click="confirmDelete({{ $attribute->id }})">{{ __('attributes.actions.delete') }}</flux:menu.item>
+                            {{-- The role is part of the study: it can be edited, never renamed or deleted. --}}
+                            @unless ($attribute->isRole())
+                                <flux:menu.separator />
+                                <flux:menu.item variant="danger" icon="trash" wire:click="confirmDelete({{ $attribute->id }})">{{ __('attributes.actions.delete') }}</flux:menu.item>
+                            @endunless
                         </flux:menu>
                     </flux:dropdown>
                 </div>
@@ -51,7 +56,7 @@
                 :subheading="__('attributes.dialog.subheading', ['placeholder' => \App\Models\PersonaAttribute::PLACEHOLDER])"
             />
 
-            <flux:input wire:model.live.blur="name" :label="__('attributes.fields.name')" :placeholder="__('attributes.placeholders.name')" autofocus />
+            <flux:input wire:model.live.blur="name" :label="__('attributes.fields.name')" :placeholder="__('attributes.placeholders.name')" :disabled="$this->editingIsRole()" autofocus />
 
             <flux:input
                 wire:model.live.debounce.300ms="selfTemplate"

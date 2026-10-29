@@ -102,7 +102,7 @@ class SelectContributors extends Component
 
         return view('livewire.projects.select-contributors', [
             'project' => $project,
-            'experts' => Expert::query()->search($this->search)->orderBy('name')->get(),
+            'experts' => Expert::query()->with('personaAttributes')->search($this->search)->orderBy('name')->get(),
             'users' => $users,
             'seatedExpertIds' => array_flip($project->experts()->pluck('experts.id')->all()),
             'invitedUserIds' => array_flip($project->users()->pluck('users.id')->all()),
