@@ -24,7 +24,7 @@
         <flux:table.rows>
             @foreach ($logs as $log)
                 @php($open = $selectedJobId === $log->id)
-                <flux:table.row wire:key="job-{{ $log->id }}" wire:click="selectJob({{ $log->id }})" @class(['cursor-pointer', 'bg-zinc-800/5 dark:bg-white/[7%]' => $open])>
+                <flux:table.row wire:key="job-{{ $log->id }}" wire:click="selectJob({{ $log->id }})" wire:loading.delay.class="opacity-60" wire:target="selectJob({{ $log->id }})" @class(['cursor-pointer', 'bg-zinc-800/5 dark:bg-white/[7%]' => $open])>
                     <flux:table.cell>
                         {{-- The keyboard way in; .stop, or the row's own click would close it again. --}}
                         <flux:button size="xs" variant="ghost" icon="chevron-right" wire:click.stop="selectJob({{ $log->id }})"

@@ -295,3 +295,12 @@ html[data-sidebar-resizing] * {
     cursor: col-resize !important;
     user-select: none !important;
 }
+
+/* Reduced motion: slow spinners and pulses instead of stopping them (a frozen
+   spinner reads as a hang), and drop the skeleton's sweeping shimmer. */
+@media (prefers-reduced-motion: reduce) {
+    .animate-spin { animation-duration: 3s; }
+    .animate-pulse { animation-duration: 4s; }
+    [data-flux-skeleton]::before,
+    [data-flux-skeleton-line]::before { animation: none; }
+}

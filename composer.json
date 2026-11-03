@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "ext-zstd": "*",
         "guzzlehttp/guzzle": "^7.10",
         "laravel/ai": "1.0.*",
         "laravel/framework": "^12.0",

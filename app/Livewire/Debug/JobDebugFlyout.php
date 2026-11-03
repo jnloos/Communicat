@@ -4,7 +4,6 @@ namespace App\Livewire\Debug;
 
 use App\Livewire\Debug\Concerns\ShowsJobReport;
 use App\Models\Project;
-use Flux\Flux;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -39,11 +38,11 @@ class JobDebugFlyout extends Component
         $this->projectId = $project->id;
     }
 
+    /** The trigger opens the modal on the client (`$flux.modal(MODAL).show()`); this only loads the jobs. */
     #[On('open-job-debug')]
     public function open(): void
     {
         $this->opened = true;
-        Flux::modal(self::MODAL)->show();
     }
 
     /**

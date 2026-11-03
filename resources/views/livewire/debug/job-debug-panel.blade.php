@@ -30,6 +30,8 @@
             </x-slot:actions>
         </x-page-header>
 
-        <x-debug.job-report :logs="$logs" :selected="$selected" :selected-job-id="$selectedJobId" />
+        <div class="transition-opacity" wire:loading.delay.class="opacity-60" wire:target="projectId">
+            <x-debug.job-report :logs="$logs" :selected="$selected" :selected-job-id="$selectedJobId" />
+        </div>
     </div>
 </section>

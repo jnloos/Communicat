@@ -10,12 +10,12 @@
         <flux:heading size="xl" level="2" @class(['min-w-0 flex-1 break-words', 'italic text-zinc-400! dark:text-zinc-500!' => $title === null])>{{ $title ?? __('questions.untitled') }}</flux:heading>
 
         @unless ($readOnly)
-            <span wire:loading.remove>
+            <span wire:loading.remove wire:target="notes">
                 <flux:text size="sm" class="flex shrink-0 items-center gap-1 pt-1.5" role="status" x-show="saved" x-cloak x-transition.opacity.duration.500ms>
                     <flux:icon.check variant="micro" />{{ __('questions.autosave.saved') }}
                 </flux:text>
             </span>
-            <flux:text size="sm" class="shrink-0 pt-1.5" wire:loading>{{ __('questions.autosave.saving') }}</flux:text>
+            <flux:text size="sm" class="shrink-0 pt-1.5" wire:loading wire:target="notes">{{ __('questions.autosave.saving') }}</flux:text>
         @endunless
 
         <flux:dropdown position="bottom" align="end" class="shrink-0">
@@ -239,34 +239,37 @@
         </div>
     </div>
 
-    @if ($result->isEmpty())
-        <x-empty-state icon="chart-bar">{{ __('questions.result.empty') }}</x-empty-state>
-    @else
-        {{-- Legend: one colour per group, the same in every panel. --}}
-        @if (count($result->groups) > 1)
-            <div class="flex flex-wrap gap-x-4 gap-y-1">
-                @foreach ($result->groups as $key => $label)
-                    <flux:chart.legend :label="$label" class="p-0!" wire:key="legend-{{ $key }}">
-                        <flux:chart.legend.indicator style="background-color: var(--color-{{ GroupColor::at($loop->index) }})" />
-                    </flux:chart.legend>
-                @endforeach
-            </div>
+    {{-- While a change is recalculated the old answer stays, dimmed: never a skeleton over content. --}}
+    <div class="space-y-6" wire:loading.delay.class="opacity-60" wire:target="definition,baselineChoice,resetTurns">
+        @if ($result->isEmpty())
+            <x-empty-state icon="chart-bar">{{ __('questions.result.empty') }}</x-empty-state>
+        @else
+            {{-- Legend: one colour per group, the same in every panel. --}}
+            @if (count($result->groups) > 1)
+                <div class="flex flex-wrap gap-x-4 gap-y-1">
+                    @foreach ($result->groups as $key => $label)
+                        <flux:chart.legend :label="$label" class="p-0!" wire:key="legend-{{ $key }}">
+                            <flux:chart.legend.indicator style="background-color: var(--color-{{ GroupColor::at($loop->index) }})" />
+                        </flux:chart.legend>
+                    @endforeach
+                </div>
+            @endif
+
+            @switch($current->form)
+                @case(ResultForm::Composition)
+                    <x-statistics.composition-bars :result="$result" :metric="$current->metric" />
+                    @break
+                @case(ResultForm::Trajectory)
+                    <x-statistics.curve-panels :result="$result" />
+                    @if ($current->curve === CurveMode::Rolling)
+                        <flux:text size="sm">{{ trans_choice('statistics.trajectory.rolling_hint', $this->rollingWindow, ['count' => $this->rollingWindow]) }}</flux:text>
+                    @endif
+                    @break
+                @default
+                    <x-statistics.point-panels :result="$result" :metric="$current->metric" />
+            @endswitch
+
+            <x-statistics.run-table :result="$result" :metric="$current->metric" />
         @endif
-
-        @switch($current->form)
-            @case(ResultForm::Composition)
-                <x-statistics.composition-bars :result="$result" :metric="$current->metric" />
-                @break
-            @case(ResultForm::Trajectory)
-                <x-statistics.curve-panels :result="$result" />
-                @if ($current->curve === CurveMode::Rolling)
-                    <flux:text size="sm">{{ trans_choice('statistics.trajectory.rolling_hint', $this->rollingWindow, ['count' => $this->rollingWindow]) }}</flux:text>
-                @endif
-                @break
-            @default
-                <x-statistics.point-panels :result="$result" :metric="$current->metric" />
-        @endswitch
-
-        <x-statistics.run-table :result="$result" :metric="$current->metric" />
-    @endif
+    </div>
 </div>

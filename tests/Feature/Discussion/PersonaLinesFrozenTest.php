@@ -68,15 +68,15 @@ class PersonaLinesFrozenTest extends TestCase
         $gender->experts()->attach(11, ['value' => 'woman']);
 
         $none = $alice($this->freezeAsLegacy($fixture, 'none', [$entry]));
-        $this->assertSame(['Your role is Student.'], $none->selfLines());
+        $this->assertSame(['You are Student.'], $none->selfLines());
         $this->assertSame(' (Student)', $none->rosterLabel());
 
         $own = $alice($this->freezeAsLegacy($fixture, 'own', [$entry]));
-        $this->assertSame(['Your role is Student.', 'You are a woman.'], $own->selfLines());
+        $this->assertSame(['You are Student.', 'You are a woman.'], $own->selfLines());
         $this->assertSame(' (Student)', $own->rosterLabel());
 
         $all = $alice($this->freezeAsLegacy($fixture, 'all', [$entry]));
-        $this->assertSame(['Your role is Student.', 'You are a woman.'], $all->selfLines());
+        $this->assertSame(['You are Student.', 'You are a woman.'], $all->selfLines());
         $this->assertSame(' (Student, woman)', $all->rosterLabel());
     }
 
@@ -88,16 +88,16 @@ class PersonaLinesFrozenTest extends TestCase
         $this->assertSame(['You work as Student.'], PersonaLines::for($project->fresh(), Expert::findOrFail(11))->selfLines());
 
         PersonaAttribute::query()->delete();
-        $this->assertSame(['Your role is Student.'], PersonaLines::for($project->fresh(), Expert::findOrFail(11))->selfLines());
+        $this->assertSame(['You are Student.'], PersonaLines::for($project->fresh(), Expert::findOrFail(11))->selfLines());
     }
 
     public function test_a_frozen_role_entry_is_never_doubled_by_the_bridge(): void
     {
         $project = $this->fixtureProject();
-        $role = ['attribute' => 'Role', 'value' => 'Student', 'self_line' => 'Your role is Student.', 'roster' => 'Student'];
+        $role = ['attribute' => 'Role', 'value' => 'Student', 'self_line' => 'You are Student.', 'roster' => 'Student'];
         $project = $this->freezeAsLegacy($project, ['Role' => 'all'], [$role]);
 
-        $this->assertSame(['Your role is Student.'], PersonaLines::for($project, Expert::findOrFail(11))->selfLines());
+        $this->assertSame(['You are Student.'], PersonaLines::for($project, Expert::findOrFail(11))->selfLines());
     }
 
     public function test_a_run_frozen_now_renders_prompts_without_any_attribute_query(): void
@@ -122,7 +122,7 @@ class PersonaLinesFrozenTest extends TestCase
         }
 
         $this->assertSame([], DB::getQueryLog());
-        $this->assertSame(['Your role is Student.'], PersonaLines::for($project, $expert)->selfLines());
+        $this->assertSame(['You are Student.'], PersonaLines::for($project, $expert)->selfLines());
     }
 
     public function test_a_legacy_string_run_costs_at_most_one_query_per_lookup(): void

@@ -25,6 +25,7 @@ return [
     ],
 
     'saved' => 'Saved.',
+    'loading' => 'Loading …',
     'or' => 'or',
     'no_entries' => 'No entries',
     'avatar_alt' => ':name avatar',

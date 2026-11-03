@@ -25,7 +25,7 @@ class PersonaAttribute extends Model
     public const ROLE = 'Role';
 
     /** The one definition of the Role's default templates: role(), the legacy-run bridge and the tests read these. */
-    public const ROLE_SELF_TEMPLATE = 'Your role is :value.';
+    public const ROLE_SELF_TEMPLATE = 'You are :value.';
 
     public const ROLE_ROSTER_TEMPLATE = ':value';
 

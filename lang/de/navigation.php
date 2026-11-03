@@ -19,4 +19,6 @@ return [
     'resize_sidebar' => 'Seitenleiste in der Breite ändern',
     'resize_hint' => 'Zum Ändern der Breite ziehen (Doppelklick: zurücksetzen)',
     'statistics' => 'Statistik',
+    'environment_test' => 'Test',
+    'environment_study' => 'Studie',
 ];

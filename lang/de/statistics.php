@@ -7,6 +7,7 @@
 */
 
 return [
+    'load_failed' => 'Konnte nicht geladen werden. Schließen und erneut öffnen.',
     'title' => 'Redeanteile',
     'subheading' => 'Wer wie oft das Wort hatte und wie viel Text dabei entstand.',
     'empty' => 'Noch kein Beitrag gesprochen. Starten Sie den Lauf, dann füllen sich die Anteile.',

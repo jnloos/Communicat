@@ -70,9 +70,9 @@
             </div>
         </aside>
 
-        <div class="min-w-0 flex-1">
+        <div class="min-w-0 flex-1 transition-opacity" wire:loading.delay.class="opacity-60" wire:target="open">
             @if ($current)
-                <livewire:statistics.question-editor :question-id="$current->id" wire:key="question-editor-{{ $current->id }}" />
+                <livewire:statistics.question-editor lazy :question-id="$current->id" wire:key="question-editor-{{ $current->id }}" />
             @else
                 <x-empty-state icon="chart-bar">{{ __('questions.none_open') }}</x-empty-state>
             @endif

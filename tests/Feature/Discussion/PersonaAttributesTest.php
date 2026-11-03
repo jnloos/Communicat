@@ -116,7 +116,7 @@ class PersonaAttributesTest extends TestCase
         $this->assertStringNotContainsString('Teacher', $this->roster());
 
         $this->reveal(AttributeVisibility::Own);
-        $this->assertStringContainsString("Your role is Student.\nYou are a woman.\nYou grew up in Owerri, Nigeria.", $this->persona());
+        $this->assertStringContainsString("You are Student.\nYou are a woman.\nYou grew up in Owerri, Nigeria.", $this->persona());
         $this->assertStringNotContainsString('Teacher', $this->roster());
 
         $this->reveal(AttributeVisibility::All);
@@ -326,7 +326,7 @@ class PersonaAttributesTest extends TestCase
             $this->gender->id => AttributeVisibility::Own,
         ]);
 
-        $this->assertStringContainsString("Your role is Student.\nYou are a woman.", $this->persona());
+        $this->assertStringContainsString("You are Student.\nYou are a woman.", $this->persona());
         $this->assertStringNotContainsString('Nigeria', $this->persona());
         $roster = $this->roster();
         $this->assertStringContainsString("- Alice [{$this->alice->promptId}] (Student)", $roster);

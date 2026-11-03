@@ -247,6 +247,12 @@ class QuestionEditor extends Component
         return $this->loaded;
     }
 
+    /** Shown while the page waits for the first evaluation (the tag on the page says `lazy`). */
+    public function placeholder(): mixed
+    {
+        return view('livewire.statistics.question-editor-placeholder');
+    }
+
     public function render(): mixed
     {
         $definition = $this->currentDefinition();

@@ -150,7 +150,7 @@ class JevBidsTest extends TestCase
             }
 
             $this->assertStringContainsString("{$expert->name} [{$expert->promptId}] (Chief Executive)", $state);
-            $this->assertStringContainsString('Your role is Chief Executive.', $state);
+            $this->assertStringContainsString('You are Chief Executive.', $state);
         }
     }
 

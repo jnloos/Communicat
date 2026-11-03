@@ -25,6 +25,7 @@ return [
     ],
 
     'saved' => 'Gespeichert.',
+    'loading' => 'Lädt …',
     'or' => 'oder',
     'no_entries' => 'Keine Einträge',
     'avatar_alt' => 'Avatar von :name',

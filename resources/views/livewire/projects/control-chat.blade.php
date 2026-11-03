@@ -97,7 +97,7 @@
                             size="sm"
                             variant="subtle"
                             icon="bug-ant"
-                            x-on:click="$dispatch('open-job-debug')"
+                            x-on:click="$flux.modal('{{ \App\Livewire\Debug\JobDebugFlyout::MODAL }}').show(); $dispatch('open-job-debug')"
                             :aria-label="__('chat.controls.debug')"
                         />
                     @endif
@@ -107,7 +107,7 @@
                         size="sm"
                         variant="subtle"
                         icon="chart-bar"
-                        x-on:click="$dispatch('open-statistics')"
+                        x-on:click="$flux.modal('{{ \App\Livewire\Projects\StatisticsFlyout::MODAL }}').show(); $dispatch('open-statistics')"
                         :aria-label="__('chat.controls.stats')"
                     />
                 </div>

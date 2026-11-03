@@ -44,6 +44,8 @@
                             :subtitle="$expert->attributeSummary"
                             :avatar-url="$expert->avatar_url"
                             wire:loading.attr="disabled"
+                            wire:loading.delay.class="opacity-60"
+                            wire:target="addExpert,removeExpert,search,tagFilter,tagFilterMode,clearTagFilter"
                             wire:click="{{ $active ? 'removeExpert' : 'addExpert' }}({{ $expert->id }})"
                         />
                     @endforeach
@@ -79,6 +81,8 @@
                                 :subtitle="$user->email"
                                 :avatar-url="$user->avatar_url"
                                 wire:loading.attr="disabled"
+                                wire:loading.delay.class="opacity-60"
+                                wire:target="addUser,removeUser,userSearch"
                                 wire:click="{{ $active ? 'removeUser' : 'addUser' }}({{ $user->id }})"
                             />
                         @endforeach

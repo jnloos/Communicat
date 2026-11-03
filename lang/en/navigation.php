@@ -19,4 +19,6 @@ return [
     'resize_sidebar' => 'Resize sidebar',
     'resize_hint' => 'Drag to resize the sidebar (double-click: reset)',
     'statistics' => 'Statistics',
+    'environment_test' => 'Test',
+    'environment_study' => 'Study',
 ];

@@ -52,7 +52,9 @@
          The groups stack without a gap: folded, they are a run of headers, and
          Flux's my-px on each header already gives them the rhythm of the nav
          items above. Only the ungrouped block is set apart, as its own section. --}}
-    <div class="flex flex-col">
+    {{-- Dims the list (not the dropdown) while a filter change is in flight; delay
+         keeps fast answers from flickering, opacity keeps the layout still. --}}
+    <div class="flex flex-col transition-opacity" wire:loading.delay.class="opacity-60" wire:target="tagFilter,tagFilterMode,clearTagFilter">
         {{-- The groups sort among themselves by dragging their header (wire:sort);
              the ungrouped block below is outside this container, so a group can
              never be dropped under it. Only while no filter hides drawers: the

@@ -185,6 +185,15 @@ class ProjectNavigationTest extends TestCase
         $this->assertSame([], $this->projectsInGroup($component, $group)->all());
     }
 
+    public function test_the_project_list_dims_while_a_filter_change_is_in_flight(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(ProjectNavigation::class)
+            ->assertSeeHtml('wire:loading.delay.class="opacity-60"')
+            ->assertSeeHtml('wire:target="tagFilter,tagFilterMode,clearTagFilter"');
+    }
+
     /**
      * The menu's "Group" heading labels the list of groups to file into. With
      * no group there is no list, and the heading would sit alone above the

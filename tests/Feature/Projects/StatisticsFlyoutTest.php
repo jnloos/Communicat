@@ -60,6 +60,41 @@ class StatisticsFlyoutTest extends TestCase
             ->assertViewHas('charts', fn ($charts) => $charts->turnSectors() === []);
     }
 
+    public function test_before_it_is_opened_it_shows_a_skeleton_and_afterwards_the_numbers(): void
+    {
+        app()->setLocale('en');
+        $this->turn('Alice', 10);
+
+        Livewire::test(StatisticsFlyout::class, ['project' => $this->project])
+            ->assertSeeHtml('data-statistics-skeleton')
+            ->assertSee('Loading …')
+            ->assertDontSee(__('statistics.empty'))
+            ->call('open')
+            ->assertDontSeeHtml('data-statistics-skeleton')
+            ->assertSeeHtml('data-pie-legend');
+    }
+
+    public function test_the_skeleton_warns_when_the_numbers_do_not_arrive(): void
+    {
+        Livewire::test(StatisticsFlyout::class, ['project' => $this->project])
+            ->assertSeeHtml('setTimeout(() => slow = true, 15000)')
+            ->assertSeeHtml('role="alert"');
+
+        foreach (['de', 'en'] as $locale) {
+            $this->assertNotSame('statistics.load_failed', __('statistics.load_failed', [], $locale));
+        }
+    }
+
+    public function test_the_chart_dims_while_a_toggle_recalculates(): void
+    {
+        $this->turn('Alice', 10);
+
+        Livewire::test(StatisticsFlyout::class, ['project' => $this->project])
+            ->call('open')
+            ->assertSeeHtml('wire:target="trajectoryUnit,trajectoryMode"')
+            ->assertSeeHtml('wire:loading.delay.class="opacity-60"');
+    }
+
     public function test_opening_fills_both_charts(): void
     {
         $this->turn('Alice', 10);

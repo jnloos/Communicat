@@ -53,6 +53,7 @@ return [
         'dropzone_text' => 'Eine .zip bis :mb MB; größere mit php artisan bundle:import',
         'failed' => 'Das Bundle konnte nicht gelesen werden: :message',
         'checking' => 'Bundle wird geprüft …',
+        'importing' => 'Import läuft …',
         'preview_heading' => 'Das würde importiert',
         'nothing_new' => 'Nichts Neues: alles in diesem Bundle ist schon da.',
         'done_heading' => 'Importiert',

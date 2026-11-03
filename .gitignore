@@ -33,3 +33,5 @@ CLAUDE.md
 
 # Scratch space for planning workspaces and agent reports
 .superpowers/
+.env.study
+.env.test

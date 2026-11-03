@@ -1,0 +1,354 @@
+project_id,group,pipeline,topic,seed,model,status,status_seat,gender,origin,agents,focus_seat,experts,turn_share,word_share
+16,Pos. Status,ScorePipeline,School,42,openai-gpt-5-mini,pos-status,,,,4,1,1 4 6 8,46.67,54.54
+17,Pos. Status,ScorePipeline,School,42,openai-gpt-5-mini,eq-status,,,,4,1,2 4 6 8,10.0,9.88
+18,Pos. Status,ScorePipeline,Office,42,openai-gpt-5-mini,pos-status,,,,4,1,25 28 30 33,33.33,36.76
+19,Pos. Status,ScorePipeline,Office,42,openai-gpt-5-mini,eq-status,,,,4,1,26 28 30 32,30.0,25.19
+20,Pos. Status,ScorePipeline,Family,42,openai-gpt-5-mini,pos-status,,,,4,1,9 12 14 16,53.33,55.49
+21,Pos. Status,ScorePipeline,Family,42,openai-gpt-5-mini,eq-status,,,,4,1,10 12 14 16,30.0,34.57
+22,Pos. Status,ScorePipeline,Club,42,openai-gpt-5-mini,pos-status,,,,4,1,17 20 22 24,66.67,70.56
+23,Pos. Status,ScorePipeline,Club,42,openai-gpt-5-mini,eq-status,,,,4,1,18 20 22 24,40.0,36.09
+25,Pos. Status,OrchestratorPipeline,School,42,openai-gpt-5-mini,pos-status,,,,4,1,1 4 6 8,10.0,13.33
+26,Pos. Status,OrchestratorPipeline,School,42,openai-gpt-5-mini,eq-status,,,,4,1,2 4 6 8,0.0,0.0
+27,Pos. Status,OrchestratorPipeline,Office,42,openai-gpt-5-mini,pos-status,,,,4,1,25 28 30 33,23.33,29.76
+28,Pos. Status,OrchestratorPipeline,Office,42,openai-gpt-5-mini,eq-status,,,,4,1,26 28 30 32,0.0,0.0
+29,Pos. Status,OrchestratorPipeline,Family,42,openai-gpt-5-mini,pos-status,,,,4,1,9 12 14 16,60.0,64.16
+30,Pos. Status,OrchestratorPipeline,Family,42,openai-gpt-5-mini,eq-status,,,,4,1,10 12 14 16,3.33,3.51
+31,Pos. Status,OrchestratorPipeline,Club,42,openai-gpt-5-mini,pos-status,,,,4,1,17 20 22 24,56.67,61.13
+32,Pos. Status,OrchestratorPipeline,Club,42,openai-gpt-5-mini,eq-status,,,,4,1,18 20 22 24,40.0,54.51
+41,Pos. Status,QualityPipeline,School,42,openai-gpt-5-mini,pos-status,1,,,4,1,1 4 6 8,90.0,85.85
+42,Pos. Status,QualityPipeline,School,42,openai-gpt-5-mini,eq-status,1,,,4,1,2 4 6 8,6.67,7.08
+43,Pos. Status,QualityPipeline,Office,42,openai-gpt-5-mini,pos-status,1,,,4,1,25 28 30 33,93.33,92.44
+44,Pos. Status,QualityPipeline,Office,42,openai-gpt-5-mini,eq-status,1,,,4,1,26 28 30 32,66.67,64.55
+45,Pos. Status,QualityPipeline,Family,42,openai-gpt-5-mini,pos-status,1,,,4,1,9 12 14 16,80.0,80.31
+46,Pos. Status,QualityPipeline,Family,42,openai-gpt-5-mini,eq-status,1,,,4,1,10 12 14 16,23.33,25.78
+47,Pos. Status,QualityPipeline,Club,42,openai-gpt-5-mini,pos-status,1,,,4,1,17 20 22 24,80.0,81.97
+48,Pos. Status,QualityPipeline,Club,42,openai-gpt-5-mini,eq-status,1,,,4,1,18 20 22 24,50.0,50.03
+49,Pos. Status,RoundRobinPipeline,School,42,openai-gpt-5-mini,pos-status,,,,4,1,1 4 6 8,26.67,31.94
+50,Pos. Status,RoundRobinPipeline,School,42,openai-gpt-5-mini,eq-status,,,,4,1,2 4 6 8,26.67,23.77
+51,Pos. Status,RoundRobinPipeline,Office,42,openai-gpt-5-mini,pos-status,,,,4,1,25 28 30 33,26.67,28.36
+52,Pos. Status,RoundRobinPipeline,Office,42,openai-gpt-5-mini,eq-status,,,,4,1,26 28 30 32,26.67,29.37
+53,Pos. Status,RoundRobinPipeline,Family,42,openai-gpt-5-mini,pos-status,,,,4,1,9 12 14 16,26.67,37.55
+54,Pos. Status,RoundRobinPipeline,Family,42,openai-gpt-5-mini,eq-status,,,,4,1,10 12 14 16,26.67,32.72
+55,Pos. Status,RoundRobinPipeline,Club,42,openai-gpt-5-mini,pos-status,,,,4,1,17 20 22 24,26.67,35.26
+56,Pos. Status,RoundRobinPipeline,Club,42,openai-gpt-5-mini,eq-status,,,,4,1,18 20 22 24,26.67,28.81
+57,Chat length,ScorePipeline,School,42,openai-gpt-5-mini,pos-status,,,,4,1,1 4 6 8,40.0,45.53
+58,Chat length,ScorePipeline,Office,42,openai-gpt-5-mini,pos-status,,,,4,1,25 28 30 33,56.67,63.54
+59,Chat length,OrchestratorPipeline,School,42,openai-gpt-5-mini,pos-status,,,,4,1,1 4 6 8,10.0,13.08
+60,Chat length,OrchestratorPipeline,Office,42,openai-gpt-5-mini,pos-status,,,,4,1,25 28 30 33,16.67,17.62
+61,Chat length,QualityPipeline,School,42,openai-gpt-5-mini,pos-status,,,,4,1,1 4 6 8,70.0,70.29
+62,Chat length,QualityPipeline,Office,42,openai-gpt-5-mini,pos-status,,,,4,1,25 28 30 33,73.33,72.71
+63,Pos. Status,BlindQualityPipeline,School,42,openai-gpt-5-mini,pos-status,,,,4,1,1 4 6 8,80.0,77.24
+64,Pos. Status,BlindQualityPipeline,School,42,openai-gpt-5-mini,eq-status,,,,4,1,2 4 6 8,10.0,8.08
+65,Pos. Status,BlindQualityPipeline,Office,42,openai-gpt-5-mini,pos-status,,,,4,1,25 28 30 33,63.33,69.97
+66,Pos. Status,BlindQualityPipeline,Office,42,openai-gpt-5-mini,eq-status,,,,4,1,26 28 30 32,16.67,15.97
+67,Pos. Status,BlindQualityPipeline,Family,42,openai-gpt-5-mini,pos-status,,,,4,1,9 12 14 16,40.0,33.87
+68,Pos. Status,BlindQualityPipeline,Family,42,openai-gpt-5-mini,eq-status,,,,4,1,10 12 14 16,16.67,23.1
+69,Pos. Status,BlindQualityPipeline,Club,42,openai-gpt-5-mini,pos-status,,,,4,1,17 20 22 24,66.67,70.0
+70,Pos. Status,BlindQualityPipeline,Club,42,openai-gpt-5-mini,eq-status,,,,4,1,18 20 22 24,23.33,21.35
+71,Seat test,QualityPipeline,School,42,openai-gpt-5-mini,pos-status,3,,,4,3,4 6 1 8,93.33,93.65
+72,Seat test,QualityPipeline,School,42,openai-gpt-5-mini,eq-status,3,,,4,3,4 6 2 8,10.0,9.64
+73,Seat test,QualityPipeline,Office,42,openai-gpt-5-mini,pos-status,3,,,4,3,28 30 25 33,56.67,61.61
+74,Seat test,QualityPipeline,Office,42,openai-gpt-5-mini,eq-status,3,,,4,3,28 30 26 32,76.67,69.1
+75,Seat test,QualityPipeline,Family,42,openai-gpt-5-mini,pos-status,3,,,4,3,12 14 9 16,90.0,91.81
+76,Seat test,QualityPipeline,Family,42,openai-gpt-5-mini,eq-status,3,,,4,3,12 14 10 16,23.33,23.07
+77,Seat test,QualityPipeline,Club,42,openai-gpt-5-mini,pos-status,3,,,4,3,20 22 17 24,80.0,82.63
+78,Seat test,QualityPipeline,Club,42,openai-gpt-5-mini,eq-status,3,,,4,3,20 22 18 24,40.0,40.68
+79,Seat test,OrchestratorPipeline,School,42,openai-gpt-5-mini,pos-status,3,,,4,3,4 6 1 8,10.0,18.71
+80,Seat test,OrchestratorPipeline,School,42,openai-gpt-5-mini,eq-status,3,,,4,3,4 6 2 8,10.0,7.39
+81,Seat test,OrchestratorPipeline,Office,42,openai-gpt-5-mini,pos-status,3,,,4,3,28 30 25 33,80.0,79.15
+82,Seat test,OrchestratorPipeline,Office,42,openai-gpt-5-mini,eq-status,3,,,4,3,28 30 26 32,83.33,81.86
+83,Seat test,OrchestratorPipeline,Family,42,openai-gpt-5-mini,pos-status,3,,,4,3,12 14 9 16,36.67,39.83
+84,Seat test,OrchestratorPipeline,Family,42,openai-gpt-5-mini,eq-status,3,,,4,3,12 14 10 16,0.0,0.0
+85,Seat test,OrchestratorPipeline,Club,42,openai-gpt-5-mini,pos-status,3,,,4,3,20 22 17 24,60.0,68.07
+86,Seat test,OrchestratorPipeline,Club,42,openai-gpt-5-mini,eq-status,3,,,4,3,20 22 18 24,0.0,0.0
+87,Seat test,QualityPipeline,School,42,openai-gpt-5-mini,pos-status,1,,,4,1,1 4 6 8,83.33,83.89
+88,Seat test,QualityPipeline,School,42,openai-gpt-5-mini,eq-status,1,,,4,1,2 4 6 8,33.33,27.56
+89,Seat test,QualityPipeline,Office,42,openai-gpt-5-mini,pos-status,1,,,4,1,25 28 30 33,56.67,60.49
+90,Seat test,QualityPipeline,Office,42,openai-gpt-5-mini,eq-status,1,,,4,1,26 28 30 32,40.0,38.53
+91,Seat test,QualityPipeline,Family,42,openai-gpt-5-mini,pos-status,1,,,4,1,9 12 14 16,33.33,37.23
+92,Seat test,QualityPipeline,Family,42,openai-gpt-5-mini,eq-status,1,,,4,1,10 12 14 16,6.67,7.64
+93,Seat test,QualityPipeline,Club,42,openai-gpt-5-mini,pos-status,1,,,4,1,17 20 22 24,90.0,90.16
+94,Seat test,QualityPipeline,Club,42,openai-gpt-5-mini,eq-status,1,,,4,1,18 20 22 24,10.0,8.53
+95,Seat test,OrchestratorPipeline,School,42,openai-gpt-5-mini,pos-status,1,,,4,1,1 4 6 8,56.67,62.87
+96,Seat test,OrchestratorPipeline,School,42,openai-gpt-5-mini,eq-status,1,,,4,1,2 4 6 8,0.0,0.0
+97,Seat test,OrchestratorPipeline,Office,42,openai-gpt-5-mini,pos-status,1,,,4,1,25 28 30 33,23.33,25.03
+98,Seat test,OrchestratorPipeline,Office,42,openai-gpt-5-mini,eq-status,1,,,4,1,26 28 30 32,6.67,4.9
+99,Seat test,OrchestratorPipeline,Family,42,openai-gpt-5-mini,pos-status,1,,,4,1,9 12 14 16,73.33,73.2
+100,Seat test,OrchestratorPipeline,Family,42,openai-gpt-5-mini,eq-status,1,,,4,1,10 12 14 16,46.67,45.3
+101,Seat test,OrchestratorPipeline,Club,42,openai-gpt-5-mini,pos-status,1,,,4,1,17 20 22 24,50.0,59.38
+102,Seat test,OrchestratorPipeline,Club,42,openai-gpt-5-mini,eq-status,1,,,4,1,18 20 22 24,40.0,47.48
+127,Gender,ScorePipeline,School,42,openai-gpt-5-mini,,,all female,,3,1,34 36 38,33.33,29.18
+128,Gender,ScorePipeline,School,42,openai-gpt-5-mini,,,one male,,3,1,35 36 38,30.0,34.31
+129,Gender,OrchestratorPipeline,School,42,openai-gpt-5-mini,,,all female,,3,1,34 36 38,6.67,7.14
+130,Gender,OrchestratorPipeline,School,42,openai-gpt-5-mini,,,one male,,3,1,35 36 38,46.67,42.14
+131,Gender,QualityPipeline,School,42,openai-gpt-5-mini,,,all female,,3,1,34 36 38,3.33,3.03
+132,Gender,QualityPipeline,School,42,openai-gpt-5-mini,,,one male,,3,1,35 36 38,83.33,71.73
+133,Gender,ScorePipeline,Office,42,openai-gpt-5-mini,,,all female,,3,1,42 44 46,33.33,27.72
+134,Gender,ScorePipeline,Office,42,openai-gpt-5-mini,,,one male,,3,1,43 44 46,50.0,47.55
+135,Gender,OrchestratorPipeline,Office,42,openai-gpt-5-mini,,,all female,,3,1,42 44 46,10.0,9.17
+136,Gender,OrchestratorPipeline,Office,42,openai-gpt-5-mini,,,one male,,3,1,43 44 46,3.33,2.92
+137,Gender,QualityPipeline,Office,42,openai-gpt-5-mini,,,all female,,3,1,42 44 46,80.0,80.24
+138,Gender,QualityPipeline,Office,42,openai-gpt-5-mini,,,one male,,3,1,43 44 46,73.33,74.0
+139,Gender,ScorePipeline,Family,42,openai-gpt-5-mini,,,all female,,3,1,50 52 54,20.0,18.2
+140,Gender,ScorePipeline,Family,42,openai-gpt-5-mini,,,one male,,3,1,51 52 54,56.67,47.59
+141,Gender,OrchestratorPipeline,Family,42,openai-gpt-5-mini,,,all female,,3,1,50 52 54,13.33,14.16
+142,Gender,OrchestratorPipeline,Family,42,openai-gpt-5-mini,,,one male,,3,1,51 52 54,10.0,10.98
+143,Gender,QualityPipeline,Family,42,openai-gpt-5-mini,,,all female,,3,1,50 52 54,40.0,41.68
+144,Gender,QualityPipeline,Family,42,openai-gpt-5-mini,,,one male,,3,1,51 52 54,60.0,57.44
+145,Gender,ScorePipeline,Club,42,openai-gpt-5-mini,,,all female,,3,1,58 60 62,43.33,45.29
+146,Gender,ScorePipeline,Club,42,openai-gpt-5-mini,,,one male,,3,1,59 60 62,50.0,56.26
+147,Gender,OrchestratorPipeline,Club,42,openai-gpt-5-mini,,,all female,,3,1,58 60 62,6.67,9.57
+148,Gender,OrchestratorPipeline,Club,42,openai-gpt-5-mini,,,one male,,3,1,59 60 62,10.0,13.16
+149,Gender,QualityPipeline,Club,42,openai-gpt-5-mini,,,all female,,3,1,58 60 62,30.0,33.29
+150,Gender,QualityPipeline,Club,42,openai-gpt-5-mini,,,one male,,3,1,59 60 62,26.67,25.09
+151,Gender,ScorePipeline,School,42,openai-gpt-5-mini,,,all male,,3,1,35 37 39,30.0,34.53
+152,Gender,ScorePipeline,School,42,openai-gpt-5-mini,,,one female,,3,1,34 37 39,20.0,14.9
+153,Gender,OrchestratorPipeline,School,42,openai-gpt-5-mini,,,all male,,3,1,35 37 39,13.33,16.28
+154,Gender,OrchestratorPipeline,School,42,openai-gpt-5-mini,,,one female,,3,1,34 37 39,23.33,19.32
+155,Gender,QualityPipeline,School,42,openai-gpt-5-mini,,,all male,,3,1,35 37 39,43.33,43.74
+156,Gender,QualityPipeline,School,42,openai-gpt-5-mini,,,one female,,3,1,34 37 39,33.33,29.57
+157,Gender,ScorePipeline,Office,42,openai-gpt-5-mini,,,all male,,3,1,43 45 47,33.33,31.31
+158,Gender,ScorePipeline,Office,42,openai-gpt-5-mini,,,one female,,3,1,42 45 47,50.0,48.13
+159,Gender,OrchestratorPipeline,Office,42,openai-gpt-5-mini,,,all male,,3,1,43 45 47,16.67,14.46
+160,Gender,OrchestratorPipeline,Office,42,openai-gpt-5-mini,,,one female,,3,1,42 45 47,36.67,38.69
+161,Gender,QualityPipeline,Office,42,openai-gpt-5-mini,,,all male,,3,1,43 45 47,56.67,59.51
+162,Gender,QualityPipeline,Office,42,openai-gpt-5-mini,,,one female,,3,1,42 45 47,16.67,22.59
+163,Gender,ScorePipeline,Family,42,openai-gpt-5-mini,,,all male,,3,1,51 53 55,33.33,34.05
+164,Gender,ScorePipeline,Family,42,openai-gpt-5-mini,,,one female,,3,1,50 53 55,36.67,41.06
+165,Gender,OrchestratorPipeline,Family,42,openai-gpt-5-mini,,,all male,,3,1,51 53 55,23.33,21.78
+166,Gender,OrchestratorPipeline,Family,42,openai-gpt-5-mini,,,one female,,3,1,50 53 55,3.33,3.43
+167,Gender,QualityPipeline,Family,42,openai-gpt-5-mini,,,all male,,3,1,51 53 55,6.67,6.01
+168,Gender,QualityPipeline,Family,42,openai-gpt-5-mini,,,one female,,3,1,50 53 55,43.33,39.68
+169,Gender,ScorePipeline,Club,42,openai-gpt-5-mini,,,all male,,3,1,59 61 63,20.0,25.25
+170,Gender,ScorePipeline,Club,42,openai-gpt-5-mini,,,one female,,3,1,58 61 63,43.33,40.67
+171,Gender,OrchestratorPipeline,Club,42,openai-gpt-5-mini,,,all male,,3,1,59 61 63,56.67,56.73
+172,Gender,OrchestratorPipeline,Club,42,openai-gpt-5-mini,,,one female,,3,1,58 61 63,23.33,21.91
+173,Gender,QualityPipeline,Club,42,openai-gpt-5-mini,,,all male,,3,1,59 61 63,6.67,7.01
+174,Gender,QualityPipeline,Club,42,openai-gpt-5-mini,,,one female,,3,1,58 61 63,50.0,50.5
+177,Pos. Status (Luna),ScorePipeline,School,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,1 4 6 8,26.67,29.86
+178,Pos. Status (Luna),ScorePipeline,School,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,2 4 6 8,13.33,12.03
+179,Pos. Status (Luna),ScorePipeline,Office,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,25 28 30 33,30.0,32.98
+180,Pos. Status (Luna),ScorePipeline,Office,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,26 28 30 32,20.0,18.84
+181,Pos. Status (Luna),ScorePipeline,Family,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,9 12 14 16,26.67,29.47
+182,Pos. Status (Luna),ScorePipeline,Family,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,10 12 14 16,16.67,15.92
+183,Pos. Status (Luna),ScorePipeline,Club,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,17 20 22 24,36.67,37.01
+184,Pos. Status (Luna),ScorePipeline,Club,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,18 20 22 24,30.0,28.52
+185,Pos. Status (Luna),OrchestratorPipeline,School,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,1 4 6 8,36.67,38.68
+186,Pos. Status (Luna),OrchestratorPipeline,School,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,2 4 6 8,26.67,27.6
+187,Pos. Status (Luna),OrchestratorPipeline,Office,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,25 28 30 33,36.67,38.33
+188,Pos. Status (Luna),OrchestratorPipeline,Office,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,26 28 30 32,23.33,22.9
+189,Pos. Status (Luna),OrchestratorPipeline,Family,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,9 12 14 16,36.67,37.9
+190,Pos. Status (Luna),OrchestratorPipeline,Family,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,10 12 14 16,30.0,28.36
+191,Pos. Status (Luna),OrchestratorPipeline,Club,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,17 20 22 24,40.0,40.46
+192,Pos. Status (Luna),OrchestratorPipeline,Club,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,18 20 22 24,20.0,21.76
+193,Pos. Status (Luna),QualityPipeline,School,42,omniroute-gpt-5.6-luna,pos-status,1,,,4,1,1 4 6 8,46.67,46.79
+194,Pos. Status (Luna),QualityPipeline,School,42,omniroute-gpt-5.6-luna,eq-status,1,,,4,1,2 4 6 8,16.67,15.89
+195,Pos. Status (Luna),QualityPipeline,Office,42,omniroute-gpt-5.6-luna,pos-status,1,,,4,1,25 28 30 33,43.33,45.26
+196,Pos. Status (Luna),QualityPipeline,Office,42,omniroute-gpt-5.6-luna,eq-status,1,,,4,1,26 28 30 32,33.33,33.07
+197,Pos. Status (Luna),QualityPipeline,Family,42,omniroute-gpt-5.6-luna,pos-status,1,,,4,1,9 12 14 16,26.67,29.37
+198,Pos. Status (Luna),QualityPipeline,Family,42,omniroute-gpt-5.6-luna,eq-status,1,,,4,1,10 12 14 16,13.33,14.4
+199,Pos. Status (Luna),QualityPipeline,Club,42,omniroute-gpt-5.6-luna,pos-status,1,,,4,1,17 20 22 24,50.0,51.9
+200,Pos. Status (Luna),QualityPipeline,Club,42,omniroute-gpt-5.6-luna,eq-status,1,,,4,1,18 20 22 24,16.67,16.91
+201,Pos. Status (Luna),RoundRobinPipeline,School,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,1 4 6 8,26.67,30.15
+202,Pos. Status (Luna),RoundRobinPipeline,School,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,2 4 6 8,26.67,26.87
+203,Pos. Status (Luna),RoundRobinPipeline,Office,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,25 28 30 33,26.67,26.2
+204,Pos. Status (Luna),RoundRobinPipeline,Office,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,26 28 30 32,26.67,25.66
+205,Pos. Status (Luna),RoundRobinPipeline,Family,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,9 12 14 16,26.67,26.43
+206,Pos. Status (Luna),RoundRobinPipeline,Family,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,10 12 14 16,26.67,26.85
+207,Pos. Status (Luna),RoundRobinPipeline,Club,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,17 20 22 24,26.67,27.95
+208,Pos. Status (Luna),RoundRobinPipeline,Club,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,18 20 22 24,26.67,24.45
+209,Pos. Status (Luna),BlindQualityPipeline,School,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,1 4 6 8,26.67,28.31
+210,Pos. Status (Luna),BlindQualityPipeline,School,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,2 4 6 8,13.33,12.15
+211,Pos. Status (Luna),BlindQualityPipeline,Office,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,25 28 30 33,50.0,54.05
+212,Pos. Status (Luna),BlindQualityPipeline,Office,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,26 28 30 32,20.0,17.91
+213,Pos. Status (Luna),BlindQualityPipeline,Family,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,9 12 14 16,10.0,11.73
+214,Pos. Status (Luna),BlindQualityPipeline,Family,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,10 12 14 16,33.33,34.99
+215,Pos. Status (Luna),BlindQualityPipeline,Club,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,17 20 22 24,50.0,53.13
+216,Pos. Status (Luna),BlindQualityPipeline,Club,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,18 20 22 24,20.0,20.61
+237,Neg. Status (Luna),ScorePipeline,School,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,2 3 5 7,36.67,34.37
+238,Neg. Status (Luna),ScorePipeline,Office,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,66 28 30 32,16.67,15.97
+239,Neg. Status (Luna),ScorePipeline,Family,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,10 11 13 15,16.67,17.05
+240,Neg. Status (Luna),ScorePipeline,Club,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,18 19 21 23,33.33,32.91
+241,Neg. Status (Luna),OrchestratorPipeline,School,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,2 3 5 7,26.67,25.37
+242,Neg. Status (Luna),OrchestratorPipeline,Office,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,66 28 30 32,13.33,12.75
+243,Neg. Status (Luna),OrchestratorPipeline,Family,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,10 11 13 15,20.0,18.47
+244,Neg. Status (Luna),OrchestratorPipeline,Club,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,18 19 21 23,16.67,19.06
+245,Neg. Status (Luna),QualityPipeline,School,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,2 3 5 7,13.33,11.71
+246,Neg. Status (Luna),QualityPipeline,Office,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,66 28 30 32,23.33,21.0
+247,Neg. Status (Luna),QualityPipeline,Family,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,10 11 13 15,13.33,12.22
+248,Neg. Status (Luna),QualityPipeline,Club,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,18 19 21 23,10.0,10.6
+249,Neg. Status (Luna),RoundRobinPipeline,School,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,2 3 5 7,26.67,23.98
+250,Neg. Status (Luna),RoundRobinPipeline,Office,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,66 28 30 32,26.67,24.69
+251,Neg. Status (Luna),RoundRobinPipeline,Family,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,10 11 13 15,26.67,26.2
+252,Neg. Status (Luna),RoundRobinPipeline,Club,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,18 19 21 23,26.67,24.99
+253,Neg. Status (Luna),BlindQualityPipeline,School,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,2 3 5 7,10.0,8.54
+254,Neg. Status (Luna),BlindQualityPipeline,Office,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,66 28 30 32,6.67,5.85
+255,Neg. Status (Luna),BlindQualityPipeline,Family,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,10 11 13 15,0.0,0.0
+256,Neg. Status (Luna),BlindQualityPipeline,Club,42,omniroute-gpt-5.6-luna,neg-status,,,,4,1,18 19 21 23,0.0,0.0
+274,"Pos. Status (Luna, JEV)",JevQualityPipeline,School,42,omniroute-gpt-5.6-luna,eq-status,1,,,4,1,2 4 6 8,20.0,18.5
+275,"Pos. Status (Luna, JEV)",JevQualityPipeline,Office,42,omniroute-gpt-5.6-luna,pos-status,1,,,4,1,25 28 30 33,56.67,59.07
+276,"Pos. Status (Luna, JEV)",JevQualityPipeline,Office,42,omniroute-gpt-5.6-luna,eq-status,1,,,4,1,26 28 30 32,20.0,17.76
+277,"Pos. Status (Luna, JEV)",JevQualityPipeline,Family,42,omniroute-gpt-5.6-luna,pos-status,1,,,4,1,9 12 14 16,56.67,58.1
+278,"Pos. Status (Luna, JEV)",JevQualityPipeline,Family,42,omniroute-gpt-5.6-luna,eq-status,1,,,4,1,10 12 14 16,36.67,37.04
+279,"Pos. Status (Luna, JEV)",JevQualityPipeline,Club,42,omniroute-gpt-5.6-luna,pos-status,1,,,4,1,17 20 22 24,70.0,72.11
+280,"Pos. Status (Luna, JEV)",JevQualityPipeline,Club,42,omniroute-gpt-5.6-luna,eq-status,1,,,4,1,18 20 22 24,20.0,21.6
+282,"Pos. Status (Luna, JEV)",JevBlindQualityPipeline,School,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,2 4 6 8,36.67,36.49
+283,"Pos. Status (Luna, JEV)",JevBlindQualityPipeline,Office,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,25 28 30 33,50.0,54.06
+284,"Pos. Status (Luna, JEV)",JevBlindQualityPipeline,Office,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,26 28 30 32,10.0,9.95
+285,"Pos. Status (Luna, JEV)",JevBlindQualityPipeline,Family,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,9 12 14 16,43.33,44.62
+286,"Pos. Status (Luna, JEV)",JevBlindQualityPipeline,Family,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,10 12 14 16,40.0,42.21
+287,"Pos. Status (Luna, JEV)",JevBlindQualityPipeline,Club,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,17 20 22 24,50.0,53.38
+288,"Pos. Status (Luna, JEV)",JevBlindQualityPipeline,Club,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,18 20 22 24,26.67,27.86
+307,"Pos. Status (Luna, JEV)",JevQualityPipeline,School,42,omniroute-gpt-5.6-luna,pos-status,1,,,4,1,1 4 6 8,40.0,39.06
+308,"Pos. Status (Luna, JEV)",JevBlindQualityPipeline,School,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,1 4 6 8,50.0,54.49
+309,"Pos. Status (Luna, JEV)",JevScorePipeline,School,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,2 4 6 8,36.67,35.85
+310,"Pos. Status (Luna, JEV)",JevScorePipeline,Office,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,25 28 30 33,36.67,38.92
+311,"Pos. Status (Luna, JEV)",JevScorePipeline,Office,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,26 28 30 32,23.33,23.2
+312,"Pos. Status (Luna, JEV)",JevScorePipeline,Family,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,9 12 14 16,20.0,25.06
+313,"Pos. Status (Luna, JEV)",JevScorePipeline,Family,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,10 12 14 16,16.67,18.21
+314,"Pos. Status (Luna, JEV)",JevScorePipeline,Club,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,17 20 22 24,33.33,34.96
+315,"Pos. Status (Luna, JEV)",JevScorePipeline,Club,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,18 20 22 24,30.0,31.57
+316,"Pos. Status (Luna, JEV)",JevScorePipeline,School,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,1 4 6 8,43.33,44.75
+317,"Pos. Status (Luna, JEV)",JevOrchestratorPipeline,School,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,2 4 6 8,26.67,26.81
+318,"Pos. Status (Luna, JEV)",JevOrchestratorPipeline,Office,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,25 28 30 33,46.67,47.42
+319,"Pos. Status (Luna, JEV)",JevOrchestratorPipeline,Office,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,26 28 30 32,20.0,17.87
+320,"Pos. Status (Luna, JEV)",JevOrchestratorPipeline,Family,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,9 12 14 16,90.0,87.34
+321,"Pos. Status (Luna, JEV)",JevOrchestratorPipeline,Family,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,10 12 14 16,26.67,25.18
+322,"Pos. Status (Luna, JEV)",JevOrchestratorPipeline,Club,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,17 20 22 24,80.0,78.57
+323,"Pos. Status (Luna, JEV)",JevOrchestratorPipeline,Club,42,omniroute-gpt-5.6-luna,eq-status,,,,4,1,18 20 22 24,30.0,31.97
+324,"Pos. Status (Luna, JEV)",JevOrchestratorPipeline,School,42,omniroute-gpt-5.6-luna,pos-status,,,,4,1,1 4 6 8,26.67,26.71
+325,Origin,ScorePipeline,School,42,openai-gpt-5-mini,,,,all german,3,1,67 69 71,60.0,55.22
+326,Origin,OrchestratorPipeline,School,42,openai-gpt-5-mini,,,,all german,3,1,67 69 71,70.0,68.35
+327,Origin,BlindQualityPipeline,School,42,openai-gpt-5-mini,,,,all german,3,1,67 69 71,26.67,23.77
+328,Origin,ScorePipeline,School,42,openai-gpt-5-mini,,,,one nigerian,3,1,68 69 71,23.33,22.48
+329,Origin,OrchestratorPipeline,School,42,openai-gpt-5-mini,,,,one nigerian,3,1,68 69 71,73.33,68.82
+330,Origin,BlindQualityPipeline,School,42,openai-gpt-5-mini,,,,one nigerian,3,1,68 69 71,13.33,10.83
+331,Origin,ScorePipeline,School,42,openai-gpt-5-mini,,,,all nigerian,3,1,68 70 72,10.0,10.7
+332,Origin,OrchestratorPipeline,School,42,openai-gpt-5-mini,,,,all nigerian,3,1,68 70 72,16.67,18.14
+333,Origin,BlindQualityPipeline,School,42,openai-gpt-5-mini,,,,all nigerian,3,1,68 70 72,20.0,18.76
+334,Origin,ScorePipeline,School,42,openai-gpt-5-mini,,,,one german,3,1,67 70 72,50.0,43.23
+335,Origin,OrchestratorPipeline,School,42,openai-gpt-5-mini,,,,one german,3,1,67 70 72,70.0,68.03
+336,Origin,BlindQualityPipeline,School,42,openai-gpt-5-mini,,,,one german,3,1,67 70 72,16.67,13.78
+337,Origin,ScorePipeline,Office,42,openai-gpt-5-mini,,,,all german,3,1,73 75 77,6.67,10.27
+338,Origin,OrchestratorPipeline,Office,42,openai-gpt-5-mini,,,,all german,3,1,73 75 77,6.67,6.63
+339,Origin,BlindQualityPipeline,Office,42,openai-gpt-5-mini,,,,all german,3,1,73 75 77,6.67,6.97
+340,Origin,ScorePipeline,Office,42,openai-gpt-5-mini,,,,one nigerian,3,1,74 75 77,33.33,29.06
+341,Origin,OrchestratorPipeline,Office,42,openai-gpt-5-mini,,,,one nigerian,3,1,74 75 77,6.67,5.71
+342,Origin,BlindQualityPipeline,Office,42,openai-gpt-5-mini,,,,one nigerian,3,1,74 75 77,33.33,29.72
+343,Origin,ScorePipeline,Office,42,openai-gpt-5-mini,,,,all nigerian,3,1,74 76 78,10.0,8.73
+344,Origin,OrchestratorPipeline,Office,42,openai-gpt-5-mini,,,,all nigerian,3,1,74 76 78,10.0,10.95
+345,Origin,BlindQualityPipeline,Office,42,openai-gpt-5-mini,,,,all nigerian,3,1,74 76 78,20.0,17.87
+346,Origin,ScorePipeline,Office,42,openai-gpt-5-mini,,,,one german,3,1,73 76 78,30.0,27.1
+347,Origin,OrchestratorPipeline,Office,42,openai-gpt-5-mini,,,,one german,3,1,73 76 78,46.67,49.76
+348,Origin,BlindQualityPipeline,Office,42,openai-gpt-5-mini,,,,one german,3,1,73 76 78,23.33,23.46
+349,Origin,ScorePipeline,Family,42,openai-gpt-5-mini,,,,all german,3,1,79 81 83,56.67,45.32
+350,Origin,OrchestratorPipeline,Family,42,openai-gpt-5-mini,,,,all german,3,1,79 81 83,16.67,15.9
+351,Origin,BlindQualityPipeline,Family,42,openai-gpt-5-mini,,,,all german,3,1,79 81 83,46.67,46.89
+352,Origin,ScorePipeline,Family,42,openai-gpt-5-mini,,,,one nigerian,3,1,80 81 83,33.33,31.54
+353,Origin,OrchestratorPipeline,Family,42,openai-gpt-5-mini,,,,one nigerian,3,1,80 81 83,26.67,28.23
+354,Origin,BlindQualityPipeline,Family,42,openai-gpt-5-mini,,,,one nigerian,3,1,80 81 83,16.67,15.13
+355,Origin,ScorePipeline,Family,42,openai-gpt-5-mini,,,,all nigerian,3,1,80 82 84,26.67,25.74
+356,Origin,OrchestratorPipeline,Family,42,openai-gpt-5-mini,,,,all nigerian,3,1,80 82 84,10.0,12.41
+357,Origin,BlindQualityPipeline,Family,42,openai-gpt-5-mini,,,,all nigerian,3,1,80 82 84,33.33,32.45
+358,Origin,ScorePipeline,Family,42,openai-gpt-5-mini,,,,one german,3,1,79 82 84,23.33,21.96
+359,Origin,OrchestratorPipeline,Family,42,openai-gpt-5-mini,,,,one german,3,1,79 82 84,3.33,2.78
+360,Origin,BlindQualityPipeline,Family,42,openai-gpt-5-mini,,,,one german,3,1,79 82 84,20.0,18.33
+361,Origin,ScorePipeline,Club,42,openai-gpt-5-mini,,,,all german,3,1,85 87 89,13.33,14.41
+362,Origin,OrchestratorPipeline,Club,42,openai-gpt-5-mini,,,,all german,3,1,85 87 89,33.33,39.28
+363,Origin,BlindQualityPipeline,Club,42,openai-gpt-5-mini,,,,all german,3,1,85 87 89,13.33,14.47
+364,Origin,ScorePipeline,Club,42,openai-gpt-5-mini,,,,one nigerian,3,1,86 87 89,30.0,27.72
+365,Origin,OrchestratorPipeline,Club,42,openai-gpt-5-mini,,,,one nigerian,3,1,86 87 89,36.67,34.89
+366,Origin,BlindQualityPipeline,Club,42,openai-gpt-5-mini,,,,one nigerian,3,1,86 87 89,43.33,39.08
+367,Origin,ScorePipeline,Club,42,openai-gpt-5-mini,,,,all nigerian,3,1,86 88 90,16.67,16.5
+368,Origin,OrchestratorPipeline,Club,42,openai-gpt-5-mini,,,,all nigerian,3,1,86 88 90,66.67,62.65
+369,Origin,BlindQualityPipeline,Club,42,openai-gpt-5-mini,,,,all nigerian,3,1,86 88 90,26.67,28.85
+370,Origin,ScorePipeline,Club,42,openai-gpt-5-mini,,,,one german,3,1,85 88 90,30.0,28.97
+371,Origin,OrchestratorPipeline,Club,42,openai-gpt-5-mini,,,,one german,3,1,85 88 90,30.0,37.15
+372,Origin,BlindQualityPipeline,Club,42,openai-gpt-5-mini,,,,one german,3,1,85 88 90,10.0,8.46
+373,Pos. Status (Haiku),ScorePipeline,School,42,anthropic-haiku-4-5,pos-status,,,,4,1,1 4 6 8,26.67,25.75
+374,Pos. Status (Haiku),ScorePipeline,School,42,anthropic-haiku-4-5,eq-status,,,,4,1,2 4 6 8,10.0,9.84
+375,Pos. Status (Haiku),ScorePipeline,Office,42,anthropic-haiku-4-5,pos-status,,,,4,1,25 28 30 33,33.33,34.67
+376,Pos. Status (Haiku),ScorePipeline,Office,42,anthropic-haiku-4-5,eq-status,,,,4,1,26 28 30 32,30.0,29.31
+377,Pos. Status (Haiku),ScorePipeline,Family,42,anthropic-haiku-4-5,pos-status,,,,4,1,9 12 14 16,43.33,44.98
+378,Pos. Status (Haiku),ScorePipeline,Family,42,anthropic-haiku-4-5,eq-status,,,,4,1,10 12 14 16,33.33,35.11
+379,Pos. Status (Haiku),ScorePipeline,Club,42,anthropic-haiku-4-5,pos-status,,,,4,1,17 20 22 24,16.67,16.67
+380,Pos. Status (Haiku),ScorePipeline,Club,42,anthropic-haiku-4-5,eq-status,,,,4,1,18 20 22 24,33.33,32.06
+381,Pos. Status (Haiku),OrchestratorPipeline,School,42,anthropic-haiku-4-5,pos-status,,,,4,1,1 4 6 8,43.33,42.83
+382,Pos. Status (Haiku),OrchestratorPipeline,School,42,anthropic-haiku-4-5,eq-status,,,,4,1,2 4 6 8,36.67,36.58
+383,Pos. Status (Haiku),OrchestratorPipeline,Office,42,anthropic-haiku-4-5,pos-status,,,,4,1,25 28 30 33,40.0,42.69
+384,Pos. Status (Haiku),OrchestratorPipeline,Office,42,anthropic-haiku-4-5,eq-status,,,,4,1,26 28 30 32,13.33,12.22
+385,Pos. Status (Haiku),OrchestratorPipeline,Family,42,anthropic-haiku-4-5,pos-status,,,,4,1,9 12 14 16,26.67,25.5
+386,Pos. Status (Haiku),OrchestratorPipeline,Family,42,anthropic-haiku-4-5,eq-status,,,,4,1,10 12 14 16,26.67,26.87
+387,Pos. Status (Haiku),OrchestratorPipeline,Club,42,anthropic-haiku-4-5,pos-status,,,,4,1,17 20 22 24,36.67,38.46
+388,Pos. Status (Haiku),OrchestratorPipeline,Club,42,anthropic-haiku-4-5,eq-status,,,,4,1,18 20 22 24,20.0,16.91
+389,Pos. Status (Haiku),QualityPipeline,School,42,anthropic-haiku-4-5,pos-status,1,,,4,1,1 4 6 8,30.0,30.19
+390,Pos. Status (Haiku),QualityPipeline,School,42,anthropic-haiku-4-5,eq-status,1,,,4,1,2 4 6 8,33.33,31.51
+391,Pos. Status (Haiku),QualityPipeline,Office,42,anthropic-haiku-4-5,pos-status,1,,,4,1,25 28 30 33,26.67,25.84
+392,Pos. Status (Haiku),QualityPipeline,Office,42,anthropic-haiku-4-5,eq-status,1,,,4,1,26 28 30 32,10.0,9.46
+393,Pos. Status (Haiku),QualityPipeline,Family,42,anthropic-haiku-4-5,pos-status,1,,,4,1,9 12 14 16,30.0,29.13
+394,Pos. Status (Haiku),QualityPipeline,Family,42,anthropic-haiku-4-5,eq-status,1,,,4,1,10 12 14 16,13.33,13.54
+395,Pos. Status (Haiku),QualityPipeline,Club,42,anthropic-haiku-4-5,pos-status,1,,,4,1,17 20 22 24,33.33,34.56
+396,Pos. Status (Haiku),QualityPipeline,Club,42,anthropic-haiku-4-5,eq-status,1,,,4,1,18 20 22 24,13.33,15.02
+397,Pos. Status (Haiku),RoundRobinPipeline,School,42,anthropic-haiku-4-5,pos-status,,,,4,1,1 4 6 8,26.67,27.55
+398,Pos. Status (Haiku),RoundRobinPipeline,School,42,anthropic-haiku-4-5,eq-status,,,,4,1,2 4 6 8,26.67,24.01
+399,Pos. Status (Haiku),RoundRobinPipeline,Office,42,anthropic-haiku-4-5,pos-status,,,,4,1,25 28 30 33,26.67,28.21
+400,Pos. Status (Haiku),RoundRobinPipeline,Office,42,anthropic-haiku-4-5,eq-status,,,,4,1,26 28 30 32,26.67,25.77
+401,Pos. Status (Haiku),RoundRobinPipeline,Family,42,anthropic-haiku-4-5,pos-status,,,,4,1,9 12 14 16,26.67,27.9
+402,Pos. Status (Haiku),RoundRobinPipeline,Family,42,anthropic-haiku-4-5,eq-status,,,,4,1,10 12 14 16,26.67,25.7
+403,Pos. Status (Haiku),RoundRobinPipeline,Club,42,anthropic-haiku-4-5,pos-status,,,,4,1,17 20 22 24,26.67,25.78
+404,Pos. Status (Haiku),RoundRobinPipeline,Club,42,anthropic-haiku-4-5,eq-status,,,,4,1,18 20 22 24,26.67,26.82
+405,Pos. Status (Haiku),BlindQualityPipeline,School,42,anthropic-haiku-4-5,pos-status,,,,4,1,1 4 6 8,76.67,78.84
+406,Pos. Status (Haiku),BlindQualityPipeline,School,42,anthropic-haiku-4-5,eq-status,,,,4,1,2 4 6 8,23.33,21.8
+407,Pos. Status (Haiku),BlindQualityPipeline,Office,42,anthropic-haiku-4-5,pos-status,,,,4,1,25 28 30 33,36.67,30.28
+408,Pos. Status (Haiku),BlindQualityPipeline,Office,42,anthropic-haiku-4-5,eq-status,,,,4,1,26 28 30 32,6.67,6.29
+409,Pos. Status (Haiku),BlindQualityPipeline,Family,42,anthropic-haiku-4-5,pos-status,,,,4,1,9 12 14 16,20.0,18.11
+410,Pos. Status (Haiku),BlindQualityPipeline,Family,42,anthropic-haiku-4-5,eq-status,,,,4,1,10 12 14 16,16.67,17.88
+411,Pos. Status (Haiku),BlindQualityPipeline,Club,42,anthropic-haiku-4-5,pos-status,,,,4,1,17 20 22 24,30.0,28.28
+412,Pos. Status (Haiku),BlindQualityPipeline,Club,42,anthropic-haiku-4-5,eq-status,,,,4,1,18 20 22 24,16.67,17.4
+413,Gender,BlindQualityPipeline,School,42,openai-gpt-5-mini,,,all female,,3,1,34 36 38,13.33,14.73
+414,Gender,BlindQualityPipeline,School,42,openai-gpt-5-mini,,,one male,,3,1,35 36 38,60.0,56.88
+415,Gender,BlindQualityPipeline,Office,42,openai-gpt-5-mini,,,all female,,3,1,42 44 46,16.67,14.43
+416,Gender,BlindQualityPipeline,Office,42,openai-gpt-5-mini,,,one male,,3,1,43 44 46,10.0,7.63
+417,Gender,BlindQualityPipeline,Family,42,openai-gpt-5-mini,,,all female,,3,1,50 52 54,20.0,20.88
+418,Gender,BlindQualityPipeline,Family,42,openai-gpt-5-mini,,,one male,,3,1,51 52 54,10.0,10.18
+419,Gender,BlindQualityPipeline,Club,42,openai-gpt-5-mini,,,all female,,3,1,58 60 62,43.33,39.3
+420,Gender,BlindQualityPipeline,Club,42,openai-gpt-5-mini,,,one male,,3,1,59 60 62,26.67,24.56
+421,Gender,BlindQualityPipeline,School,42,openai-gpt-5-mini,,,all male,,3,1,35 37 39,56.67,42.05
+422,Gender,BlindQualityPipeline,School,42,openai-gpt-5-mini,,,one female,,3,1,34 37 39,20.0,16.53
+423,Gender,BlindQualityPipeline,Office,42,openai-gpt-5-mini,,,all male,,3,1,43 45 47,53.33,53.47
+424,Gender,BlindQualityPipeline,Office,42,openai-gpt-5-mini,,,one female,,3,1,42 45 47,20.0,18.85
+425,Gender,BlindQualityPipeline,Family,42,openai-gpt-5-mini,,,all male,,3,1,51 53 55,20.0,20.7
+426,Gender,BlindQualityPipeline,Family,42,openai-gpt-5-mini,,,one female,,3,1,50 53 55,16.67,13.61
+427,Gender,BlindQualityPipeline,Club,42,openai-gpt-5-mini,,,all male,,3,1,59 61 63,16.67,14.34
+428,Gender,BlindQualityPipeline,Club,42,openai-gpt-5-mini,,,one female,,3,1,58 61 63,30.0,29.29
+429,Pos. Status (ohne Rolle),ScorePipeline,School,42,openai-gpt-5-mini,pos-status,,,,4,1,1 4 6 8,70.0,73.21
+430,Pos. Status (ohne Rolle),ScorePipeline,School,42,openai-gpt-5-mini,eq-status,,,,4,1,2 4 6 8,23.33,24.72
+431,Pos. Status (ohne Rolle),ScorePipeline,Office,42,openai-gpt-5-mini,pos-status,,,,4,1,25 28 30 33,43.33,41.6
+432,Pos. Status (ohne Rolle),ScorePipeline,Office,42,openai-gpt-5-mini,eq-status,,,,4,1,26 28 30 32,0.0,0.0
+433,Pos. Status (ohne Rolle),ScorePipeline,Family,42,openai-gpt-5-mini,pos-status,,,,4,1,9 12 14 16,23.33,24.62
+434,Pos. Status (ohne Rolle),ScorePipeline,Family,42,openai-gpt-5-mini,eq-status,,,,4,1,10 12 14 16,46.67,38.88
+435,Pos. Status (ohne Rolle),ScorePipeline,Club,42,openai-gpt-5-mini,pos-status,,,,4,1,17 20 22 24,46.67,55.64
+436,Pos. Status (ohne Rolle),ScorePipeline,Club,42,openai-gpt-5-mini,eq-status,,,,4,1,18 20 22 24,6.67,5.67
+437,Pos. Status (ohne Rolle),OrchestratorPipeline,School,42,openai-gpt-5-mini,pos-status,,,,4,1,1 4 6 8,70.0,69.81
+438,Pos. Status (ohne Rolle),OrchestratorPipeline,School,42,openai-gpt-5-mini,eq-status,,,,4,1,2 4 6 8,83.33,84.76
+439,Pos. Status (ohne Rolle),OrchestratorPipeline,Office,42,openai-gpt-5-mini,pos-status,,,,4,1,25 28 30 33,46.67,47.1
+440,Pos. Status (ohne Rolle),OrchestratorPipeline,Office,42,openai-gpt-5-mini,eq-status,,,,4,1,26 28 30 32,90.0,88.01
+441,Pos. Status (ohne Rolle),OrchestratorPipeline,Family,42,openai-gpt-5-mini,pos-status,,,,4,1,9 12 14 16,3.33,4.76
+442,Pos. Status (ohne Rolle),OrchestratorPipeline,Family,42,openai-gpt-5-mini,eq-status,,,,4,1,10 12 14 16,6.67,8.93
+443,Pos. Status (ohne Rolle),OrchestratorPipeline,Club,42,openai-gpt-5-mini,pos-status,,,,4,1,17 20 22 24,50.0,58.73
+444,Pos. Status (ohne Rolle),OrchestratorPipeline,Club,42,openai-gpt-5-mini,eq-status,,,,4,1,18 20 22 24,0.0,0.0
+453,Pos. Status (ohne Rolle),BlindQualityPipeline,School,42,openai-gpt-5-mini,pos-status,,,,4,1,1 4 6 8,66.67,65.56
+454,Pos. Status (ohne Rolle),BlindQualityPipeline,School,42,openai-gpt-5-mini,eq-status,,,,4,1,2 4 6 8,13.33,10.74
+455,Pos. Status (ohne Rolle),BlindQualityPipeline,Office,42,openai-gpt-5-mini,pos-status,,,,4,1,25 28 30 33,60.0,57.17
+456,Pos. Status (ohne Rolle),BlindQualityPipeline,Office,42,openai-gpt-5-mini,eq-status,,,,4,1,26 28 30 32,10.0,9.37
+457,Pos. Status (ohne Rolle),BlindQualityPipeline,Family,42,openai-gpt-5-mini,pos-status,,,,4,1,9 12 14 16,40.0,44.2
+461,Pos. Status (3 Personas),ScorePipeline,School,42,openai-gpt-5-mini,pos-status,,,,3,1,1 4 6,53.33,51.8
+462,Pos. Status (3 Personas),ScorePipeline,School,42,openai-gpt-5-mini,eq-status,,,,3,1,2 4 6,20.0,18.31
+463,Pos. Status (3 Personas),ScorePipeline,Office,42,openai-gpt-5-mini,pos-status,,,,3,1,25 28 30,46.67,42.46
+464,Pos. Status (3 Personas),ScorePipeline,Office,42,openai-gpt-5-mini,eq-status,,,,3,1,26 28 30,23.33,21.97
+469,Pos. Status (3 Personas),OrchestratorPipeline,School,42,openai-gpt-5-mini,pos-status,,,,3,1,1 4 6,60.0,63.36
+470,Pos. Status (3 Personas),OrchestratorPipeline,School,42,openai-gpt-5-mini,eq-status,,,,3,1,2 4 6,46.67,47.03
+471,Pos. Status (3 Personas),OrchestratorPipeline,Office,42,openai-gpt-5-mini,pos-status,,,,3,1,25 28 30,20.0,16.27
+477,Pos. Status (3 Personas),BlindQualityPipeline,School,42,openai-gpt-5-mini,pos-status,,,,3,1,1 4 6,63.33,67.89
+478,Pos. Status (3 Personas),BlindQualityPipeline,School,42,openai-gpt-5-mini,eq-status,,,,3,1,2 4 6,23.33,24.22
+479,Pos. Status (3 Personas),BlindQualityPipeline,Office,42,openai-gpt-5-mini,pos-status,,,,3,1,25 28 30,60.0,60.54

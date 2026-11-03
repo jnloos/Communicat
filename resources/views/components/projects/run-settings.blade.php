@@ -51,11 +51,14 @@
             @endforeach
         </flux:select>
 
-        <flux:select wire:model.defer="form.model" :label="__('projects.fields.model')" :description="$help('model')">
-            @foreach ($models as $key => $label)
-                <option value="{{ $key }}">{{ $label }}</option>
-            @endforeach
-        </flux:select>
+        {{-- The model list is rebuilt on the server when the provider changes. --}}
+        <div wire:loading.delay.class="opacity-60" wire:target="form.provider">
+            <flux:select wire:model.defer="form.model" :label="__('projects.fields.model')" :description="$help('model')">
+                @foreach ($models as $key => $label)
+                    <option value="{{ $key }}">{{ $label }}</option>
+                @endforeach
+            </flux:select>
+        </div>
     </flux:accordion.content>
 </flux:accordion.item>
 

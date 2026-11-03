@@ -23,7 +23,7 @@
                 @endif
             </x-empty-state>
         @else
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" wire:loading.delay.class="opacity-60" wire:target="search,tagFilter,tagFilterMode,clearTagFilter">
                 @foreach ($experts as $expert)
                     <x-contributors.contributors-card
                         wire:key="expert-{{ $expert->id }}"

@@ -22,5 +22,5 @@ Requirements:
 - No single participant's perspective — neutral and complete
 - Do not lose anything from the previous summary that still matters for the further course of the discussion
 - All essential decisions, open questions, positions and facts must be preserved
-- Refer to participants only by their name, without role or rank designation
+- Refer to participants only by their name, without job or rank designation
 - No labels, no headings, just plain running text

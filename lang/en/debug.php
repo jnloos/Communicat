@@ -7,6 +7,7 @@
 */
 
 return [
+    'load_failed' => 'Could not be loaded. Close and reopen.',
     'title' => 'Job Debug',
     'subheading' => 'Report from the last 50 jobs.',
     'select_project' => 'Select project',

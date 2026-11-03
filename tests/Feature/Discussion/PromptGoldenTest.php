@@ -56,8 +56,8 @@ class PromptGoldenTest extends TestCase
     {
         $rendered = $this->renderFixturePrompts($this->fixtureProject(AttributeVisibility::Own));
 
-        $this->assertStringContainsString("Your role is Student.\n", $rendered['speak']);
-        $this->assertStringContainsString('Your role is Student.', $rendered['think.speaker']);
+        $this->assertStringContainsString("You are Student.\n", $rendered['speak']);
+        $this->assertStringContainsString('You are Student.', $rendered['think.speaker']);
         foreach ($rendered as $name => $text) {
             foreach (['(Student)', '(Teacher)', '(Parent)'] as $roster) {
                 $this->assertStringNotContainsString($roster, $text, "{$name}: {$roster}");

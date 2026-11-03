@@ -215,7 +215,7 @@ class AttributesPageTest extends TestCase
 
         $this->assertSame(PersonaAttribute::ROLE_SELF_TEMPLATE, $role->self_template);
         $this->assertSame(PersonaAttribute::ROLE_ROSTER_TEMPLATE, $role->roster_template);
-        $this->assertSame('Your role is Teacher.', $role->selfLine('Teacher'));
+        $this->assertSame('You are Teacher.', $role->selfLine('Teacher'));
     }
 
     public function test_sorting_and_moving_write_the_position(): void

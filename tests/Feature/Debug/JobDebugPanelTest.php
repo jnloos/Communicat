@@ -3,6 +3,7 @@
 namespace Tests\Feature\Debug;
 
 use App\Livewire\Debug\JobDebugPanel;
+use App\Models\JobLog;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -57,6 +58,16 @@ class JobDebugPanelTest extends TestCase
 
         $this->assertEqualsCanonicalizing([$owned->id, $shared->id], $projects->pluck('id')->all());
         $this->assertFalse($projects->contains('id', $foreign->id));
+    }
+
+    public function test_the_table_dims_while_the_project_changes_and_a_row_while_it_opens(): void
+    {
+        $own = Project::factory()->create(['user_id' => $this->user->id]);
+        $job = JobLog::create(['job_class' => 'App\\Jobs\\TurnRunner', 'project_id' => $own->id, 'status' => 'success', 'started_at' => now()]);
+
+        Livewire::test(JobDebugPanel::class)
+            ->assertSeeHtml('wire:target="projectId"')
+            ->assertSeeHtml('wire:target="selectJob('.$job->id.')"');
     }
 
     public function test_it_listens_on_the_channel_of_the_shown_project(): void

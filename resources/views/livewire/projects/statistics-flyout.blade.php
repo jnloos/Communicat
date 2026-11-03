@@ -5,7 +5,45 @@
         <x-modal-header :heading="__('statistics.title')" :subheading="__('statistics.subheading')" />
 
         <div class="mt-6 flex-1 overflow-y-auto">
-            @if ($report->isEmpty())
+            @if (! $opened)
+                {{-- The modal opens on the click; the numbers follow with the server's answer.
+                     Same blocks as below (two pie cards, trajectory card, table), so nothing jumps. --}}
+                <div role="status" aria-busy="true" data-statistics-skeleton
+                     x-data="{ slow: false, timer: null }"
+                     x-on:open-statistics.window="slow = false; clearTimeout(timer); timer = setTimeout(() => slow = true, 15000)">
+                    <flux:callout x-show="slow" x-cloak variant="warning" icon="exclamation-triangle" role="alert" class="mb-4" :text="__('statistics.load_failed')" />
+                    <span class="sr-only">{{ __('common.loading') }}</span>
+                    <flux:skeleton.group animate="shimmer" aria-hidden="true">
+                        <div class="grid gap-6 sm:grid-cols-2">
+                            @foreach ([1, 2] as $pie)
+                                <flux:card size="sm">
+                                    <flux:skeleton class="h-5 w-28" />
+                                    <flux:skeleton class="mt-1.5 h-4 w-36" />
+                                    <flux:skeleton class="mt-4 aspect-square h-auto w-full rounded-full" />
+                                    <div class="mt-3 space-y-1">
+                                        @foreach ([1, 2, 3, 4] as $row)
+                                            <flux:skeleton class="h-5 w-full" />
+                                        @endforeach
+                                    </div>
+                                    <flux:skeleton class="mt-4 h-[30px] w-full" />
+                                </flux:card>
+                            @endforeach
+                        </div>
+
+                        <flux:card size="sm" class="mt-6">
+                            <flux:skeleton class="h-[34px] w-full" />
+                            <flux:skeleton class="mt-4 aspect-[2/1] h-auto w-full rounded-lg" />
+                            <flux:skeleton class="mx-auto mt-3 h-5 w-2/3" />
+                        </flux:card>
+
+                        <div class="pt-6">
+                            @foreach ([1, 2, 3, 4, 5] as $row)
+                                <flux:skeleton class="h-[47.6px] w-full" />
+                            @endforeach
+                        </div>
+                    </flux:skeleton.group>
+                </div>
+            @elseif ($report->isEmpty())
                 <x-empty-state icon="chart-bar">
                     {{ __('statistics.empty') }}
                 </x-empty-state>
@@ -61,8 +99,10 @@
                          new series needs a fresh element rather than a morphed one. --}}
                     <flux:chart
                         wire:key="trajectory-{{ $trajectoryUnit->value }}-{{ $trajectoryMode->value }}-{{ count($trajectoryRows) }}"
+                        wire:loading.delay.class="opacity-60"
+                        wire:target="trajectoryUnit,trajectoryMode"
                         :value="$trajectoryRows"
-                        class="mt-4 aspect-[2/1]"
+                        class="mt-4 aspect-[2/1] transition-opacity"
                     >
                         <flux:chart.svg>
                             @foreach ($trajectoryLines as $line)

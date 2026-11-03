@@ -46,6 +46,42 @@ class StatisticsPageTest extends TestCase
             ->assertDontSeeHtml('moveTemplate(');
     }
 
+    public function test_the_editor_loads_lazily_behind_a_skeleton(): void
+    {
+        $user = User::factory()->create();
+        $question = $user->questions()->create(['name' => 'Mine']);
+        $this->actingAs($user);
+
+        Livewire::test(StatisticsPage::class, ['questionId' => $question->id])
+            ->assertSeeHtml('data-flux-skeleton')
+            ->assertSeeHtml('aria-busy="true"')
+            ->assertSee(__('common.loading'))
+            ->assertDontSee(__('questions.notes.label'));
+
+        Livewire::withoutLazyLoading();
+        Livewire::test(StatisticsPage::class, ['questionId' => $question->id])
+            ->assertDontSeeHtml('data-flux-skeleton')
+            ->assertSee(__('questions.notes.label'));
+    }
+
+    public function test_the_editor_dims_while_another_question_opens(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(StatisticsPage::class)
+            ->assertSeeHtml('wire:loading.delay.class="opacity-60"')
+            ->assertSeeHtml('wire:target="open"');
+    }
+
+    public function test_the_loading_texts_exist_in_both_languages(): void
+    {
+        foreach (['de', 'en'] as $locale) {
+            foreach (['common.loading', 'questions.autosave.saving', 'questions.autosave.saved'] as $key) {
+                $this->assertNotSame($key, __($key, [], $locale), "$key missing in $locale");
+            }
+        }
+    }
+
     public function test_a_new_question_opens_at_once_without_a_name(): void
     {
         $user = User::factory()->create();
@@ -63,11 +99,12 @@ class StatisticsPageTest extends TestCase
         $user = User::factory()->create();
         $this->actingAs($user);
 
-        Livewire::test(StatisticsPage::class)
+        $page = Livewire::test(StatisticsPage::class)
             ->assertSee('Templates')
             ->assertSee('Questions')
-            ->assertSee('Status effect')
-            ->call('open', $template->id)
+            ->assertSee('Status effect');
+        Livewire::withoutLazyLoading(); // Livewire resets it after every request, so it is set right before the one that opens the editor.
+        $page->call('open', $template->id)
             ->assertSet('questionId', $template->id)
             ->assertSee('Copy to adjust');
 

@@ -13,6 +13,7 @@
                 <a href="{{ route('dashboard') }}" class="ms-1 flex min-w-0 items-center space-x-2 rtl:space-x-reverse" wire:navigate>
                     <x-app-logo />
                 </a>
+                <x-environment-badge class="ms-auto" />
                 <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
             </flux:sidebar.header>
 
@@ -61,6 +62,8 @@
             </a>
 
             <flux:spacer />
+
+            <x-environment-badge class="me-2" />
 
             <flux:dropdown position="top" align="end">
                 <flux:profile :initials="auth()->user()->initials()" icon-trailing="chevron-down"/>

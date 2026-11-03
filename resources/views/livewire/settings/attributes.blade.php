@@ -80,7 +80,7 @@
                     :placeholder="__('attributes.preview.example')"
                 />
 
-                <dl class="space-y-1 text-sm" data-preview>
+                <dl class="space-y-1 text-sm" data-preview wire:loading.delay.class="opacity-60" wire:target="selfTemplate,rosterTemplate,previewValue">
                     <div>
                         <dt class="text-xs text-zinc-500 dark:text-zinc-400">{{ __('attributes.preview.self') }}</dt>
                         <dd class="text-zinc-800 dark:text-white" data-preview-self>{{ $previewSelf ?? '–' }}</dd>

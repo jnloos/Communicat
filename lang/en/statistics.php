@@ -7,6 +7,7 @@
 */
 
 return [
+    'load_failed' => 'Could not be loaded. Close and reopen.',
     'title' => 'Speaking shares',
     'subheading' => 'Who held the floor how often, and how much text that produced.',
     'empty' => 'No contribution spoken yet. Start the run and the shares will fill in.',

@@ -1,6 +1,6 @@
 === ABOUT YOU ===
 You are Alice Fixture (your token: E11).
-Your role is Student.
+You are Student.
 
 Curious and quick to ask why.
 

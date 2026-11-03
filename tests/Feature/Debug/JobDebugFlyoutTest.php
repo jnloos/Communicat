@@ -70,6 +70,30 @@ class JobDebugFlyoutTest extends TestCase
         $this->assertTrue($logs->isEmpty());
     }
 
+    public function test_it_shows_a_skeleton_until_it_is_opened(): void
+    {
+        app()->setLocale('en');
+        $project = $this->project();
+        $this->jobFor($project);
+
+        Livewire::test(JobDebugFlyout::class, ['project' => $project])
+            ->assertSeeHtml('data-job-report-skeleton')
+            ->assertSee('Loading …')
+            ->call('open')
+            ->assertDontSeeHtml('data-job-report-skeleton');
+    }
+
+    public function test_the_skeleton_warns_when_the_jobs_do_not_arrive(): void
+    {
+        Livewire::test(JobDebugFlyout::class, ['project' => $this->project()])
+            ->assertSeeHtml('setTimeout(() => slow = true, 15000)')
+            ->assertSeeHtml('role="alert"');
+
+        foreach (['de', 'en'] as $locale) {
+            $this->assertNotSame('debug.load_failed', __('debug.load_failed', [], $locale));
+        }
+    }
+
     public function test_opening_loads_the_jobs(): void
     {
         $project = $this->project();

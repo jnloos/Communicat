@@ -11,7 +11,6 @@ use App\Discussion\Values\ShareSeries;
 use App\Discussion\Values\ShareUnit;
 use App\Discussion\Values\Trajectory;
 use App\Models\Project;
-use Flux\Flux;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -53,11 +52,11 @@ class StatisticsFlyout extends Component
         $this->projectId = $project->id;
     }
 
+    /** The trigger opens the modal on the client (`$flux.modal(MODAL).show()`); this only loads the numbers. */
     #[On('open-statistics')]
     public function open(): void
     {
         $this->opened = true;
-        Flux::modal(self::MODAL)->show();
     }
 
     #[On('echo-private:projects.{projectId},.MessageGenerated')]

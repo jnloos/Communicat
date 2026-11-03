@@ -6,7 +6,7 @@
             {{-- The ZIP is built before the download starts; say so for a while after the click. --}}
             <div class="flex flex-wrap items-center gap-3" x-data="{ building: false }">
                 <flux:button icon="arrow-down-tray" :href="route('settings.export')" x-on:click="building = true; setTimeout(() => building = false, 8000)">{{ __('transfer.export.everything') }}</flux:button>
-                <flux:text size="sm" aria-live="polite"><span x-show="building" x-cloak>{{ __('transfer.export.building') }}</span></flux:text>
+                <flux:text size="sm" aria-live="polite" class="flex items-center gap-1.5" x-show="building" x-cloak><flux:icon.loading variant="micro" />{{ __('transfer.export.building') }}</flux:text>
             </div>
         </flux:card>
 
@@ -18,7 +18,7 @@
                 <flux:file-upload wire:model="bundle" accept=".zip,application/zip">
                     <flux:file-upload.dropzone inline role="button" :aria-label="__('transfer.import.choose')" :heading="__('transfer.import.dropzone_heading')" :text="__('transfer.import.dropzone_text', ['mb' => $maxMegabytes])" />
                 </flux:file-upload>
-                <flux:text size="sm" aria-live="polite" wire:loading wire:target="bundle">{{ __('transfer.import.checking') }}</flux:text>
+                <flux:text size="sm" aria-live="polite" class="flex items-center gap-1.5" wire:loading.flex wire:target="bundle"><flux:icon.loading variant="micro" />{{ __('transfer.import.checking') }}</flux:text>
                 <flux:error name="bundle" />
             @else
                 @if ($stage === 'done')
@@ -39,8 +39,9 @@
                 @endif
                 <x-transfer.report :report="$importReport" />
 
-                <div class="flex justify-end gap-2">
+                <div class="flex items-center justify-end gap-2">
                     @if ($stage === 'preview')
+                        <flux:text size="sm" class="mr-auto flex items-center gap-1.5" wire:loading.flex wire:target="import" aria-live="polite"><flux:icon.loading variant="micro" />{{ __('transfer.import.importing') }}</flux:text>
                         <flux:button variant="filled" wire:click="startOver">{{ __('common.actions.cancel') }}</flux:button>
                         <flux:button variant="primary" icon="arrow-up-tray" wire:click="import" wire:loading.attr="disabled" wire:target="import" :disabled="$nothingNew">{{ __('transfer.import.submit') }}</flux:button>
                     @else

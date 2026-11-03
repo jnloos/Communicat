@@ -16,6 +16,7 @@
         </flux:tabs>
     </flux:tab.group>
 
+    <div wire:loading.delay.class="opacity-60" wire:target="scope">
     @if ($categories->isEmpty())
         <x-empty-state icon="tag">{{ __('tags.empty') }}</x-empty-state>
     @endif
@@ -99,6 +100,7 @@
                 />
             </flux:card>
         @endforeach
+    </div>
     </div>
 
     <x-tags.add-form
