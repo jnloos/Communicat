@@ -30,6 +30,7 @@ return [
         'success' => 'success',
         'failed' => 'failed',
         'running' => 'running…',
+        'interrupted' => 'interrupted',
     ],
 
     'empty' => 'No jobs have run yet.',

@@ -194,6 +194,23 @@ return [
             'temperature' => null,
             'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
         ],
+        // The same models as the gateway's Luna entries, but over the paid API key (listed by GET /v1/models, 09.11.2026).
+        'openai-gpt-5.6-luna' => [
+            'label' => 'GPT-5.6 Luna',
+            'provider' => 'openai',
+            'model' => 'gpt-5.6-luna',
+            'max_output_tokens' => 8000,
+            'temperature' => null,
+            'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
+        ],
+        'openai-gpt-6-luna' => [
+            'label' => 'GPT-6 Luna',
+            'provider' => 'openai',
+            'model' => 'gpt-6-luna',
+            'max_output_tokens' => 8000,
+            'temperature' => null,
+            'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
+        ],
         'anthropic-opus-5' => [
             'label' => 'Claude Opus 5',
             'provider' => 'anthropic',
@@ -251,6 +268,15 @@ return [
             'label' => 'GPT-5.6 Sol',
             'provider' => 'omniroute',
             'model' => 'cx/gpt-5.6-sol',
+            'max_output_tokens' => 8000,
+            'temperature' => null,
+            'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),
+        ],
+        // Listed by GET /v1/models of the gateway on 09.11.2026.
+        'omniroute-gpt-6-luna' => [
+            'label' => 'GPT-6 Luna',
+            'provider' => 'omniroute',
+            'model' => 'cx/gpt-6-luna',
             'max_output_tokens' => 8000,
             'temperature' => null,
             'reasoning_effort' => env('OPENAI_REASONING_EFFORT', 'low'),

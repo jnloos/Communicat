@@ -61,10 +61,10 @@ class OmniRouteChannelTest extends TestCase
     {
         $this->assertSame('OmniRoute', ModelConfig::providers()['omniroute']);
         $this->assertSame(
-            ['omniroute-gpt-5.6-luna', 'omniroute-gpt-5.6-terra', 'omniroute-gpt-5.6-sol', 'omniroute-claude-opus-5', 'omniroute-claude-sonnet-5', 'omniroute-claude-fable-5', 'omniroute-claude-haiku-4-5'],
+            ['omniroute-gpt-5.6-luna', 'omniroute-gpt-5.6-terra', 'omniroute-gpt-5.6-sol', 'omniroute-gpt-6-luna', 'omniroute-claude-opus-5', 'omniroute-claude-sonnet-5', 'omniroute-claude-fable-5', 'omniroute-claude-haiku-4-5'],
             array_keys(ModelConfig::optionsFor('omniroute')),
         );
-        $this->assertSame(['openai-gpt-5', 'openai-gpt-5-mini', 'openai-gpt-5-nano'], array_keys(ModelConfig::optionsFor('openai')));
+        $this->assertSame(['openai-gpt-5', 'openai-gpt-5-mini', 'openai-gpt-5-nano', 'openai-gpt-5.6-luna', 'openai-gpt-6-luna'], array_keys(ModelConfig::optionsFor('openai')));
     }
 
     public function test_the_gateway_is_never_the_default(): void

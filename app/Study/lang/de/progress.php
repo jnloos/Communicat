@@ -1,0 +1,29 @@
+<?php
+
+// Study-only, removable: see app/Study/README.md.
+return [
+    'nav' => 'Studie',
+    'heading' => 'Studienfortschritt',
+    'subheading' => 'Kontrolliere den Stand eines Batch Runs für eine Studie.',
+    'wave' => 'Welle',
+    'all_waves' => 'Alle Wellen',
+    'missing_heading' => 'Noch keine Studienzellen',
+    'missing' => 'Es fehlen die Projekt-Tag-Kategorien: :categories. Der Zellen-Generator legt sie an.',
+    'stale_heading' => 'Die Worker stehen',
+    'stale' => 'Seit mehr als :minutes Minuten ist kein Turn fertig geworden, obwohl Läufe offen sind.',
+    'done' => 'Fertige Läufe',
+    'breakdown' => ':started laufen · :open offen · :given_up aufgegeben',
+    'pace' => 'Tempo (letzte Stunde)',
+    'turns_per_hour' => ':count Turns/h',
+    'eta' => 'Restzeit',
+    'hours' => '≈ :hours h',
+    'last_turn' => 'Letzter Turn',
+    'queued' => ':count Jobs in der Queue',
+    'grid_caption' => 'Fertige von allen Läufen je Zelle: Fokus-Profil (Zeile) × Duo-Profil (Spalte)',
+    'focus_duo' => 'Fokus ↓ / Duo →',
+    'cell_title' => ':done fertig, :started laufen, :open offen, :given_up aufgegeben',
+    'no_cells' => 'Keine Läufe in dieser Auswahl.',
+    'disruptions' => 'Störungen der letzten Stunde',
+    'failed_jobs' => 'Aufgegebene Läufe',
+    'none' => 'Keine.',
+];

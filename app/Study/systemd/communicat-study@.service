@@ -1,0 +1,25 @@
+# Study workers: one unit per worker, e.g. 16 of them:
+#   systemctl enable --now communicat-study@{1..16}
+# Copy to /etc/systemd/system/communicat-study@.service. Study-only, see app/Study/README.md. Fill the queue with
+#   php artisan study:queue --group=ID --order-seed=SEED
+# Broadcasting is off for these workers: a study run has no viewer, and a missing
+# Reverb would otherwise interrupt every turn.
+
+[Unit]
+Description=Communicat study worker %i
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/communicat
+Environment=BROADCAST_CONNECTION=log
+ExecStart=php artisan queue:work study --queue=study --sleep=5 --max-time=21600
+Restart=always
+RestartSec=5
+# Let a running turn finish on stop: the job's own timeout is 3600 s.
+TimeoutStopSec=300
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target

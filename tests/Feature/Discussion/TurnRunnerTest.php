@@ -17,6 +17,7 @@ use App\Models\Project;
 use App\Models\PromptLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Laravel\Ai\Exceptions\RateLimitedException;
 use RuntimeException;
 use Tests\Fakes\FakeAgents;
 use Tests\TestCase;
@@ -137,6 +138,18 @@ class TurnRunnerTest extends TestCase
         $this->assertNull($log->words);
         $this->assertSame(0, Message::whereNotNull('expert_id')->count());
         $this->assertSame(1, PromptLog::where('status', 'failed')->count());
+    }
+
+    /** An unreachable or rate-limited provider says nothing about the mechanism: interrupted, not failed. */
+    public function test_an_infrastructure_error_is_recorded_as_interrupted(): void
+    {
+        FakeAgents::fails(SpeakAgent::class, RateLimitedException::forProvider('openai'));
+
+        $result = app(TurnRunner::class)->run($this->project);
+
+        $this->assertSame('interrupted', $result->reason);
+        $this->assertSame(JobStatus::Interrupted, JobLog::sole()->status);
+        $this->assertStringContainsString('RateLimitedException', JobLog::sole()->error);
     }
 
     public function test_stops_without_a_log_when_nobody_can_speak(): void

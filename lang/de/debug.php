@@ -30,6 +30,7 @@ return [
         'success' => 'erfolgreich',
         'failed' => 'fehlgeschlagen',
         'running' => 'läuft…',
+        'interrupted' => 'unterbrochen',
     ],
 
     'empty' => 'Noch keine Jobs gelaufen.',

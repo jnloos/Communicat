@@ -1,0 +1,2787 @@
+{
+ "filters": {
+  "outcome": "focus persona turn share, first 30 spoken turns, pp",
+  "agents": 3,
+  "min_spoken": 30,
+  "included": 232,
+  "excluded": {},
+  "included_with_infrastructure_failures": 15
+ },
+ "1_sd_raw": [
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "n": 32,
+   "mean": 30.4,
+   "sd": 15.7
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "n": 40,
+   "mean": 28.7,
+   "sd": 16.5
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "n": 32,
+   "mean": 34.2,
+   "sd": 3.6
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "openai-gpt-5-mini",
+   "n": 40,
+   "mean": 27.5,
+   "sd": 21.8
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "n": 16,
+   "mean": 40.8,
+   "sd": 25.6
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "n": 32,
+   "mean": 32.9,
+   "sd": 9.0
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "openai-gpt-5-mini",
+   "n": 40,
+   "mean": 34.1,
+   "sd": 15.2
+  }
+ ],
+ "1_sd_residual": [
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "n": 32,
+   "df": 21,
+   "residual_sd": 15.2,
+   "formula": "turn_share ~ condition + topic"
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "n": 40,
+   "df": 27,
+   "residual_sd": 15.4,
+   "formula": "turn_share ~ condition + topic"
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "n": 32,
+   "df": 21,
+   "residual_sd": 3.1,
+   "formula": "turn_share ~ condition + topic"
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "openai-gpt-5-mini",
+   "n": 40,
+   "df": 27,
+   "residual_sd": 19.1,
+   "formula": "turn_share ~ condition + topic"
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "n": 16,
+   "df": 9,
+   "residual_sd": 25.4,
+   "formula": "turn_share ~ condition + topic"
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "n": 32,
+   "df": 21,
+   "residual_sd": 6.1,
+   "formula": "turn_share ~ condition + topic"
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "openai-gpt-5-mini",
+   "n": 40,
+   "df": 27,
+   "residual_sd": 13.8,
+   "formula": "turn_share ~ condition + topic"
+  },
+  {
+   "pipeline": "pooled",
+   "model": "all",
+   "n": 232,
+   "df": 208,
+   "residual_sd": 15.6,
+   "formula": "turn_share ~ condition + pipeline + topic + model"
+  },
+  {
+   "pipeline": "pooled",
+   "model": "omniroute-gpt-5.6-luna",
+   "n": 96,
+   "df": 83,
+   "residual_sd": 9.7,
+   "formula": "turn_share ~ condition + pipeline + topic + model"
+  },
+  {
+   "pipeline": "pooled",
+   "model": "openai-gpt-5-mini",
+   "n": 136,
+   "df": 120,
+   "residual_sd": 18.6,
+   "formula": "turn_share ~ condition + pipeline + topic + model"
+  }
+ ],
+ "2_inventory": [
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all female",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all female",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all female",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all female",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all female / gender_sentence=shown",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all female / gender_sentence=shown",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all female / gender_sentence=shown",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all female / gender_sentence=shown",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all male",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all male",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all male",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all male",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all male / gender_sentence=shown",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all male / gender_sentence=shown",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all male / gender_sentence=shown",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=all male / gender_sentence=shown",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one female",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one female",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one female",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one female",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one female / gender_sentence=shown",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one female / gender_sentence=shown",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one female / gender_sentence=shown",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one female / gender_sentence=shown",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one male",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one male",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one male",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one male",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one male / gender_sentence=shown",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one male / gender_sentence=shown",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one male / gender_sentence=shown",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "gender=one male / gender_sentence=shown",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=all german",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=all german",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=all german",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=all german",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=all nigerian",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=all nigerian",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=all nigerian",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=all nigerian",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=one german",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=one german",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=one german",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=one german",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=one nigerian",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=one nigerian",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=one nigerian",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "origin=one nigerian",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "status=eq-status",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "status=eq-status",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "status=eq-status",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "status=eq-status",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "status=pos-status",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "status=pos-status",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "status=pos-status",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "condition": "status=pos-status",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all female",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all female",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all female",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all female",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all female / gender_sentence=shown",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all female / gender_sentence=shown",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all female / gender_sentence=shown",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all female / gender_sentence=shown",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all male",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all male",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all male",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all male",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all male / gender_sentence=shown",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all male / gender_sentence=shown",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all male / gender_sentence=shown",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=all male / gender_sentence=shown",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one female",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one female",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one female",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one female",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one female / gender_sentence=shown",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one female / gender_sentence=shown",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one female / gender_sentence=shown",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one female / gender_sentence=shown",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one male",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one male",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one male",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one male",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one male / gender_sentence=shown",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one male / gender_sentence=shown",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one male / gender_sentence=shown",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "gender=one male / gender_sentence=shown",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=all german",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=all german",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=all german",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=all german",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=all nigerian",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=all nigerian",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=all nigerian",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=all nigerian",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=one german",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=one german",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=one german",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=one german",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=one nigerian",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=one nigerian",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=one nigerian",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "origin=one nigerian",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "status=eq-status",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "status=eq-status",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "status=eq-status",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "status=eq-status",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "status=pos-status",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "status=pos-status",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "status=pos-status",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "condition": "status=pos-status",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=all female",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=all female",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=all female",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=all female",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=all male",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=all male",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=all male",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=all male",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=one female",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=one female",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=one female",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=one female",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=one male",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=one male",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=one male",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "condition": "gender=one male",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all female",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all female",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all female",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all female",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all female / gender_sentence=shown",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all female / gender_sentence=shown",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all female / gender_sentence=shown",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all female / gender_sentence=shown",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all male",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all male",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all male",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all male",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all male / gender_sentence=shown",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all male / gender_sentence=shown",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all male / gender_sentence=shown",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=all male / gender_sentence=shown",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one female",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one female",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one female",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one female",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one female / gender_sentence=shown",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one female / gender_sentence=shown",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one female / gender_sentence=shown",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one female / gender_sentence=shown",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one male",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one male",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one male",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one male",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one male / gender_sentence=shown",
+   "topic": "Club",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one male / gender_sentence=shown",
+   "topic": "Family",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one male / gender_sentence=shown",
+   "topic": "Office",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "gender=one male / gender_sentence=shown",
+   "topic": "School",
+   "model": "omniroute-gpt-5.6-luna",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=all german",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=all german",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=all german",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=all german",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=all nigerian",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=all nigerian",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=all nigerian",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=all nigerian",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=one german",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=one german",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=one german",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=one german",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=one nigerian",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=one nigerian",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=one nigerian",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "origin=one nigerian",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "status=eq-status",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "status=eq-status",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "status=eq-status",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "status=eq-status",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "status=pos-status",
+   "topic": "Club",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "status=pos-status",
+   "topic": "Family",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "status=pos-status",
+   "topic": "Office",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "condition": "status=pos-status",
+   "topic": "School",
+   "model": "openai-gpt-5-mini",
+   "focus_seat": 1,
+   "runs": 1
+  }
+ ],
+ "3_topic_name": [
+  {
+   "pipeline": "BlindQualityPipeline",
+   "n": 72,
+   "adjusted_for": "condition + model",
+   "topic": {
+    "levels": 4,
+    "runs_per_level": [
+     18,
+     18,
+     18,
+     18
+    ],
+    "sd_of_means": 1.9,
+    "icc1": -0.034
+   },
+   "focus_name": {
+    "levels": 13,
+    "runs_per_level": [
+     2,
+     2,
+     2,
+     2,
+     6,
+     6,
+     6,
+     6,
+     6,
+     6,
+     6,
+     6,
+     16
+    ],
+    "sd_of_means": 8.3,
+    "icc1": 0.156
+   }
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "n": 72,
+   "adjusted_for": "condition + model",
+   "topic": {
+    "levels": 4,
+    "runs_per_level": [
+     18,
+     18,
+     18,
+     18
+    ],
+    "sd_of_means": 7.3,
+    "icc1": 0.19
+   },
+   "focus_name": {
+    "levels": 13,
+    "runs_per_level": [
+     2,
+     2,
+     2,
+     2,
+     6,
+     6,
+     6,
+     6,
+     6,
+     6,
+     6,
+     6,
+     16
+    ],
+    "sd_of_means": 9.6,
+    "icc1": -0.016
+   }
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "n": 16,
+   "adjusted_for": "condition + model",
+   "topic": {
+    "levels": 4,
+    "runs_per_level": [
+     4,
+     4,
+     4,
+     4
+    ],
+    "sd_of_means": 11.8,
+    "icc1": 0.037
+   },
+   "focus_name": {
+    "levels": 8,
+    "runs_per_level": [
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2,
+     2
+    ],
+    "sd_of_means": 17.7,
+    "icc1": 0.234
+   }
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "n": 72,
+   "adjusted_for": "condition + model",
+   "topic": {
+    "levels": 4,
+    "runs_per_level": [
+     18,
+     18,
+     18,
+     18
+    ],
+    "sd_of_means": 3.3,
+    "icc1": 0.058
+   },
+   "focus_name": {
+    "levels": 13,
+    "runs_per_level": [
+     2,
+     2,
+     2,
+     2,
+     6,
+     6,
+     6,
+     6,
+     6,
+     6,
+     6,
+     6,
+     16
+    ],
+    "sd_of_means": 3.9,
+    "icc1": -0.096
+   }
+  }
+ ],
+ "4_condition_means": [
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "n": 4,
+   "mean": 21.7,
+   "sd": 18.4
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=all female / gender_sentence=shown",
+   "n": 4,
+   "mean": 33.3,
+   "sd": 11.5
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "n": 4,
+   "mean": 19.2,
+   "sd": 9.2
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=all male / gender_sentence=shown",
+   "n": 4,
+   "mean": 40.0,
+   "sd": 20.2
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "n": 4,
+   "mean": 35.0,
+   "sd": 15.0
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=one female / gender_sentence=shown",
+   "n": 4,
+   "mean": 36.7,
+   "sd": 17.4
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "n": 4,
+   "mean": 16.7,
+   "sd": 11.2
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=one male / gender_sentence=shown",
+   "n": 4,
+   "mean": 40.8,
+   "sd": 6.9
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=all female",
+   "n": 4,
+   "mean": 23.3,
+   "sd": 13.6
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=all male",
+   "n": 4,
+   "mean": 36.7,
+   "sd": 21.3
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=one female",
+   "n": 4,
+   "mean": 21.7,
+   "sd": 5.8
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=one male",
+   "n": 4,
+   "mean": 26.7,
+   "sd": 23.6
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "origin=all german",
+   "n": 4,
+   "mean": 23.3,
+   "sd": 17.6
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "origin=all nigerian",
+   "n": 4,
+   "mean": 25.0,
+   "sd": 6.4
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "origin=one german",
+   "n": 4,
+   "mean": 17.5,
+   "sd": 5.7
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "origin=one nigerian",
+   "n": 4,
+   "mean": 26.7,
+   "sd": 14.1
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "status=eq-status",
+   "n": 4,
+   "mean": 30.8,
+   "sd": 15.2
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "status=pos-status",
+   "n": 4,
+   "mean": 55.0,
+   "sd": 12.3
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "n": 4,
+   "mean": 35.0,
+   "sd": 5.8
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=all female / gender_sentence=shown",
+   "n": 4,
+   "mean": 32.5,
+   "sd": 1.7
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "n": 4,
+   "mean": 34.2,
+   "sd": 3.2
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=all male / gender_sentence=shown",
+   "n": 4,
+   "mean": 35.8,
+   "sd": 4.2
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "n": 4,
+   "mean": 34.2,
+   "sd": 1.7
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=one female / gender_sentence=shown",
+   "n": 4,
+   "mean": 35.8,
+   "sd": 1.7
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "n": 4,
+   "mean": 35.8,
+   "sd": 4.2
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=one male / gender_sentence=shown",
+   "n": 4,
+   "mean": 30.0,
+   "sd": 2.7
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=all female",
+   "n": 4,
+   "mean": 9.2,
+   "sd": 3.2
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=all male",
+   "n": 4,
+   "mean": 27.5,
+   "sd": 19.9
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=one female",
+   "n": 4,
+   "mean": 21.7,
+   "sd": 13.7
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=one male",
+   "n": 4,
+   "mean": 17.5,
+   "sd": 19.7
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "origin=all german",
+   "n": 4,
+   "mean": 31.7,
+   "sd": 27.8
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "origin=all nigerian",
+   "n": 4,
+   "mean": 25.8,
+   "sd": 27.4
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "origin=one german",
+   "n": 4,
+   "mean": 37.5,
+   "sd": 28.1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "origin=one nigerian",
+   "n": 4,
+   "mean": 35.8,
+   "sd": 27.9
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "status=eq-status",
+   "n": 4,
+   "mean": 39.2,
+   "sd": 24.1
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "status=pos-status",
+   "n": 4,
+   "mean": 29.2,
+   "sd": 21.0
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=all female",
+   "n": 4,
+   "mean": 38.3,
+   "sd": 31.8
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=all male",
+   "n": 4,
+   "mean": 28.3,
+   "sd": 25.6
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=one female",
+   "n": 4,
+   "mean": 35.8,
+   "sd": 14.5
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=one male",
+   "n": 4,
+   "mean": 60.8,
+   "sd": 24.7
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=all female / gender_sentence=hidden",
+   "n": 4,
+   "mean": 26.7,
+   "sd": 7.2
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=all female / gender_sentence=shown",
+   "n": 4,
+   "mean": 30.8,
+   "sd": 14.2
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=all male / gender_sentence=hidden",
+   "n": 4,
+   "mean": 27.5,
+   "sd": 7.4
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=all male / gender_sentence=shown",
+   "n": 4,
+   "mean": 40.0,
+   "sd": 4.7
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=one female / gender_sentence=hidden",
+   "n": 4,
+   "mean": 31.7,
+   "sd": 6.4
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=one female / gender_sentence=shown",
+   "n": 4,
+   "mean": 40.0,
+   "sd": 7.2
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=one male / gender_sentence=hidden",
+   "n": 4,
+   "mean": 25.8,
+   "sd": 3.2
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "condition": "gender=one male / gender_sentence=shown",
+   "n": 4,
+   "mean": 40.8,
+   "sd": 5.0
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=all female",
+   "n": 4,
+   "mean": 32.5,
+   "sd": 9.6
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=all male",
+   "n": 4,
+   "mean": 29.2,
+   "sd": 6.3
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=one female",
+   "n": 4,
+   "mean": 37.5,
+   "sd": 12.9
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "gender=one male",
+   "n": 4,
+   "mean": 46.7,
+   "sd": 11.5
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "origin=all german",
+   "n": 4,
+   "mean": 34.2,
+   "sd": 28.1
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "origin=all nigerian",
+   "n": 4,
+   "mean": 15.8,
+   "sd": 7.9
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "origin=one german",
+   "n": 4,
+   "mean": 33.3,
+   "sd": 11.5
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "origin=one nigerian",
+   "n": 4,
+   "mean": 30.0,
+   "sd": 4.7
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "status=eq-status",
+   "n": 4,
+   "mean": 29.2,
+   "sd": 14.0
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "openai-gpt-5-mini",
+   "condition": "status=pos-status",
+   "n": 4,
+   "mean": 52.5,
+   "sd": 12.9
+  }
+ ],
+ "5_tokens": [
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "n": 32,
+   "tokens_in": {
+    "n": 32,
+    "mean": 477242,
+    "median": 481704
+   },
+   "tokens_cached": {
+    "n": 0,
+    "mean": null,
+    "median": null
+   },
+   "tokens_out": {
+    "n": 32,
+    "mean": 33712,
+    "median": 33662
+   }
+  },
+  {
+   "pipeline": "BlindQualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "n": 40,
+   "tokens_in": {
+    "n": 40,
+    "mean": 950207,
+    "median": 957116
+   },
+   "tokens_cached": {
+    "n": 40,
+    "mean": 686029,
+    "median": 683648
+   },
+   "tokens_out": {
+    "n": 40,
+    "mean": 74165,
+    "median": 73548
+   }
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "n": 32,
+   "tokens_in": {
+    "n": 32,
+    "mean": 322314,
+    "median": 320626
+   },
+   "tokens_cached": {
+    "n": 0,
+    "mean": null,
+    "median": null
+   },
+   "tokens_out": {
+    "n": 32,
+    "mean": 15359,
+    "median": 15446
+   }
+  },
+  {
+   "pipeline": "OrchestratorPipeline",
+   "model": "openai-gpt-5-mini",
+   "n": 40,
+   "tokens_in": {
+    "n": 40,
+    "mean": 567609,
+    "median": 584364
+   },
+   "tokens_cached": {
+    "n": 24,
+    "mean": 456912,
+    "median": 468416
+   },
+   "tokens_out": {
+    "n": 40,
+    "mean": 29870,
+    "median": 29960
+   }
+  },
+  {
+   "pipeline": "QualityPipeline",
+   "model": "openai-gpt-5-mini",
+   "n": 16,
+   "tokens_in": {
+    "n": 16,
+    "mean": 988486,
+    "median": 981726
+   },
+   "tokens_cached": {
+    "n": 0,
+    "mean": null,
+    "median": null
+   },
+   "tokens_out": {
+    "n": 16,
+    "mean": 75432,
+    "median": 74320
+   }
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "omniroute-gpt-5.6-luna",
+   "n": 32,
+   "tokens_in": {
+    "n": 32,
+    "mean": 409964,
+    "median": 408471
+   },
+   "tokens_cached": {
+    "n": 0,
+    "mean": null,
+    "median": null
+   },
+   "tokens_out": {
+    "n": 32,
+    "mean": 19206,
+    "median": 19076
+   }
+  },
+  {
+   "pipeline": "ScorePipeline",
+   "model": "openai-gpt-5-mini",
+   "n": 40,
+   "tokens_in": {
+    "n": 40,
+    "mean": 795384,
+    "median": 786196
+   },
+   "tokens_cached": {
+    "n": 24,
+    "mean": 573664,
+    "median": 574336
+   },
+   "tokens_out": {
+    "n": 40,
+    "mean": 51199,
+    "median": 50746
+   }
+  }
+ ],
+ "check_122_runs_sd_19_2": [
+  {
+   "subset": "all 3-agent runs",
+   "n": 232,
+   "sd": 16.3
+  },
+  {
+   "subset": "model=omniroute-gpt-5.6-luna",
+   "n": 96,
+   "sd": 10.7
+  },
+  {
+   "subset": "model=openai-gpt-5-mini",
+   "n": 136,
+   "sd": 19.4
+  },
+  {
+   "subset": "pipeline=BlindQualityPipeline",
+   "n": 72,
+   "sd": 16.1
+  },
+  {
+   "subset": "pipeline=OrchestratorPipeline",
+   "n": 72,
+   "sd": 16.6
+  },
+  {
+   "subset": "pipeline=QualityPipeline",
+   "n": 16,
+   "sd": 25.6
+  },
+  {
+   "subset": "pipeline=ScorePipeline",
+   "n": 72,
+   "sd": 12.8
+  }
+ ]
+}

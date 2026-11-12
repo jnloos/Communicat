@@ -103,8 +103,8 @@ class RunProject extends Command
             ['Stopped because', $stoppedBecause ?? 'the requested turns were done'],
         ]);
 
-        // A run that stops for a reason other than a failure did what it was
-        // asked to; only a failure is worth a non-zero exit code.
-        return $failed > 0 && $this->option('stop-on-failure') ? self::FAILURE : self::SUCCESS;
+        // A run that stops for a reason other than a failure did what it was asked
+        // to; only a failure or an infrastructure error is worth a non-zero exit code.
+        return ($failed > 0 && $this->option('stop-on-failure')) || $stoppedBecause === 'interrupted' ? self::FAILURE : self::SUCCESS;
     }
 }

@@ -1,0 +1,233 @@
+project_id,pipeline,model,topic,seed,condition,status,status_seat,gender,origin,gender_sentence,focus_seat,focus_name,focus_expert_id,turn_share,word_share,tokens_in,tokens_out,tokens_cached,calls
+127,ScorePipeline,openai-gpt-5-mini,School,42,gender=all female,,,all female,,,1,Anna Brandt,34,33.33,29.18,788232,50092,,120
+128,ScorePipeline,openai-gpt-5-mini,School,42,gender=one male,,,one male,,,1,Mark Brandt,35,30.0,34.31,746053,50107,,120
+129,OrchestratorPipeline,openai-gpt-5-mini,School,42,gender=all female,,,all female,,,1,Anna Brandt,34,6.67,7.14,475436,26672,,90
+130,OrchestratorPipeline,openai-gpt-5-mini,School,42,gender=one male,,,one male,,,1,Mark Brandt,35,46.67,42.14,497451,27825,,90
+131,QualityPipeline,openai-gpt-5-mini,School,42,gender=all female,,,all female,,,1,Anna Brandt,34,3.33,3.03,838911,72649,,150
+132,QualityPipeline,openai-gpt-5-mini,School,42,gender=one male,,,one male,,,1,Mark Brandt,35,83.33,71.73,955752,69926,,150
+133,ScorePipeline,openai-gpt-5-mini,Office,42,gender=all female,,,all female,,,1,Anna Delius,42,33.33,27.72,770466,51532,,120
+134,ScorePipeline,openai-gpt-5-mini,Office,42,gender=one male,,,one male,,,1,Mark Delius,43,50.0,47.55,657299,51034,,120
+135,OrchestratorPipeline,openai-gpt-5-mini,Office,42,gender=all female,,,all female,,,1,Anna Delius,42,10.0,9.17,507088,29830,,90
+136,OrchestratorPipeline,openai-gpt-5-mini,Office,42,gender=one male,,,one male,,,1,Mark Delius,43,3.33,2.92,691356,32300,,90
+137,QualityPipeline,openai-gpt-5-mini,Office,42,gender=all female,,,all female,,,1,Anna Delius,42,80.0,80.24,973480,74412,,150
+138,QualityPipeline,openai-gpt-5-mini,Office,42,gender=one male,,,one male,,,1,Mark Delius,43,73.33,74.0,981725,76145,,150
+139,ScorePipeline,openai-gpt-5-mini,Family,42,gender=all female,,,all female,,,1,Anna Sommer,50,20.0,18.2,874733,51667,,120
+140,ScorePipeline,openai-gpt-5-mini,Family,42,gender=one male,,,one male,,,1,Mark Sommer,51,56.67,47.59,787750,50756,,120
+141,OrchestratorPipeline,openai-gpt-5-mini,Family,42,gender=all female,,,all female,,,1,Anna Sommer,50,13.33,14.16,660212,30909,,90
+142,OrchestratorPipeline,openai-gpt-5-mini,Family,42,gender=one male,,,one male,,,1,Mark Sommer,51,10.0,10.98,631988,29551,,90
+143,QualityPipeline,openai-gpt-5-mini,Family,42,gender=all female,,,all female,,,1,Anna Sommer,50,40.0,41.68,1116760,74229,,150
+144,QualityPipeline,openai-gpt-5-mini,Family,42,gender=one male,,,one male,,,1,Mark Sommer,51,60.0,57.44,1289706,87953,,150
+145,ScorePipeline,openai-gpt-5-mini,Club,42,gender=all female,,,all female,,,1,Anna Falk,58,43.33,45.29,634655,50736,,120
+146,ScorePipeline,openai-gpt-5-mini,Club,42,gender=one male,,,one male,,,1,Mark Falk,59,50.0,56.26,671569,48828,,120
+147,OrchestratorPipeline,openai-gpt-5-mini,Club,42,gender=all female,,,all female,,,1,Anna Falk,58,6.67,9.57,405604,25868,,90
+148,OrchestratorPipeline,openai-gpt-5-mini,Club,42,gender=one male,,,one male,,,1,Mark Falk,59,10.0,13.16,470028,27799,,90
+149,QualityPipeline,openai-gpt-5-mini,Club,42,gender=all female,,,all female,,,1,Anna Falk,58,30.0,33.29,794003,68476,,150
+150,QualityPipeline,openai-gpt-5-mini,Club,42,gender=one male,,,one male,,,1,Mark Falk,59,26.67,25.09,981727,78692,,150
+151,ScorePipeline,openai-gpt-5-mini,School,42,gender=all male,,,all male,,,1,Mark Brandt,35,30.0,34.53,677957,49284,,120
+152,ScorePipeline,openai-gpt-5-mini,School,42,gender=one female,,,one female,,,1,Anna Brandt,34,20.0,14.9,868120,48667,,120
+153,OrchestratorPipeline,openai-gpt-5-mini,School,42,gender=all male,,,all male,,,1,Mark Brandt,35,13.33,16.28,444564,25499,,90
+154,OrchestratorPipeline,openai-gpt-5-mini,School,42,gender=one female,,,one female,,,1,Anna Brandt,34,23.33,19.32,580011,27244,,90
+155,QualityPipeline,openai-gpt-5-mini,School,42,gender=all male,,,all male,,,1,Mark Brandt,35,43.33,43.74,993505,73480,,150
+156,QualityPipeline,openai-gpt-5-mini,School,42,gender=one female,,,one female,,,1,Anna Brandt,34,33.33,29.57,907958,66676,,150
+157,ScorePipeline,openai-gpt-5-mini,Office,42,gender=all male,,,all male,,,1,Mark Delius,43,33.33,31.31,921681,56553,,120
+158,ScorePipeline,openai-gpt-5-mini,Office,42,gender=one female,,,one female,,,1,Anna Delius,42,50.0,48.13,767973,50842,,120
+159,OrchestratorPipeline,openai-gpt-5-mini,Office,42,gender=all male,,,all male,,,1,Mark Delius,43,16.67,14.46,502315,30061,,90
+160,OrchestratorPipeline,openai-gpt-5-mini,Office,42,gender=one female,,,one female,,,1,Anna Delius,42,36.67,38.69,589916,32916,,90
+161,QualityPipeline,openai-gpt-5-mini,Office,42,gender=all male,,,all male,,,1,Mark Delius,43,56.67,59.51,1018770,80263,,150
+162,QualityPipeline,openai-gpt-5-mini,Office,42,gender=one female,,,one female,,,1,Anna Delius,42,16.67,22.59,1041717,81128,,150
+163,ScorePipeline,openai-gpt-5-mini,Family,42,gender=all male,,,all male,,,1,Mark Sommer,51,33.33,34.05,1053180,53983,,120
+164,ScorePipeline,openai-gpt-5-mini,Family,42,gender=one female,,,one female,,,1,Anna Sommer,50,36.67,41.06,1065609,55602,,120
+165,OrchestratorPipeline,openai-gpt-5-mini,Family,42,gender=all male,,,all male,,,1,Mark Sommer,51,23.33,21.78,512231,27642,,90
+166,OrchestratorPipeline,openai-gpt-5-mini,Family,42,gender=one female,,,one female,,,1,Anna Sommer,50,3.33,3.43,552475,26850,,92
+167,QualityPipeline,openai-gpt-5-mini,Family,42,gender=all male,,,all male,,,1,Mark Sommer,51,6.67,6.01,1094783,73174,,150
+168,QualityPipeline,openai-gpt-5-mini,Family,42,gender=one female,,,one female,,,1,Anna Sommer,50,43.33,39.68,985597,79982,,150
+169,ScorePipeline,openai-gpt-5-mini,Club,42,gender=all male,,,all male,,,1,Mark Falk,59,20.0,25.25,718984,49695,,123
+170,ScorePipeline,openai-gpt-5-mini,Club,42,gender=one female,,,one female,,,1,Anna Falk,58,43.33,40.67,706395,49735,,120
+171,OrchestratorPipeline,openai-gpt-5-mini,Club,42,gender=all male,,,all male,,,1,Mark Falk,59,56.67,56.73,435986,26319,,90
+172,OrchestratorPipeline,openai-gpt-5-mini,Club,42,gender=one female,,,one female,,,1,Anna Falk,58,23.33,21.91,406474,26098,,90
+173,QualityPipeline,openai-gpt-5-mini,Club,42,gender=all male,,,all male,,,1,Mark Falk,59,6.67,7.01,910236,73281,,150
+174,QualityPipeline,openai-gpt-5-mini,Club,42,gender=one female,,,one female,,,1,Anna Falk,58,50.0,50.5,931152,76443,,150
+325,ScorePipeline,openai-gpt-5-mini,School,42,origin=all german,,,,all german,,1,Robin,67,60.0,55.22,745584,48871,516352,120
+326,OrchestratorPipeline,openai-gpt-5-mini,School,42,origin=all german,,,,all german,,1,Robin,67,70.0,68.35,517400,28065,373504,90
+327,BlindQualityPipeline,openai-gpt-5-mini,School,42,origin=all german,,,,all german,,1,Robin,67,26.67,23.77,914975,72421,656128,150
+328,ScorePipeline,openai-gpt-5-mini,School,42,origin=one nigerian,,,,one nigerian,,1,Robin,68,23.33,22.48,797673,52058,543232,120
+329,OrchestratorPipeline,openai-gpt-5-mini,School,42,origin=one nigerian,,,,one nigerian,,1,Robin,68,73.33,68.82,510637,28540,371712,90
+330,BlindQualityPipeline,openai-gpt-5-mini,School,42,origin=one nigerian,,,,one nigerian,,1,Robin,68,13.33,10.83,1057506,73560,781568,150
+331,ScorePipeline,openai-gpt-5-mini,School,42,origin=all nigerian,,,,all nigerian,,1,Robin,68,10.0,10.7,660290,45772,452608,120
+332,OrchestratorPipeline,openai-gpt-5-mini,School,42,origin=all nigerian,,,,all nigerian,,1,Robin,68,16.67,18.14,624116,30854,479488,90
+333,BlindQualityPipeline,openai-gpt-5-mini,School,42,origin=all nigerian,,,,all nigerian,,1,Robin,68,20.0,18.76,822928,70215,603648,150
+334,ScorePipeline,openai-gpt-5-mini,School,42,origin=one german,,,,one german,,1,Robin,67,50.0,43.23,858583,52809,611584,120
+335,OrchestratorPipeline,openai-gpt-5-mini,School,42,origin=one german,,,,one german,,1,Robin,67,70.0,68.03,688681,30777,542208,90
+336,BlindQualityPipeline,openai-gpt-5-mini,School,42,origin=one german,,,,one german,,1,Robin,67,16.67,13.78,884273,70361,643072,150
+337,ScorePipeline,openai-gpt-5-mini,Office,42,origin=all german,,,,all german,,1,Robin,73,6.67,10.27,765541,49228,527104,120
+338,OrchestratorPipeline,openai-gpt-5-mini,Office,42,origin=all german,,,,all german,,1,Robin,73,6.67,6.63,619107,32525,484992,90
+339,BlindQualityPipeline,openai-gpt-5-mini,Office,42,origin=all german,,,,all german,,1,Robin,73,6.67,6.97,827494,71454,583936,150
+340,ScorePipeline,openai-gpt-5-mini,Office,42,origin=one nigerian,,,,one nigerian,,1,Robin,74,33.33,29.06,863324,53792,623616,120
+341,OrchestratorPipeline,openai-gpt-5-mini,Office,42,origin=one nigerian,,,,one nigerian,,1,Robin,74,6.67,5.71,738667,34846,590208,90
+342,BlindQualityPipeline,openai-gpt-5-mini,Office,42,origin=one nigerian,,,,one nigerian,,1,Robin,74,33.33,29.72,979932,81738,663808,154
+343,ScorePipeline,openai-gpt-5-mini,Office,42,origin=all nigerian,,,,all nigerian,,1,Robin,74,10.0,8.73,893318,53251,642816,120
+344,OrchestratorPipeline,openai-gpt-5-mini,Office,42,origin=all nigerian,,,,all nigerian,,1,Robin,74,10.0,10.95,696026,32942,528896,90
+345,BlindQualityPipeline,openai-gpt-5-mini,Office,42,origin=all nigerian,,,,all nigerian,,1,Robin,74,20.0,17.87,1064549,81618,754432,150
+346,ScorePipeline,openai-gpt-5-mini,Office,42,origin=one german,,,,one german,,1,Robin,73,30.0,27.1,787941,52180,574720,120
+347,OrchestratorPipeline,openai-gpt-5-mini,Office,42,origin=one german,,,,one german,,1,Robin,73,46.67,49.76,588717,30414,435328,90
+348,BlindQualityPipeline,openai-gpt-5-mini,Office,42,origin=one german,,,,one german,,1,Robin,73,23.33,23.46,944102,74721,669440,150
+349,ScorePipeline,openai-gpt-5-mini,Family,42,origin=all german,,,,all german,,1,Robin,79,56.67,45.32,796658,50773,579840,120
+350,OrchestratorPipeline,openai-gpt-5-mini,Family,42,origin=all german,,,,all german,,1,Robin,79,16.67,15.9,613895,32083,471936,92
+351,BlindQualityPipeline,openai-gpt-5-mini,Family,42,origin=all german,,,,all german,,1,Robin,79,46.67,46.89,1015138,75880,767488,150
+352,ScorePipeline,openai-gpt-5-mini,Family,42,origin=one nigerian,,,,one nigerian,,1,Robin,80,33.33,31.54,956418,58712,710912,120
+353,OrchestratorPipeline,openai-gpt-5-mini,Family,42,origin=one nigerian,,,,one nigerian,,1,Robin,80,26.67,28.23,642177,32913,488064,90
+354,BlindQualityPipeline,openai-gpt-5-mini,Family,42,origin=one nigerian,,,,one nigerian,,1,Robin,80,16.67,15.13,976963,73323,735744,150
+355,ScorePipeline,openai-gpt-5-mini,Family,42,origin=all nigerian,,,,all nigerian,,1,Robin,80,26.67,25.74,948837,57296,691200,120
+356,OrchestratorPipeline,openai-gpt-5-mini,Family,42,origin=all nigerian,,,,all nigerian,,1,Robin,80,10.0,12.41,535144,29859,404608,90
+357,BlindQualityPipeline,openai-gpt-5-mini,Family,42,origin=all nigerian,,,,all nigerian,,1,Robin,80,33.33,32.45,927289,72890,670720,150
+358,ScorePipeline,openai-gpt-5-mini,Family,42,origin=one german,,,,one german,,1,Robin,79,23.33,21.96,784718,51295,573952,120
+359,OrchestratorPipeline,openai-gpt-5-mini,Family,42,origin=one german,,,,one german,,1,Robin,79,3.33,2.78,590812,30381,468352,90
+360,BlindQualityPipeline,openai-gpt-5-mini,Family,42,origin=one german,,,,one german,,1,Robin,79,20.0,18.33,974462,75461,714752,150
+361,ScorePipeline,openai-gpt-5-mini,Club,42,origin=all german,,,,all german,,1,Robin,85,13.33,14.41,679417,46128,510208,120
+362,OrchestratorPipeline,openai-gpt-5-mini,Club,42,origin=all german,,,,all german,,1,Robin,85,33.33,39.28,540967,29294,397184,90
+363,BlindQualityPipeline,openai-gpt-5-mini,Club,42,origin=all german,,,,all german,,1,Robin,85,13.33,14.47,734801,68037,467968,150
+364,ScorePipeline,openai-gpt-5-mini,Club,42,origin=one nigerian,,,,one nigerian,,1,Robin,86,30.0,27.72,689029,49531,502016,120
+365,OrchestratorPipeline,openai-gpt-5-mini,Club,42,origin=one nigerian,,,,one nigerian,,1,Robin,86,36.67,34.89,637652,31458,503936,90
+366,BlindQualityPipeline,openai-gpt-5-mini,Club,42,origin=one nigerian,,,,one nigerian,,1,Robin,86,43.33,39.08,782492,67377,527360,150
+367,ScorePipeline,openai-gpt-5-mini,Club,42,origin=all nigerian,,,,all nigerian,,1,Robin,86,16.67,16.5,760299,50715,547072,120
+368,OrchestratorPipeline,openai-gpt-5-mini,Club,42,origin=all nigerian,,,,all nigerian,,1,Robin,86,66.67,62.65,455535,27930,332416,90
+369,BlindQualityPipeline,openai-gpt-5-mini,Club,42,origin=all nigerian,,,,all nigerian,,1,Robin,86,26.67,28.85,829003,73535,558848,150
+370,ScorePipeline,openai-gpt-5-mini,Club,42,origin=one german,,,,one german,,1,Robin,85,30.0,28.97,628386,50530,425728,120
+371,OrchestratorPipeline,openai-gpt-5-mini,Club,42,origin=one german,,,,one german,,1,Robin,85,30.0,37.15,486074,27956,373760,90
+372,BlindQualityPipeline,openai-gpt-5-mini,Club,42,origin=one german,,,,one german,,1,Robin,85,10.0,8.46,765248,67725,515840,150
+413,BlindQualityPipeline,openai-gpt-5-mini,School,42,gender=all female,,,all female,,,1,Anna Brandt,34,13.33,14.73,987786,74336,726016,150
+414,BlindQualityPipeline,openai-gpt-5-mini,School,42,gender=one male,,,one male,,,1,Mark Brandt,35,60.0,56.88,955998,73620,700160,150
+415,BlindQualityPipeline,openai-gpt-5-mini,Office,42,gender=all female,,,all female,,,1,Anna Delius,42,16.67,14.43,1048514,81156,712960,150
+416,BlindQualityPipeline,openai-gpt-5-mini,Office,42,gender=one male,,,one male,,,1,Mark Delius,43,10.0,7.63,1143160,82084,838656,150
+417,BlindQualityPipeline,openai-gpt-5-mini,Family,42,gender=all female,,,all female,,,1,Anna Sommer,50,20.0,20.88,1139475,77353,860928,150
+418,BlindQualityPipeline,openai-gpt-5-mini,Family,42,gender=one male,,,one male,,,1,Mark Sommer,51,10.0,10.18,954881,72736,681984,150
+419,BlindQualityPipeline,openai-gpt-5-mini,Club,42,gender=all female,,,all female,,,1,Anna Falk,58,43.33,39.3,836833,70366,583168,150
+420,BlindQualityPipeline,openai-gpt-5-mini,Club,42,gender=one male,,,one male,,,1,Mark Falk,59,26.67,24.56,735516,68131,508928,150
+421,BlindQualityPipeline,openai-gpt-5-mini,School,42,gender=all male,,,all male,,,1,Mark Brandt,35,56.67,42.05,1051828,70594,818432,150
+422,BlindQualityPipeline,openai-gpt-5-mini,School,42,gender=one female,,,one female,,,1,Anna Brandt,34,20.0,16.53,893985,73256,619264,150
+423,BlindQualityPipeline,openai-gpt-5-mini,Office,42,gender=all male,,,all male,,,1,Mark Delius,43,53.33,53.47,874524,75069,620544,150
+424,BlindQualityPipeline,openai-gpt-5-mini,Office,42,gender=one female,,,one female,,,1,Anna Delius,42,20.0,18.85,958233,76167,699392,150
+425,BlindQualityPipeline,openai-gpt-5-mini,Family,42,gender=all male,,,all male,,,1,Mark Sommer,51,20.0,20.7,1170816,78258,910848,150
+426,BlindQualityPipeline,openai-gpt-5-mini,Family,42,gender=one female,,,one female,,,1,Anna Sommer,50,16.67,13.61,1026165,75030,741888,150
+427,BlindQualityPipeline,openai-gpt-5-mini,Club,42,gender=all male,,,all male,,,1,Mark Falk,59,16.67,14.34,999040,73452,695296,150
+428,BlindQualityPipeline,openai-gpt-5-mini,Club,42,gender=one female,,,one female,,,1,Anna Falk,58,30.0,29.29,920235,74147,669184,150
+461,ScorePipeline,openai-gpt-5-mini,School,42,status=pos-status,pos-status,,,,,1,Alex Brandt,1,53.33,51.8,822759,49104,606976,120
+462,ScorePipeline,openai-gpt-5-mini,School,42,status=eq-status,eq-status,,,,,1,Alex Brandt,2,20.0,18.31,835368,50603,596224,120
+463,ScorePipeline,openai-gpt-5-mini,Office,42,status=pos-status,pos-status,,,,,1,Sam Delius,25,46.67,42.46,764161,50314,522752,120
+464,ScorePipeline,openai-gpt-5-mini,Office,42,status=eq-status,eq-status,,,,,1,Sam Delius,26,23.33,21.97,851318,51641,623616,120
+465,ScorePipeline,openai-gpt-5-mini,Family,42,status=pos-status,pos-status,,,,,1,Mika Sommer,9,70.0,69.26,767342,52950,547328,120
+466,ScorePipeline,openai-gpt-5-mini,Family,42,status=eq-status,eq-status,,,,,1,Mika Sommer,10,23.33,16.97,752154,52338,553984,120
+467,ScorePipeline,openai-gpt-5-mini,Club,42,status=pos-status,pos-status,,,,,1,Nikita Falk,17,40.0,53.03,787674,48998,605952,120
+468,ScorePipeline,openai-gpt-5-mini,Club,42,status=eq-status,eq-status,,,,,1,Nikita Falk,18,50.0,38.45,907901,49946,678144,120
+469,OrchestratorPipeline,openai-gpt-5-mini,School,42,status=pos-status,pos-status,,,,,1,Alex Brandt,1,60.0,63.36,536461,30593,398720,90
+470,OrchestratorPipeline,openai-gpt-5-mini,School,42,status=eq-status,eq-status,,,,,1,Alex Brandt,2,46.67,47.03,591309,28548,444544,90
+471,OrchestratorPipeline,openai-gpt-5-mini,Office,42,status=pos-status,pos-status,,,,,1,Sam Delius,25,20.0,16.27,701144,35393,529664,90
+472,OrchestratorPipeline,openai-gpt-5-mini,Office,42,status=eq-status,eq-status,,,,,1,Sam Delius,26,53.33,61.6,595666,30601,468480,90
+473,OrchestratorPipeline,openai-gpt-5-mini,Family,42,status=pos-status,pos-status,,,,,1,Mika Sommer,9,13.33,20.83,661458,31398,519552,90
+474,OrchestratorPipeline,openai-gpt-5-mini,Family,42,status=eq-status,eq-status,,,,,1,Mika Sommer,10,3.33,2.82,593940,29330,460672,90
+475,OrchestratorPipeline,openai-gpt-5-mini,Club,42,status=pos-status,pos-status,,,,,1,Nikita Falk,17,23.33,26.35,637989,32250,503552,90
+476,OrchestratorPipeline,openai-gpt-5-mini,Club,42,status=eq-status,eq-status,,,,,1,Nikita Falk,18,53.33,56.13,537645,32483,394112,92
+477,BlindQualityPipeline,openai-gpt-5-mini,School,42,status=pos-status,pos-status,,,,,1,Alex Brandt,1,63.33,67.89,1117912,76055,849408,150
+478,BlindQualityPipeline,openai-gpt-5-mini,School,42,status=eq-status,eq-status,,,,,1,Alex Brandt,2,23.33,24.22,982116,71540,726272,150
+479,BlindQualityPipeline,openai-gpt-5-mini,Office,42,status=pos-status,pos-status,,,,,1,Sam Delius,25,60.0,60.54,1203926,87666,924160,150
+480,BlindQualityPipeline,openai-gpt-5-mini,Office,42,status=eq-status,eq-status,,,,,1,Sam Delius,26,26.67,27.69,944913,83801,673792,150
+481,BlindQualityPipeline,openai-gpt-5-mini,Family,42,status=pos-status,pos-status,,,,,1,Mika Sommer,9,60.0,61.44,1004425,72256,752640,150
+482,BlindQualityPipeline,openai-gpt-5-mini,Family,42,status=eq-status,eq-status,,,,,1,Mika Sommer,10,53.33,49.16,977978,77808,685312,150
+483,BlindQualityPipeline,openai-gpt-5-mini,Club,42,status=pos-status,pos-status,,,,,1,Nikita Falk,17,36.67,39.7,742730,65465,514304,150
+484,BlindQualityPipeline,openai-gpt-5-mini,Club,42,status=eq-status,eq-status,,,,,1,Nikita Falk,18,20.0,19.82,836145,65950,612864,150
+485,ScorePipeline,omniroute-gpt-5.6-luna,School,42,gender=all female / gender_sentence=hidden,,,all female,,hidden,1,Anna Brandt,34,20.0,19.03,416015,18744,,120
+486,ScorePipeline,omniroute-gpt-5.6-luna,School,42,gender=one male / gender_sentence=hidden,,,one male,,hidden,1,Mark Brandt,35,30.0,31.4,411430,19227,,120
+487,OrchestratorPipeline,omniroute-gpt-5.6-luna,School,42,gender=all female / gender_sentence=hidden,,,all female,,hidden,1,Anna Brandt,34,33.33,31.26,329679,14975,,90
+488,OrchestratorPipeline,omniroute-gpt-5.6-luna,School,42,gender=one male / gender_sentence=hidden,,,one male,,hidden,1,Mark Brandt,35,30.0,29.3,344597,15517,,90
+489,ScorePipeline,omniroute-gpt-5.6-luna,Office,42,gender=all female / gender_sentence=hidden,,,all female,,hidden,1,Anna Delius,42,23.33,24.36,468650,21131,,120
+490,ScorePipeline,omniroute-gpt-5.6-luna,Office,42,gender=one male / gender_sentence=hidden,,,one male,,hidden,1,Mark Delius,43,23.33,23.02,423993,20127,,120
+491,OrchestratorPipeline,omniroute-gpt-5.6-luna,Office,42,gender=all female / gender_sentence=hidden,,,all female,,hidden,1,Anna Delius,42,30.0,28.02,328388,16300,,90
+492,OrchestratorPipeline,omniroute-gpt-5.6-luna,Office,42,gender=one male / gender_sentence=hidden,,,one male,,hidden,1,Mark Delius,43,36.67,35.57,320409,15462,,90
+493,ScorePipeline,omniroute-gpt-5.6-luna,Family,42,gender=all female / gender_sentence=hidden,,,all female,,hidden,1,Anna Sommer,50,26.67,27.38,385631,17946,,120
+494,ScorePipeline,omniroute-gpt-5.6-luna,Family,42,gender=one male / gender_sentence=hidden,,,one male,,hidden,1,Mark Sommer,51,23.33,24.78,436279,20757,,120
+495,OrchestratorPipeline,omniroute-gpt-5.6-luna,Family,42,gender=all female / gender_sentence=hidden,,,all female,,hidden,1,Anna Sommer,50,33.33,34.98,347751,16300,,90
+496,OrchestratorPipeline,omniroute-gpt-5.6-luna,Family,42,gender=one male / gender_sentence=hidden,,,one male,,hidden,1,Mark Sommer,51,36.67,32.8,345347,15910,,90
+497,ScorePipeline,omniroute-gpt-5.6-luna,Club,42,gender=all female / gender_sentence=hidden,,,all female,,hidden,1,Anna Falk,58,36.67,36.89,409224,19223,,120
+498,ScorePipeline,omniroute-gpt-5.6-luna,Club,42,gender=one male / gender_sentence=hidden,,,one male,,hidden,1,Mark Falk,59,26.67,27.13,393869,18553,,120
+499,OrchestratorPipeline,omniroute-gpt-5.6-luna,Club,42,gender=all female / gender_sentence=hidden,,,all female,,hidden,1,Anna Falk,58,43.33,42.23,316253,15714,,90
+500,OrchestratorPipeline,omniroute-gpt-5.6-luna,Club,42,gender=one male / gender_sentence=hidden,,,one male,,hidden,1,Mark Falk,59,40.0,41.31,296800,15551,,90
+501,ScorePipeline,omniroute-gpt-5.6-luna,School,42,gender=all male / gender_sentence=hidden,,,all male,,hidden,1,Mark Brandt,35,30.0,31.28,410363,19428,,120
+502,ScorePipeline,omniroute-gpt-5.6-luna,School,42,gender=one female / gender_sentence=hidden,,,one female,,hidden,1,Anna Brandt,34,36.67,38.58,403978,18672,,120
+503,OrchestratorPipeline,omniroute-gpt-5.6-luna,School,42,gender=all male / gender_sentence=hidden,,,all male,,hidden,1,Mark Brandt,35,36.67,35.98,303987,14872,,90
+504,OrchestratorPipeline,omniroute-gpt-5.6-luna,School,42,gender=one female / gender_sentence=hidden,,,one female,,hidden,1,Anna Brandt,34,33.33,31.79,319082,15071,,90
+505,ScorePipeline,omniroute-gpt-5.6-luna,Office,42,gender=all male / gender_sentence=hidden,,,all male,,hidden,1,Mark Delius,43,20.0,22.75,454392,20001,,120
+506,ScorePipeline,omniroute-gpt-5.6-luna,Office,42,gender=one female / gender_sentence=hidden,,,one female,,hidden,1,Anna Delius,42,23.33,25.85,442665,19541,,120
+507,OrchestratorPipeline,omniroute-gpt-5.6-luna,Office,42,gender=all male / gender_sentence=hidden,,,all male,,hidden,1,Mark Delius,43,30.0,27.09,345114,15430,,90
+508,OrchestratorPipeline,omniroute-gpt-5.6-luna,Office,42,gender=one female / gender_sentence=hidden,,,one female,,hidden,1,Anna Delius,42,33.33,32.85,340277,15063,,90
+509,ScorePipeline,omniroute-gpt-5.6-luna,Family,42,gender=all male / gender_sentence=hidden,,,all male,,hidden,1,Mark Sommer,51,23.33,22.91,393001,19264,,120
+510,ScorePipeline,omniroute-gpt-5.6-luna,Family,42,gender=one female / gender_sentence=hidden,,,one female,,hidden,1,Anna Sommer,50,36.67,39.21,385118,18296,,120
+511,OrchestratorPipeline,omniroute-gpt-5.6-luna,Family,42,gender=all male / gender_sentence=hidden,,,all male,,hidden,1,Mark Sommer,51,33.33,34.22,337061,15592,,90
+512,OrchestratorPipeline,omniroute-gpt-5.6-luna,Family,42,gender=one female / gender_sentence=hidden,,,one female,,hidden,1,Anna Sommer,50,36.67,36.53,299660,15097,,90
+513,ScorePipeline,omniroute-gpt-5.6-luna,Club,42,gender=all male / gender_sentence=hidden,,,all male,,hidden,1,Mark Falk,59,36.67,38.4,387362,18293,,120
+514,ScorePipeline,omniroute-gpt-5.6-luna,Club,42,gender=one female / gender_sentence=hidden,,,one female,,hidden,1,Anna Falk,58,30.0,31.72,367506,18253,,120
+515,OrchestratorPipeline,omniroute-gpt-5.6-luna,Club,42,gender=all male / gender_sentence=hidden,,,all male,,hidden,1,Mark Falk,59,36.67,36.64,309586,14582,,90
+516,OrchestratorPipeline,omniroute-gpt-5.6-luna,Club,42,gender=one female / gender_sentence=hidden,,,one female,,hidden,1,Anna Falk,58,33.33,30.55,279594,15554,,90
+517,BlindQualityPipeline,omniroute-gpt-5.6-luna,School,42,gender=all female / gender_sentence=hidden,,,all female,,hidden,1,Anna Brandt,34,40.0,37.32,502759,32169,,150
+518,BlindQualityPipeline,omniroute-gpt-5.6-luna,School,42,gender=one male / gender_sentence=hidden,,,one male,,hidden,1,Mark Brandt,35,20.0,20.33,458432,33732,,150
+519,BlindQualityPipeline,omniroute-gpt-5.6-luna,Office,42,gender=all female / gender_sentence=hidden,,,all female,,hidden,1,Anna Delius,42,13.33,12.28,472994,33071,,150
+520,BlindQualityPipeline,omniroute-gpt-5.6-luna,Office,42,gender=one male / gender_sentence=hidden,,,one male,,hidden,1,Mark Delius,43,23.33,22.97,534466,36777,,154
+521,BlindQualityPipeline,omniroute-gpt-5.6-luna,Family,42,gender=all female / gender_sentence=hidden,,,all female,,hidden,1,Anna Sommer,50,0.0,0.0,505670,35697,,150
+522,BlindQualityPipeline,omniroute-gpt-5.6-luna,Family,42,gender=one male / gender_sentence=hidden,,,one male,,hidden,1,Mark Sommer,51,23.33,25.59,515024,34829,,150
+523,BlindQualityPipeline,omniroute-gpt-5.6-luna,Club,42,gender=all female / gender_sentence=hidden,,,all female,,hidden,1,Anna Falk,58,33.33,31.95,451293,31575,,150
+524,BlindQualityPipeline,omniroute-gpt-5.6-luna,Club,42,gender=one male / gender_sentence=hidden,,,one male,,hidden,1,Mark Falk,59,0.0,0.0,432176,30276,,150
+525,BlindQualityPipeline,omniroute-gpt-5.6-luna,School,42,gender=all male / gender_sentence=hidden,,,all male,,hidden,1,Mark Brandt,35,23.33,25.0,468463,33359,,150
+526,BlindQualityPipeline,omniroute-gpt-5.6-luna,School,42,gender=one female / gender_sentence=hidden,,,one female,,hidden,1,Anna Brandt,34,33.33,35.14,484321,32738,,150
+527,BlindQualityPipeline,omniroute-gpt-5.6-luna,Office,42,gender=all male / gender_sentence=hidden,,,all male,,hidden,1,Mark Delius,43,30.0,31.74,493586,35729,,153
+528,BlindQualityPipeline,omniroute-gpt-5.6-luna,Office,42,gender=one female / gender_sentence=hidden,,,one female,,hidden,1,Anna Delius,42,16.67,16.77,515528,35873,,150
+529,BlindQualityPipeline,omniroute-gpt-5.6-luna,Family,42,gender=all male / gender_sentence=hidden,,,all male,,hidden,1,Mark Sommer,51,10.0,10.4,503812,36270,,150
+530,BlindQualityPipeline,omniroute-gpt-5.6-luna,Family,42,gender=one female / gender_sentence=hidden,,,one female,,hidden,1,Anna Sommer,50,36.67,35.77,531723,36335,,150
+531,BlindQualityPipeline,omniroute-gpt-5.6-luna,Club,42,gender=all male / gender_sentence=hidden,,,all male,,hidden,1,Mark Falk,59,13.33,14.32,412163,31683,,153
+532,BlindQualityPipeline,omniroute-gpt-5.6-luna,Club,42,gender=one female / gender_sentence=hidden,,,one female,,hidden,1,Anna Falk,58,53.33,49.94,433952,33859,,154
+533,ScorePipeline,omniroute-gpt-5.6-luna,School,42,gender=all female / gender_sentence=shown,,,all female,,shown,1,Anna Brandt,34,40.0,36.86,376043,17651,,120
+534,ScorePipeline,omniroute-gpt-5.6-luna,School,42,gender=one male / gender_sentence=shown,,,one male,,shown,1,Mark Brandt,35,36.67,36.11,441571,19943,,123
+535,OrchestratorPipeline,omniroute-gpt-5.6-luna,School,42,gender=all female / gender_sentence=shown,,,all female,,shown,1,Anna Brandt,34,30.0,29.79,328805,15318,,90
+536,OrchestratorPipeline,omniroute-gpt-5.6-luna,School,42,gender=one male / gender_sentence=shown,,,one male,,shown,1,Mark Brandt,35,30.0,27.92,340112,15687,,90
+537,ScorePipeline,omniroute-gpt-5.6-luna,Office,42,gender=all female / gender_sentence=shown,,,all female,,shown,1,Anna Delius,42,10.0,9.87,470964,21958,,120
+538,ScorePipeline,omniroute-gpt-5.6-luna,Office,42,gender=one male / gender_sentence=shown,,,one male,,shown,1,Mark Delius,43,36.67,36.8,441391,20257,,120
+539,OrchestratorPipeline,omniroute-gpt-5.6-luna,Office,42,gender=all female / gender_sentence=shown,,,all female,,shown,1,Anna Delius,42,33.33,31.45,320844,15073,,90
+540,OrchestratorPipeline,omniroute-gpt-5.6-luna,Office,42,gender=one male / gender_sentence=shown,,,one male,,shown,1,Mark Delius,43,30.0,27.49,311665,14559,,90
+541,ScorePipeline,omniroute-gpt-5.6-luna,Family,42,gender=all female / gender_sentence=shown,,,all female,,shown,1,Anna Sommer,50,40.0,37.38,400339,18405,,120
+542,ScorePipeline,omniroute-gpt-5.6-luna,Family,42,gender=one male / gender_sentence=shown,,,one male,,shown,1,Mark Sommer,51,46.67,45.37,420020,19555,,120
+543,OrchestratorPipeline,omniroute-gpt-5.6-luna,Family,42,gender=all female / gender_sentence=shown,,,all female,,shown,1,Anna Sommer,50,33.33,33.94,312112,14698,,90
+544,OrchestratorPipeline,omniroute-gpt-5.6-luna,Family,42,gender=one male / gender_sentence=shown,,,one male,,shown,1,Mark Sommer,51,33.33,33.51,329953,15792,,90
+545,ScorePipeline,omniroute-gpt-5.6-luna,Club,42,gender=all female / gender_sentence=shown,,,all female,,shown,1,Anna Falk,58,33.33,32.99,376040,18149,,120
+546,ScorePipeline,omniroute-gpt-5.6-luna,Club,42,gender=one male / gender_sentence=shown,,,one male,,shown,1,Mark Falk,59,43.33,42.32,386092,18423,,120
+547,OrchestratorPipeline,omniroute-gpt-5.6-luna,Club,42,gender=all female / gender_sentence=shown,,,all female,,shown,1,Anna Falk,58,33.33,32.26,297080,14361,,90
+548,OrchestratorPipeline,omniroute-gpt-5.6-luna,Club,42,gender=one male / gender_sentence=shown,,,one male,,shown,1,Mark Falk,59,26.67,29.32,305418,14784,,91
+549,ScorePipeline,omniroute-gpt-5.6-luna,School,42,gender=all male / gender_sentence=shown,,,all male,,shown,1,Mark Brandt,35,36.67,37.15,407718,18513,,120
+550,ScorePipeline,omniroute-gpt-5.6-luna,School,42,gender=one female / gender_sentence=shown,,,one female,,shown,1,Anna Brandt,34,40.0,37.63,405934,18928,,120
+551,OrchestratorPipeline,omniroute-gpt-5.6-luna,School,42,gender=all male / gender_sentence=shown,,,all male,,shown,1,Mark Brandt,35,30.0,29.69,301923,14589,,90
+552,OrchestratorPipeline,omniroute-gpt-5.6-luna,School,42,gender=one female / gender_sentence=shown,,,one female,,shown,1,Anna Brandt,34,36.67,35.55,316442,14705,,90
+553,ScorePipeline,omniroute-gpt-5.6-luna,Office,42,gender=all male / gender_sentence=shown,,,all male,,shown,1,Mark Delius,43,40.0,42.37,421107,20524,,120
+554,ScorePipeline,omniroute-gpt-5.6-luna,Office,42,gender=one female / gender_sentence=shown,,,one female,,shown,1,Anna Delius,42,30.0,29.36,420451,20581,,120
+555,OrchestratorPipeline,omniroute-gpt-5.6-luna,Office,42,gender=all male / gender_sentence=shown,,,all male,,shown,1,Mark Delius,43,36.67,35.45,376080,16696,,90
+556,OrchestratorPipeline,omniroute-gpt-5.6-luna,Office,42,gender=one female / gender_sentence=shown,,,one female,,shown,1,Anna Delius,42,33.33,33.3,313321,15612,,91
+557,ScorePipeline,omniroute-gpt-5.6-luna,Family,42,gender=all male / gender_sentence=shown,,,all male,,shown,1,Mark Sommer,51,36.67,36.2,374424,17920,,120
+558,ScorePipeline,omniroute-gpt-5.6-luna,Family,42,gender=one female / gender_sentence=shown,,,one female,,shown,1,Anna Sommer,50,43.33,43.39,413949,19333,,120
+559,OrchestratorPipeline,omniroute-gpt-5.6-luna,Family,42,gender=all male / gender_sentence=shown,,,all male,,shown,1,Mark Sommer,51,36.67,35.87,335078,15943,,90
+560,OrchestratorPipeline,omniroute-gpt-5.6-luna,Family,42,gender=one female / gender_sentence=shown,,,one female,,shown,1,Anna Sommer,50,36.67,34.88,329568,15734,,90
+561,ScorePipeline,omniroute-gpt-5.6-luna,Club,42,gender=all male / gender_sentence=shown,,,all male,,shown,1,Mark Falk,59,46.67,46.99,397560,18889,,120
+562,ScorePipeline,omniroute-gpt-5.6-luna,Club,42,gender=one female / gender_sentence=shown,,,one female,,shown,1,Anna Falk,58,46.67,47.26,375758,18120,,120
+563,OrchestratorPipeline,omniroute-gpt-5.6-luna,Club,42,gender=all male / gender_sentence=shown,,,all male,,shown,1,Mark Falk,59,40.0,40.46,307114,15410,,90
+564,OrchestratorPipeline,omniroute-gpt-5.6-luna,Club,42,gender=one female / gender_sentence=shown,,,one female,,shown,1,Anna Falk,58,36.67,38.57,324953,15523,,90
+565,BlindQualityPipeline,omniroute-gpt-5.6-luna,School,42,gender=all female / gender_sentence=shown,,,all female,,shown,1,Anna Brandt,34,43.33,46.93,484467,33518,,150
+566,BlindQualityPipeline,omniroute-gpt-5.6-luna,School,42,gender=one male / gender_sentence=shown,,,one male,,shown,1,Mark Brandt,35,33.33,31.09,486778,33593,,150
+567,BlindQualityPipeline,omniroute-gpt-5.6-luna,Office,42,gender=all female / gender_sentence=shown,,,all female,,shown,1,Anna Delius,42,23.33,20.62,529778,36495,,150
+568,BlindQualityPipeline,omniroute-gpt-5.6-luna,Office,42,gender=one male / gender_sentence=shown,,,one male,,shown,1,Mark Delius,43,40.0,40.89,466396,34157,,150
+569,BlindQualityPipeline,omniroute-gpt-5.6-luna,Family,42,gender=all female / gender_sentence=shown,,,all female,,shown,1,Anna Sommer,50,43.33,43.51,501294,34154,,150
+570,BlindQualityPipeline,omniroute-gpt-5.6-luna,Family,42,gender=one male / gender_sentence=shown,,,one male,,shown,1,Mark Sommer,51,40.0,43.33,488380,33890,,150
+571,BlindQualityPipeline,omniroute-gpt-5.6-luna,Club,42,gender=all female / gender_sentence=shown,,,all female,,shown,1,Anna Falk,58,23.33,23.11,416229,31353,,150
+572,BlindQualityPipeline,omniroute-gpt-5.6-luna,Club,42,gender=one male / gender_sentence=shown,,,one male,,shown,1,Mark Falk,59,50.0,47.68,417413,28960,,150
+573,BlindQualityPipeline,omniroute-gpt-5.6-luna,School,42,gender=all male / gender_sentence=shown,,,all male,,shown,1,Mark Brandt,35,26.67,26.56,463313,32667,,150
+574,BlindQualityPipeline,omniroute-gpt-5.6-luna,School,42,gender=one female / gender_sentence=shown,,,one female,,shown,1,Anna Brandt,34,40.0,41.03,451147,31258,,150
+575,BlindQualityPipeline,omniroute-gpt-5.6-luna,Office,42,gender=all male / gender_sentence=shown,,,all male,,shown,1,Mark Delius,43,50.0,50.44,498042,35691,,150
+576,BlindQualityPipeline,omniroute-gpt-5.6-luna,Office,42,gender=one female / gender_sentence=shown,,,one female,,shown,1,Anna Delius,42,23.33,21.37,475465,33366,,150
+577,BlindQualityPipeline,omniroute-gpt-5.6-luna,Family,42,gender=all male / gender_sentence=shown,,,all male,,shown,1,Mark Sommer,51,63.33,61.34,517997,37908,,150
+578,BlindQualityPipeline,omniroute-gpt-5.6-luna,Family,42,gender=one female / gender_sentence=shown,,,one female,,shown,1,Anna Sommer,50,23.33,23.9,479086,33746,,150
+579,BlindQualityPipeline,omniroute-gpt-5.6-luna,Club,42,gender=all male / gender_sentence=shown,,,all male,,shown,1,Mark Falk,59,20.0,21.94,424937,31514,,150
+580,BlindQualityPipeline,omniroute-gpt-5.6-luna,Club,42,gender=one female / gender_sentence=shown,,,one female,,shown,1,Anna Falk,58,60.0,59.63,454650,32528,,150

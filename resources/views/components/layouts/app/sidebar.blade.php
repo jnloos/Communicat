@@ -38,6 +38,9 @@
                     {{ __('navigation.statistics') }}
                 </flux:sidebar.item>
 
+                {{-- Renders the study module's link while it is on; nothing once it is off or removed. --}}
+                @includeIf('study::nav-item')
+
                 <flux:sidebar.item icon="cog" :href="route('settings.profile')" :current="request()->routeIs('settings.*')" wire:navigate>
                     {{ __('navigation.settings') }}
                 </flux:sidebar.item>

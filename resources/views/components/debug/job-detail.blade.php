@@ -2,7 +2,7 @@
 
 {{-- One opened job: its error, its calls and the message it wrote. --}}
 <div class="space-y-4 py-2">
-    @if ($job->status === \App\Discussion\Values\JobStatus::Failed && filled($job->error))
+    @if (filled($job->error))
         <flux:callout variant="danger" icon="exclamation-triangle" :heading="__('debug.detail.error')">
             <flux:callout.text class="max-h-48 overflow-auto whitespace-pre-wrap font-mono text-xs">{{ $job->error }}</flux:callout.text>
         </flux:callout>
