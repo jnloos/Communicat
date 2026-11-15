@@ -22,7 +22,7 @@ class PlanStudyWave extends Command
         {manifest : Path to the study manifest (JSON)}
         {--wave= : Wave number, from 1}
         {--scenarios= : Scenario range FROM-TO}
-        {--decision= : Why this wave is planned (required from wave 2 on)}
+        {--decision= : Why this wave is planned (optional)}
         {--user= : Owner of the projects; default the first admin}
         {--dry-run : Show what would be written, write nothing}
         {--apply : Write the wave}';

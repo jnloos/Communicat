@@ -13,7 +13,7 @@ return [
     'from' => 'From scenario',
     'to' => 'To scenario',
     'decision' => 'Decision',
-    'decision_help' => 'Why this wave is planned. Required from wave 2 on.',
+    'decision_help' => 'Why this wave is planned. Optional.',
     'preview' => 'Preview',
     'apply' => 'Apply wave',
     'confirm_title' => 'Apply this wave?',

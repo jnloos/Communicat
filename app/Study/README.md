@@ -41,8 +41,8 @@ pure function (no DB, no global RNG; pinned by `PlannerGoldenTest`): run key
 experts get uuid5s from run key and persona content, so `WaveWriter` finds them
 again: writing twice changes nothing, an abort resumes, one transaction per
 instance (scenario × block). Wave N > 1 needs wave N−1 applied, the same core
-hash, unchanged earlier scenarios, the next scenario and a decision
-(`WaveRules`). Tags it sets: project `study`, `wave`, `scenario`, `block`,
+hash, unchanged earlier scenarios, and the next scenario
+(`WaveRules`); the decision is an optional note. Tags it sets: project `study`, `wave`, `scenario`, `block`,
 `focus profile`, `duo profile`, `focus seat`; persona `study`, `first name`,
 `subgroup`. Attributes Role, Gender, Origin are shown `all`, every other
 attribute `none`. Each wave files its runs in the owner's sidebar group

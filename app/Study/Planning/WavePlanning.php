@@ -30,7 +30,7 @@ final class WavePlanning
             return new PreparedWave(null, $number, $from, $to, $decision, [], $exception->problems);
         }
 
-        $problems = $this->rules->problems($manifest, $number, $from, $to, $decision);
+        $problems = $this->rules->problems($manifest, $number, $from, $to);
         $plans = WaveRules::rangeFits($manifest, $from, $to) ? (new Planner)->plan($manifest, $from, $to) : [];
 
         if ($plans !== []) {

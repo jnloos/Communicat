@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Study-only, removable: see app/Study/README.md.
  *
  * One planned wave of a study: its scenario range, why it was planned (the
- * decision, from wave 2 on) and the canonical copy of the manifest it was
+ * optional decision) and the canonical copy of the manifest it was
  * planned from. The copies are what lets a later wave prove it changed nothing
  * an earlier one planned, and study:check recompute every wave as it was.
  */

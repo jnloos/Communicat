@@ -3,7 +3,9 @@
 namespace App\Services\StudyExport;
 
 use App\Discussion\Support\PersonaLines;
+use App\Discussion\Values\JobStatus;
 use App\Discussion\Values\ShareReport;
+use App\Models\JobLog;
 use App\Models\PersonaAttribute;
 use App\Models\Project;
 use App\Models\ProjectGroup;
@@ -18,7 +20,7 @@ final class RunTable
     /** The columns before the project tag columns, and those after them. */
     private const HEAD = ['run_uuid', 'title', 'description', 'pipeline', 'model', 'seed', 'turn_budget', 'group'];
 
-    private const TAIL = ['attribute_visibility', 'turns_spoken', 'turns_failed_without_speaking'];
+    private const TAIL = ['attribute_visibility', 'turns_spoken', 'turns_failed_without_speaking', 'turns_interrupted', 'code_commit', 'code_dirty'];
 
     private readonly TagColumns $tags;
 
@@ -48,8 +50,13 @@ final class RunTable
     {
         $groups = ProjectGroup::where('user_id', $viewer->id)->pluck('name', 'id');
         $filing = $this->filingOf($viewer, $runs);
+        $interrupted = JobLog::whereIn('project_id', $runs->pluck('id'))
+            ->where('status', JobStatus::Interrupted)
+            ->groupBy('project_id')
+            ->selectRaw('project_id, count(*) as n')
+            ->pluck('n', 'project_id');
 
-        return $runs->map(function (Project $run) use ($reports, $groups, $filing) {
+        return $runs->map(function (Project $run) use ($reports, $groups, $filing, $interrupted) {
             $report = $reports[$run->id];
             $groupId = $filing[$run->id] ?? null;
 
@@ -66,6 +73,10 @@ final class RunTable
                 'attribute_visibility' => $this->visibilityCell($run),
                 'turns_spoken' => $report->spokenTurns,
                 'turns_failed_without_speaking' => $report->failedTurns,
+                'turns_interrupted' => (int) ($interrupted[$run->id] ?? 0),
+                // runs frozen before 15.11.2026 carry no provenance: empty, never guessed
+                'code_commit' => $run->run_config['provenance']['commit'] ?? null,
+                'code_dirty' => isset($run->run_config['provenance']['dirty']) ? (int) $run->run_config['provenance']['dirty'] : null,
             ];
         })->values()->all();
     }

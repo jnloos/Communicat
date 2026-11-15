@@ -29,6 +29,11 @@ final class StudyArchive
         attribute_visibility: one cell like "Role=all; gender=own", per attribute
         none, own or all, what the run's prompts revealed of it (the setting frozen
         when the run started; empty when no attribute is defined).
+        turns_interrupted counts turns lost to an infrastructure error (connection,
+        overload, timeout); they are no failure of the model and are not in
+        turns_failed_without_speaking. code_commit and code_dirty are the commit
+        the run started on and whether the checkout had local changes (empty for
+        runs started before 15.11.2026 or without git).
 
         turns.csv, selector columns: fallback is 1 when the selector could not read
         its decision and drew the speaker instead (Orchestrator and the judges: the

@@ -251,6 +251,8 @@ class StudyExportTest extends TestCase
             'selection' => ['selector' => 'HighestBidSelector', 'speaker_id' => $alex->id, 'signals' => ['bids' => ["E{$alex->id}" => 5, "E{$kim->id}" => 2], 'fallbacks' => []], 'tie_broken' => false]]);
         PromptLog::create(['job_log_id' => $spoken->id, 'model' => 'm', 'prompt' => 'p', 'response' => 'r', 'tokens_in' => 100, 'tokens_out' => 20, 'tokens_reasoning' => null]);
         JobLog::create(['job_class' => 'x', 'project_id' => $run->id, 'status' => 'failed', 'started_at' => now(), 'turn_index' => 2, 'error' => 'HTTP 500']);
+        JobLog::create(['job_class' => 'x', 'project_id' => $run->id, 'status' => 'interrupted', 'started_at' => now(), 'turn_index' => 3, 'error' => 'ConnectionException']);
+        $run->forceFill(['run_config' => ['provenance' => ['commit' => 'abc123', 'dirty' => false]]])->save();
         $path = $this->temporaryPath();
 
         app(StudyExport::class)->write(collect([$run]), $viewer, $path);
@@ -260,6 +262,9 @@ class StudyExportTest extends TestCase
         $this->assertSame('Score', $files['runs.csv'][0]['group']);
         $this->assertSame('1', $files['runs.csv'][0]['turns_spoken']);
         $this->assertSame('1', $files['runs.csv'][0]['turns_failed_without_speaking']);
+        $this->assertSame('1', $files['runs.csv'][0]['turns_interrupted']);
+        $this->assertSame('abc123', $files['runs.csv'][0]['code_commit']);
+        $this->assertSame('0', $files['runs.csv'][0]['code_dirty']);
 
         $participants = collect($files['participants.csv'])->keyBy('expert_uuid');
         $this->assertSame('true', $participants[$alex->uuid]['title-holder']);

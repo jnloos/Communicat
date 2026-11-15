@@ -24,18 +24,18 @@ class WaveRulesTest extends TestCase
         $this->assertStringContainsString('scenarios 1 to 6', implode("\n", $this->problems($this->manifest(), 1, 3, 2)));
     }
 
-    public function test_wave_2_needs_an_applied_wave_1_a_decision_and_the_next_scenario(): void
+    public function test_wave_2_needs_an_applied_wave_1_and_the_next_scenario(): void
     {
         $manifest = $this->manifest();
-        $this->assertStringContainsString('Wave 1 does not exist', implode("\n", $this->problems($manifest, 2, 4, 6, 'go')));
+        $this->assertStringContainsString('Wave 1 does not exist', implode("\n", $this->problems($manifest, 2, 4, 6)));
 
         $first = $this->record($manifest, 1, 1, 3);
-        $this->assertStringContainsString('Wave 1 is not applied yet', implode("\n", $this->problems($manifest, 2, 4, 6, 'go')));
+        $this->assertStringContainsString('Wave 1 is not applied yet', implode("\n", $this->problems($manifest, 2, 4, 6)));
 
         $first->update(['applied_at' => now()]);
-        $this->assertSame([], $this->problems($manifest, 2, 4, 6, 'Power is too low, add three scenarios.'));
-        $this->assertStringContainsString('must start at scenario 4', implode("\n", $this->problems($manifest, 2, 5, 6, 'go')));
-        $this->assertStringContainsString('needs a decision', implode("\n", $this->problems($manifest, 2, 4, 6, '  ')));
+        $this->assertSame([], $this->problems($manifest, 2, 4, 6));
+        $this->assertStringContainsString('must start at scenario 4', implode("\n", $this->problems($manifest, 2, 5, 6)));
+        $this->assertSame([], $this->problems($manifest, 2, 4, 6), 'a decision is optional');
     }
 
     public function test_the_rules_read_the_stored_wave_even_if_its_model_left_the_config(): void
@@ -46,7 +46,7 @@ class WaveRulesTest extends TestCase
         unset($models[$manifest->model()]);
         config(['ai.models' => $models]);
 
-        $this->assertSame([], $this->problems($manifest, 2, 4, 6, 'Add three scenarios.'));
+        $this->assertSame([], $this->problems($manifest, 2, 4, 6));
     }
 
     public function test_a_changed_core_or_planned_scenario_is_rejected_an_unplanned_change_accepted(): void
@@ -54,21 +54,21 @@ class WaveRulesTest extends TestCase
         $this->record($this->manifest(), 1, 1, 3)->update(['applied_at' => now()]);
 
         $core = $this->manifest(fn (array $m) => ['turn_budget' => 40] + $m);
-        $this->assertStringContainsString('core differs', implode("\n", $this->problems($core, 2, 4, 6, 'go')));
+        $this->assertStringContainsString('core differs', implode("\n", $this->problems($core, 2, 4, 6)));
 
         $third = $this->manifest(function (array $m) {
             $m['scenarios'][2]['topic'] = 'Something else?';
 
             return $m;
         });
-        $this->assertStringContainsString('Scenario 3 differs', implode("\n", $this->problems($third, 2, 4, 6, 'go')));
+        $this->assertStringContainsString('Scenario 3 differs', implode("\n", $this->problems($third, 2, 4, 6)));
 
         $fifth = $this->manifest(function (array $m) {
             $m['scenarios'][4]['topic'] = 'Something else?';
 
             return $m;
         });
-        $this->assertSame([], $this->problems($fifth, 2, 4, 6, 'go'));
+        $this->assertSame([], $this->problems($fifth, 2, 4, 6));
     }
 
     public function test_the_same_wave_again_is_accepted_only_with_the_same_file_and_range(): void
@@ -94,9 +94,9 @@ class WaveRulesTest extends TestCase
         $this->assertSame([], $this->problems($this->manifest(), 1, 1, 3));
     }
 
-    private function problems(Manifest $manifest, int $number, int $from, int $to, ?string $decision = null): array
+    private function problems(Manifest $manifest, int $number, int $from, int $to): array
     {
-        return (new WaveRules)->problems($manifest, $number, $from, $to, $decision);
+        return (new WaveRules)->problems($manifest, $number, $from, $to);
     }
 
     private function manifest(?callable $change = null): Manifest
