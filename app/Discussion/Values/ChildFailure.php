@@ -3,8 +3,8 @@
 namespace App\Discussion\Values;
 
 use App\Discussion\AbortsRun;
-use App\Discussion\PromptAbortedInChild;
-use App\Discussion\PromptFailedInChild;
+use App\Discussion\PromptTaskAborted;
+use App\Discussion\PromptTaskFailed;
 use App\Discussion\TransientFailure;
 use Illuminate\Http\Client\RequestException;
 use Throwable;
@@ -24,6 +24,7 @@ final readonly class ChildFailure
         public ?int $status,
         public bool $transient,
         public bool $abortsRun,
+        public ?string $origin = null,
     ) {}
 
     public static function of(Throwable $e): self
@@ -34,12 +35,13 @@ final readonly class ChildFailure
             status: $e instanceof RequestException ? $e->response->status() : null,
             transient: TransientFailure::is($e),
             abortsRun: $e instanceof AbortsRun,
+            origin: basename($e->getFile()).':'.$e->getLine(),
         );
     }
 
-    public function toException(): PromptFailedInChild
+    public function toException(): PromptTaskFailed
     {
-        return $this->abortsRun ? new PromptAbortedInChild($this) : new PromptFailedInChild($this);
+        return $this->abortsRun ? new PromptTaskAborted($this) : new PromptTaskFailed($this);
     }
 
     /** "RequestException (HTTP 500): …", what job_logs.error shows after the exception's own class. */
@@ -47,6 +49,8 @@ final readonly class ChildFailure
     {
         $status = $this->status === null ? '' : " (HTTP {$this->status})";
 
-        return class_basename($this->class).$status.': '.$this->message;
+        $origin = $this->origin === null ? '' : " [at {$this->origin}]";
+
+        return class_basename($this->class).$status.': '.$this->message.$origin;
     }
 }

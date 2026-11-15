@@ -41,6 +41,9 @@ class Expert extends Model
     ];
 
     /** The fields a prompt reads; tags and avatar reach no model and stay changeable. */
+    /** Per instance: it lives one request, and a started run locks the persona for good. */
+    private ?bool $locked = null;
+
     private const PROMPT_FIELDS = ['name', 'description'];
 
     protected static function booted(): void
@@ -60,10 +63,12 @@ class Expert extends Model
      */
     public function isLocked(): bool
     {
-        return $this->exists && (
-            $this->projects()->whereNotNull('run_config')->exists()
-            || JobLog::where('expert_id', $this->id)->exists()
-        );
+        if (! $this->exists) {
+            return false;
+        }
+
+        return $this->locked ??= $this->projects()->whereNotNull('run_config')->exists()
+            || JobLog::where('expert_id', $this->id)->exists();
     }
 
     /** @throws PersonaLocked */

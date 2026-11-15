@@ -2,7 +2,8 @@
 
 namespace App\Discussion\Support;
 
-use App\Discussion\PromptFailedInChild;
+use App\Discussion\PromptTaskFailed;
+use App\Discussion\TransientFailure;
 use App\Discussion\Values\ChildFailure;
 use Closure;
 use Illuminate\Support\Facades\Concurrency;
@@ -20,7 +21,7 @@ use Throwable;
  * bound object gets dragged along and can fail to serialise.
  *
  * Every task runs guarded (guarded()): a failure comes back as a ChildFailure
- * and is thrown here as PromptFailedInChild, on every path alike -- one task,
+ * and is thrown here as PromptTaskFailed, on every path alike -- one task,
  * the sync driver, child processes, the one-after-another fallback -- so the
  * same error counts the same in every pipeline.
  *
@@ -38,11 +39,13 @@ class ParallelPrompts
      * @param  array<array-key, Closure(): T>  $tasks
      * @return array<array-key, T>
      *
-     * @throws PromptFailedInChild for the first task that failed
+     * @throws PromptTaskFailed for the first task that failed
      */
     public function run(array $tasks): array
     {
-        $results = array_combine(array_keys($tasks), $this->runGuarded(array_values(array_map(self::guarded(...), $tasks))));
+        $guarded = array_map(self::guarded(...), $tasks);
+        $outcomes = $this->runGuarded(array_values($guarded));
+        $results = array_combine(array_keys($tasks), $outcomes);
 
         foreach ($results as $result) {
             if ($result instanceof ChildFailure) {
@@ -68,6 +71,11 @@ class ParallelPrompts
             try {
                 return $task();
             } catch (Throwable $e) {
+                // The child's trace would otherwise be lost: only scalars cross back.
+                if (! TransientFailure::is($e)) {
+                    report($e);
+                }
+
                 return ChildFailure::of($e);
             }
         };

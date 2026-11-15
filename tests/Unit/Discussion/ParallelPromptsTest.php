@@ -4,14 +4,15 @@ namespace Tests\Unit\Discussion;
 
 use App\Discussion\AbortsRun;
 use App\Discussion\Jev\JevRejected;
-use App\Discussion\PromptAbortedInChild;
-use App\Discussion\PromptFailedInChild;
+use App\Discussion\PromptTaskAborted;
+use App\Discussion\PromptTaskFailed;
 use App\Discussion\Support\ParallelPrompts;
 use App\Discussion\TransientFailure;
 use App\Discussion\Values\ChildFailure;
 use App\Discussion\Values\Completion;
 use Closure;
 use GuzzleHttp\Psr7\Response as Psr7Response;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\Client\Response as HttpResponse;
 use Illuminate\Support\Facades\Concurrency;
@@ -139,7 +140,7 @@ class ParallelPromptsTest extends TestCase
     {
         $e = $this->failureOf($path([static fn () => throw self::httpError(500)]));
 
-        $this->assertInstanceOf(PromptFailedInChild::class, $e);
+        $this->assertInstanceOf(PromptTaskFailed::class, $e);
         $this->assertNotInstanceOf(AbortsRun::class, $e);
         $this->assertSame(RequestException::class, $e->failure->class);
         $this->assertSame(500, $e->failure->status);
@@ -149,11 +150,33 @@ class ParallelPromptsTest extends TestCase
     }
 
     #[DataProvider('paths')]
+    public function test_a_failure_names_where_it_was_thrown_and_a_non_transient_one_is_reported(Closure $path): void
+    {
+        $reported = [];
+        $this->app->make(ExceptionHandler::class)
+            ->reportable(function (Throwable $e) use (&$reported) {
+                $reported[] = $e;
+
+                return false;
+            });
+
+        $e = $this->failureOf($path([static fn () => throw new \LogicException('boom')]));
+
+        $this->assertMatchesRegularExpression('/\[at ParallelPromptsTest\.php:\d+\]$/', $e->getMessage());
+        $this->assertCount(1, $reported);
+        $this->assertInstanceOf(\LogicException::class, $reported[0]);
+
+        $reported = [];
+        $this->failureOf($path([static fn () => throw self::httpError(500)]));
+        $this->assertSame([], $reported, 'a transient failure is not reported');
+    }
+
+    #[DataProvider('paths')]
     public function test_a_client_error_in_a_task_is_not_transient(Closure $path): void
     {
         $e = $this->failureOf($path([static fn () => throw self::httpError(400)]));
 
-        $this->assertInstanceOf(PromptFailedInChild::class, $e);
+        $this->assertInstanceOf(PromptTaskFailed::class, $e);
         $this->assertSame(400, $e->failure->status);
         $this->assertFalse($e->failure->transient);
         $this->assertFalse(TransientFailure::is($e));
@@ -164,7 +187,7 @@ class ParallelPromptsTest extends TestCase
     {
         $e = $this->failureOf($path([static fn () => throw new JevRejected(401, 'Invalid API key')]));
 
-        $this->assertInstanceOf(PromptAbortedInChild::class, $e);
+        $this->assertInstanceOf(PromptTaskAborted::class, $e);
         $this->assertInstanceOf(AbortsRun::class, $e);
         $this->assertFalse(TransientFailure::is($e));
         $this->assertStringContainsString('JevRejected', $e->getMessage());
@@ -179,7 +202,7 @@ class ParallelPromptsTest extends TestCase
 
         $e = $this->failureOf([static fn () => self::completion('ok'), static fn () => throw self::httpError(503)]);
 
-        $this->assertInstanceOf(PromptFailedInChild::class, $e);
+        $this->assertInstanceOf(PromptTaskFailed::class, $e);
         $this->assertSame(503, $e->failure->status);
     }
 

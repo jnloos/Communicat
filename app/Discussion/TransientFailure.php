@@ -17,7 +17,7 @@ use Throwable;
  * mechanism under study, so it is recorded as interrupted, not failed, and the
  * study runner waits and retries instead of carrying on.
  *
- * A failed ParallelPrompts task arrives as PromptFailedInChild, classified by
+ * A failed ParallelPrompts task arrives as PromptTaskFailed, classified by
  * this same rule where the real exception still existed (ChildFailure::of()).
  */
 final class TransientFailure
@@ -30,6 +30,6 @@ final class TransientFailure
             || $e instanceof ProcessTimedOutException
             || ($e instanceof RequestException && $e->response->serverError())
             || ($e instanceof QueryException && str_contains($e->getMessage(), 'database is locked'))
-            || ($e instanceof PromptFailedInChild && $e->failure->transient);
+            || ($e instanceof PromptTaskFailed && $e->failure->transient);
     }
 }

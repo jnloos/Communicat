@@ -10,7 +10,7 @@ use RuntimeException;
  * whether it was transient, so TransientFailure and job_logs.error see the real
  * cause in every pipeline, whether the task ran in a child process or not.
  */
-class PromptFailedInChild extends RuntimeException
+class PromptTaskFailed extends RuntimeException
 {
     public function __construct(public readonly ChildFailure $failure)
     {

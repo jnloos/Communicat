@@ -13,6 +13,8 @@ use Symfony\Component\Finder\SplFileInfo;
  * run_config.provenance so a run can be traced to them after the code moves on.
  * Commit, dirty flag and prompt hash are read once per process and checkout
  * root: a worker opens many runs, and the code it runs does not change under it.
+ * `dirty` also counts untracked, not-ignored files, on purpose: such a file can
+ * change behaviour as much as an edited one.
  */
 class CodeProvenance
 {

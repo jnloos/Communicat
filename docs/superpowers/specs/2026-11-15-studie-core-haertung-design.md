@@ -66,9 +66,9 @@ schlägt das fehl (`TypeError`), der HTTP-Status geht verloren. Folge: Ein 500er
   `transient` (`TransientFailure::is()`, im Kind ausgewertet, wo die echte Exception noch existiert) und
   `abortsRun` (`instanceof AbortsRun`). Nur Skalare, wie `Completion`.
 - Der Elternprozess wirft für das erste `ChildFailure` der Runde:
-  - `PromptFailedInChild` (trägt Klasse, Status, `transient`), oder
-  - `PromptAbortedInChild implements AbortsRun`, wenn `abortsRun` gesetzt ist.
-- `TransientFailure::is()` erkennt zusätzlich `PromptFailedInChild` mit `transient === true`.
+  - `PromptTaskFailed` (trägt Klasse, Status, `transient`), oder
+  - `PromptTaskAborted implements AbortsRun`, wenn `abortsRun` gesetzt ist.
+- `TransientFailure::is()` erkennt zusätzlich `PromptTaskFailed` mit `transient === true`.
 - Derselbe Weg gilt für eine einzelne Aufgabe, den sync-Treiber und den Fallback `oneAfterAnother`, damit sich
   Tests und Betrieb nicht unterscheiden.
 
@@ -140,8 +140,8 @@ Core-Änderung.
   Snapshot ohne diese Schlüssel läuft weiter.
 - `CodeProvenanceTest`: Der Hash ändert sich, wenn sich eine Prompt-Datei ändert; ohne Git sind `commit` und
   `dirty` null.
-- `ParallelPromptsTest`: Aus einer `RequestException` mit 500 wird `PromptFailedInChild` mit `transient`, aus
-  einer mit 400 eine ohne; eine `AbortsRun`-Exception wird `PromptAbortedInChild`.
+- `ParallelPromptsTest`: Aus einer `RequestException` mit 500 wird `PromptTaskFailed` mit `transient`, aus
+  einer mit 400 eine ohne; eine `AbortsRun`-Exception wird `PromptTaskAborted`.
 - Ein Turn-Test je Pipeline-Art: Ein 500er im Kind ergibt `interrupted` in Score wie im Orchestrator.
 - `GuardAgainstModelDriftTest`, `JevClientTest`: Abweichung wirft `ModelDrifted`; der Turn ist `failed`,
   `project:run` bricht ab.

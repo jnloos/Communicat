@@ -13,6 +13,7 @@ use App\Models\TagScope;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -55,6 +56,20 @@ class ExpertLockTest extends TestCase
         $leaver = Expert::factory()->create();
         JobLog::create(['job_class' => 'x', 'project_id' => Project::factory()->create()->id, 'expert_id' => $leaver->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => 1]);
         $this->assertTrue($leaver->isLocked(), 'who spoke and left the run stays locked');
+    }
+
+    public function test_the_answer_is_read_once_per_instance_and_a_fresh_instance_sees_a_new_lock(): void
+    {
+        $expert = Expert::factory()->create();
+        Project::factory()->create()->addContributingExpert($expert);
+
+        DB::enableQueryLog();
+        $expert->isLocked();
+        $expert->isLocked();
+        $this->assertCount(2, DB::getQueryLog(), 'one lookup of two queries, then memoised');
+
+        JobLog::create(['job_class' => 'x', 'project_id' => Project::factory()->create()->id, 'expert_id' => $expert->id, 'status' => 'success', 'started_at' => now(), 'turn_index' => 1]);
+        $this->assertTrue(Expert::find($expert->id)->isLocked());
     }
 
     public function test_name_description_attributes_and_deletion_are_refused(): void
