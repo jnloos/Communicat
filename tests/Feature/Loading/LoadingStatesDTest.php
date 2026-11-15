@@ -33,7 +33,7 @@ class LoadingStatesDTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(SelectContributors::class, ['project' => $project])
-            ->assertSeeHtml('wire:target="addExpert,removeExpert,search,tagFilter,tagFilterMode,clearTagFilter"');
+            ->assertSeeHtml('wire:target="addExpert,removeExpert,search,gotoPage,nextPage,previousPage"');
     }
 
     public function test_model_select_dims_while_provider_reloads_it(): void

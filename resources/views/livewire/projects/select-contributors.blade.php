@@ -24,7 +24,22 @@
 
                 <x-experts.filter-bar />
 
-                @if($experts->isEmpty())
+                @foreach ($seated as $expert)
+                    <x-contributors.contributors-card
+                        wire:key="expert-{{ $expert->id }}"
+                        :selected="true"
+                        :disabled="! $mayManage"
+                        :name="$expert->name"
+                        :subtitle="$expert->attributeSummary"
+                        :avatar-url="$expert->avatar_url"
+                        wire:loading.attr="disabled"
+                        wire:loading.delay.class="opacity-60"
+                        wire:target="addExpert,removeExpert"
+                        wire:click="removeExpert({{ $expert->id }})"
+                    />
+                @endforeach
+
+                @if($experts->isEmpty() && ($hasFilters || $seated->isEmpty()))
                     <x-empty-state :icon="$hasFilters ? 'magnifying-glass' : 'user-circle'">
                         @if($hasFilters)
                             {{ __('projects.contributors.no_expert_matches') }}
@@ -34,21 +49,23 @@
                     </x-empty-state>
                 @else
                     @foreach ($experts as $expert)
-                        @php($active = isset($seatedExpertIds[$expert->id]))
                         <x-contributors.contributors-card
                             wire:key="expert-{{ $expert->id }}"
-                            :selected="$active"
-                            :dimmed="! $active && ! $canAddExpert"
+                            :dimmed="! $canAddExpert"
                             :disabled="! $mayManage"
                             :name="$expert->name"
                             :subtitle="$expert->attributeSummary"
                             :avatar-url="$expert->avatar_url"
                             wire:loading.attr="disabled"
                             wire:loading.delay.class="opacity-60"
-                            wire:target="addExpert,removeExpert,search,tagFilter,tagFilterMode,clearTagFilter"
-                            wire:click="{{ $active ? 'removeExpert' : 'addExpert' }}({{ $expert->id }})"
+                            wire:target="addExpert,removeExpert,search,gotoPage,nextPage,previousPage"
+                            wire:click="addExpert({{ $expert->id }})"
                         />
                     @endforeach
+
+                    @if ($experts->hasPages())
+                        <flux:pagination :paginator="$experts" />
+                    @endif
                 @endif
             </div>
         </flux:tab.panel>

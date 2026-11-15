@@ -35,7 +35,7 @@ class ProjectNavigationTest extends TestCase
     /** The view is handed groups and their projects; this is what the sidebar renders. */
     private function projectsInGroup(mixed $component, ProjectGroup $group): Collection
     {
-        return collect($component->viewData('grouped')[$group->id] ?? []);
+        return isset($component->viewData('grouped')[$group->id]) ? $component->viewData('grouped')[$group->id]->getCollection() : new Collection;
     }
 
     public function test_a_project_moves_into_a_group_and_shows_up_under_it(): void

@@ -101,6 +101,11 @@
                     @empty
                         <div class="px-3 py-1 text-sm text-zinc-400">{{ __('groups.empty') }}</div>
                     @endforelse
+
+                    {{-- Ten rows per drawer (ProjectNavigation::PER_PAGE); the open project is pinned on top when it sits on another page. --}}
+                    @if ($grouped[$group->id]->hasPages())
+                        <flux:pagination :paginator="$grouped[$group->id]" class="border-0 pt-1 pe-1" />
+                    @endif
                 </flux:sidebar.group>
 
                 {{-- Hovering the group's own header, not its projects: the wrapper
@@ -133,7 +138,7 @@
         @endforeach
         </div>
 
-        @if ($ungrouped->isNotEmpty())
+        @if ($ungrouped->isNotEmpty() || ! $ungrouped->onFirstPage())
             <flux:sidebar.group :heading="__('groups.ungrouped')" @class(['mt-4' => $groups->isNotEmpty()])>
                 @foreach ($ungrouped as $project)
                     <x-projects.nav-project
@@ -143,6 +148,10 @@
                         :outside-filter="$outsideFilterProjectId === $project->id"
                     />
                 @endforeach
+
+                @if ($ungrouped->hasPages())
+                    <flux:pagination :paginator="$ungrouped" class="border-0 pt-1 pe-1" />
+                @endif
             </flux:sidebar.group>
         @endif
 

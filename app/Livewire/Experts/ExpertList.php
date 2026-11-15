@@ -10,10 +10,12 @@ use App\Models\TagScope;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class ExpertList extends Component
 {
     use FiltersByTags;
+    use WithPagination;
 
     #[Url(as: 'q')]
     public string $search = '';
@@ -31,6 +33,11 @@ class ExpertList extends Component
     #[Url(as: 'tags_mode')]
     public string $tagFilterMode = TagFilterMode::Cut->value;
 
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
     #[On('expert_modified')]
     public function render(): mixed
     {
@@ -43,7 +50,7 @@ class ExpertList extends Component
             ->search($search)
             ->where(fn ($q) => $this->applyTagFilter($q, $filter))
             ->orderBy('name')
-            ->get();
+            ->paginate(10);
 
         return view('livewire.experts.expert-list', [
             'experts' => $experts,

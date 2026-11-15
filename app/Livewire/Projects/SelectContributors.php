@@ -12,6 +12,8 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithoutUrlPagination;
+use Livewire\WithPagination;
 
 /**
  * The flyout that seats experts and invites users. Both change who takes part
@@ -19,6 +21,9 @@ use Livewire\Component;
  */
 class SelectContributors extends Component
 {
+    use WithoutUrlPagination;
+    use WithPagination;
+
     #[Locked]
     public int $forProjectId;
 
@@ -31,6 +36,11 @@ class SelectContributors extends Component
     public function mount(Project $project): void
     {
         $this->forProjectId = $project->id;
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
     }
 
     #[Computed]
@@ -91,6 +101,7 @@ class SelectContributors extends Component
     {
         $project = $this->project;
         $userSearch = trim($this->userSearch);
+        $seated = $project->experts()->with('personaAttributes')->get();
 
         $users = User::query()
             ->whereKeyNot($project->user_id)
@@ -102,9 +113,11 @@ class SelectContributors extends Component
 
         return view('livewire.projects.select-contributors', [
             'project' => $project,
-            'experts' => Expert::query()->with('personaAttributes')->search($this->search)->orderBy('name')->get(),
+            // The seated experts (at most four) stay listed in seat order whatever the page or search; the page lists the others.
+            'seated' => $seated,
+            'experts' => Expert::query()->with('personaAttributes')->whereKeyNot($seated->modelKeys())
+                ->search($this->search)->orderBy('name')->paginate(10),
             'users' => $users,
-            'seatedExpertIds' => array_flip($project->experts()->pluck('experts.id')->all()),
             'invitedUserIds' => array_flip($project->users()->pluck('users.id')->all()),
             'mayManage' => Gate::allows('manageContributors', $project),
             'hasFilters' => trim($this->search) !== '',

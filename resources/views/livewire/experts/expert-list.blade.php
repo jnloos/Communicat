@@ -1,5 +1,5 @@
 <div class="mx-auto w-full max-w-6xl">
-    <x-page-header :heading="__('experts.list.heading')" :subheading="trans_choice('experts.list.count', $experts->count())" align="center">
+    <x-page-header :heading="__('experts.list.heading')" :subheading="trans_choice('experts.list.count', $experts->total())" align="center">
         @can('create', App\Models\Expert::class)
             <x-slot:actions>
                 <flux:button variant="primary" icon="plus" @click="$wire.dispatch('edit_expert')">
@@ -41,6 +41,10 @@
                     </x-contributors.contributors-card>
                 @endforeach
             </div>
+
+            @if ($experts->hasPages())
+                <flux:pagination :paginator="$experts" />
+            @endif
         @endif
     </div>
 </div>

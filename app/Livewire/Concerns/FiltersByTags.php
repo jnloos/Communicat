@@ -22,7 +22,8 @@ use Illuminate\Support\Collection;
  * $tagFilter holds the picked value ids (bound to the menu's checkboxes),
  * $tagFilterMode is a TagFilterMode value: cut (a row matches every picked category, any picked value
  * within one) or merge (any one picked value is enough). The queried model
- * must use HasTags.
+ * must use HasTags, and the host must use WithPagination: a changed filter
+ * sends every list it paginates back to page 1.
  */
 trait FiltersByTags
 {
@@ -30,6 +31,24 @@ trait FiltersByTags
     public function clearTagFilter(): void
     {
         $this->tagFilter = [];
+        $this->resetPages();
+    }
+
+    public function updatedTagFilter(): void
+    {
+        $this->resetPages();
+    }
+
+    public function updatedTagFilterMode(): void
+    {
+        $this->resetPages();
+    }
+
+    private function resetPages(): void
+    {
+        foreach (array_keys($this->paginators) as $pageName) {
+            $this->resetPage($pageName);
+        }
     }
 
     /**

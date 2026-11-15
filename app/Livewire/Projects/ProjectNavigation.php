@@ -10,12 +10,14 @@ use App\Models\ProjectGroup;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\User;
-use Illuminate\Support\Collection;
+use Illuminate\Contracts\Pagination\Paginator;
 use Livewire\Attributes\Authorize;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Session;
 use Livewire\Component;
+use Livewire\WithoutUrlPagination;
+use Livewire\WithPagination;
 
 /**
  * The project list in the sidebar, sorted into the signed-in user's own groups
@@ -35,7 +37,12 @@ class ProjectNavigation extends Component
 {
     public const LIST_CHANGED = 'project-list-changed';
 
+    /** Rows per drawer and in the ungrouped list; a study wave holds thousands of runs. */
+    public const PER_PAGE = 10;
+
     use FiltersByTags;
+    use WithoutUrlPagination;
+    use WithPagination;
 
     /** Which project the page is showing, so the list can mark it. */
     #[Locked]
@@ -115,27 +122,28 @@ class ProjectNavigation extends Component
 
     public function render(): mixed
     {
+        $user = $this->user();
         $tagCategories = TagCategory::ofScope(TagScope::Project)->with('values')->get();
         $filter = $this->normaliseFilterState($tagCategories);
-        $outsideFilterProjectId = $this->openProjectOutside($filter);
+        $open = $this->currentProjectId === null ? null : $user->projects()->whereKey($this->currentProjectId)->first();
+        $outsideFilterProjectId = $this->openProjectOutside($open, $filter);
+        $openGroupId = $open === null ? null : $this->groupIdOf($open);
 
-        // The open project always stays in the list, even when it does not match:
-        // the row marking where the user is must not vanish under a filter.
-        [$filed, $ungrouped] = $this->user()->projects()
-            ->where(fn ($query) => $this->applyTagFilter($query, $filter)
-                ->when($outsideFilterProjectId !== null, fn ($query) => $query->orWhere('projects.id', $outsideFilterProjectId)))
-            ->orderByDesc('projects.updated_at')
-            ->get()
-            ->partition(fn (Project $project) => $project->pivot->project_group_id !== null);
-
-        $byGroup = $filed->groupBy(fn (Project $project) => (int) $project->pivot->project_group_id);
-        $groups = $this->user()->projectGroups()->get();
+        $groups = $user->projectGroups()->get();
 
         // Unfiltered, an empty drawer stays visible so it can be filled; while a
-        // filter is on, a drawer without a match is only noise.
+        // filter is on, a drawer without a match is only noise (one grouped COUNT).
         if (! $filter->isEmpty()) {
-            $groups = $groups->filter(fn (ProjectGroup $group) => $byGroup->has($group->id))->values();
+            $matching = $this->applyTagFilter($user->projects(), $filter)->toBase()
+                ->select('project_contributors.project_group_id')->selectRaw('count(*) as matches')
+                ->groupBy('project_contributors.project_group_id')
+                ->pluck('matches', 'project_group_id');
+            $groups = $groups->filter(fn (ProjectGroup $group) => $matching->has($group->id) || $group->id === $openGroupId)->values();
         }
+
+        $grouped = $groups->mapWithKeys(fn (ProjectGroup $group) => [
+            $group->id => $this->page($filter, $group->id, $open),
+        ])->all();
 
         // The match count only serves the no-match message, which exists once
         // there are categories to filter by; without one it would be a wasted query.
@@ -144,34 +152,55 @@ class ProjectNavigation extends Component
         return view('livewire.projects.project-navigation', [
             'groups' => $groups,
             'sortable' => $filter->isEmpty(),
-            'grouped' => $groups
-                ->mapWithKeys(fn (ProjectGroup $group) => [$group->id => $byGroup->get($group->id, new Collection)])
-                ->all(),
-            'ungrouped' => $ungrouped,
+            'grouped' => $grouped,
+            'ungrouped' => $this->page($filter, null, $open),
             'tagCategories' => $tagCategories,
             'activeFilterCount' => count($filter->valueIds()),
             'tagFilterMode' => $this->tagFilterMode,
-            'matchCount' => $hasCategories ? $this->applyTagFilter($this->user()->projects(), $filter)->count() : null,
+            'matchCount' => $hasCategories ? $this->applyTagFilter($user->projects(), $filter)->count() : null,
             'outsideFilterProjectId' => $outsideFilterProjectId,
         ]);
     }
 
     /**
-     * The open project, if it is one of the user's own and the filter hides it;
-     * null otherwise.
+     * One page of a drawer ($groupId) or of the ungrouped list (null), newest first.
+     *
+     * The open project always stays in its list, even when it does not match the
+     * filter or sits on another page: it is then pinned on top of the page shown.
      */
-    private function openProjectOutside(TagFilter $filter): ?int
+    private function page(TagFilter $filter, ?int $groupId, ?Project $open): Paginator
     {
-        if ($filter->isEmpty() || $this->currentProjectId === null) {
+        $query = $this->user()->projects();
+        $query = $groupId === null ? $query->wherePivotNull('project_group_id') : $query->wherePivot('project_group_id', $groupId);
+
+        $page = $this->applyTagFilter($query, $filter)
+            ->orderByDesc('projects.updated_at')
+            ->simplePaginate(self::PER_PAGE, pageName: $groupId === null ? 'ungrouped' : 'group-'.$groupId);
+
+        if ($open !== null && $this->groupIdOf($open) === $groupId && ! $page->getCollection()->contains('id', $open->id)) {
+            $page->getCollection()->prepend($open);
+        }
+
+        return $page;
+    }
+
+    /** The user's drawer the project sits in (pivot value, a string on some drivers), null when ungrouped. */
+    private function groupIdOf(Project $project): ?int
+    {
+        $groupId = $project->pivot->project_group_id;
+
+        return $groupId === null ? null : (int) $groupId;
+    }
+
+    /**
+     * The open project's id, if the filter hides it; null otherwise.
+     */
+    private function openProjectOutside(?Project $open, TagFilter $filter): ?int
+    {
+        if ($open === null || $filter->isEmpty()) {
             return null;
         }
 
-        $own = $this->user()->projects()->whereKey($this->currentProjectId);
-
-        if (! (clone $own)->exists() || $this->applyTagFilter($own, $filter)->exists()) {
-            return null;
-        }
-
-        return $this->currentProjectId;
+        return $this->applyTagFilter($this->user()->projects()->whereKey($open->id), $filter)->exists() ? null : $open->id;
     }
 }
