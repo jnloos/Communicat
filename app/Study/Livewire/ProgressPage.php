@@ -3,6 +3,7 @@
 namespace App\Study\Livewire;
 
 use App\Livewire\Concerns\NeedsConfirmation;
+use App\Study\Control\CircuitBreaker;
 use App\Study\Control\PauseFlag;
 use App\Study\Control\PauseSource;
 use App\Study\Models\StudyEvent;
@@ -11,6 +12,7 @@ use App\Study\Watch\AlertLevel;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use RuntimeException;
 
 /**
  * Study-only, removable: see app/Study/README.md.
@@ -26,6 +28,9 @@ class ProgressPage extends Component
     /** A `wave` tag value id; null shows every wave. */
     #[Url]
     public ?int $wave = null;
+
+    /** Why the last pause or resume did not happen: the pause file could not be written or removed. */
+    public ?string $controlError = null;
 
     public function boot(): void
     {
@@ -47,8 +52,14 @@ class ProgressPage extends Component
     {
         Gate::authorize('admin');
 
-        if (app(PauseFlag::class)->pause('manual', 'manual', PauseSource::Manual)) {
-            $this->recordManual('manual_paused');
+        $this->controlError = null;
+
+        try {
+            if (app(PauseFlag::class)->pause('manual', 'manual', PauseSource::Manual)) {
+                $this->recordManual('manual_paused');
+            }
+        } catch (RuntimeException $e) {
+            $this->controlError = $e->getMessage();
         }
     }
 
@@ -56,9 +67,15 @@ class ProgressPage extends Component
     {
         Gate::authorize('admin');
 
-        if (app(PauseFlag::class)->active()) {
-            app(PauseFlag::class)->resume();
-            $this->recordManual('manual_resumed');
+        $this->controlError = null;
+
+        try {
+            if (app(PauseFlag::class)->active()) {
+                app(CircuitBreaker::class)->resume();
+                $this->recordManual('manual_resumed');
+            }
+        } catch (RuntimeException $e) {
+            $this->controlError = $e->getMessage();
         }
     }
 

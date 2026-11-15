@@ -2,6 +2,7 @@
 
 namespace App\Study\Console;
 
+use App\Study\Control\CircuitBreaker;
 use App\Study\Control\PauseFlag;
 use Illuminate\Console\Command;
 use RuntimeException;
@@ -13,7 +14,7 @@ class ResumeStudy extends Command
 
     protected $description = 'Lift the study pause, whoever set it.';
 
-    public function handle(PauseFlag $pause): int
+    public function handle(PauseFlag $pause, CircuitBreaker $breaker): int
     {
         $state = $pause->state();
 
@@ -24,7 +25,7 @@ class ResumeStudy extends Command
         }
 
         try {
-            $pause->resume();
+            $breaker->resume();
         } catch (RuntimeException $e) {
             $this->error($e->getMessage().' The study is still paused.');
 

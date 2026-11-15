@@ -13,8 +13,6 @@ use RuntimeException;
  */
 class PauseFlag
 {
-    public function __construct(private readonly BreakerStreak $streak) {}
-
     /** One stat per call, no database: the worker loop asks this every few seconds. */
     public function active(): bool
     {
@@ -59,7 +57,7 @@ class PauseFlag
     }
 
     /**
-     * Also resets the streak: the old one would trip again on the first failed turn.
+     * Use CircuitBreaker::resume() to also reset the streak.
      *
      * @throws RuntimeException when the file stays: the study would stay paused while the caller reports it running
      */
@@ -68,8 +66,6 @@ class PauseFlag
         if (! @unlink($this->path()) && $this->active()) {
             throw new RuntimeException("Could not remove the pause file {$this->path()}.");
         }
-
-        $this->streak->reset();
     }
 
     private function path(): string

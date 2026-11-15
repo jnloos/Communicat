@@ -89,6 +89,29 @@ class ProgressPageControlsTest extends TestCase
         $this->assertFalse(app(PauseFlag::class)->active());
     }
 
+    public function test_a_pause_file_that_cannot_be_written_shows_the_message_instead_of_a_500(): void
+    {
+        $path = $this->unwritableDirectory().'/pause.json';
+        config(['study.pause_file' => $path]);
+
+        Livewire::test(ProgressPage::class)->call('askToPause')->call('executeConfirmed')
+            ->assertOk()->assertSet('controlError', "Could not write the pause file {$path}.")->assertSee('data-control-error', false);
+    }
+
+    public function test_a_pause_file_that_cannot_be_removed_shows_the_message_instead_of_a_500(): void
+    {
+        $directory = $this->unwritableDirectory();
+        chmod($directory, 0700);
+        config(['study.pause_file' => $directory.'/pause.json']);
+        app(PauseFlag::class)->pause('lunch', 'manual', PauseSource::Manual);
+        chmod($directory, 0500);
+
+        Livewire::test(ProgressPage::class)->call('askToResume')->call('executeConfirmed')
+            ->assertOk()->assertSet('controlError', "Could not remove the pause file {$directory}/pause.json.");
+
+        $this->assertTrue(app(PauseFlag::class)->active());
+    }
+
     public function test_the_event_list_shows_at_most_ten_newest_first(): void
     {
         foreach (range(1, 12) as $i) {

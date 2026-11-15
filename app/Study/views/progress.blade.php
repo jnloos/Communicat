@@ -25,6 +25,10 @@
         </x-slot:actions>
     </x-page-header>
 
+    @if ($controlError !== null)
+        <flux:callout class="mt-6" variant="danger" icon="exclamation-triangle" data-control-error :text="$controlError" />
+    @endif
+
     @if ($snapshot->pause !== null)
         <flux:callout class="mt-6" icon="pause-circle" data-pause-callout
             :variant="$snapshot->pause->source === \App\Study\Control\PauseSource::Manual ? 'warning' : 'danger'"

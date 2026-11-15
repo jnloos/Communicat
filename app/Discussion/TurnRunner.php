@@ -79,7 +79,7 @@ class TurnRunner
             Log::error(sprintf('Turn %d of project %d failed: %s', $log->turn_index, $project->id, $e->getMessage()), ['exception' => $e]);
 
             $status = TransientFailure::is($e) ? JobStatus::Interrupted : JobStatus::Failed;
-            $this->finish($log, $payload, $status, class_basename($e).': '.$e->getMessage());
+            $this->finish($log, $payload, $status, class_basename($e).': '.ErrorText::of($e));
 
             // The turn is on record; an error no later turn can get past ends the run instead.
             if ($e instanceof AbortsRun) {

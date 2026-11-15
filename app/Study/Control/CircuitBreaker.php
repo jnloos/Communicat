@@ -23,6 +23,17 @@ class CircuitBreaker
         private readonly FatalSignal $fatal,
     ) {}
 
+    /**
+     * Lifts the pause and resets the streak: the old one would trip again on the first failed turn.
+     *
+     * @throws \RuntimeException when the pause file stays, see PauseFlag::resume()
+     */
+    public function resume(): void
+    {
+        $this->pause->resume();
+        $this->streak->reset();
+    }
+
     public function turnSpoken(): void
     {
         $this->streak->reset();

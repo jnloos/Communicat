@@ -16,6 +16,7 @@ use App\Models\JobLog;
 use App\Models\Message;
 use App\Models\Project;
 use App\Models\PromptLog;
+use GuzzleHttp\Psr7\Response;
 use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\RequestException;
@@ -155,6 +156,18 @@ class TurnRunnerTest extends TestCase
         $this->assertSame('interrupted', $result->reason);
         $this->assertSame(JobStatus::Interrupted, JobLog::sole()->status);
         $this->assertStringContainsString('RateLimitedException', JobLog::sole()->error);
+    }
+
+    public function test_a_quota_error_keeps_its_provider_code_in_the_log(): void
+    {
+        $body = '{"error":{"type":"insufficient_quota","code":"insufficient_quota"}}';
+        $previous = new RequestException(new HttpResponse(new Response(429, [], $body)));
+        FakeAgents::fails(SpeakAgent::class, RateLimitedException::forProvider('openai', 429, $previous));
+
+        app(TurnRunner::class)->run($this->project);
+
+        $this->assertSame(JobStatus::Interrupted, JobLog::sole()->status);
+        $this->assertStringContainsString('insufficient_quota', JobLog::sole()->error);
     }
 
     public function test_stops_without_a_log_when_nobody_can_speak(): void

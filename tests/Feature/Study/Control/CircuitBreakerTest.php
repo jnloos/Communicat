@@ -5,6 +5,7 @@ namespace Tests\Feature\Study\Control;
 use App\Discussion\ModelDrifted;
 use App\Discussion\Values\JobStatus;
 use App\Models\JobLog;
+use App\Study\Control\BreakerStreak;
 use App\Study\Control\CircuitBreaker;
 use App\Study\Control\PauseFlag;
 use App\Study\Control\PauseSource;
@@ -41,6 +42,18 @@ class CircuitBreakerTest extends TestCase
         $this->assertTrue($this->pause->active());
         $this->assertSame('streak', $this->pause->state()->signal);
         $this->assertSame(PauseSource::Breaker, $this->pause->state()->source);
+    }
+
+    public function test_resume_lifts_the_pause_and_resets_the_streak(): void
+    {
+        $streak = app(BreakerStreak::class);
+        $streak->increment();
+        $this->pause->pause('manual', 'manual', PauseSource::Manual);
+
+        $this->breaker->resume();
+
+        $this->assertFalse($this->pause->active());
+        $this->assertSame(0, $streak->count());
     }
 
     public function test_a_spoken_turn_resets_the_streak(): void

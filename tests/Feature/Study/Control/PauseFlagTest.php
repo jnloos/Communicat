@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Study\Control;
 
-use App\Study\Control\BreakerStreak;
 use App\Study\Control\PauseFlag;
 use App\Study\Control\PauseSource;
 use RuntimeException;
@@ -73,18 +72,14 @@ class PauseFlagTest extends TestCase
         $this->flag->resume();
     }
 
-    public function test_resume_deletes_the_file_and_resets_the_streak(): void
+    public function test_resume_deletes_the_file(): void
     {
-        $streak = app(BreakerStreak::class);
-        $streak->increment();
-        $streak->increment();
         $this->flag->pause('manual', 'manual', PauseSource::Manual);
 
         $this->flag->resume();
 
         $this->assertFalse($this->flag->active());
         $this->assertFileDoesNotExist(config('study.pause_file'));
-        $this->assertSame(0, $streak->count());
     }
 
     public function test_an_unreadable_file_counts_as_paused(): void

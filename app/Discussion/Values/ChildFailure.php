@@ -3,6 +3,7 @@
 namespace App\Discussion\Values;
 
 use App\Discussion\AbortsRun;
+use App\Discussion\ErrorText;
 use App\Discussion\PromptTaskAborted;
 use App\Discussion\PromptTaskFailed;
 use App\Discussion\TransientFailure;
@@ -31,7 +32,7 @@ final readonly class ChildFailure
     {
         return new self(
             class: $e::class,
-            message: $e->getMessage(),
+            message: ErrorText::of($e),
             status: $e instanceof RequestException ? $e->response->status() : null,
             transient: TransientFailure::is($e),
             abortsRun: $e instanceof AbortsRun,

@@ -55,24 +55,34 @@ during a batch must not be able to steer when to stop.
 project until it starts, so `study:queue` may run twice. Delays: 0 after a spoken
 or failed turn, `60 s · 2^(n−1)` up to 900 s after `n` silent turns in a row
 (interrupted, `jev_outage`). `Control/RunHealth` reads those chains from
-`job_logs` (spoken = `words` not null). At 10 failed or 12 silent turns in a row
-the run is given up: project tag `superseded: true` plus a `failed_jobs` row; a
-replacement is the planner's job. **Never while the study is paused.** A bug
-(any other exception) fails the job and ends the chain; `study:queue` restores it.
+`job_logs` (spoken = `words` not null). A run is given up after 10 failed turns in
+a row (no words, status failed) or 3 abandoned turns in a row (a dead worker or a
+timeout: the next job closes the leftover `running` row with `RunHealth::ABANDONED`
+and checks this before the next turn): project tag `superseded: true` plus a
+`failed_jobs` row; a replacement is the planner's job. **Never while the study is
+paused.** Infrastructure interruptions and `jev_outage` never give a run up; silent
+turns only set the backoff. A deleted project ends the chain quietly. A transient
+exception outside the turn retries with backoff 10/60/300 s; a bug (any other
+exception) fails the job and ends the chain; `study:queue` restores it and prints
+"Queued" / "Already queued" / "Already finished".
 
 **Pause.** `storage/app/study/pause.json` (`config('study.pause_file')`) pauses the
 whole study; a file because `cache:clear`/`optimize:clear` must not lift it. A
 `Queue::looping` hook keeps workers on the `study` connection from taking a job
 while it exists. `study:pause "reason"` sets it, `study:resume` prints and removes
-it and resets the breaker's streak. The circuit breaker sets it with source
+it and resets the breaker's streak (use case `CircuitBreaker::resume()`, also behind
+the dashboard button; `PauseFlag` only handles the file). Both commands and the
+dashboard fail with the file's path when the pause file cannot be written or removed
+(the dashboard shows it in a callout). The circuit breaker sets it with source
 `breaker` on any `AbortsRun` (model drift, Jev rejected), on an error text matching
-`study.breaker.fatal_patterns` (HTTP 401/402/403, exhausted credit), or after 8
+`study.breaker.fatal_patterns` (HTTP 401/402/403, exhausted credit, `insufficient_quota`: core's `ErrorText` appends the provider's error code
+to the SDK's body-less 429 message), or after 8
 turns in a row without a word over all runs (cache, 6 h TTL). It never lifts
 itself. Workers and web app must share the host and be able to write
 `storage/app/study`.
 
 **Workers.** Six units (`systemctl enable --now communicat-study@{1..6}`),
-`TimeoutStopSec=400` above the turn timeout of 360 s, `MemoryMax=550M` per unit
+`KillMode=mixed`, `TimeoutStopSec=400` above the turn timeout of 360 s, `MemoryMax=550M` per unit
 (children included). The turn timeout needs `ext-pcntl`. Order the tests pin:
 timeout 360 < lock 420 < `retry_after` 480. After a manual `queue:clear study` the
 unique locks block `study:queue` for up to an hour: run `php artisan cache:clear`
