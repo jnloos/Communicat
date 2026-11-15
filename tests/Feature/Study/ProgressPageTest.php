@@ -10,9 +10,11 @@ use App\Models\TagScope;
 use App\Models\TagValue;
 use App\Models\User;
 use App\Study\Livewire\ProgressPage;
+use App\Study\Planning\WavePlanning;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
+use Tests\Feature\Study\Planning\ManifestTest;
 use Tests\TestCase;
 
 class ProgressPageTest extends TestCase
@@ -93,6 +95,24 @@ class ProgressPageTest extends TestCase
 
         $this->assertSame(1, $report['totals']['given_up']);
         $this->assertSame($project->id, $report['failedJobs'][0]['project']);
+    }
+
+    public function test_an_applied_wave_shows_in_the_grid_and_the_wave_filter(): void
+    {
+        $this->asAdmin();
+        $planning = app(WavePlanning::class);
+        $planning->apply($planning->record($planning->prepare(ManifestTest::fixture('tiny-manifest.json'), 1, 1, 1, null), auth()->user()));
+
+        $report = Livewire::test(ProgressPage::class)->viewData('report');
+
+        $this->assertSame(['1'], array_values($report['waves']));
+        $this->assertSame(['S+G+E+', 'S−G+E+', 'S+G+E−', 'S−G+E−', 'S+G−E+', 'S−G−E+', 'S+G−E−', 'S−G−E−'], array_values($report['rows']));
+        $this->assertSame(64, $report['totals']['open']);
+        // 16 blocks × 4 status cells: each of the 64 focus × duo cells holds one run.
+        $this->assertSame(64, collect($report['grids']['ScorePipeline'])->flatten(1)->count());
+
+        $filtered = Livewire::test(ProgressPage::class)->set('wave', array_key_first($report['waves']))->viewData('report');
+        $this->assertSame(64, $filtered['totals']['total']);
     }
 
     private function asAdmin(): void

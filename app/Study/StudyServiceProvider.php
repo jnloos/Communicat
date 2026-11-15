@@ -2,7 +2,10 @@
 
 namespace App\Study;
 
+use App\Study\Console\CheckStudyPlan;
+use App\Study\Console\PlanStudyWave;
 use App\Study\Console\QueueStudyRuns;
+use App\Study\Livewire\PlanWavePage;
 use App\Study\Livewire\ProgressPage;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -30,6 +33,9 @@ class StudyServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Always, like the queue connection: the schema must not depend on the switch.
+        $this->loadMigrationsFrom(__DIR__.'/database/migrations');
+
         if (! config('study.enabled')) {
             return;
         }
@@ -38,6 +44,7 @@ class StudyServiceProvider extends ServiceProvider
         $this->loadTranslationsFrom(__DIR__.'/lang', 'study');
 
         Livewire::component('study.progress-page', ProgressPage::class);
+        Livewire::component('study.plan-wave-page', PlanWavePage::class);
 
         Route::middleware(['web', 'auth', 'verified', 'can:admin'])
             ->prefix('study')
@@ -45,7 +52,7 @@ class StudyServiceProvider extends ServiceProvider
             ->group(__DIR__.'/routes.php');
 
         if ($this->app->runningInConsole()) {
-            $this->commands([QueueStudyRuns::class]);
+            $this->commands([QueueStudyRuns::class, PlanStudyWave::class, CheckStudyPlan::class]);
         }
     }
 }

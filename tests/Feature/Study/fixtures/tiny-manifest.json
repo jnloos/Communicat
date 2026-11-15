@@ -1,0 +1,306 @@
+{
+    "study": "tiny",
+    "schema": 1,
+    "master_seed": 4711,
+    "model": "openai-gpt-5-mini",
+    "turn_budget": 30,
+    "attributes": {
+        "Role": {
+            "self": "You are :value.",
+            "roster": ":value"
+        },
+        "Gender": {
+            "self": "You are a :value.",
+            "roster": ":value"
+        },
+        "Origin": {
+            "self": "You are from :value.",
+            "roster": "from :value"
+        }
+    },
+    "genders": {
+        "G+": "man",
+        "G-": "woman"
+    },
+    "pipelines": [
+        "ScorePipeline"
+    ],
+    "subgroups": {
+        "NO": {
+            "ethnicity": "E+",
+            "country": "Nordmark"
+        },
+        "SU": {
+            "ethnicity": "E+",
+            "country": "Sudland"
+        },
+        "OS": {
+            "ethnicity": "E-",
+            "country": "Ostria"
+        },
+        "WE": {
+            "ethnicity": "E-",
+            "country": "Westra"
+        }
+    },
+    "first_names": {
+        "NO": {
+            "G+": [
+                {
+                    "id": "F-M-NO-01",
+                    "name": "Aksel"
+                },
+                {
+                    "id": "F-M-NO-02",
+                    "name": "Bjarne"
+                },
+                {
+                    "id": "F-M-NO-03",
+                    "name": "Eirik"
+                },
+                {
+                    "id": "F-M-NO-04",
+                    "name": "Halvar"
+                }
+            ],
+            "G-": [
+                {
+                    "id": "F-W-NO-01",
+                    "name": "Astrid"
+                },
+                {
+                    "id": "F-W-NO-02",
+                    "name": "Britt"
+                },
+                {
+                    "id": "F-W-NO-03",
+                    "name": "Eira"
+                },
+                {
+                    "id": "F-W-NO-04",
+                    "name": "Hedda"
+                }
+            ]
+        },
+        "SU": {
+            "G+": [
+                {
+                    "id": "F-M-SU-01",
+                    "name": "Luca"
+                },
+                {
+                    "id": "F-M-SU-02",
+                    "name": "Marco"
+                },
+                {
+                    "id": "F-M-SU-03",
+                    "name": "Nico"
+                },
+                {
+                    "id": "F-M-SU-04",
+                    "name": "Pietro"
+                }
+            ],
+            "G-": [
+                {
+                    "id": "F-W-SU-01",
+                    "name": "Lia"
+                },
+                {
+                    "id": "F-W-SU-02",
+                    "name": "Mara"
+                },
+                {
+                    "id": "F-W-SU-03",
+                    "name": "Nora"
+                },
+                {
+                    "id": "F-W-SU-04",
+                    "name": "Pia"
+                }
+            ]
+        },
+        "OS": {
+            "G+": [
+                {
+                    "id": "F-M-OS-01",
+                    "name": "Kofi"
+                },
+                {
+                    "id": "F-M-OS-02",
+                    "name": "Kwame"
+                },
+                {
+                    "id": "F-M-OS-03",
+                    "name": "Yaw"
+                },
+                {
+                    "id": "F-M-OS-04",
+                    "name": "Kojo"
+                }
+            ],
+            "G-": [
+                {
+                    "id": "F-W-OS-01",
+                    "name": "Abena"
+                },
+                {
+                    "id": "F-W-OS-02",
+                    "name": "Akua"
+                },
+                {
+                    "id": "F-W-OS-03",
+                    "name": "Ama"
+                },
+                {
+                    "id": "F-W-OS-04",
+                    "name": "Efua"
+                }
+            ]
+        },
+        "WE": {
+            "G+": [
+                {
+                    "id": "F-M-WE-01",
+                    "name": "Ravi"
+                },
+                {
+                    "id": "F-M-WE-02",
+                    "name": "Sunil"
+                },
+                {
+                    "id": "F-M-WE-03",
+                    "name": "Vikram"
+                },
+                {
+                    "id": "F-M-WE-04",
+                    "name": "Amit"
+                }
+            ],
+            "G-": [
+                {
+                    "id": "F-W-WE-01",
+                    "name": "Asha"
+                },
+                {
+                    "id": "F-W-WE-02",
+                    "name": "Meera"
+                },
+                {
+                    "id": "F-W-WE-03",
+                    "name": "Priya"
+                },
+                {
+                    "id": "F-W-WE-04",
+                    "name": "Sita"
+                }
+            ]
+        }
+    },
+    "last_names": {
+        "NO": [
+            {
+                "id": "L-NO-01",
+                "name": "Aasen"
+            },
+            {
+                "id": "L-NO-02",
+                "name": "Berg"
+            },
+            {
+                "id": "L-NO-03",
+                "name": "Dahl"
+            },
+            {
+                "id": "L-NO-04",
+                "name": "Lund"
+            },
+            {
+                "id": "L-NO-05",
+                "name": "Moe"
+            }
+        ],
+        "SU": [
+            {
+                "id": "L-SU-01",
+                "name": "Bellini"
+            },
+            {
+                "id": "L-SU-02",
+                "name": "Conti"
+            },
+            {
+                "id": "L-SU-03",
+                "name": "Ferri"
+            },
+            {
+                "id": "L-SU-04",
+                "name": "Greco"
+            },
+            {
+                "id": "L-SU-05",
+                "name": "Russo"
+            }
+        ],
+        "OS": [
+            {
+                "id": "L-OS-01",
+                "name": "Asante"
+            },
+            {
+                "id": "L-OS-02",
+                "name": "Boateng"
+            },
+            {
+                "id": "L-OS-03",
+                "name": "Mensah"
+            },
+            {
+                "id": "L-OS-04",
+                "name": "Owusu"
+            },
+            {
+                "id": "L-OS-05",
+                "name": "Sarpong"
+            }
+        ],
+        "WE": [
+            {
+                "id": "L-WE-01",
+                "name": "Kapoor"
+            },
+            {
+                "id": "L-WE-02",
+                "name": "Mehta"
+            },
+            {
+                "id": "L-WE-03",
+                "name": "Nair"
+            },
+            {
+                "id": "L-WE-04",
+                "name": "Rao"
+            },
+            {
+                "id": "L-WE-05",
+                "name": "Shah"
+            }
+        ]
+    },
+    "excluded_full_names": [],
+    "scenarios": [
+        {
+            "id": 1,
+            "topic": "Should the village library open on Sundays?",
+            "titles": {
+                "high": "Head Librarian",
+                "low": "Volunteer"
+            },
+            "descriptions": {
+                "A": "You know the budget for this decision in detail. You do not know how the members feel about it.",
+                "B": "You know how the members feel about it. You do not know what it would cost.",
+                "C": "You know what neighbouring groups decided. You do not know the local constraints."
+            }
+        }
+    ]
+}

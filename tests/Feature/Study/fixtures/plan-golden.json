@@ -1,0 +1,4354 @@
+[
+    {
+        "key": "tiny:s01:b01:hh:ScorePipeline",
+        "uuid": "baf193a0-4efa-577c-ba95-fd3fbe155e25",
+        "title": "S01 B01 S+G+E+/S+G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1810837090,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B01",
+            "focus": "S+G+E+",
+            "duo": "S+G+E+",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "b4bb3552-54a3-5ecd-a1a9-d825ba4d9a34",
+                "name": "Aksel Lund",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "9cc36996-4036-5ccb-8275-27b3d78ef4a3",
+                "name": "Nico Russo",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-03",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "a9a350c0-45e8-52a9-b8e9-fa708234a1c1",
+                "name": "Bjarne Dahl",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-02",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b01:hl:ScorePipeline",
+        "uuid": "f05dc979-3e7f-55f1-b2bd-726ab7b71986",
+        "title": "S01 B01 S+G+E+/S−G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1474171376,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B01",
+            "focus": "S+G+E+",
+            "duo": "S−G+E+",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "1704d145-e0c8-54db-82a8-c84046cd8cbe",
+                "name": "Nico Russo",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-03",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "b4bb3552-54a3-5ecd-a1a9-d825ba4d9a34",
+                "name": "Aksel Lund",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "3b8d6492-637f-51bc-8c0f-39d7c113322c",
+                "name": "Bjarne Dahl",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-02",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b01:lh:ScorePipeline",
+        "uuid": "635adb26-8287-52cd-a0db-0599e81d2534",
+        "title": "S01 B01 S−G+E+/S+G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1870418574,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B01",
+            "focus": "S−G+E+",
+            "duo": "S+G+E+",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "b9ce0752-436e-5929-9d43-41d9910a4da0",
+                "name": "Aksel Lund",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "9cc36996-4036-5ccb-8275-27b3d78ef4a3",
+                "name": "Nico Russo",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-03",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "a9a350c0-45e8-52a9-b8e9-fa708234a1c1",
+                "name": "Bjarne Dahl",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-02",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b01:ll:ScorePipeline",
+        "uuid": "51b0f143-cfc8-573d-adbf-eb56b0e85caf",
+        "title": "S01 B01 S−G+E+/S−G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 946069001,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B01",
+            "focus": "S−G+E+",
+            "duo": "S−G+E+",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "b9ce0752-436e-5929-9d43-41d9910a4da0",
+                "name": "Aksel Lund",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "1704d145-e0c8-54db-82a8-c84046cd8cbe",
+                "name": "Nico Russo",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-03",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "3b8d6492-637f-51bc-8c0f-39d7c113322c",
+                "name": "Bjarne Dahl",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-02",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b02:hh:ScorePipeline",
+        "uuid": "a946b1a9-e00b-5c5c-8bc3-07c59d19001e",
+        "title": "S01 B02 S+G+E+/S+G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1851400529,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B02",
+            "focus": "S+G+E+",
+            "duo": "S+G+E−",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "ae1b7027-2e3e-5500-ade6-5efb4a170d2f",
+                "name": "Kojo Boateng",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-04",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "d6e72d2d-2a00-5ace-9af2-95bf11261575",
+                "name": "Vikram Shah",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-03",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "3b06f4fd-0a07-55e0-bdf9-5722c44ae894",
+                "name": "Luca Ferri",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-01",
+                    "subgroup": "SU"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b02:hl:ScorePipeline",
+        "uuid": "9bb3f15a-9268-5331-8dc3-d2c5f7e487a1",
+        "title": "S01 B02 S+G+E+/S−G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1678052,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B02",
+            "focus": "S+G+E+",
+            "duo": "S−G+E−",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "3b06f4fd-0a07-55e0-bdf9-5722c44ae894",
+                "name": "Luca Ferri",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-01",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "415409d8-44f4-55de-9253-75ee78133277",
+                "name": "Vikram Shah",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-03",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "94943c50-7d3c-50b4-ae55-61626cd9c0af",
+                "name": "Kojo Boateng",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-04",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b02:lh:ScorePipeline",
+        "uuid": "8645846b-801e-5717-86a3-6c19370cc697",
+        "title": "S01 B02 S−G+E+/S+G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 776776720,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B02",
+            "focus": "S−G+E+",
+            "duo": "S+G+E−",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "d6e72d2d-2a00-5ace-9af2-95bf11261575",
+                "name": "Vikram Shah",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-03",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "ae1b7027-2e3e-5500-ade6-5efb4a170d2f",
+                "name": "Kojo Boateng",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-04",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "29e0a0d5-d30f-5ae0-b05c-24451351e301",
+                "name": "Luca Ferri",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-01",
+                    "subgroup": "SU"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b02:ll:ScorePipeline",
+        "uuid": "e611391a-dbef-5d22-b763-d075cc015f7a",
+        "title": "S01 B02 S−G+E+/S−G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1756690616,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B02",
+            "focus": "S−G+E+",
+            "duo": "S−G+E−",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "415409d8-44f4-55de-9253-75ee78133277",
+                "name": "Vikram Shah",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-03",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "29e0a0d5-d30f-5ae0-b05c-24451351e301",
+                "name": "Luca Ferri",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-01",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "94943c50-7d3c-50b4-ae55-61626cd9c0af",
+                "name": "Kojo Boateng",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-04",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b03:hh:ScorePipeline",
+        "uuid": "a6f3ca48-146d-5ad7-a53c-408c64bfc218",
+        "title": "S01 B03 S+G+E+/S+G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 645626063,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B03",
+            "focus": "S+G+E+",
+            "duo": "S+G−E+",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "c80d4984-0589-57e0-92e8-f26e02214b81",
+                "name": "Halvar Lund",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-04",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "a73898cd-db23-5c4e-b555-e13b271d7b65",
+                "name": "Astrid Berg",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "faf02aab-393a-5cb9-9be7-e4387c4d9479",
+                "name": "Hedda Moe",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-04",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b03:hl:ScorePipeline",
+        "uuid": "e4ffd9f7-5e3a-57e2-8e23-3cc3577c982d",
+        "title": "S01 B03 S+G+E+/S−G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 296325209,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B03",
+            "focus": "S+G+E+",
+            "duo": "S−G−E+",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "8d0c1c43-7b98-5d14-b39b-894317e0e578",
+                "name": "Astrid Berg",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "b5ebd32e-a283-556d-a43f-5a29697b1932",
+                "name": "Hedda Moe",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-04",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "c80d4984-0589-57e0-92e8-f26e02214b81",
+                "name": "Halvar Lund",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-04",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b03:lh:ScorePipeline",
+        "uuid": "07799665-cf44-5c4d-a5f0-d1586a93a554",
+        "title": "S01 B03 S−G+E+/S+G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1306622211,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B03",
+            "focus": "S−G+E+",
+            "duo": "S+G−E+",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "a73898cd-db23-5c4e-b555-e13b271d7b65",
+                "name": "Astrid Berg",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "faf02aab-393a-5cb9-9be7-e4387c4d9479",
+                "name": "Hedda Moe",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-04",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "1d44eecc-45e5-56bf-81f4-2570fab9577a",
+                "name": "Halvar Lund",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-04",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b03:ll:ScorePipeline",
+        "uuid": "ff737853-948f-5ab2-83dc-f7b89f08c13a",
+        "title": "S01 B03 S−G+E+/S−G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 514342953,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B03",
+            "focus": "S−G+E+",
+            "duo": "S−G−E+",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "b5ebd32e-a283-556d-a43f-5a29697b1932",
+                "name": "Hedda Moe",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-04",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "8d0c1c43-7b98-5d14-b39b-894317e0e578",
+                "name": "Astrid Berg",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "1d44eecc-45e5-56bf-81f4-2570fab9577a",
+                "name": "Halvar Lund",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-04",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b04:hh:ScorePipeline",
+        "uuid": "faf38e05-2e58-56e8-814d-e8ea7a02b21e",
+        "title": "S01 B04 S+G+E+/S+G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1008574440,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B04",
+            "focus": "S+G+E+",
+            "duo": "S+G−E−",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "759af369-44b5-567b-9069-e7785fd488ec",
+                "name": "Asha Mehta",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-01",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "8b1622af-090a-57a6-aede-235bcd0bc5b4",
+                "name": "Marco Bellini",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-02",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "1cca3540-dde2-5f95-983d-c2d99d9d272c",
+                "name": "Sita Kapoor",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-04",
+                    "subgroup": "WE"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b04:hl:ScorePipeline",
+        "uuid": "d5cae5a9-bc3a-59e0-942f-008be55efbb9",
+        "title": "S01 B04 S+G+E+/S−G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 153143456,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B04",
+            "focus": "S+G+E+",
+            "duo": "S−G−E−",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "ab6eca3e-2534-5f02-8f3f-88fa28c4645c",
+                "name": "Sita Kapoor",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-04",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "1cb33b12-b137-56af-bee8-54ae8ecd15ac",
+                "name": "Asha Mehta",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-01",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "8b1622af-090a-57a6-aede-235bcd0bc5b4",
+                "name": "Marco Bellini",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-02",
+                    "subgroup": "SU"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b04:lh:ScorePipeline",
+        "uuid": "3a77f119-0a20-57e9-8a21-0eebf9d60c26",
+        "title": "S01 B04 S−G+E+/S+G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1705366559,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B04",
+            "focus": "S−G+E+",
+            "duo": "S+G−E−",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "1cca3540-dde2-5f95-983d-c2d99d9d272c",
+                "name": "Sita Kapoor",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-04",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "759af369-44b5-567b-9069-e7785fd488ec",
+                "name": "Asha Mehta",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-01",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "be79a732-d8dc-5e55-85e9-6b3b8e1b7949",
+                "name": "Marco Bellini",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-02",
+                    "subgroup": "SU"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b04:ll:ScorePipeline",
+        "uuid": "9431e9e3-abb8-5723-bc85-291b5bfd5596",
+        "title": "S01 B04 S−G+E+/S−G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 468748307,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B04",
+            "focus": "S−G+E+",
+            "duo": "S−G−E−",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "ab6eca3e-2534-5f02-8f3f-88fa28c4645c",
+                "name": "Sita Kapoor",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-04",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "1cb33b12-b137-56af-bee8-54ae8ecd15ac",
+                "name": "Asha Mehta",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-01",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "be79a732-d8dc-5e55-85e9-6b3b8e1b7949",
+                "name": "Marco Bellini",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-02",
+                    "subgroup": "SU"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b05:hh:ScorePipeline",
+        "uuid": "94415bd8-7a12-5eec-bca8-073d86aeacae",
+        "title": "S01 B05 S+G+E−/S+G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1950667633,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B05",
+            "focus": "S+G+E−",
+            "duo": "S+G+E+",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "a2cf2ee1-fc79-5405-bed8-fea8245ed04d",
+                "name": "Nico Bellini",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-03",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "fa99461e-ac47-5031-918d-6bb48d83a2e9",
+                "name": "Marco Ferri",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-02",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "3dc7bb71-05f0-59bf-ace0-e1f9a6e5eb6e",
+                "name": "Amit Mehta",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-04",
+                    "subgroup": "WE"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b05:hl:ScorePipeline",
+        "uuid": "38e1843d-e9fe-5ba2-b405-724fd35f687f",
+        "title": "S01 B05 S+G+E−/S−G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 189566092,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B05",
+            "focus": "S+G+E−",
+            "duo": "S−G+E+",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "25ebb28a-052f-5298-9068-03ab998da0f4",
+                "name": "Marco Ferri",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-02",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "3dc7bb71-05f0-59bf-ace0-e1f9a6e5eb6e",
+                "name": "Amit Mehta",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-04",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "16510197-fc79-50a2-95a2-14a1328574ec",
+                "name": "Nico Bellini",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-03",
+                    "subgroup": "SU"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b05:lh:ScorePipeline",
+        "uuid": "f1fd0165-e1cc-50be-b388-d691cfa424ca",
+        "title": "S01 B05 S−G+E−/S+G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1438897260,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B05",
+            "focus": "S−G+E−",
+            "duo": "S+G+E+",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "a2cf2ee1-fc79-5405-bed8-fea8245ed04d",
+                "name": "Nico Bellini",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-03",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "fa99461e-ac47-5031-918d-6bb48d83a2e9",
+                "name": "Marco Ferri",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-02",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "853ff614-7652-5789-8ebb-ed88cb934d39",
+                "name": "Amit Mehta",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-04",
+                    "subgroup": "WE"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b05:ll:ScorePipeline",
+        "uuid": "c1382342-d596-5605-9d86-88c24eeef693",
+        "title": "S01 B05 S−G+E−/S−G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 102490899,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B05",
+            "focus": "S−G+E−",
+            "duo": "S−G+E+",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "25ebb28a-052f-5298-9068-03ab998da0f4",
+                "name": "Marco Ferri",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-02",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "853ff614-7652-5789-8ebb-ed88cb934d39",
+                "name": "Amit Mehta",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-04",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "16510197-fc79-50a2-95a2-14a1328574ec",
+                "name": "Nico Bellini",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-03",
+                    "subgroup": "SU"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b06:hh:ScorePipeline",
+        "uuid": "38b4ddfe-3904-5889-aba1-625b311fd8a3",
+        "title": "S01 B06 S+G+E−/S+G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1107810142,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B06",
+            "focus": "S+G+E−",
+            "duo": "S+G+E−",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "aa4146fb-b5fd-525c-bd90-f0779e78bc82",
+                "name": "Amit Rao",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-04",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "3fcc5d85-e10c-50a0-80a7-c4fdfa365c0b",
+                "name": "Yaw Mensah",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-03",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "47da9db2-182a-554d-a9ab-f17e1b8e4d9a",
+                "name": "Vikram Nair",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-03",
+                    "subgroup": "WE"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b06:hl:ScorePipeline",
+        "uuid": "c1ae7652-e60b-5f20-93b9-b76adfe9b326",
+        "title": "S01 B06 S+G+E−/S−G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 558972201,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B06",
+            "focus": "S+G+E−",
+            "duo": "S−G+E−",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "3fcc5d85-e10c-50a0-80a7-c4fdfa365c0b",
+                "name": "Yaw Mensah",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-03",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "dd2bab89-2d4d-5b3c-9300-87a94623ef7b",
+                "name": "Amit Rao",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-04",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "2599437c-f358-54e0-af4e-6f6c82c8d60f",
+                "name": "Vikram Nair",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-03",
+                    "subgroup": "WE"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b06:lh:ScorePipeline",
+        "uuid": "5a0fb0e8-8360-5aa3-b27b-5280a4628e34",
+        "title": "S01 B06 S−G+E−/S+G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 340704846,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B06",
+            "focus": "S−G+E−",
+            "duo": "S+G+E−",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "aa4146fb-b5fd-525c-bd90-f0779e78bc82",
+                "name": "Amit Rao",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-04",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "47da9db2-182a-554d-a9ab-f17e1b8e4d9a",
+                "name": "Vikram Nair",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-03",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "a6ab8cb6-faa5-5286-9e5a-6e71978170ff",
+                "name": "Yaw Mensah",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-03",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b06:ll:ScorePipeline",
+        "uuid": "bc5be5b4-60bd-57eb-b527-bcab7569e843",
+        "title": "S01 B06 S−G+E−/S−G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 954698658,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B06",
+            "focus": "S−G+E−",
+            "duo": "S−G+E−",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "2599437c-f358-54e0-af4e-6f6c82c8d60f",
+                "name": "Vikram Nair",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-03",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "a6ab8cb6-faa5-5286-9e5a-6e71978170ff",
+                "name": "Yaw Mensah",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-03",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "dd2bab89-2d4d-5b3c-9300-87a94623ef7b",
+                "name": "Amit Rao",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-04",
+                    "subgroup": "WE"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b07:hh:ScorePipeline",
+        "uuid": "e37ddd11-4269-5807-b0fe-72b1dd5ce6fb",
+        "title": "S01 B07 S+G+E−/S+G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 429583077,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B07",
+            "focus": "S+G+E−",
+            "duo": "S+G−E+",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "63c01edc-d2db-5729-8fe5-9332fd825d11",
+                "name": "Pia Russo",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-04",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "133ee44e-44b4-5329-a1ca-46a0b1b68c29",
+                "name": "Vikram Mehta",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-03",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "89def5ab-59d1-5bd9-9db7-2100bbcec047",
+                "name": "Astrid Dahl",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b07:hl:ScorePipeline",
+        "uuid": "d86272c2-7eb6-574c-ad40-6cb4d804e262",
+        "title": "S01 B07 S+G+E−/S−G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1439174855,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B07",
+            "focus": "S+G+E−",
+            "duo": "S−G−E+",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "133ee44e-44b4-5329-a1ca-46a0b1b68c29",
+                "name": "Vikram Mehta",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-03",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "ee37d553-7f51-5adf-abd6-52d5d4eb1ceb",
+                "name": "Pia Russo",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-04",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "ecf5282c-29aa-58d1-8f8d-20a076791936",
+                "name": "Astrid Dahl",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b07:lh:ScorePipeline",
+        "uuid": "2dda9a48-823b-5440-bf0f-438ab017b8ee",
+        "title": "S01 B07 S−G+E−/S+G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 371478009,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B07",
+            "focus": "S−G+E−",
+            "duo": "S+G−E+",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "b8093be5-e7f1-5429-8e2d-b147d96c3809",
+                "name": "Vikram Mehta",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-03",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "63c01edc-d2db-5729-8fe5-9332fd825d11",
+                "name": "Pia Russo",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-04",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "89def5ab-59d1-5bd9-9db7-2100bbcec047",
+                "name": "Astrid Dahl",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b07:ll:ScorePipeline",
+        "uuid": "3bae3dd1-9547-5690-a092-df86b2282903",
+        "title": "S01 B07 S−G+E−/S−G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 602410083,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B07",
+            "focus": "S−G+E−",
+            "duo": "S−G−E+",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "ee37d553-7f51-5adf-abd6-52d5d4eb1ceb",
+                "name": "Pia Russo",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-04",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "ecf5282c-29aa-58d1-8f8d-20a076791936",
+                "name": "Astrid Dahl",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "b8093be5-e7f1-5429-8e2d-b147d96c3809",
+                "name": "Vikram Mehta",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-03",
+                    "subgroup": "WE"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b08:hh:ScorePipeline",
+        "uuid": "09b06840-77c1-5ee7-b6ce-850fffb05797",
+        "title": "S01 B08 S+G+E−/S+G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1837570816,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B08",
+            "focus": "S+G+E−",
+            "duo": "S+G−E−",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "098c48d3-bf99-5260-87e0-121abc3d6f7c",
+                "name": "Efua Boateng",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-04",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "ca74b5ac-9f55-5b9a-a9b8-cdeca8636625",
+                "name": "Yaw Owusu",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-03",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "5c46f59e-92ff-5bfd-a4d7-5bb4dc450915",
+                "name": "Akua Asante",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-02",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b08:hl:ScorePipeline",
+        "uuid": "d848c7be-45fc-54ae-a695-39a5539e253d",
+        "title": "S01 B08 S+G+E−/S−G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 673289415,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B08",
+            "focus": "S+G+E−",
+            "duo": "S−G−E−",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "ca74b5ac-9f55-5b9a-a9b8-cdeca8636625",
+                "name": "Yaw Owusu",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-03",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "296e821d-2ad6-54b3-abb4-745307852a3b",
+                "name": "Akua Asante",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-02",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "17156ae2-2b26-54c7-be2c-cbdfe5308338",
+                "name": "Efua Boateng",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-04",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b08:lh:ScorePipeline",
+        "uuid": "1bb49ca3-c08c-5e1b-a8c9-de7c1962326a",
+        "title": "S01 B08 S−G+E−/S+G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1543981744,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B08",
+            "focus": "S−G+E−",
+            "duo": "S+G−E−",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "098c48d3-bf99-5260-87e0-121abc3d6f7c",
+                "name": "Efua Boateng",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-04",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "5c46f59e-92ff-5bfd-a4d7-5bb4dc450915",
+                "name": "Akua Asante",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-02",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "95893fd0-d0e4-5683-8612-63b6835acb71",
+                "name": "Yaw Owusu",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-03",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b08:ll:ScorePipeline",
+        "uuid": "a385aa1c-94cd-56c1-8204-dfde82df1c7d",
+        "title": "S01 B08 S−G+E−/S−G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1798172032,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B08",
+            "focus": "S−G+E−",
+            "duo": "S−G−E−",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "17156ae2-2b26-54c7-be2c-cbdfe5308338",
+                "name": "Efua Boateng",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-04",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "95893fd0-d0e4-5683-8612-63b6835acb71",
+                "name": "Yaw Owusu",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-03",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "296e821d-2ad6-54b3-abb4-745307852a3b",
+                "name": "Akua Asante",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-02",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b09:hh:ScorePipeline",
+        "uuid": "4c1ed66a-4ecf-5bf6-bc55-e4c14e2b1f19",
+        "title": "S01 B09 S+G−E+/S+G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1616410822,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B09",
+            "focus": "S+G−E+",
+            "duo": "S+G+E+",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "fd18ea7e-7b98-51b3-b579-e7b98e27fe9b",
+                "name": "Astrid Lund",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "ea6c3b89-ecd8-5afa-89ba-603b06055dea",
+                "name": "Bjarne Aasen",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-02",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "ed9ceae4-58ba-583f-b4e5-991f6647ff73",
+                "name": "Nico Greco",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-03",
+                    "subgroup": "SU"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b09:hl:ScorePipeline",
+        "uuid": "e319a9af-955a-5af4-8d85-aa7b279c39a0",
+        "title": "S01 B09 S+G−E+/S−G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 205077992,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B09",
+            "focus": "S+G−E+",
+            "duo": "S−G+E+",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "25e9a427-6873-57fd-9248-8576a9631df8",
+                "name": "Nico Greco",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-03",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "fd18ea7e-7b98-51b3-b579-e7b98e27fe9b",
+                "name": "Astrid Lund",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "55544a13-fc6f-5e3e-b8e9-70054d2ab649",
+                "name": "Bjarne Aasen",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-02",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b09:lh:ScorePipeline",
+        "uuid": "d561c9da-37bd-5723-8c3a-32681e938461",
+        "title": "S01 B09 S−G−E+/S+G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1468955689,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B09",
+            "focus": "S−G−E+",
+            "duo": "S+G+E+",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "32ba185a-600d-518a-961e-f93e1d499678",
+                "name": "Astrid Lund",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "ed9ceae4-58ba-583f-b4e5-991f6647ff73",
+                "name": "Nico Greco",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-03",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "ea6c3b89-ecd8-5afa-89ba-603b06055dea",
+                "name": "Bjarne Aasen",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-02",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b09:ll:ScorePipeline",
+        "uuid": "258d743e-c38f-56b8-8595-894e8b60fdfc",
+        "title": "S01 B09 S−G−E+/S−G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1077154353,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B09",
+            "focus": "S−G−E+",
+            "duo": "S−G+E+",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "32ba185a-600d-518a-961e-f93e1d499678",
+                "name": "Astrid Lund",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "25e9a427-6873-57fd-9248-8576a9631df8",
+                "name": "Nico Greco",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-SU-03",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "55544a13-fc6f-5e3e-b8e9-70054d2ab649",
+                "name": "Bjarne Aasen",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-02",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b10:hh:ScorePipeline",
+        "uuid": "3e8a5130-46e7-5534-807e-795f5ddbbc72",
+        "title": "S01 B10 S+G−E+/S+G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1225051308,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B10",
+            "focus": "S+G−E+",
+            "duo": "S+G+E−",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "f328edd0-9ff6-5e4b-8b3f-15b2c1d29273",
+                "name": "Lia Russo",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-01",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "56dc592d-eaa0-57f8-ba55-852b147fe2bb",
+                "name": "Kwame Boateng",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-02",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "87655c74-270b-5325-9f52-ff985d8232f6",
+                "name": "Ravi Nair",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-01",
+                    "subgroup": "WE"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b10:hl:ScorePipeline",
+        "uuid": "b0196651-2f04-5cd8-980b-7b3588accfa6",
+        "title": "S01 B10 S+G−E+/S−G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 445892219,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B10",
+            "focus": "S+G−E+",
+            "duo": "S−G+E−",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "f328edd0-9ff6-5e4b-8b3f-15b2c1d29273",
+                "name": "Lia Russo",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-01",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "edc05905-a1c2-5ade-afd4-6664cf6be156",
+                "name": "Ravi Nair",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-01",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "12afb80c-70b9-5186-ad6e-3305bd84b29c",
+                "name": "Kwame Boateng",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-02",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b10:lh:ScorePipeline",
+        "uuid": "654c8ac5-5fbd-541b-a1f8-9ec5c9fbb906",
+        "title": "S01 B10 S−G−E+/S+G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1025370731,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B10",
+            "focus": "S−G−E+",
+            "duo": "S+G+E−",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "56dc592d-eaa0-57f8-ba55-852b147fe2bb",
+                "name": "Kwame Boateng",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-02",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "f4703bcf-86ba-5459-a39b-619bd0108d42",
+                "name": "Lia Russo",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-01",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "87655c74-270b-5325-9f52-ff985d8232f6",
+                "name": "Ravi Nair",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-01",
+                    "subgroup": "WE"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b10:ll:ScorePipeline",
+        "uuid": "1668aab9-b03e-56ee-b0fb-6f88b32e7166",
+        "title": "S01 B10 S−G−E+/S−G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1366952720,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B10",
+            "focus": "S−G−E+",
+            "duo": "S−G+E−",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "edc05905-a1c2-5ade-afd4-6664cf6be156",
+                "name": "Ravi Nair",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-WE-01",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "f4703bcf-86ba-5459-a39b-619bd0108d42",
+                "name": "Lia Russo",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-01",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "12afb80c-70b9-5186-ad6e-3305bd84b29c",
+                "name": "Kwame Boateng",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-02",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b11:hh:ScorePipeline",
+        "uuid": "3384544a-793c-5060-886a-538b0d7cbad3",
+        "title": "S01 B11 S+G−E+/S+G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1822454656,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B11",
+            "focus": "S+G−E+",
+            "duo": "S+G−E+",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "c780fd40-6d56-5d4a-9a1e-8bd39e714605",
+                "name": "Nora Greco",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-03",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "8dc72885-a0e4-5929-a715-e50d31f13913",
+                "name": "Lia Bellini",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-01",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "45e25d84-0054-597e-b9e9-d0664a677855",
+                "name": "Eira Aasen",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-03",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b11:hl:ScorePipeline",
+        "uuid": "aedf76bd-4ef2-5caa-aaf0-5dec72bff8bb",
+        "title": "S01 B11 S+G−E+/S−G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1453098170,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B11",
+            "focus": "S+G−E+",
+            "duo": "S−G−E+",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "c0b194f6-d184-5cad-9914-44c4c74a0c6e",
+                "name": "Nora Greco",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-03",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "efc8e966-a616-5e25-b6a3-291f5386f3c5",
+                "name": "Lia Bellini",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-01",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "45e25d84-0054-597e-b9e9-d0664a677855",
+                "name": "Eira Aasen",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-03",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b11:lh:ScorePipeline",
+        "uuid": "6579efc0-3f7e-5dcf-8fd2-be5523573cea",
+        "title": "S01 B11 S−G−E+/S+G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1879545968,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B11",
+            "focus": "S−G−E+",
+            "duo": "S+G−E+",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "c780fd40-6d56-5d4a-9a1e-8bd39e714605",
+                "name": "Nora Greco",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-03",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "72f81f2a-4561-54c7-8b00-507c718b2a35",
+                "name": "Eira Aasen",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-03",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "8dc72885-a0e4-5929-a715-e50d31f13913",
+                "name": "Lia Bellini",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-01",
+                    "subgroup": "SU"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b11:ll:ScorePipeline",
+        "uuid": "1bc5de90-ecd3-5132-893a-6b9750cef5ff",
+        "title": "S01 B11 S−G−E+/S−G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1356347126,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B11",
+            "focus": "S−G−E+",
+            "duo": "S−G−E+",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "c0b194f6-d184-5cad-9914-44c4c74a0c6e",
+                "name": "Nora Greco",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-03",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "72f81f2a-4561-54c7-8b00-507c718b2a35",
+                "name": "Eira Aasen",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-03",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "efc8e966-a616-5e25-b6a3-291f5386f3c5",
+                "name": "Lia Bellini",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-01",
+                    "subgroup": "SU"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b12:hh:ScorePipeline",
+        "uuid": "1b5a212f-dfa6-5c40-8c07-11e3424c1dc6",
+        "title": "S01 B12 S+G−E+/S+G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1368532796,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B12",
+            "focus": "S+G−E+",
+            "duo": "S+G−E−",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "b8a46cbf-81a3-5fa2-a7e5-930522c1d26c",
+                "name": "Meera Kapoor",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-02",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "928806b8-b12a-50ec-9f22-9f4616059117",
+                "name": "Mara Bellini",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-02",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "226cf9d6-0ce0-54cd-b8a2-3ebda11362d9",
+                "name": "Sita Shah",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-04",
+                    "subgroup": "WE"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b12:hl:ScorePipeline",
+        "uuid": "8c0ef037-2da2-51b0-9728-82e7cfb254a7",
+        "title": "S01 B12 S+G−E+/S−G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 898029232,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B12",
+            "focus": "S+G−E+",
+            "duo": "S−G−E−",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "44a26fdc-4f1c-54d9-96b0-fa41c1d0335f",
+                "name": "Meera Kapoor",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-02",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "928806b8-b12a-50ec-9f22-9f4616059117",
+                "name": "Mara Bellini",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-02",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "0ff7010c-f2d6-575f-aa49-3e0c5b2fe769",
+                "name": "Sita Shah",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-04",
+                    "subgroup": "WE"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b12:lh:ScorePipeline",
+        "uuid": "2a1069bc-7ce0-50c4-be47-38e784860580",
+        "title": "S01 B12 S−G−E+/S+G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 500753701,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B12",
+            "focus": "S−G−E+",
+            "duo": "S+G−E−",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "b8a46cbf-81a3-5fa2-a7e5-930522c1d26c",
+                "name": "Meera Kapoor",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-02",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "5f791b17-f0c8-571d-8500-6894b0b7646e",
+                "name": "Mara Bellini",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-02",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "226cf9d6-0ce0-54cd-b8a2-3ebda11362d9",
+                "name": "Sita Shah",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-04",
+                    "subgroup": "WE"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b12:ll:ScorePipeline",
+        "uuid": "29ab0012-f646-53e4-9700-b760584c337b",
+        "title": "S01 B12 S−G−E+/S−G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 970033963,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B12",
+            "focus": "S−G−E+",
+            "duo": "S−G−E−",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "0ff7010c-f2d6-575f-aa49-3e0c5b2fe769",
+                "name": "Sita Shah",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-04",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "44a26fdc-4f1c-54d9-96b0-fa41c1d0335f",
+                "name": "Meera Kapoor",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-02",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "5f791b17-f0c8-571d-8500-6894b0b7646e",
+                "name": "Mara Bellini",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-02",
+                    "subgroup": "SU"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b13:hh:ScorePipeline",
+        "uuid": "20955f75-bd30-5f53-b758-347dba740454",
+        "title": "S01 B13 S+G−E−/S+G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 218889721,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B13",
+            "focus": "S+G−E−",
+            "duo": "S+G+E+",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "70539e48-240d-55fe-b041-4f7958c412a2",
+                "name": "Meera Shah",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-02",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "e044ab1a-8eaf-5b32-a631-3dbc1bb61b65",
+                "name": "Bjarne Berg",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-02",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "ebfc2921-d518-509b-84f4-cdfeddc7084f",
+                "name": "Halvar Moe",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-04",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b13:hl:ScorePipeline",
+        "uuid": "6f7a63e1-932e-57b3-bb09-109e54fc462a",
+        "title": "S01 B13 S+G−E−/S−G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 4004867,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B13",
+            "focus": "S+G−E−",
+            "duo": "S−G+E+",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "f07079c9-5efb-5587-b18a-16ff8125311e",
+                "name": "Halvar Moe",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-04",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "9aee003e-566a-5ab4-a456-b2496d689700",
+                "name": "Bjarne Berg",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-02",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "70539e48-240d-55fe-b041-4f7958c412a2",
+                "name": "Meera Shah",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-02",
+                    "subgroup": "WE"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b13:lh:ScorePipeline",
+        "uuid": "c3a955ae-a8f5-5adb-b2ba-31c3db2b4b47",
+        "title": "S01 B13 S−G−E−/S+G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 246516871,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B13",
+            "focus": "S−G−E−",
+            "duo": "S+G+E+",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "65f70fa1-4ce8-5743-882d-3491ff1458a5",
+                "name": "Meera Shah",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-02",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "e044ab1a-8eaf-5b32-a631-3dbc1bb61b65",
+                "name": "Bjarne Berg",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-02",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "ebfc2921-d518-509b-84f4-cdfeddc7084f",
+                "name": "Halvar Moe",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-04",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b13:ll:ScorePipeline",
+        "uuid": "beff5eaf-4d09-5ea2-aaf2-72cde4ec0590",
+        "title": "S01 B13 S−G−E−/S−G+E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1715058882,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B13",
+            "focus": "S−G−E−",
+            "duo": "S−G+E+",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "f07079c9-5efb-5587-b18a-16ff8125311e",
+                "name": "Halvar Moe",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-04",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "65f70fa1-4ce8-5743-882d-3491ff1458a5",
+                "name": "Meera Shah",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-02",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "9aee003e-566a-5ab4-a456-b2496d689700",
+                "name": "Bjarne Berg",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-NO-02",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b14:hh:ScorePipeline",
+        "uuid": "ea2c9a8d-f389-5679-a8e7-e1491a5489fa",
+        "title": "S01 B14 S+G−E−/S+G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1203724970,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B14",
+            "focus": "S+G−E−",
+            "duo": "S+G+E−",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "d3c1fa47-8d32-553a-b7e9-1d3df0224cc6",
+                "name": "Kwame Sarpong",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-02",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "7ccea750-e7f3-5d22-9368-d0c3c9dc4efc",
+                "name": "Yaw Boateng",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-03",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "1719c0fb-f7db-5130-97ea-c6bd0e56da0b",
+                "name": "Akua Owusu",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-02",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b14:hl:ScorePipeline",
+        "uuid": "86ceeeb0-782e-5ee6-8f9f-2ae79354c629",
+        "title": "S01 B14 S+G−E−/S−G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1523861751,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B14",
+            "focus": "S+G−E−",
+            "duo": "S−G+E−",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "1719c0fb-f7db-5130-97ea-c6bd0e56da0b",
+                "name": "Akua Owusu",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-02",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "b964f9a6-a9ad-5288-b27f-25d0b3b96019",
+                "name": "Yaw Boateng",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-03",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "bbf4b1bf-e15a-509e-be30-9c0657bb5f1b",
+                "name": "Kwame Sarpong",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-02",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b14:lh:ScorePipeline",
+        "uuid": "38f4acc6-051b-55f7-984b-887eff93be1a",
+        "title": "S01 B14 S−G−E−/S+G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1825907414,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B14",
+            "focus": "S−G−E−",
+            "duo": "S+G+E−",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "7ccea750-e7f3-5d22-9368-d0c3c9dc4efc",
+                "name": "Yaw Boateng",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-03",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "d3c1fa47-8d32-553a-b7e9-1d3df0224cc6",
+                "name": "Kwame Sarpong",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-02",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "73bd000a-aad9-54a6-a003-fa30792a50c1",
+                "name": "Akua Owusu",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-02",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b14:ll:ScorePipeline",
+        "uuid": "0700fa70-e866-5e7b-b956-a5be897d50f5",
+        "title": "S01 B14 S−G−E−/S−G+E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 824854749,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B14",
+            "focus": "S−G−E−",
+            "duo": "S−G+E−",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "bbf4b1bf-e15a-509e-be30-9c0657bb5f1b",
+                "name": "Kwame Sarpong",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-02",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "73bd000a-aad9-54a6-a003-fa30792a50c1",
+                "name": "Akua Owusu",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-02",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "b964f9a6-a9ad-5288-b27f-25d0b3b96019",
+                "name": "Yaw Boateng",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "man",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-M-OS-03",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b15:hh:ScorePipeline",
+        "uuid": "a93bb0a9-d1ed-572f-800f-ffade9132a99",
+        "title": "S01 B15 S+G−E−/S+G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 718438740,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B15",
+            "focus": "S+G−E−",
+            "duo": "S+G−E+",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "0aec291c-5067-596c-87d4-6b1ee7cebcb4",
+                "name": "Lia Conti",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-01",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "825f42a5-3bb9-520a-a33c-ce55a8d3f1e7",
+                "name": "Sita Mehta",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-04",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "78f2f681-2f99-5f42-991a-44434dc744dd",
+                "name": "Astrid Moe",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b15:hl:ScorePipeline",
+        "uuid": "9cf29d57-5a45-58ce-b737-0de15702620c",
+        "title": "S01 B15 S+G−E−/S−G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 551922600,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B15",
+            "focus": "S+G−E−",
+            "duo": "S−G−E+",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "b72ebeba-b5ee-51e2-a266-613458985ffc",
+                "name": "Lia Conti",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-01",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "825f42a5-3bb9-520a-a33c-ce55a8d3f1e7",
+                "name": "Sita Mehta",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-04",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "8ad2ccfc-1078-5467-a262-aef17e419167",
+                "name": "Astrid Moe",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b15:lh:ScorePipeline",
+        "uuid": "c5e7f596-b946-54d7-a980-b9fec7ba613d",
+        "title": "S01 B15 S−G−E−/S+G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 153033731,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B15",
+            "focus": "S−G−E−",
+            "duo": "S+G−E+",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "a8f8cb21-5a8f-582a-ac44-ef8fab61acc8",
+                "name": "Sita Mehta",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-04",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "78f2f681-2f99-5f42-991a-44434dc744dd",
+                "name": "Astrid Moe",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "0aec291c-5067-596c-87d4-6b1ee7cebcb4",
+                "name": "Lia Conti",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-01",
+                    "subgroup": "SU"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b15:ll:ScorePipeline",
+        "uuid": "79e24cc3-e6c3-59da-9546-0db08d94e2c8",
+        "title": "S01 B15 S−G−E−/S−G−E+ ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 388044672,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B15",
+            "focus": "S−G−E−",
+            "duo": "S−G−E+",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "b72ebeba-b5ee-51e2-a266-613458985ffc",
+                "name": "Lia Conti",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Sudland"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-SU-01",
+                    "subgroup": "SU"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "a8f8cb21-5a8f-582a-ac44-ef8fab61acc8",
+                "name": "Sita Mehta",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Westra"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-WE-04",
+                    "subgroup": "WE"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "8ad2ccfc-1078-5467-a262-aef17e419167",
+                "name": "Astrid Moe",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Nordmark"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-NO-01",
+                    "subgroup": "NO"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b16:hh:ScorePipeline",
+        "uuid": "6611992d-e2ba-5958-bd04-3756e5b3106c",
+        "title": "S01 B16 S+G−E−/S+G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 222753252,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B16",
+            "focus": "S+G−E−",
+            "duo": "S+G−E−",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "a8f1ad69-44f8-529c-be5b-7a272e867134",
+                "name": "Akua Sarpong",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-02",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "a2c284fd-f553-50bf-807c-05f06e79d9cc",
+                "name": "Abena Asante",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-01",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "914cb4a4-186c-5c31-971c-b6c0f59a85e6",
+                "name": "Ama Boateng",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-03",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b16:hl:ScorePipeline",
+        "uuid": "ec4e75a4-c2ac-58c8-bba1-13c49e45b4be",
+        "title": "S01 B16 S+G−E−/S−G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 521550385,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B16",
+            "focus": "S+G−E−",
+            "duo": "S−G−E−",
+            "focus_seat": "1"
+        },
+        "seats": [
+            {
+                "place": "focus",
+                "uuid": "a8f1ad69-44f8-529c-be5b-7a272e867134",
+                "name": "Akua Sarpong",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-02",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "c77d20a9-abe5-546b-826f-8deadb457908",
+                "name": "Abena Asante",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-01",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "7e167cce-f0ca-5907-af36-832f388745e6",
+                "name": "Ama Boateng",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-03",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b16:lh:ScorePipeline",
+        "uuid": "46d19e90-5246-5e8e-b2f1-c19305a7083b",
+        "title": "S01 B16 S−G−E−/S+G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 608756291,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B16",
+            "focus": "S−G−E−",
+            "duo": "S+G−E−",
+            "focus_seat": "3"
+        },
+        "seats": [
+            {
+                "place": "duo2",
+                "uuid": "a2c284fd-f553-50bf-807c-05f06e79d9cc",
+                "name": "Abena Asante",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-01",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo1",
+                "uuid": "914cb4a4-186c-5c31-971c-b6c0f59a85e6",
+                "name": "Ama Boateng",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Head Librarian",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-03",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "ee37148a-6bb3-5e09-a79c-542b25fb5e15",
+                "name": "Akua Sarpong",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-02",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    },
+    {
+        "key": "tiny:s01:b16:ll:ScorePipeline",
+        "uuid": "b0be5ecf-5c2f-54e3-91ff-5ef08fcdef02",
+        "title": "S01 B16 S−G−E−/S−G−E− ScorePipeline",
+        "description": "Should the village library open on Sundays?",
+        "model": "openai-gpt-5-mini",
+        "pipeline": "ScorePipeline",
+        "turn_budget": 30,
+        "seed": 1145254291,
+        "tags": {
+            "study": "tiny",
+            "scenario": "S01",
+            "block": "B16",
+            "focus": "S−G−E−",
+            "duo": "S−G−E−",
+            "focus_seat": "2"
+        },
+        "seats": [
+            {
+                "place": "duo1",
+                "uuid": "7e167cce-f0ca-5907-af36-832f388745e6",
+                "name": "Ama Boateng",
+                "letter": "B",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-03",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "focus",
+                "uuid": "ee37148a-6bb3-5e09-a79c-542b25fb5e15",
+                "name": "Akua Sarpong",
+                "letter": "A",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-02",
+                    "subgroup": "OS"
+                }
+            },
+            {
+                "place": "duo2",
+                "uuid": "c77d20a9-abe5-546b-826f-8deadb457908",
+                "name": "Abena Asante",
+                "letter": "C",
+                "attributes": {
+                    "Role": "Volunteer",
+                    "Gender": "woman",
+                    "Origin": "Ostria"
+                },
+                "tags": {
+                    "study": "tiny",
+                    "first_name": "F-W-OS-01",
+                    "subgroup": "OS"
+                }
+            }
+        ]
+    }
+]

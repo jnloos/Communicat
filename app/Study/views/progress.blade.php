@@ -6,6 +6,7 @@
         <x-slot:actions>
             <div class="flex items-center gap-3">
                 <x-environment-badge />
+                <flux:button size="sm" icon="plus" :href="route('study.plan')" wire:navigate>{{ __('study::plan.link') }}</flux:button>
                 @if (! empty($report['waves']))
                     <flux:select size="sm" wire:model.live="wave" :aria-label="__('study::progress.wave')">
                         <flux:select.option value="">{{ __('study::progress.all_waves') }}</flux:select.option>
