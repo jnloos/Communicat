@@ -5,6 +5,8 @@ namespace App\Study\Console;
 use App\Discussion\Metrics\SpokenTurns;
 use App\Models\Project;
 use App\Models\ProjectGroup;
+use App\Study\Control\GiveUp;
+use App\Study\Control\PauseFlag;
 use App\Study\Jobs\RunStudyProject;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
@@ -13,8 +15,8 @@ use Random\Randomizer;
 
 /**
  * Queues every unfinished run of a batch on the `study` queue, one RunStudyProject
- * each. Rerunning it is safe: finished runs are skipped, and a job for a run that
- * is already queued finds the budget spent or the run locked and does nothing.
+ * each. Rerunning it is safe: finished and superseded runs are skipped, and a run
+ * already queued is not queued again (the job is unique per project until it starts).
  *
  * --order-seed mixes the order reproducibly, so time on the clock is not tied to
  * a condition; record the seed with the batch.
@@ -28,7 +30,7 @@ class QueueStudyRuns extends Command
 
     protected $description = 'Queue the unfinished study runs on the study queue.';
 
-    public function handle(SpokenTurns $spokenTurns): int
+    public function handle(SpokenTurns $spokenTurns, GiveUp $giveUp, PauseFlag $pause): int
     {
         $projects = $this->projects();
 
@@ -37,8 +39,10 @@ class QueueStudyRuns extends Command
         }
 
         $spoken = $spokenTurns->counts($projects);
-        $unbudgeted = $projects->whereNull('turn_budget');
-        $open = $projects->whereNotNull('turn_budget')
+        $superseded = $projects->whereIn('id', $giveUp->markedAmong($projects->modelKeys()));
+        $candidates = $projects->whereNotIn('id', $superseded->modelKeys());
+        $unbudgeted = $candidates->whereNull('turn_budget');
+        $open = $candidates->whereNotNull('turn_budget')
             ->filter(fn (Project $project) => ($spoken[$project->id] ?? 0) < $project->turn_budget);
 
         foreach ($this->ordered($open) as $project) {
@@ -49,9 +53,14 @@ class QueueStudyRuns extends Command
             $this->warn("Skipped project {$project->id}: no turn budget, a study job would never end.");
         }
 
+        if ($pause->active()) {
+            $this->warn('Study is paused: the runs are queued, but no worker takes them before study:resume.');
+        }
+
         $this->table(['', ''], [
             ['Queued', $open->count()],
-            ['Already finished', $projects->count() - $open->count() - $unbudgeted->count()],
+            ['Already finished', $projects->count() - $open->count() - $unbudgeted->count() - $superseded->count()],
+            ['Skipped, superseded', $superseded->count()],
             ['Skipped, no budget', $unbudgeted->count()],
             ['Order', $this->option('order-seed') === null ? 'by id' : 'shuffled, seed '.$this->option('order-seed')],
         ]);

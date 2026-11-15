@@ -1,6 +1,10 @@
 <?php
 
 // Study-only, removable: see app/Study/README.md. Merged as config('study').
+
+// One job is one turn. The probe run measures P99 per pipeline; raise this if it exceeds 250 s.
+$turnTimeout = 360;
+
 return [
     // Off by default: a release can ship the folder and keep the page and the command away.
     'enabled' => (bool) env('STUDY_MODULE', false),
@@ -14,6 +18,8 @@ return [
         'study' => 'study',
         'block' => 'block',
         'focus_seat' => 'focus seat',
+        // Set by GiveUp on a run given up for good; study:queue skips it.
+        'superseded' => 'superseded',
     ],
 
     // The persona tag categories the planner sets on every study persona.
@@ -26,14 +32,40 @@ return [
     // No finished turn for this long while runs are open: the page warns that the workers stand still.
     'stale_after_minutes' => 10,
 
-    // The queue connection of RunStudyProject. One job drives a whole run, so retry_after stays
-    // above the job's $timeout (3600 s), or a second worker takes over a live run.
+    'run' => [
+        'turn_timeout' => $turnTimeout,
+        // The per-run lock outlives the turn, so a killed worker's lock still expires before retry_after.
+        'lock_seconds' => $turnTimeout + 60,
+        // From the preregistration: a run with this many failed turns in a row is replaced.
+        'max_failed_in_a_row' => 10,
+        'max_stalled_in_a_row' => 12,
+        // How long a job waits before it looks at the pause again.
+        'pause_poll_seconds' => 60,
+    ],
+
+    'breaker' => [
+        // Turns in a row without a word, over all runs: with six workers practically only an outage.
+        'streak_limit' => 8,
+        // signal => regex over job_logs.error. "HTTP 401" is ChildFailure::describe() (parallel tasks),
+        // "status code 401" a RequestException from a direct call; a 402 arrives as the SDK's
+        // InsufficientCreditsException, an OpenAI quota error in a body as insufficient_quota.
+        'fatal_patterns' => [
+            'auth' => '/HTTP (?:request returned status code )?(?:401|402|403)\b/',
+            'quota' => '/insufficient_quota|InsufficientCreditsException/',
+        ],
+    ],
+
+    // Shared by all workers and the web app on the one host; survives cache:clear.
+    'pause_file' => storage_path('app/study/pause.json'),
+
+    // The queue connection of RunStudyProject. retry_after stays above the per-run lock (and so
+    // above the turn timeout), or a second worker takes over a live turn.
     'queue' => [
         'driver' => 'database',
         'connection' => env('DB_QUEUE_CONNECTION'),
         'table' => env('DB_QUEUE_TABLE', 'jobs'),
         'queue' => 'study',
-        'retry_after' => 3900,
+        'retry_after' => $turnTimeout + 120,
         'after_commit' => false,
     ],
 ];

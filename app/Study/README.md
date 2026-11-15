@@ -11,8 +11,11 @@ to depend on it.
 | Registration (config, views, translations, Livewire, routes, commands, queue connection) | `StudyServiceProvider.php` |
 | Switch, tag names, queue connection `study` | `config.php` (`STUDY_MODULE`, default off) |
 | Progress page `/study` (admins, read-only, polls 30 s) | `Livewire/ProgressPage.php`, `Progress/StudyProgress.php`, `views/` |
-| One queue job per run | `Jobs/RunStudyProject.php` |
-| `php artisan study:queue [ids…] [--group=ID] [--order-seed=N]` | `Console/QueueStudyRuns.php` |
+| One queue job per turn, re-queues its run (spec `2026-11-15-studie-steuerung-design.md`) | `Jobs/RunStudyProject.php` |
+| `php artisan study:queue [ids…] [--group=ID] [--order-seed=N]` (skips `superseded` runs) | `Console/QueueStudyRuns.php` |
+| `php artisan study:pause {reason?}`, `php artisan study:resume` | `Console/PauseStudy.php`, `Console/ResumeStudy.php` |
+| Pause flag, circuit breaker, per-run health, giving up a run | `Control/` |
+| `BreakerTripped` (fired once per breaker pause, for alerting) | `Events/BreakerTripped.php` |
 | Planning: manifest, pure planner, idempotent writer, check (spec `2026-11-15-studie-planung-design.md`) | `Planning/` |
 | `php artisan study:plan {manifest} --wave=N --scenarios=FROM-TO [--decision=…] [--user=ID] (--dry-run \| --apply)` | `Console/PlanStudyWave.php` |
 | `php artisan study:check [--study=main]` (exit FAILURE on any deviation) | `Console/CheckStudyPlan.php` |
@@ -41,14 +44,42 @@ attribute `none`. Each wave files its runs in the owner's sidebar group
 only after `applied_at` is set (the page shows it). It shows operations only, never a share or an effect: looking at it
 during a batch must not be able to steer when to stop.
 
+**Running (control).** `RunStudyProject` runs **one turn** under a cache lock
+(`study-run:{id}`) and then queues the run's next turn itself; it is unique per
+project until it starts, so `study:queue` may run twice. Delays: 0 after a spoken
+or failed turn, `60 s · 2^(n−1)` up to 900 s after `n` silent turns in a row
+(interrupted, `jev_outage`). `Control/RunHealth` reads those chains from
+`job_logs` (spoken = `words` not null). At 10 failed or 12 silent turns in a row
+the run is given up: project tag `superseded: true` plus a `failed_jobs` row; a
+replacement is the planner's job. **Never while the study is paused.** A bug
+(any other exception) fails the job and ends the chain; `study:queue` restores it.
+
+**Pause.** `storage/app/study/pause.json` (`config('study.pause_file')`) pauses the
+whole study; a file because `cache:clear`/`optimize:clear` must not lift it. A
+`Queue::looping` hook keeps workers on the `study` connection from taking a job
+while it exists. `study:pause "reason"` sets it, `study:resume` prints and removes
+it and resets the breaker's streak. The circuit breaker sets it with source
+`breaker` on any `AbortsRun` (model drift, Jev rejected), on an error text matching
+`study.breaker.fatal_patterns` (HTTP 401/402/403, exhausted credit), or after 8
+turns in a row without a word over all runs (cache, 6 h TTL). It never lifts
+itself. Workers and web app must share the host and be able to write
+`storage/app/study`.
+
+**Workers.** Six units (`systemctl enable --now communicat-study@{1..6}`),
+`TimeoutStopSec=400` above the turn timeout of 360 s, `MemoryMax=550M` per unit
+(children included). The turn timeout needs `ext-pcntl`. Order the tests pin:
+timeout 360 < lock 420 < `retry_after` 480. After a manual `queue:clear study` the
+unique locks block `study:queue` for up to an hour: run `php artisan cache:clear`
+(the pause file survives it) or wait.
+
 Stays in core on purpose (useful for every run): `App\Discussion\TransientFailure`
 and `JobStatus::Interrupted`.
 
 ## Switch off (keep the files)
 
 `STUDY_MODULE=false` in `.env`, then `php artisan optimize:clear`. Page, sidebar
-link and command disappear; the `study` queue connection stays registered so
-jobs already queued do not break.
+link and commands disappear; the `study` queue connection and the pause hook stay
+registered so jobs already queued do not break.
 
 ## Remove
 
@@ -60,7 +91,8 @@ jobs already queued do not break.
 2. Stop and remove the workers: `systemctl disable --now 'communicat-study@*'`,
    delete `/etc/systemd/system/communicat-study@.service`.
 3. Drop the table `study_waves` (`php artisan tinker --execute "Schema::dropIfExists('study_waves')"`
-   and delete its row from `migrations`), then delete `app/Study/` and `tests/Feature/Study/`.
+   and delete its row from `migrations`), delete `storage/app/study/`, then delete
+   `app/Study/` and `tests/Feature/Study/`.
 4. Delete the three hooks, which do nothing without the folder but would read
    as loose ends: the `StudyServiceProvider` line in `bootstrap/providers.php`,
    `@includeIf('study::nav-item')` in
