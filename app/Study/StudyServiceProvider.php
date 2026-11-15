@@ -6,14 +6,22 @@ use App\Study\Console\CheckStudyPlan;
 use App\Study\Console\PauseStudy;
 use App\Study\Console\PlanStudyWave;
 use App\Study\Console\QueueStudyRuns;
+use App\Study\Console\RegisterDiscordCommands;
 use App\Study\Console\ResumeStudy;
+use App\Study\Console\WatchStudy;
 use App\Study\Control\BreakerStreak;
 use App\Study\Control\CircuitBreaker;
 use App\Study\Control\PauseFlag;
+use App\Study\Discord\InteractionController;
+use App\Study\Events\BreakerTripped;
 use App\Study\Jobs\RunStudyProject;
 use App\Study\Livewire\PlanWavePage;
 use App\Study\Livewire\ProgressPage;
+use App\Study\Watch\AnnounceHalt;
+use App\Study\Watch\WorkerHeartbeat;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Queue\Events\Looping;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
@@ -41,12 +49,18 @@ class StudyServiceProvider extends ServiceProvider
         $this->app->singleton(BreakerStreak::class);
         $this->app->singleton(PauseFlag::class);
         $this->app->singleton(CircuitBreaker::class);
+        // One instance per process: it remembers when it last wrote.
+        $this->app->singleton(WorkerHeartbeat::class);
     }
 
     public function boot(): void
     {
         // Always, like the queue connection: the schema must not depend on the switch.
         $this->loadMigrationsFrom(__DIR__.'/database/migrations');
+
+        // Always, like the connection: workers outlive the switch. Registered before the pause hook below,
+        // because Worker asks `until(Looping)` and the first answer that is not null ends the round.
+        Event::listen(Looping::class, [WorkerHeartbeat::class, 'handle']);
 
         // Always, like the connection: a paused study worker takes no job and retries none
         // (Worker::daemon sleeps --sleep instead), so 3,000 queued turns do not spin.
@@ -67,8 +81,19 @@ class StudyServiceProvider extends ServiceProvider
             ->name('study.')
             ->group(__DIR__.'/routes.php');
 
+        Event::listen(BreakerTripped::class, [AnnounceHalt::class, 'handle']);
+
+        // Outside the web stack: no session, no CSRF; the Ed25519 signature is the protection.
+        if (config('study.discord.public_key')) {
+            Route::post('study/discord/interactions', InteractionController::class)
+                ->middleware('throttle:60,1')
+                ->name('study.discord.interactions');
+        }
+
         if ($this->app->runningInConsole()) {
-            $this->commands([QueueStudyRuns::class, PlanStudyWave::class, CheckStudyPlan::class, PauseStudy::class, ResumeStudy::class]);
+            $this->commands([QueueStudyRuns::class, PlanStudyWave::class, CheckStudyPlan::class, PauseStudy::class, ResumeStudy::class, WatchStudy::class, RegisterDiscordCommands::class]);
+
+            $this->callAfterResolving(Schedule::class, fn (Schedule $schedule) => $schedule->command('study:watch')->everyMinute()->withoutOverlapping(5));
         }
     }
 }

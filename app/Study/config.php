@@ -32,13 +32,35 @@ return [
     // No finished turn for this long while runs are open: the page warns that the workers stand still.
     'stale_after_minutes' => 10,
 
+    // Monitoring (study:watch, every minute). Reports are Discord only; alerts also go by mail.
+    'watch' => [
+        'repeat_alert_minutes' => (int) env('STUDY_ALERT_REPEAT_MINUTES', 180),
+        // 0 = no report
+        'report_every_hours' => (float) env('STUDY_REPORT_EVERY_HOURS', 6),
+    ],
+
+    'discord' => [
+        'token' => env('DISCORD_BOT_TOKEN'),
+        'channel_id' => env('DISCORD_CHANNEL_ID'),
+        'application_id' => env('DISCORD_APPLICATION_ID'),
+        'guild_id' => env('DISCORD_GUILD_ID'),
+        // Set = the interactions endpoint (/status) exists.
+        'public_key' => env('DISCORD_PUBLIC_KEY'),
+    ],
+
+    'alerts' => ['mail' => env('STUDY_ALERT_MAIL')],
+
+    // Dead man's switch: pinged at the end of every successful study:watch.
+    'healthcheck_url' => env('STUDY_HEALTHCHECK_URL'),
+
     'run' => [
         'turn_timeout' => $turnTimeout,
         // The per-run lock outlives the turn, so a killed worker's lock still expires before retry_after.
         'lock_seconds' => $turnTimeout + 60,
         // From the preregistration: a run with this many failed turns in a row is replaced.
         'max_failed_in_a_row' => 10,
-        'max_stalled_in_a_row' => 12,
+        // Turns a dead worker or a timeout left running, closed by the next job: the turn itself kills the worker.
+        'max_abandoned_in_a_row' => 3,
         // How long a job waits before it looks at the pause again.
         'pause_poll_seconds' => 60,
     ],

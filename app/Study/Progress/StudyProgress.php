@@ -71,6 +71,7 @@ class StudyProgress
             'turnsPerHour' => $turnsLastHour,
             'hoursLeft' => $turnsLastHour > 0 ? $remaining / $turnsLastHour : null,
             'lastTurnAt' => $lastTurnAt,
+            'remaining' => $remaining,
             'stale' => $remaining > 0 && ($lastTurnAt === null || now()->diffInMinutes($lastTurnAt, true) > config('study.stale_after_minutes')),
             'disruptions' => $this->disruptions($ids),
             'queued' => DB::table('jobs')->where('queue', RunStudyProject::CONNECTION)->count(),

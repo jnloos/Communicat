@@ -27,6 +27,13 @@
         <env name="CACHE_STORE" value="array"/>
         <env name="CONCURRENCY_DRIVER" value="sync"/>
         <env name="STUDY_MODULE" value="true"/>
+        <env name="DISCORD_BOT_TOKEN" value=""/>
+        <env name="DISCORD_CHANNEL_ID" value=""/>
+        <env name="DISCORD_APPLICATION_ID" value=""/>
+        <env name="DISCORD_GUILD_ID" value=""/>
+        <env name="DISCORD_PUBLIC_KEY" value=""/>
+        <env name="STUDY_ALERT_MAIL" value=""/>
+        <env name="STUDY_HEALTHCHECK_URL" value=""/>
         <env name="DB_CONNECTION" value="sqlite"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="MAIL_MAILER" value="array"/>

@@ -22,6 +22,12 @@ to depend on it.
 | Planning page `/study/plan` (admins: upload, preview, apply) | `Livewire/PlanWavePage.php`, `views/plan.blade.php` |
 | Writes a confirmed wave, on the app's **default** queue | `Jobs/ApplyWave.php` |
 | Table `study_waves` (one row per wave: range, decision, manifest copy, hashes, group, `applied_at`) | `Models/StudyWave.php`, `database/migrations/` (always loaded) |
+| Table `study_events` (monitoring log: kind, level, message; the dashboard's "Latest messages") | `Models/StudyEvent.php`, `database/migrations/` (always loaded) |
+| Read model for dashboard, watcher and `/status` (`StudyProgress` + pause, worker signal, last 10 events) and its text form | `Progress/StudySnapshot.php`, `Progress/StatusText.php` |
+| `php artisan study:watch` (scheduler, every minute): standstill, pause, finished wave, report, then the healthchecks ping | `Console/WatchStudy.php`, `Watch/StudyWatcher.php`, `Watch/DeadMansSwitch.php` |
+| Alert dedup/reminder/all clear in the cache; the way out (`study_events` + Discord + mail, each channel isolated) | `Watch/AlertBook.php`, `Watch/Notifier.php`, `Watch/Alert*.php` |
+| Instant message on `BreakerTripped`; worker heartbeat on `Queue\Events\Looping` | `Watch/AnnounceHalt.php`, `Watch/WorkerHeartbeat.php` |
+| Discord over REST (429 handling), Ed25519 interactions endpoint `POST /study/discord/interactions` (PING, `/status`), `php artisan study:discord-register` | `Discord/`, `Console/RegisterDiscordCommands.php` |
 | Worker unit | `systemd/communicat-study@.service` |
 | Tests | `tests/Feature/Study/` |
 
@@ -72,13 +78,43 @@ timeout 360 < lock 420 < `retry_after` 480. After a manual `queue:clear study` t
 unique locks block `study:queue` for up to an hour: run `php artisan cache:clear`
 (the pause file survives it) or wait.
 
+**Monitoring** (spec `2026-11-15-studie-ueberwachung-design.md`). The bot reports and
+answers `/status`; it controls nothing (pause and resume: dashboard buttons, which go
+through the confirm modal, and `study:pause`/`study:resume`). **Blind:** nothing here
+reads a share, Gini or effect; `StudyBlindnessTest` greps `app/Study` for the metric
+classes. `StudySnapshot` is the one source; the standstill rule exists once, in
+`StudyProgress` (`stale`). `study:watch` runs on the scheduler (`schedule:work` in
+`composer dev`, the scheduler unit in production; the cache must be persistent, not
+`array`). Alert states live in the cache (`study.alert.*`): send on start, remind after
+`STUDY_ALERT_REPEAT_MINUTES` (180), one all clear; `wave_finished` once, no reminder. A
+pause suppresses the standstill alert (the pause is the cause). Reports
+(`STUDY_REPORT_EVERY_HOURS`, 6, 0 = off) go to Discord only, as a text-less `report`
+row in `study_events`. A failing channel is logged and stops neither the other nor the
+checks; the ping to `STUDY_HEALTHCHECK_URL` comes last and only when the checks did not
+throw (healthchecks.io: period 1 min, grace 10 min). The worker signal
+(`study.worker.seen`, cache) is written from the queue loop for the `study` queue, at
+most every 15 s per process, **one shared signal**: it shows that some worker lives, not
+how many.
+
+**Discord setup.** Developer Portal: create application, add bot, copy token; invite the
+bot (scopes `bot` + `applications.commands`, right "Send messages" in the channel); fill
+`DISCORD_BOT_TOKEN`, `DISCORD_CHANNEL_ID`, `DISCORD_APPLICATION_ID`, `DISCORD_GUILD_ID`
+(optional, makes the command appear at once) and `DISCORD_PUBLIC_KEY` in `.env`;
+`php artisan study:discord-register` (prints the URL); enter that URL as "Interactions
+Endpoint URL" (Discord pings it and sends bad signatures, expecting 401); try `/status`
+in the channel. The endpoint needs public HTTPS and exists only while
+`DISCORD_PUBLIC_KEY` is set (route list read at boot: `optimize:clear` after changing
+it); it is outside the `web` stack, so the signature is its only protection, and it
+answers `/status` only in `DISCORD_CHANNEL_ID`. Without it, messages and reports still work.
+`STUDY_ALERT_MAIL` adds mail for alerts and all clears (the app's `MAIL_*` settings).
+
 Stays in core on purpose (useful for every run): `App\Discussion\TransientFailure`
 and `JobStatus::Interrupted`.
 
 ## Switch off (keep the files)
 
 `STUDY_MODULE=false` in `.env`, then `php artisan optimize:clear`. Page, sidebar
-link and commands disappear; the `study` queue connection and the pause hook stay
+link and commands disappear (so does `study:watch`, and with it the alerts); the `study` queue connection, the pause hook, the worker heartbeat and the `study_events` table stay
 registered so jobs already queued do not break.
 
 ## Remove
@@ -90,15 +126,15 @@ registered so jobs already queued do not break.
    the same holds for a pending `App\Study\Jobs\ApplyWave` on the default queue.
 2. Stop and remove the workers: `systemctl disable --now 'communicat-study@*'`,
    delete `/etc/systemd/system/communicat-study@.service`.
-3. Drop the table `study_waves` (`php artisan tinker --execute "Schema::dropIfExists('study_waves')"`
-   and delete its row from `migrations`), delete `storage/app/study/`, then delete
+3. Drop the tables `study_waves` and `study_events` (`php artisan tinker --execute "Schema::dropIfExists('study_waves'); Schema::dropIfExists('study_events')"`
+   and delete their rows from `migrations`), delete `storage/app/study/`, then delete
    `app/Study/` and `tests/Feature/Study/`.
 4. Delete the three hooks, which do nothing without the folder but would read
    as loose ends: the `StudyServiceProvider` line in `bootstrap/providers.php`,
    `@includeIf('study::nav-item')` in
    `resources/views/components/layouts/app/sidebar.blade.php`, the
    `@source '../../app/Study/views'` line in `resources/css/app.css`; plus
-   `STUDY_MODULE` in the `.env*` files and `phpunit.xml`, and
+   `STUDY_MODULE` and the `DISCORD_*`/`STUDY_ALERT_MAIL`/`STUDY_HEALTHCHECK_URL` keys in the `.env*` files and `phpunit.xml`, and
    `StudyModuleBoundaryTest.php`.
 5. `rm -f bootstrap/cache/*.php && composer dump-autoload -o && php artisan optimize:clear && npm run build && php artisan test`.
 

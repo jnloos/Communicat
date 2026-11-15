@@ -56,6 +56,7 @@ class ProgressPageTest extends TestCase
 
         $this->assertSame(['total' => 3, 'done' => 1, 'started' => 1, 'open' => 1, 'given_up' => 0], $report['totals']);
         $this->assertSame(['total' => 2, 'done' => 1, 'started' => 1, 'open' => 0, 'given_up' => 0], $report['grids']['ScorePipeline'][$high->id][$low->id]);
+        $this->assertSame(3, $report['remaining']);
         $this->assertSame(3, $report['turnsPerHour']);
         $this->assertFalse($report['stale']);
     }

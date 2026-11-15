@@ -5,6 +5,12 @@
     <x-page-header :heading="__('study::progress.heading')" :subheading="__('study::progress.subheading')">
         <x-slot:actions>
             <div class="flex items-center gap-3">
+                @if ($snapshot->pause === null)
+                    <flux:badge size="sm" color="green" data-running>{{ __('study::progress.running') }}</flux:badge>
+                    <flux:button size="sm" icon="pause" wire:click="askToPause" data-pause>{{ __('study::progress.pause') }}</flux:button>
+                @else
+                    <flux:button size="sm" icon="play" variant="primary" wire:click="askToResume" data-resume>{{ __('study::progress.resume') }}</flux:button>
+                @endif
                 <x-environment-badge />
                 <flux:button size="sm" icon="plus" :href="route('study.plan')" wire:navigate>{{ __('study::plan.link') }}</flux:button>
                 @if (! empty($report['waves']))
@@ -18,6 +24,13 @@
             </div>
         </x-slot:actions>
     </x-page-header>
+
+    @if ($snapshot->pause !== null)
+        <flux:callout class="mt-6" icon="pause-circle" data-pause-callout
+            :variant="$snapshot->pause->source === \App\Study\Control\PauseSource::Manual ? 'warning' : 'danger'"
+            :heading="__('study::progress.paused_heading')"
+            :text="__('study::progress.paused', ['since' => $snapshot->pause->since->format('H:i'), 'reason' => $snapshot->pause->reason])" />
+    @endif
 
     @if ($report['missing'] !== [])
         <flux:callout class="mt-6" icon="information-circle" :heading="__('study::progress.missing_heading')"
@@ -51,6 +64,10 @@
                 <flux:text size="sm">{{ __('study::progress.last_turn') }}</flux:text>
                 <flux:heading size="lg">{{ $report['lastTurnAt'] === null ? '–' : \Illuminate\Support\Carbon::parse($report['lastTurnAt'])->diffForHumans() }}</flux:heading>
                 <flux:text size="sm">{{ __('study::progress.queued', ['count' => $report['queued']]) }}</flux:text>
+                <p data-worker-signal @if ($snapshot->workerSilent()) data-worker-stale @endif
+                    @class(['text-sm', 'text-zinc-500 dark:text-zinc-400' => ! $snapshot->workerSilent(), 'text-red-600 dark:text-red-400' => $snapshot->workerSilent()])>
+                    {{ __('study::progress.worker_signal', ['ago' => $snapshot->workerSeenAt?->diffForHumans() ?? '–']) }}
+                </p>
             </flux:card>
         </div>
 
@@ -111,4 +128,17 @@
             </flux:card>
         </div>
     @endif
+
+    <flux:card class="mt-6" data-events>
+        <flux:heading>{{ __('study::progress.events') }}</flux:heading>
+        @forelse ($snapshot->recentEvents as $event)
+            <div class="mt-2 flex items-baseline gap-3 text-sm">
+                <flux:badge size="sm" :color="['crit' => 'red', 'warn' => 'amber', 'ok' => 'green', 'info' => 'zinc'][$event->level] ?? 'zinc'">{{ $event->level }}</flux:badge>
+                <span class="tabular-nums text-zinc-500">{{ $event->created_at->format('d.m. H:i') }}</span>
+                <span>{{ $event->message === '' ? __("study::watch.kind.{$event->kind}") : $event->message }}</span>
+            </div>
+        @empty
+            <flux:text class="mt-2">{{ __('study::progress.none') }}</flux:text>
+        @endforelse
+    </flux:card>
 </section>
