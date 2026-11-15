@@ -196,6 +196,23 @@ es für die Studie zählt.
   dazu ein **regelmäßiger Lagebericht** (Vorschlag: alle 6 h, Takt konfigurierbar). Pause/Resume nur über
   Leitstand oder CLI.
 
+## Teilprojekte (15.11., ersetzt die Arbeitspakete oben als Reihenfolge)
+
+Je Teilprojekt eine eigene Spec und ein eigener Plan. Ablauf: A → B → C → Probelauf; D und F parallel, E vor dem
+Probelauf.
+
+| # | Teilprojekt | Inhalt | Spec |
+|---|---|---|---|
+| A | Core-Härtung | M4, M5, M9, M10, M11 | `2026-11-15-studie-core-haertung-design.md` |
+| B | Planung | Manifest, Planer, Anlegen, `study:plan`, `study:check`, Projekt-Tag `focus seat` (M12) | offen; blockiert durch Frage 15 |
+| C | Steuerung | ein Job pro Turn, Pausen-Flag, Breaker, Worker-Zahl (M6–M8) | offen |
+| D | Überwachung | Dashboard `/study`, Discord-Bot, Stillstand | offen; Erreichbarkeit per HTTPS klären |
+| E | Export/Auswertung | neue Spalten, Auswertungsskript an synthetischen Fällen | offen |
+| F | Betrieb | MySQL, Backups mit Restore-Test, `.env.study`, VPS (M14) | offen |
+
+Danach: Probelauf (48–96 Läufe, Probe-Namen, M13) → Poweranalyse neu → Präregistrierung → Chaos-Probe → Welle 1.
+Offen ohne Zuordnung: Pagination von Sidebar und Listen bei 3.072 Projekten.
+
 ## Entscheidungen 1–8 (alle getroffen, siehe „Entschieden“)
 
 Zusätzlich zu 8: **Keine Blindheitssperre.** Statistik-Flyout und `/statistics` bleiben unverändert. Jedes
