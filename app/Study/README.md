@@ -97,7 +97,8 @@ classes. `StudySnapshot` is the one source; the standstill rule exists once, in
 `composer dev`, the scheduler unit in production; the cache must be persistent, not
 `array`). Alert states live in the cache (`study.alert.*`): send on start, remind after
 `STUDY_ALERT_REPEAT_MINUTES` (180), one all clear; `wave_finished` once, no reminder. A
-pause suppresses the standstill alert (the pause is the cause). Reports
+pause suppresses the standstill alert (the pause is the cause), and so does the
+`study.stale_after_minutes` after the last watch that saw it (the last turn predates the pause). Reports
 (`STUDY_REPORT_EVERY_HOURS`, 6, 0 = off) go to Discord only, as a text-less `report`
 row in `study_events`. A failing channel is logged and stops neither the other nor the
 checks; the ping to `STUDY_HEALTHCHECK_URL` comes last and only when the checks did not

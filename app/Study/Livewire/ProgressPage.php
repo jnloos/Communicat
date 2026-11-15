@@ -7,6 +7,7 @@ use App\Study\Control\CircuitBreaker;
 use App\Study\Control\PauseFlag;
 use App\Study\Control\PauseSource;
 use App\Study\Models\StudyEvent;
+use App\Study\Progress\StudyProgress;
 use App\Study\Progress\StudySnapshot;
 use App\Study\Watch\AlertLevel;
 use Illuminate\Support\Facades\Gate;
@@ -89,10 +90,11 @@ class ProgressPage extends Component
 
     private function askToConfirm(string $action, string $method): void
     {
-        $progress = StudySnapshot::read()->progress;
+        $progress = app(StudyProgress::class)->read();
+        $totals = $progress['totals'] ?? ['total' => 0, 'done' => 0];
 
         $this->confirmLabel = __("study::progress.{$action}_label");
-        $this->confirmMessage = __("study::progress.{$action}_message", ['runs' => $progress['totals']['total'] ?? 0, 'turns' => $progress['remaining'] ?? 0]);
+        $this->confirmMessage = __("study::progress.{$action}_message", ['runs' => $totals['total'] - $totals['done'], 'turns' => $progress['remaining'] ?? 0]);
         $this->needsConfirmation($method);
     }
 

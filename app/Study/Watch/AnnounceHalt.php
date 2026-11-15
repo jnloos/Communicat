@@ -9,7 +9,7 @@ use Throwable;
 
 /**
  * Reports a breaker pause at once instead of at the next minute. It goes through the same
- * AlertBook entry as the watcher, so whoever is first sends and the other finds it done; if this
+ * AlertBook entry as the watcher, so whoever claims it first (an atomic add) sends and the other finds it done; if this
  * fails (it runs inside a worker's turn), the watcher catches up within a minute.
  */
 class AnnounceHalt

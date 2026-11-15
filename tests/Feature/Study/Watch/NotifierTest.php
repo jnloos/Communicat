@@ -10,6 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class NotifierTest extends TestCase
@@ -33,6 +34,19 @@ class NotifierTest extends TestCase
         $this->assertSame('Stillstand', StudyEvent::sole()->message);
         Http::assertSentCount(1);
         $this->assertCount(1, $this->sentMails());
+    }
+
+    public function test_a_failing_event_write_does_not_stop_discord_or_mail(): void
+    {
+        Http::fake(['discord.com/*' => Http::response([], 200)]);
+        Log::spy();
+        Schema::drop('study_events');
+
+        $this->notify();
+
+        Http::assertSentCount(1);
+        $this->assertCount(1, $this->sentMails());
+        Log::shouldHaveReceived('warning')->once();
     }
 
     public function test_a_failing_discord_does_not_stop_mail_or_the_event(): void

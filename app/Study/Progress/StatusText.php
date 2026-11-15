@@ -78,7 +78,7 @@ class StatusText
     {
         $last = array_slice($failedJobs, 0, 3);
 
-        return $last === [] ? [] : [__('study::watch.status.given_up').': '.collect($last)->map(fn ($job) => '#'.($job['project'] ?? '?').' '.Str::before((string) $job['reason'], ':'))->implode(', ')];
+        return $last === [] ? [] : [__('study::watch.status.given_up').': '.collect($last)->map(fn ($job) => '#'.($job['project'] ?? '?').' '.ErrorClass::of($job['reason']))->implode(', ')];
     }
 
     private function ago(?CarbonInterface $at): string

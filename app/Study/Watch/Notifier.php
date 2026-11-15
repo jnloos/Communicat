@@ -12,7 +12,7 @@ use Throwable;
 
 /**
  * The way of a message out: study_events first (so the dashboard has it whatever happens), then
- * Discord, then mail. Each channel fails alone: a dead channel is logged and stops neither the
+ * Discord, then mail. Each channel (the event write too) fails alone: a dead channel is logged and stops neither the
  * other nor the checks that called.
  */
 class Notifier
@@ -51,6 +51,6 @@ class Notifier
 
     private function recordEvent(string $kind, AlertLevel $level, string $message): void
     {
-        StudyEvent::create(['kind' => $kind, 'level' => $level->value, 'message' => $message]);
+        $this->attempt('event', fn () => StudyEvent::create(['kind' => $kind, 'level' => $level->value, 'message' => $message]));
     }
 }

@@ -22,6 +22,13 @@ class WorkerHeartbeatTest extends TestCase
         $this->assertSame(now()->timestamp, Cache::get('study.worker.seen'));
     }
 
+    public function test_a_study_worker_on_several_queues_writes_the_signal(): void
+    {
+        event(new Looping('study', 'study,default'));
+
+        $this->assertNotNull(Cache::get('study.worker.seen'));
+    }
+
     public function test_another_queue_does_not(): void
     {
         event(new Looping('database', 'default'));

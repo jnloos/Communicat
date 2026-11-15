@@ -136,14 +136,14 @@ class StudyProgress
         return $grids;
     }
 
-    /** "interrupted · RateLimitedException" => count, over the last hour */
+    /** "interrupted · RateLimitedException" => count, over the last hour; the class only, never the message */
     private function disruptions(array $projectIds): array
     {
         return JobLog::whereIn('project_id', $projectIds)
             ->whereIn('status', [JobStatus::Failed, JobStatus::Interrupted])
             ->where('finished_at', '>=', now()->subHour())
             ->get(['status', 'error'])
-            ->countBy(fn (JobLog $log) => $log->status->value.' · '.strtok((string) $log->error, ':'))
+            ->countBy(fn (JobLog $log) => $log->status->value.' · '.ErrorClass::of($log->error))
             ->sortDesc()
             ->all();
     }

@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Cache;
  */
 class AlertBook
 {
+    /** Ten years, as good as forever: Cache::add is atomic only with a TTL. */
+    private const KEEP_SECONDS = 315_360_000;
+
     public function __construct(private readonly Notifier $notifier) {}
 
     /**
@@ -33,8 +36,10 @@ class AlertBook
         }
 
         if ($entry === null) {
-            Cache::forever($key, ['since' => now()->timestamp, 'lastSent' => now()->timestamp]);
-            $this->notifier->send($alert(), mail: true);
+            // The first claim wins, so a listener and the watcher cannot both send. A TTL is needed for an atomic add.
+            if (Cache::add($key, ['since' => now()->timestamp, 'lastSent' => now()->timestamp], self::KEEP_SECONDS)) {
+                $this->notifier->send($alert(), mail: true);
+            }
         } elseif (! $once && now()->timestamp - $entry['lastSent'] >= config('study.watch.repeat_alert_minutes') * 60) {
             Cache::forever($key, ['since' => $entry['since'], 'lastSent' => now()->timestamp]);
             $this->notifier->send($alert()->asReminder($this->minutesSince($entry['since'])), mail: true);

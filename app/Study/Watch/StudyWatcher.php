@@ -13,18 +13,39 @@ class StudyWatcher
 {
     private const REPORT_KEY = 'study.report.last';
 
+    private const PAUSE_SEEN_KEY = 'study.pause.seen';
+
     public function __construct(private readonly AlertBook $book, private readonly Alerts $alerts, private readonly Notifier $notifier) {}
 
     public function run(): void
     {
         $snapshot = StudySnapshot::read();
 
-        // A pause is the cause of the standstill and has its own alert: one message, not two.
-        $this->book->sync('standstill', $snapshot->standstill() && $snapshot->pause === null, fn () => $this->alerts->standstill($snapshot));
+        $this->syncStandstill($snapshot);
         $this->book->sync('paused', $snapshot->pause !== null, fn () => $this->alerts->paused($snapshot->pause));
         $this->book->sync('wave_finished', $snapshot->finished(), fn () => $this->alerts->waveFinished($snapshot), once: true);
 
         $this->reportWhenDue($snapshot);
+    }
+
+    /**
+     * A pause is the cause of the standstill and has its own alert, so the standstill is not
+     * judged while it lasts (neither raised nor cleared) nor for stale_after_minutes after it
+     * was last seen: the last turn is older than the pause, which says nothing about the workers.
+     */
+    private function syncStandstill(StudySnapshot $snapshot): void
+    {
+        if ($snapshot->pause !== null) {
+            Cache::forever(self::PAUSE_SEEN_KEY, now()->timestamp);
+
+            return;
+        }
+
+        $pausedAt = Cache::get(self::PAUSE_SEEN_KEY);
+
+        if ($pausedAt === null || now()->timestamp - $pausedAt >= config('study.stale_after_minutes') * 60) {
+            $this->book->sync('standstill', $snapshot->standstill(), fn () => $this->alerts->standstill($snapshot));
+        }
     }
 
     private function reportWhenDue(StudySnapshot $snapshot): void

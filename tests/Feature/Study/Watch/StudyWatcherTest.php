@@ -119,6 +119,38 @@ class StudyWatcherTest extends TestCase
         $this->assertSame('info', StudyEvent::where('kind', 'paused')->value('level'));
     }
 
+    public function test_a_long_pause_is_no_standstill_after_the_resume_until_the_grace_period_is_over(): void
+    {
+        $this->cell(spoken: 1);
+        app(PauseFlag::class)->pause('lunch', 'manual', PauseSource::Manual);
+        $this->watch();
+
+        $this->travel(config('study.stale_after_minutes') + 5)->minutes();
+        $this->watch();
+        app(PauseFlag::class)->resume();
+        $this->watch();
+
+        $this->assertSame(0, StudyEvent::where('kind', 'standstill')->count(), 'no turn can be newer than the pause');
+
+        $this->travel(config('study.stale_after_minutes') + 1)->minutes();
+        $this->watch();
+
+        $this->assertSame(1, StudyEvent::where('kind', 'standstill')->where('level', 'crit')->count());
+    }
+
+    public function test_pausing_during_a_standstill_sends_no_recovery(): void
+    {
+        $project = $this->cell();
+        $this->watch();
+        app(PauseFlag::class)->pause('lunch', 'manual', PauseSource::Manual);
+
+        $this->watch();
+        $this->spokenTurn($project, 1);
+        $this->watch();
+
+        $this->assertSame(['crit'], StudyEvent::where('kind', 'standstill')->pluck('level')->all());
+    }
+
     public function test_the_report_comes_every_interval_to_discord_only(): void
     {
         config(['study.watch.report_every_hours' => 6]);

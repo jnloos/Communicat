@@ -6,6 +6,7 @@ use App\Study\Watch\StudyWatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 use Tests\Feature\Study\UsesTemporaryPauseFile;
 use Tests\TestCase;
@@ -65,6 +66,17 @@ class WatchPingTest extends TestCase
         Http::fake([self::URL => fn () => throw new ConnectionException('timeout')]);
 
         $this->artisan('study:watch')->assertSuccessful();
+    }
+
+    public function test_a_failed_ping_logs_the_class_but_never_the_secret_url(): void
+    {
+        config(['study.healthcheck_url' => self::URL]);
+        Http::fake([self::URL => fn () => throw new ConnectionException('cURL error for '.self::URL)]);
+        Log::spy();
+
+        $this->artisan('study:watch')->assertSuccessful();
+
+        Log::shouldHaveReceived('warning')->withArgs(fn (string $message) => str_contains($message, ConnectionException::class) && ! str_contains($message, 'hc-ping'))->once();
     }
 
     public function test_it_runs_every_minute_on_the_scheduler(): void

@@ -21,7 +21,7 @@ class WorkerHeartbeat
 
     public function handle(Looping $event): void
     {
-        if ($event->queue !== RunStudyProject::CONNECTION || now()->timestamp - $this->lastWrite < self::EVERY_SECONDS) {
+        if ($event->connectionName !== RunStudyProject::CONNECTION || now()->timestamp - $this->lastWrite < self::EVERY_SECONDS) {
             return;
         }
 

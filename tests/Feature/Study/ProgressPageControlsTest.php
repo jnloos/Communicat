@@ -54,12 +54,13 @@ class ProgressPageControlsTest extends TestCase
 
     public function test_the_pause_button_parks_the_action_and_only_confirming_pauses(): void
     {
-        $this->cell(spoken: 1);
+        $this->cell(spoken: 2);
+        $this->cell();
         $page = Livewire::test(ProgressPage::class)->call('askToPause');
 
         $page->assertSet('pendingMethod', 'pauseStudy');
         $this->assertFalse(app(PauseFlag::class)->active());
-        $this->assertStringContainsString('1', $page->get('confirmMessage'));
+        $this->assertStringContainsString('(1 runs, 2 turns left)', $page->get('confirmMessage'));
 
         $page->call('executeConfirmed');
 
