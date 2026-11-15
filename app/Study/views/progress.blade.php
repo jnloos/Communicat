@@ -6,7 +6,9 @@
         <x-slot:actions>
             <div class="flex items-center gap-3">
                 @if ($snapshot->pause === null)
-                    <flux:badge size="sm" color="green" data-running>{{ __('study::progress.running') }}</flux:badge>
+                    <span class="inline-flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-300" data-running>
+                        <span class="size-2 rounded-full bg-emerald-500" aria-hidden="true"></span>{{ __('study::progress.running') }}
+                    </span>
                     <flux:button size="sm" icon="pause" wire:click="askToPause" data-pause>{{ __('study::progress.pause') }}</flux:button>
                 @else
                     <flux:button size="sm" icon="play" variant="primary" wire:click="askToResume" data-resume>{{ __('study::progress.resume') }}</flux:button>
