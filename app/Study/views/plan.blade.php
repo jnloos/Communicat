@@ -13,7 +13,7 @@
         <flux:callout class="mt-6" variant="danger" icon="exclamation-triangle" data-failed
             :heading="__('study::plan.failed', ['done' => $written, 'total' => $applyingWave->plannedRuns()])" :text="$applyingWave->failed_reason" />
     @elseif ($applyingWave !== null)
-        <flux:callout class="mt-6" :variant="$writing ? 'secondary' : 'success'" :icon="$writing ? 'arrow-path' : 'check-circle'" data-applying
+        <flux:callout class="mt-6" :variant="$writing ? 'secondary' : 'success'" :icon="$writing ? 'loading' : 'check-circle'" data-applying
             :heading="$writing
                 ? __('study::plan.applying', ['done' => $written, 'total' => $applyingWave->plannedRuns()])
                 : __('study::plan.applied', ['total' => $written])" />
@@ -25,7 +25,6 @@
                 :heading="$manifest?->getClientOriginalName() ?? __('study::plan.dropzone_heading')"
                 :text="__('study::plan.dropzone_text', ['mb' => $maxMegabytes])" />
         </flux:file-upload>
-        <flux:error name="manifest" />
 
         <div class="grid gap-4 sm:grid-cols-3">
             <flux:input type="number" min="1" wire:model="wave" :label="__('study::plan.wave')" />
@@ -33,10 +32,16 @@
             <flux:input type="number" min="1" wire:model="to" :label="__('study::plan.to')" />
         </div>
 
-        <div class="flex items-center justify-end gap-2">
-            <flux:button wire:click="preview" icon="eye">{{ __('study::plan.preview') }}</flux:button>
-            <flux:button variant="primary" icon="play" wire:click="confirmApply"
-                :disabled="$overview === [] || $overview['problems'] !== []">{{ __('study::plan.apply') }}</flux:button>
+        @php($blocked = $overview === [] ? 'needs_preview' : ($overview['problems'] !== [] ? 'has_problems' : null))
+        <div class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+            @if ($blocked)
+                <flux:text size="sm" id="apply-hint" class="me-auto">{{ __("study::plan.{$blocked}") }}</flux:text>
+            @endif
+            <div class="flex gap-2">
+                <flux:button wire:click="preview" icon="eye">{{ __('study::plan.preview') }}</flux:button>
+                <flux:button variant="primary" icon="play" wire:click="confirmApply" :disabled="$blocked !== null"
+                    :aria-describedby="$blocked ? 'apply-hint' : null">{{ __('study::plan.apply') }}</flux:button>
+            </div>
         </div>
     </flux:card>
 
@@ -64,7 +69,8 @@
         @foreach ($overview['prompts'] as $scenario => $prompt)
             <flux:card class="mt-6">
                 <flux:heading>{{ __('study::plan.prompt', ['scenario' => $scenario]) }}</flux:heading>
-                <pre class="mt-3 whitespace-pre-wrap font-mono text-xs">{{ $prompt }}</pre>
+                {{-- Long prompts scroll inside the card; tabindex lets the keyboard scroll it too. --}}
+                <pre tabindex="0" class="mt-3 max-h-[32rem] overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-zinc-50 p-3 font-mono text-xs dark:bg-white/5">{{ $prompt }}</pre>
             </flux:card>
         @endforeach
     @endif

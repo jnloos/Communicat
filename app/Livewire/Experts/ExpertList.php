@@ -38,6 +38,13 @@ class ExpertList extends Component
         $this->resetPage();
     }
 
+    /** The no-match state's way out: search and tag values cleared, the mode kept. */
+    public function resetFilters(): void
+    {
+        $this->search = '';
+        $this->clearTagFilter();
+    }
+
     #[On('expert_modified')]
     public function render(): mixed
     {
@@ -52,9 +59,13 @@ class ExpertList extends Component
             ->orderBy('name')
             ->paginate(10);
 
+        $hasFilters = $search !== '' || $filter->valueIds() !== [];
+
         return view('livewire.experts.expert-list', [
             'experts' => $experts,
-            'hasFilters' => $search !== '' || $filter->valueIds() !== [],
+            'hasFilters' => $hasFilters,
+            // Only a filtered list needs the unfiltered total, for "12 of 800 experts".
+            'allCount' => $hasFilters ? Expert::count() : $experts->total(),
             'tagCategories' => $tagCategories,
             'activeTagCount' => count($filter->valueIds()),
         ]);

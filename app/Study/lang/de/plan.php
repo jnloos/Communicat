@@ -23,7 +23,7 @@ return [
     'personas' => 'Personas',
     'seats' => 'Fokus-Sitz',
     'seat' => 'Sitz :seat',
-    'per_cell' => 'Min–Max je Zelle',
+    'per_cell' => 'Min. bis Max. je Zelle',
     'subgroups' => 'Fokus-Untergruppe × Fokus-Profil',
     'names' => 'Vornamen: Personas je Namens-ID',
     'pool' => 'Gender, Untergruppe',
@@ -35,5 +35,7 @@ return [
     'duplicates' => 'Volle Namen in zwei Instanzen: :count',
     'prompt' => 'Prompt, Szenario :scenario (Block 1, hh, Fokus-Persona)',
     'changed' => 'Das Formular wurde nach der Vorschau geändert. Bitte die Vorschau neu erzeugen.',
-    'failed' => 'Das Anlegen der Welle ist nach :done von :total Runs fehlgeschlagen; erneut anwenden, um fortzusetzen.',
+    'failed' => 'Das Anlegen der Welle ist nach :done von :total Läufen fehlgeschlagen. Erneut anwenden, um fortzusetzen.',
+    'needs_preview' => 'Erst die Vorschau erzeugen: angelegt wird nur, was sie zeigt.',
+    'has_problems' => 'Die Vorschau meldet Probleme; erst beheben, dann anlegen.',
 ];

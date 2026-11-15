@@ -5,7 +5,7 @@ namespace App\Study\Planning;
 /**
  * Study-only, removable: see app/Study/README.md.
  *
- * A wave as asked for -- manifest, number, range -- with its plan and
+ * A wave as asked for (manifest, number, range) with its plan and
  * every reason it would be refused (spec 1.2, 1.3, 3). What the preview shows
  * and what record() accepts only when the list is empty.
  */

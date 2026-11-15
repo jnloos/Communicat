@@ -22,7 +22,7 @@ class LoadingStatesDTest extends TestCase
         Expert::factory()->create();
 
         Livewire::test(ExpertList::class)
-            ->assertSeeHtml('wire:target="search,tagFilter,tagFilterMode,clearTagFilter"');
+            ->assertSeeHtml('wire:target="search,tagFilter,tagFilterMode,clearTagFilter,resetFilters,gotoPage,nextPage,previousPage"');
     }
 
     public function test_contributor_cards_dim_while_their_action_runs(): void

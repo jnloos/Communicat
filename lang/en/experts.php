@@ -24,6 +24,8 @@ return [
     'list' => [
         'heading' => 'Edit Experts',
         'count' => ':count expert|:count experts',
+        'count_filtered' => ':count of :total expert|:count of :total experts',
+        'reset_filters' => 'Reset filters',
         'create' => 'Create Expert',
         'no_matches' => 'No experts match the current filters.',
         'empty' => 'No experts yet.',

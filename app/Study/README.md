@@ -1,4 +1,4 @@
-# Study module — study-only, not part of a release
+# Study module: study-only, not part of a release
 
 Everything here exists only to run the master thesis study (see the handout
 `2026-11-11_Handout-Studiendesign.pdf`, §3 and §6). Core code never names

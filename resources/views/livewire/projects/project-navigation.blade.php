@@ -1,7 +1,7 @@
 {{--
     The sidebar's project list. flex-1 makes it both the scrolling area when
     there are projects and the spacer that pushes the footer down when there
-    are none — which is why no flux:sidebar.spacer is needed here.
+    are none, so no flux:sidebar.spacer is needed here.
 --}}
 <div data-project-list class="-mx-2 flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden px-2">
     {{-- The label row is the title of the list, not one of its groups: an xs
@@ -98,19 +98,25 @@
                             :current="$currentProjectId === $project->id"
                             :outside-filter="$outsideFilterProjectId === $project->id"
                         />
+
+                        @if ($loop->first && $pinnedIn === $group->id)
+                            <flux:separator variant="subtle" class="my-1" data-pinned-separator />
+                        @endif
                     @empty
                         <div class="px-3 py-1 text-sm text-zinc-400">{{ __('groups.empty') }}</div>
                     @endforelse
 
-                    {{-- Ten rows per drawer (ProjectNavigation::PER_PAGE); the open project is pinned on top when it sits on another page. --}}
+                    {{-- Ten rows per drawer (ProjectNavigation::PER_PAGE). The open
+                         project is pinned on top when it sits on another page, set
+                         off from the page by a hairline. --}}
                     @if ($grouped[$group->id]->hasPages())
-                        <flux:pagination :paginator="$grouped[$group->id]" class="border-0 pt-1 pe-1" />
+                        <x-projects.nav-pager :paginator="$grouped[$group->id]" :pages="$pages[$group->id]" :list="$group->name" />
                     @endif
                 </flux:sidebar.group>
 
                 {{-- Hovering the group's own header, not its projects: the wrapper
                      spans the whole group, so a plain group-hover would light this
-                     up while the pointer is three rows down on a project — which
+                     up while the pointer is three rows down on a project, which
                      has a menu of its own. The button sits over the header and
                      takes its own hover, hence the second condition. --}}
                 <div wire:sort:ignore class="absolute end-1 top-0 flex h-8 items-center opacity-0 transition-opacity hover:opacity-100 has-[:focus-visible]:opacity-100 group-has-[>ui-disclosure>button:hover]/navgroup:opacity-100 has-[[data-open]]:opacity-100">
@@ -147,10 +153,14 @@
                         :current="$currentProjectId === $project->id"
                         :outside-filter="$outsideFilterProjectId === $project->id"
                     />
+
+                    @if ($loop->first && $pinnedIn === 'ungrouped')
+                        <flux:separator variant="subtle" class="my-1" data-pinned-separator />
+                    @endif
                 @endforeach
 
                 @if ($ungrouped->hasPages())
-                    <flux:pagination :paginator="$ungrouped" class="border-0 pt-1 pe-1" />
+                    <x-projects.nav-pager :paginator="$ungrouped" :pages="$ungroupedPages" :list="__('groups.ungrouped')" />
                 @endif
             </flux:sidebar.group>
         @endif

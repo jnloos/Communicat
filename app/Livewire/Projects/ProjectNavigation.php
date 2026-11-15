@@ -66,13 +66,19 @@ class ProjectNavigation extends Component
     #[Session]
     public string $tagFilterMode = TagFilterMode::Cut->value;
 
+    /**
+     * Where render() pinned the open project on top of a page it is not on: a
+     * group id, 'ungrouped', or null. Per request only, so private.
+     */
+    private int|string|null $pinnedIn = null;
+
     public function mount(?int $currentProjectId = null): void
     {
         $this->currentProjectId = $currentProjectId;
     }
 
     /**
-     * Ticking the group the project already sits in takes it out again — there
+     * Ticking the group the project already sits in takes it out again. There
      * is deliberately no separate "remove from group" entry.
      */
     #[Authorize('view', 'project')]
@@ -123,6 +129,7 @@ class ProjectNavigation extends Component
     public function render(): mixed
     {
         $user = $this->user();
+        $this->pinnedIn = null;
         $tagCategories = TagCategory::ofScope(TagScope::Project)->with('values')->get();
         $filter = $this->normaliseFilterState($tagCategories);
         $open = $this->currentProjectId === null ? null : $user->projects()->whereKey($this->currentProjectId)->first();
@@ -131,33 +138,37 @@ class ProjectNavigation extends Component
 
         $groups = $user->projectGroups()->get();
 
-        // Unfiltered, an empty drawer stays visible so it can be filled; while a
-        // filter is on, a drawer without a match is only noise (one grouped COUNT).
+        // One grouped COUNT gives every list its page count, the filter's match
+        // count and, while a filter is on, which drawers still have a match
+        // (unfiltered, an empty drawer stays visible so it can be filled).
+        $counts = $this->applyTagFilter($user->projects(), $filter)->toBase()
+            ->select('project_contributors.project_group_id')->selectRaw('count(*) as matches')
+            ->groupBy('project_contributors.project_group_id')
+            ->pluck('matches', 'project_group_id');
+
         if (! $filter->isEmpty()) {
-            $matching = $this->applyTagFilter($user->projects(), $filter)->toBase()
-                ->select('project_contributors.project_group_id')->selectRaw('count(*) as matches')
-                ->groupBy('project_contributors.project_group_id')
-                ->pluck('matches', 'project_group_id');
-            $groups = $groups->filter(fn (ProjectGroup $group) => $matching->has($group->id) || $group->id === $openGroupId)->values();
+            $groups = $groups->filter(fn (ProjectGroup $group) => $counts->has($group->id) || $group->id === $openGroupId)->values();
         }
 
         $grouped = $groups->mapWithKeys(fn (ProjectGroup $group) => [
             $group->id => $this->page($filter, $group->id, $open),
         ])->all();
-
-        // The match count only serves the no-match message, which exists once
-        // there are categories to filter by; without one it would be a wasted query.
-        $hasCategories = $tagCategories->isNotEmpty();
+        $ungrouped = $this->page($filter, null, $open);
 
         return view('livewire.projects.project-navigation', [
             'groups' => $groups,
             'sortable' => $filter->isEmpty(),
             'grouped' => $grouped,
-            'ungrouped' => $this->page($filter, null, $open),
+            'ungrouped' => $ungrouped,
+            'pages' => $groups->mapWithKeys(fn (ProjectGroup $group) => [$group->id => $this->lastPage($counts->get($group->id, 0))])->all(),
+            // pluck() keys the ungrouped (NULL) row as ''.
+            'ungroupedPages' => $this->lastPage($counts->get('', 0)),
+            'pinnedIn' => $this->pinnedIn,
             'tagCategories' => $tagCategories,
             'activeFilterCount' => count($filter->valueIds()),
             'tagFilterMode' => $this->tagFilterMode,
-            'matchCount' => $hasCategories ? $this->applyTagFilter($user->projects(), $filter)->count() : null,
+            // Only the no-match message reads it, and that needs categories to filter by.
+            'matchCount' => $tagCategories->isNotEmpty() ? (int) $counts->sum() : null,
             'outsideFilterProjectId' => $outsideFilterProjectId,
         ]);
     }
@@ -179,9 +190,15 @@ class ProjectNavigation extends Component
 
         if ($open !== null && $this->groupIdOf($open) === $groupId && ! $page->getCollection()->contains('id', $open->id)) {
             $page->getCollection()->prepend($open);
+            $this->pinnedIn = $groupId ?? 'ungrouped';
         }
 
         return $page;
+    }
+
+    private function lastPage(int $count): int
+    {
+        return max(1, (int) ceil($count / self::PER_PAGE));
     }
 
     /** The user's drawer the project sits in (pivot value, a string on some drivers), null when ungrouped. */

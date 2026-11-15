@@ -9,7 +9,8 @@
         </flux:table.columns>
         <flux:table.rows>
             @foreach ($table['rows'] as $row)
-                <flux:table.row>
+                {{-- The "all" row is a total: set it apart from the rows it sums. --}}
+                <flux:table.row @class(['font-medium' => $row[0] === __('study::plan.all')])>
                     @foreach ($row as $index => $cell)
                         <flux:table.cell :align="$index === 0 ? 'start' : 'end'" class="tabular-nums">{{ $cell }}</flux:table.cell>
                     @endforeach

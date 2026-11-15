@@ -23,7 +23,7 @@ return [
     'personas' => 'Personas',
     'seats' => 'Focus seat',
     'seat' => 'Seat :seat',
-    'per_cell' => 'min–max per cell',
+    'per_cell' => 'min to max per cell',
     'subgroups' => 'Focus subgroup × focus profile',
     'names' => 'First names: personas per name id',
     'pool' => 'Gender, subgroup',
@@ -36,4 +36,6 @@ return [
     'prompt' => 'Prompt, scenario :scenario (block 1, hh, focus persona)',
     'changed' => 'The form changed after the preview. Preview again before applying.',
     'failed' => 'Writing the wave failed after :done of :total runs; apply it again to continue.',
+    'needs_preview' => 'Preview first: only what the preview shows is applied.',
+    'has_problems' => 'The preview reports problems; fix them before applying.',
 ];

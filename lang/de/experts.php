@@ -24,6 +24,8 @@ return [
     'list' => [
         'heading' => 'Experten bearbeiten',
         'count' => ':count Experte|:count Experten',
+        'count_filtered' => ':count von :total Experten|:count von :total Experten',
+        'reset_filters' => 'Filter zurücksetzen',
         'create' => 'Experte erstellen',
         'no_matches' => 'Keine Experten entsprechen den aktuellen Filtern.',
         'empty' => 'Noch keine Experten vorhanden.',

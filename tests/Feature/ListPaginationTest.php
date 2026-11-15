@@ -109,6 +109,26 @@ class ListPaginationTest extends TestCase
         $this->assertCount(11, $rows);
     }
 
+    public function test_the_pager_names_its_position_and_sets_the_pinned_project_apart(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        $projects = $this->projectsFor($user, 25);
+
+        Livewire::test(ProjectNavigation::class, ['currentProjectId' => $projects[0]->id])
+            ->assertViewHas('ungroupedPages', 3)
+            ->assertViewHas('pinnedIn', 'ungrouped')
+            ->assertSeeHtml('data-pinned-separator')
+            ->assertSee('1 / 3')
+            ->assertSee(__('groups.pager.next'))
+            ->call('nextPage', 'ungrouped')
+            ->assertSee('2 / 3');
+
+        Livewire::test(ProjectNavigation::class, ['currentProjectId' => $projects[24]->id])
+            ->assertViewHas('pinnedIn', null)
+            ->assertDontSeeHtml('data-pinned-separator');
+    }
+
     public function test_a_sidebar_render_reads_no_more_than_a_page_of_projects(): void
     {
         $user = User::factory()->create();

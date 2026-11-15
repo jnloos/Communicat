@@ -11,6 +11,13 @@ return [
 
     'ungrouped' => 'Unsorted chats',
 
+    'pager' => [
+        'label' => 'Pages of :list',
+        'previous' => 'Previous page',
+        'next' => 'Next page',
+        'position' => 'Page :page of :pages',
+    ],
+
     'menus' => [
         'project' => 'Project menu',
         'group' => 'Group menu',

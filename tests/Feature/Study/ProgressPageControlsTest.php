@@ -52,6 +52,17 @@ class ProgressPageControlsTest extends TestCase
             ->assertDontSee('data-pause-callout', false);
     }
 
+    public function test_the_running_mark_shows_even_without_open_turns_and_never_while_paused(): void
+    {
+        Livewire::test(ProgressPage::class)
+            ->assertSee('data-running', false)
+            ->assertSee(__('study::progress.running_idle'));
+
+        app(PauseFlag::class)->pause('manual', 'manual', PauseSource::Manual);
+
+        Livewire::test(ProgressPage::class)->assertDontSee('data-running', false);
+    }
+
     public function test_the_pause_button_parks_the_action_and_only_confirming_pauses(): void
     {
         $this->cell(spoken: 2);

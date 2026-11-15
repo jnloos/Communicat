@@ -213,4 +213,24 @@ class ExpertListTagFilterTest extends TestCase
             ->assertSeeHtml('wire:model.live="tagFilter"')
             ->assertSeeHtml('wire:model.live="tagFilterMode"');
     }
+
+    public function test_a_filtered_list_counts_against_all_and_resets_to_everyone(): void
+    {
+        [$gender, $female] = $this->categoryWithTwoValues('gender', 'female', 'male');
+        $this->expert('Alice', [[$gender, $female]]);
+        $this->expert('Bella');
+        $this->expert('Carl');
+
+        Livewire::test(ExpertList::class)
+            ->assertSee('3 experts')
+            ->set('tagFilter', [$female->id])
+            ->set('search', 'Ali')
+            ->assertSee('1 of 3 expert')
+            ->set('search', 'Nobody')
+            ->assertSee('Reset filters')
+            ->call('resetFilters')
+            ->assertSet('search', '')
+            ->assertSet('tagFilter', [])
+            ->assertSee('Carl');
+    }
 }

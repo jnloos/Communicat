@@ -1,5 +1,8 @@
 <div class="mx-auto w-full max-w-6xl">
-    <x-page-header :heading="__('experts.list.heading')" :subheading="trans_choice('experts.list.count', $experts->total())" align="center">
+    <x-page-header :heading="__('experts.list.heading')"
+        :subheading="$hasFilters
+            ? trans_choice('experts.list.count_filtered', $experts->total(), ['total' => $allCount])
+            : trans_choice('experts.list.count', $allCount)" align="center">
         @can('create', App\Models\Expert::class)
             <x-slot:actions>
                 <flux:button variant="primary" icon="plus" @click="$wire.dispatch('edit_expert')">
@@ -18,12 +21,15 @@
             <x-empty-state :icon="$hasFilters ? 'magnifying-glass' : 'user-circle'">
                 @if($hasFilters)
                     {{ __('experts.list.no_matches') }}
+                    <div class="mt-3">
+                        <flux:button size="sm" icon="x-mark" wire:click="resetFilters">{{ __('experts.list.reset_filters') }}</flux:button>
+                    </div>
                 @else
                     {{ __('experts.list.empty') }}
                 @endif
             </x-empty-state>
         @else
-            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" wire:loading.delay.class="opacity-60" wire:target="search,tagFilter,tagFilterMode,clearTagFilter">
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3" wire:loading.delay.class="opacity-60" wire:target="search,tagFilter,tagFilterMode,clearTagFilter,resetFilters,gotoPage,nextPage,previousPage">
                 @foreach ($experts as $expert)
                     <x-contributors.contributors-card
                         wire:key="expert-{{ $expert->id }}"
