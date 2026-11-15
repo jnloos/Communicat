@@ -196,6 +196,15 @@ es für die Studie zählt.
   dazu ein **regelmäßiger Lagebericht** (Vorschlag: alle 6 h, Takt konfigurierbar). Pause/Resume nur über
   Leitstand oder CLI.
 
+## Entscheidung 17: Vom Orchestrator gesetzt, damit B und D nicht blockieren (15.11.)
+
+- **Frage 15:** Namen als Bausteine im Manifest (Vornamen je Gender × Untergruppe, Nachnamen je Untergruppe, je
+  mit ID), der Planer kombiniert deterministisch aus `master_seed`, kein voller Name doppelt; optionale
+  Sperrliste `excluded_full_names`. Revidierbar bis zur Präregistrierung.
+- **Discord:** Meldungen und Lagebericht über die Bot-REST-API (nur Bot-Token und Kanal-ID, kein öffentlicher
+  Endpunkt nötig). `/status` über einen Interactions-Endpunkt mit Signaturprüfung, nur aktiv, wenn
+  `DISCORD_PUBLIC_KEY` gesetzt ist; ohne Endpunkt fällt `/status` weg, alles andere läuft.
+
 ## Teilprojekte (15.11., ersetzt die Arbeitspakete oben als Reihenfolge)
 
 Je Teilprojekt eine eigene Spec und ein eigener Plan. Ablauf: A → B → C → Probelauf; D und F parallel, E vor dem
