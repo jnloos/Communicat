@@ -25,6 +25,16 @@ class PlannerInvariantsTest extends TestCase
         $this->plan = (new Planner)->plan($this->manifest, 1, 6);
     }
 
+    public function test_a_persona_of_another_study_is_another_record(): void
+    {
+        $other = json_decode(ManifestTest::fixture('probe-manifest.json'), true);
+        $other['study'] = 'other';
+        $plan = (new Planner)->plan(Manifest::fromJson(json_encode($other)), 1, 1);
+
+        $this->assertSame($this->plan[0]->personas['focus']->name, $plan[0]->personas['focus']->name);
+        $this->assertNotSame($this->plan[0]->personas['focus']->uuid, $plan[0]->personas['focus']->uuid);
+    }
+
     public function test_1_every_scenario_has_16_instances_of_4_status_cells_per_pipeline(): void
     {
         $this->assertCount(6 * 16 * 4 * 3, $this->plan);

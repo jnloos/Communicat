@@ -10,8 +10,6 @@ use App\Models\TagValue;
 use App\Models\User;
 use App\Services\Tags\TagNames;
 use App\Study\Planning\Manifest;
-use App\Study\Planning\Planner;
-use App\Study\Planning\Pot;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -27,10 +25,10 @@ class StudyWave extends Model
 {
     protected $fillable = [
         'study', 'number', 'first_scenario', 'last_scenario', 'decision',
-        'manifest', 'manifest_sha256', 'core_sha256', 'user_id', 'project_group_id', 'applied_at',
+        'manifest', 'manifest_sha256', 'core_sha256', 'user_id', 'project_group_id', 'applied_at', 'failed_reason', 'failed_at',
     ];
 
-    protected $casts = ['applied_at' => 'datetime'];
+    protected $casts = ['applied_at' => 'datetime', 'failed_at' => 'datetime'];
 
     public static function record(Manifest $manifest, int $number, int $from, int $to, ?string $decision, ?int $userId): self
     {
@@ -49,15 +47,13 @@ class StudyWave extends Model
 
     public function manifest(): Manifest
     {
-        return Manifest::fromJson($this->manifest);
+        return Manifest::fromStored($this->manifest);
     }
 
     /** How many runs the wave plans; read from the stored copy without planning it again. */
     public function plannedRuns(): int
     {
-        $scenarios = $this->last_scenario - $this->first_scenario + 1;
-
-        return $scenarios * Pot::BLOCKS * count(Planner::STATUS_CELLS) * count(json_decode($this->manifest, true)['pipelines']);
+        return $this->manifest()->runsPer($this->last_scenario - $this->first_scenario + 1);
     }
 
     /** How many of its runs exist so far: projects tagged with this study and this wave. */
@@ -66,19 +62,24 @@ class StudyWave extends Model
         $query = Project::query();
 
         foreach (['study' => $this->study, 'wave' => (string) $this->number] as $key => $value) {
-            $valueIds = TagValue::whereIn('tag_category_id', self::categoryIds(config("study.tags.{$key}")))->where('name', $value)->pluck('id');
+            $valueIds = TagValue::whereIn('tag_category_id', self::projectCategoryIds(config("study.tags.{$key}")))->where('name', $value)->pluck('id');
             $query->whereHas('tagValues', fn ($tagged) => $tagged->whereIn('tag_values.id', $valueIds));
         }
 
         return $query->count();
     }
 
-    /** @return list<int> */
-    private static function categoryIds(string $name): array
+    /** @return list<int> the project tag categories of this name, matched like everywhere else */
+    public static function projectCategoryIds(string $name): array
     {
         return TagCategory::ofScope(TagScope::Project)->get()
             ->filter(fn (TagCategory $category) => TagNames::same($category->name, $name))
             ->modelKeys();
+    }
+
+    public function hasFailed(): bool
+    {
+        return $this->failed_at !== null;
     }
 
     public function isApplied(): bool

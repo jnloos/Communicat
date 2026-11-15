@@ -36,4 +36,6 @@ return [
     'all' => 'alle',
     'duplicates' => 'Volle Namen in zwei Instanzen: :count',
     'prompt' => 'Prompt, Szenario :scenario (Block 1, hh, Fokus-Persona)',
+    'changed' => 'Das Formular wurde nach der Vorschau geändert. Bitte die Vorschau neu erzeugen.',
+    'failed' => 'Das Anlegen der Welle ist nach :done von :total Runs fehlgeschlagen; erneut anwenden, um fortzusetzen.',
 ];

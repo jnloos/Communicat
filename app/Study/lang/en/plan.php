@@ -36,4 +36,6 @@ return [
     'all' => 'all',
     'duplicates' => 'Full names in two instances: :count',
     'prompt' => 'Prompt, scenario :scenario (block 1, hh, focus persona)',
+    'changed' => 'The form changed after the preview. Preview again before applying.',
+    'failed' => 'Writing the wave failed after :done of :total runs; apply it again to continue.',
 ];

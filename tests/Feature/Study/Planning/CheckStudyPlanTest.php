@@ -3,6 +3,7 @@
 namespace Tests\Feature\Study\Planning;
 
 use App\Models\Expert;
+use App\Models\PersonaAttribute;
 use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\TagScope;
@@ -34,6 +35,24 @@ class CheckStudyPlanTest extends TestCase
         $this->artisan('study:check', ['--study' => 'tiny'])
             ->expectsOutputToContain('No deviations')
             ->assertSuccessful();
+    }
+
+    public function test_a_definition_named_in_another_case_is_the_same_attribute(): void
+    {
+        PersonaAttribute::where('name', 'Gender')->update(['name' => 'gender']);
+
+        $this->artisan('study:check', ['--study' => 'tiny'])->expectsOutputToContain('No deviations')->assertSuccessful();
+    }
+
+    public function test_a_stored_wave_outlives_a_model_removed_from_the_config(): void
+    {
+        $manifest = StudyWave::sole()->manifest();
+        $models = config('ai.models');
+        unset($models[$manifest->model()]);
+        config(['ai.models' => $models]);
+
+        $this->artisan('study:check', ['--study' => 'tiny'])->expectsOutputToContain('No deviations')->assertSuccessful();
+        $this->assertSame($manifest->sha256(), StudyWave::sole()->manifest()->sha256());
     }
 
     public function test_a_changed_seed_is_reported(): void

@@ -8,7 +8,7 @@ use Ramsey\Uuid\Uuid;
  * Study-only, removable: see app/Study/README.md.
  *
  * One planned persona: name, description and the three attributes, plus the
- * tags the analysis reads (spec 2.4). Its uuid addresses its content, so the
+ * tags the analysis reads (spec 2.4). Its uuid addresses its content (study included, so a probe and the main study never share a record), so the
  * same persona in another status cell or pipeline of its instance is the same
  * record, and a record edited by hand no longer matches its plan.
  */
@@ -44,7 +44,7 @@ final class PersonaPlan
         $this->subgroup = $drawn->subgroup;
         $this->uuid = Uuid::uuid5(
             Uuid::uuid5(Uuid::NAMESPACE_URL, 'communicat:study:persona'),
-            Manifest::canonicalize([$this->name, $description, $attributes['Role'], $attributes['Gender'], $attributes['Origin']]),
+            Manifest::canonicalize([$study, $this->name, $description, $attributes['Role'], $attributes['Gender'], $attributes['Origin']]),
         )->toString();
     }
 

@@ -152,6 +152,9 @@ final class ManifestProblems
                 }
 
                 $names = array_column($list, 'name');
+                foreach ($names as $name) {
+                    $this->value($name, "{$label}, {$noun}: name");
+                }
                 foreach (array_unique(array_diff_assoc($names, array_unique($names))) as $duplicate) {
                     $this->problems[] = "{$label}, {$noun}: {$duplicate} appears twice.";
                 }
@@ -166,7 +169,7 @@ final class ManifestProblems
         }
     }
 
-    /** Every pair a draw can make must fit as an attribute value-sized line; checking the longest of each is enough. */
+    /** Every pair a draw can make must fit in an attribute value; checking the longest of each is enough (line breaks and empty names are checked name by name). */
     private function fullNames(array $data, string $code): void
     {
         $longest = fn (mixed $list) => is_array($list) ? collect($list)->pluck('name')->filter(fn ($name) => is_string($name))->sortByDesc(fn ($name) => mb_strlen($name))->first() : null;
@@ -175,7 +178,7 @@ final class ManifestProblems
         foreach (self::GENDERS as $gender) {
             $first = $longest($data['first_names'][$code][$gender] ?? null);
             if ($first !== null && $last !== null) {
-                $this->value("{$first} {$last}", "Subgroup {$code}, {$gender}: full name");
+                $this->require(ValueProblem::of("{$first} {$last}") !== ValueProblem::TooLong, "Subgroup {$code}, {$gender}: full name: ".ValueProblem::TooLong->message());
             }
         }
     }

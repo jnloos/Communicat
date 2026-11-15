@@ -1,5 +1,6 @@
 {{-- Study-only, removable: see app/Study/README.md. Upload, preview, confirm; the writing runs in ApplyWave. --}}
-@php($writing = $applyingWave !== null && ! $applyingWave->isApplied())
+@php($failed = $applyingWave?->hasFailed() ?? false)
+@php($writing = $applyingWave !== null && ! $applyingWave->isApplied() && ! $failed)
 
 <section class="mx-auto w-full max-w-6xl" @if ($writing) wire:poll.5s @endif>
     <x-page-header :heading="__('study::plan.heading')" :subheading="__('study::plan.subheading')">
@@ -8,7 +9,10 @@
         </x-slot:actions>
     </x-page-header>
 
-    @if ($applyingWave !== null)
+    @if ($failed)
+        <flux:callout class="mt-6" variant="danger" icon="exclamation-triangle" data-failed
+            :heading="__('study::plan.failed', ['done' => $written, 'total' => $applyingWave->plannedRuns()])" :text="$applyingWave->failed_reason" />
+    @elseif ($applyingWave !== null)
         <flux:callout class="mt-6" :variant="$writing ? 'secondary' : 'success'" :icon="$writing ? 'arrow-path' : 'check-circle'" data-applying
             :heading="$writing
                 ? __('study::plan.applying', ['done' => $written, 'total' => $applyingWave->plannedRuns()])

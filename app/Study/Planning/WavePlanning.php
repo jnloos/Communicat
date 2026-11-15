@@ -48,7 +48,7 @@ final class WavePlanning
 
     /**
      * The wave's row: created, or the existing one when an interrupted apply
-     * continues (WaveRules let it through only with the same file and range).
+     * continues (WaveRules let it through only with the same file and range, and only for its own user).
      *
      * @throws WaveRefused
      */
@@ -58,8 +58,18 @@ final class WavePlanning
             throw new WaveRefused($wave->problems);
         }
 
-        return StudyWave::where('study', $wave->manifest->study())->where('number', $wave->number)->first()
-            ?? StudyWave::record($wave->manifest, $wave->number, $wave->from, $wave->to, $wave->decision, $owner->id);
+        $existing = StudyWave::where('study', $wave->manifest->study())->where('number', $wave->number)->first();
+
+        if ($existing === null) {
+            return StudyWave::record($wave->manifest, $wave->number, $wave->from, $wave->to, $wave->decision, $owner->id);
+        }
+
+        // The runs belong to the user the wave was planned for; resuming as another would silently ignore the request.
+        if ($existing->user_id !== $owner->id) {
+            throw new WaveRefused(["Wave {$existing->number} belongs to user {$existing->user_id}; resume it with that user, not {$owner->id}."]);
+        }
+
+        return $existing;
     }
 
     /**

@@ -8,7 +8,7 @@ use JsonException;
  * Study-only, removable: see app/Study/README.md.
  *
  * The fixed study file a wave is planned from (spec 1): model, pipelines,
- * attribute templates, name pools and scenarios. Read only through fromJson(),
+ * attribute templates, name pools and scenarios. Read through fromJson() on upload,
  * which refuses anything the planner could not turn into a study.
  *
  * Three hashes over the canonical form (spec 1.3): the core (everything but the
@@ -20,18 +20,21 @@ final class Manifest
     /** @param  array<string, mixed>  $data  decoded and validated */
     private function __construct(private readonly array $data) {}
 
+    /**
+     * A canonical copy read back from study_waves: it was validated when its wave
+     * was planned, and today's model registry or pipelines must not reject it.
+     *
+     * @throws InvalidManifest
+     */
+    public static function fromStored(string $json): self
+    {
+        return new self(self::decode($json));
+    }
+
     /** @throws InvalidManifest */
     public static function fromJson(string $json): self
     {
-        try {
-            $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
-        } catch (JsonException $exception) {
-            throw new InvalidManifest(['Not valid JSON: '.$exception->getMessage()]);
-        }
-
-        if (! is_array($data) || array_is_list($data)) {
-            throw new InvalidManifest(['The manifest must be a JSON object.']);
-        }
+        $data = self::decode($json);
 
         $problems = ManifestProblems::of($data);
         if ($problems !== []) {
@@ -44,6 +47,22 @@ final class Manifest
         NameDraw::through($manifest, count($manifest->scenarios()));
 
         return $manifest;
+    }
+
+    /** @return array<string, mixed> */
+    private static function decode(string $json): array
+    {
+        try {
+            $data = json_decode($json, true, flags: JSON_THROW_ON_ERROR);
+        } catch (JsonException $exception) {
+            throw new InvalidManifest(['Not valid JSON: '.$exception->getMessage()]);
+        }
+
+        if (! is_array($data) || array_is_list($data)) {
+            throw new InvalidManifest(['The manifest must be a JSON object.']);
+        }
+
+        return $data;
     }
 
     public function study(): string
@@ -117,6 +136,12 @@ final class Manifest
     public function scenarios(): array
     {
         return $this->data['scenarios'];
+    }
+
+    /** How many runs the planner makes of this many scenarios: blocks × status cells × pipelines. */
+    public function runsPer(int $scenarios): int
+    {
+        return $scenarios * Pot::BLOCKS * count(Planner::STATUS_CELLS) * count($this->pipelines());
     }
 
     /** @param  int  $id  1-based, as in the file */

@@ -4,6 +4,7 @@ namespace Tests\Feature\Study\Planning;
 
 use App\Study\Planning\InvalidManifest;
 use App\Study\Planning\Manifest;
+use App\Study\Planning\Planner;
 use Closure;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -16,6 +17,13 @@ class ManifestTest extends TestCase
 
         $this->assertSame('probe', $manifest->study());
         $this->assertCount(6, $manifest->scenarios());
+    }
+
+    public function test_runs_per_scenario_match_what_the_planner_makes(): void
+    {
+        $manifest = Manifest::fromJson(self::fixture('tiny-manifest.json'));
+
+        $this->assertSame(count((new Planner)->plan($manifest, 1, 1)), $manifest->runsPer(1));
     }
 
     /** @return array<string, array{Closure(array): array, string}> */
@@ -61,6 +69,16 @@ class ManifestTest extends TestCase
 
                 return $m;
             }, 'line break'],
+            'line break in a short first name' => [function (array $m) {
+                $m['first_names']['AL']['G+'][0]['name'] = "A\nB";
+
+                return $m;
+            }, 'Subgroup AL, G+, first names: name: An attribute value must not contain a line break'],
+            'empty last name' => [function (array $m) {
+                $m['last_names']['AL'][0]['name'] = '';
+
+                return $m;
+            }, 'Subgroup AL, last names: name must not be empty'],
             'not NFC' => [function (array $m) {
                 $m['subgroups']['AL']['country'] = "Alde\u{0301}ria";
 

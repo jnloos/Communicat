@@ -19,7 +19,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "b4bb3552-54a3-5ecd-a1a9-d825ba4d9a34",
+                "uuid": "ac017a6b-674f-5c3f-b73c-b2e40c5e1e0a",
                 "name": "Aksel Lund",
                 "letter": "A",
                 "attributes": {
@@ -35,7 +35,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "9cc36996-4036-5ccb-8275-27b3d78ef4a3",
+                "uuid": "877b5484-9a31-5764-9811-275e7995718b",
                 "name": "Nico Russo",
                 "letter": "B",
                 "attributes": {
@@ -51,7 +51,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "a9a350c0-45e8-52a9-b8e9-fa708234a1c1",
+                "uuid": "d053466b-77fa-54b4-ae63-2dca164bb8d7",
                 "name": "Bjarne Dahl",
                 "letter": "C",
                 "attributes": {
@@ -87,7 +87,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "1704d145-e0c8-54db-82a8-c84046cd8cbe",
+                "uuid": "e3054c2f-524c-51c0-8a54-9955704de8ab",
                 "name": "Nico Russo",
                 "letter": "B",
                 "attributes": {
@@ -103,7 +103,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "b4bb3552-54a3-5ecd-a1a9-d825ba4d9a34",
+                "uuid": "ac017a6b-674f-5c3f-b73c-b2e40c5e1e0a",
                 "name": "Aksel Lund",
                 "letter": "A",
                 "attributes": {
@@ -119,7 +119,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "3b8d6492-637f-51bc-8c0f-39d7c113322c",
+                "uuid": "2a273b18-9071-597b-ba30-949036090904",
                 "name": "Bjarne Dahl",
                 "letter": "C",
                 "attributes": {
@@ -155,7 +155,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "b9ce0752-436e-5929-9d43-41d9910a4da0",
+                "uuid": "f032be99-ac59-5cbf-97a1-361c51e326c0",
                 "name": "Aksel Lund",
                 "letter": "A",
                 "attributes": {
@@ -171,7 +171,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "9cc36996-4036-5ccb-8275-27b3d78ef4a3",
+                "uuid": "877b5484-9a31-5764-9811-275e7995718b",
                 "name": "Nico Russo",
                 "letter": "B",
                 "attributes": {
@@ -187,7 +187,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "a9a350c0-45e8-52a9-b8e9-fa708234a1c1",
+                "uuid": "d053466b-77fa-54b4-ae63-2dca164bb8d7",
                 "name": "Bjarne Dahl",
                 "letter": "C",
                 "attributes": {
@@ -223,7 +223,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "b9ce0752-436e-5929-9d43-41d9910a4da0",
+                "uuid": "f032be99-ac59-5cbf-97a1-361c51e326c0",
                 "name": "Aksel Lund",
                 "letter": "A",
                 "attributes": {
@@ -239,7 +239,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "1704d145-e0c8-54db-82a8-c84046cd8cbe",
+                "uuid": "e3054c2f-524c-51c0-8a54-9955704de8ab",
                 "name": "Nico Russo",
                 "letter": "B",
                 "attributes": {
@@ -255,7 +255,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "3b8d6492-637f-51bc-8c0f-39d7c113322c",
+                "uuid": "2a273b18-9071-597b-ba30-949036090904",
                 "name": "Bjarne Dahl",
                 "letter": "C",
                 "attributes": {
@@ -291,7 +291,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "ae1b7027-2e3e-5500-ade6-5efb4a170d2f",
+                "uuid": "d9366526-5dcf-57dc-9da0-7b31ceea256b",
                 "name": "Kojo Boateng",
                 "letter": "C",
                 "attributes": {
@@ -307,7 +307,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "d6e72d2d-2a00-5ace-9af2-95bf11261575",
+                "uuid": "9cba94a4-c93d-57fa-ae71-d8f3b2d77239",
                 "name": "Vikram Shah",
                 "letter": "B",
                 "attributes": {
@@ -323,7 +323,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "3b06f4fd-0a07-55e0-bdf9-5722c44ae894",
+                "uuid": "fdb1ebdd-8fef-543d-9024-c28f9c2b9dba",
                 "name": "Luca Ferri",
                 "letter": "A",
                 "attributes": {
@@ -359,7 +359,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "3b06f4fd-0a07-55e0-bdf9-5722c44ae894",
+                "uuid": "fdb1ebdd-8fef-543d-9024-c28f9c2b9dba",
                 "name": "Luca Ferri",
                 "letter": "A",
                 "attributes": {
@@ -375,7 +375,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "415409d8-44f4-55de-9253-75ee78133277",
+                "uuid": "28b7882d-322f-5e49-87a1-a1ebe12cee48",
                 "name": "Vikram Shah",
                 "letter": "B",
                 "attributes": {
@@ -391,7 +391,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "94943c50-7d3c-50b4-ae55-61626cd9c0af",
+                "uuid": "3a92d850-0778-5168-8030-7bf346d95e60",
                 "name": "Kojo Boateng",
                 "letter": "C",
                 "attributes": {
@@ -427,7 +427,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "d6e72d2d-2a00-5ace-9af2-95bf11261575",
+                "uuid": "9cba94a4-c93d-57fa-ae71-d8f3b2d77239",
                 "name": "Vikram Shah",
                 "letter": "B",
                 "attributes": {
@@ -443,7 +443,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "ae1b7027-2e3e-5500-ade6-5efb4a170d2f",
+                "uuid": "d9366526-5dcf-57dc-9da0-7b31ceea256b",
                 "name": "Kojo Boateng",
                 "letter": "C",
                 "attributes": {
@@ -459,7 +459,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "29e0a0d5-d30f-5ae0-b05c-24451351e301",
+                "uuid": "bf6cc052-9d65-53b4-b15f-e170c75a55f6",
                 "name": "Luca Ferri",
                 "letter": "A",
                 "attributes": {
@@ -495,7 +495,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "415409d8-44f4-55de-9253-75ee78133277",
+                "uuid": "28b7882d-322f-5e49-87a1-a1ebe12cee48",
                 "name": "Vikram Shah",
                 "letter": "B",
                 "attributes": {
@@ -511,7 +511,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "29e0a0d5-d30f-5ae0-b05c-24451351e301",
+                "uuid": "bf6cc052-9d65-53b4-b15f-e170c75a55f6",
                 "name": "Luca Ferri",
                 "letter": "A",
                 "attributes": {
@@ -527,7 +527,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "94943c50-7d3c-50b4-ae55-61626cd9c0af",
+                "uuid": "3a92d850-0778-5168-8030-7bf346d95e60",
                 "name": "Kojo Boateng",
                 "letter": "C",
                 "attributes": {
@@ -563,7 +563,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "c80d4984-0589-57e0-92e8-f26e02214b81",
+                "uuid": "da873f80-b94d-55aa-bbe1-c3d045f21154",
                 "name": "Halvar Lund",
                 "letter": "A",
                 "attributes": {
@@ -579,7 +579,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "a73898cd-db23-5c4e-b555-e13b271d7b65",
+                "uuid": "b4234572-3572-55d8-b3a8-2d26484398b9",
                 "name": "Astrid Berg",
                 "letter": "B",
                 "attributes": {
@@ -595,7 +595,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "faf02aab-393a-5cb9-9be7-e4387c4d9479",
+                "uuid": "55d6a1b9-e146-5840-ab27-ecd09c7fe1bf",
                 "name": "Hedda Moe",
                 "letter": "C",
                 "attributes": {
@@ -631,7 +631,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "8d0c1c43-7b98-5d14-b39b-894317e0e578",
+                "uuid": "aced2fd3-032c-557c-af74-51d706c63c95",
                 "name": "Astrid Berg",
                 "letter": "B",
                 "attributes": {
@@ -647,7 +647,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "b5ebd32e-a283-556d-a43f-5a29697b1932",
+                "uuid": "831f1f04-deb8-5833-a59f-b4382d32b682",
                 "name": "Hedda Moe",
                 "letter": "C",
                 "attributes": {
@@ -663,7 +663,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "c80d4984-0589-57e0-92e8-f26e02214b81",
+                "uuid": "da873f80-b94d-55aa-bbe1-c3d045f21154",
                 "name": "Halvar Lund",
                 "letter": "A",
                 "attributes": {
@@ -699,7 +699,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "a73898cd-db23-5c4e-b555-e13b271d7b65",
+                "uuid": "b4234572-3572-55d8-b3a8-2d26484398b9",
                 "name": "Astrid Berg",
                 "letter": "B",
                 "attributes": {
@@ -715,7 +715,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "faf02aab-393a-5cb9-9be7-e4387c4d9479",
+                "uuid": "55d6a1b9-e146-5840-ab27-ecd09c7fe1bf",
                 "name": "Hedda Moe",
                 "letter": "C",
                 "attributes": {
@@ -731,7 +731,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "1d44eecc-45e5-56bf-81f4-2570fab9577a",
+                "uuid": "574193f4-84ab-5756-b28e-215604589797",
                 "name": "Halvar Lund",
                 "letter": "A",
                 "attributes": {
@@ -767,7 +767,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "b5ebd32e-a283-556d-a43f-5a29697b1932",
+                "uuid": "831f1f04-deb8-5833-a59f-b4382d32b682",
                 "name": "Hedda Moe",
                 "letter": "C",
                 "attributes": {
@@ -783,7 +783,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "8d0c1c43-7b98-5d14-b39b-894317e0e578",
+                "uuid": "aced2fd3-032c-557c-af74-51d706c63c95",
                 "name": "Astrid Berg",
                 "letter": "B",
                 "attributes": {
@@ -799,7 +799,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "1d44eecc-45e5-56bf-81f4-2570fab9577a",
+                "uuid": "574193f4-84ab-5756-b28e-215604589797",
                 "name": "Halvar Lund",
                 "letter": "A",
                 "attributes": {
@@ -835,7 +835,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "759af369-44b5-567b-9069-e7785fd488ec",
+                "uuid": "5c689497-2167-51ab-90f0-59c8a884ff38",
                 "name": "Asha Mehta",
                 "letter": "C",
                 "attributes": {
@@ -851,7 +851,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "8b1622af-090a-57a6-aede-235bcd0bc5b4",
+                "uuid": "9436a262-ea0b-5e1f-84db-b5e691c4baa2",
                 "name": "Marco Bellini",
                 "letter": "A",
                 "attributes": {
@@ -867,7 +867,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "1cca3540-dde2-5f95-983d-c2d99d9d272c",
+                "uuid": "bd065b26-1c80-51e9-8218-779f1ee269ac",
                 "name": "Sita Kapoor",
                 "letter": "B",
                 "attributes": {
@@ -903,7 +903,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "ab6eca3e-2534-5f02-8f3f-88fa28c4645c",
+                "uuid": "68e8770b-81d4-5040-aa1d-05b252214947",
                 "name": "Sita Kapoor",
                 "letter": "B",
                 "attributes": {
@@ -919,7 +919,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "1cb33b12-b137-56af-bee8-54ae8ecd15ac",
+                "uuid": "5fdc5315-d248-540a-ad95-ad9035d1778d",
                 "name": "Asha Mehta",
                 "letter": "C",
                 "attributes": {
@@ -935,7 +935,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "8b1622af-090a-57a6-aede-235bcd0bc5b4",
+                "uuid": "9436a262-ea0b-5e1f-84db-b5e691c4baa2",
                 "name": "Marco Bellini",
                 "letter": "A",
                 "attributes": {
@@ -971,7 +971,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "1cca3540-dde2-5f95-983d-c2d99d9d272c",
+                "uuid": "bd065b26-1c80-51e9-8218-779f1ee269ac",
                 "name": "Sita Kapoor",
                 "letter": "B",
                 "attributes": {
@@ -987,7 +987,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "759af369-44b5-567b-9069-e7785fd488ec",
+                "uuid": "5c689497-2167-51ab-90f0-59c8a884ff38",
                 "name": "Asha Mehta",
                 "letter": "C",
                 "attributes": {
@@ -1003,7 +1003,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "be79a732-d8dc-5e55-85e9-6b3b8e1b7949",
+                "uuid": "1f389dd0-f379-5e6b-88be-d8f344df9a78",
                 "name": "Marco Bellini",
                 "letter": "A",
                 "attributes": {
@@ -1039,7 +1039,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "ab6eca3e-2534-5f02-8f3f-88fa28c4645c",
+                "uuid": "68e8770b-81d4-5040-aa1d-05b252214947",
                 "name": "Sita Kapoor",
                 "letter": "B",
                 "attributes": {
@@ -1055,7 +1055,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "1cb33b12-b137-56af-bee8-54ae8ecd15ac",
+                "uuid": "5fdc5315-d248-540a-ad95-ad9035d1778d",
                 "name": "Asha Mehta",
                 "letter": "C",
                 "attributes": {
@@ -1071,7 +1071,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "be79a732-d8dc-5e55-85e9-6b3b8e1b7949",
+                "uuid": "1f389dd0-f379-5e6b-88be-d8f344df9a78",
                 "name": "Marco Bellini",
                 "letter": "A",
                 "attributes": {
@@ -1107,7 +1107,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "a2cf2ee1-fc79-5405-bed8-fea8245ed04d",
+                "uuid": "9e8bc45b-b026-56f0-8ae0-739b4b099a51",
                 "name": "Nico Bellini",
                 "letter": "B",
                 "attributes": {
@@ -1123,7 +1123,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "fa99461e-ac47-5031-918d-6bb48d83a2e9",
+                "uuid": "06bb5a13-abda-5be1-84c8-cf53dfdaae3f",
                 "name": "Marco Ferri",
                 "letter": "C",
                 "attributes": {
@@ -1139,7 +1139,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "3dc7bb71-05f0-59bf-ace0-e1f9a6e5eb6e",
+                "uuid": "89a161b3-bdf8-5784-a0d4-c83d64272b26",
                 "name": "Amit Mehta",
                 "letter": "A",
                 "attributes": {
@@ -1175,7 +1175,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "25ebb28a-052f-5298-9068-03ab998da0f4",
+                "uuid": "a4dd96f8-6a9e-501d-8712-94ab30105dcb",
                 "name": "Marco Ferri",
                 "letter": "C",
                 "attributes": {
@@ -1191,7 +1191,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "3dc7bb71-05f0-59bf-ace0-e1f9a6e5eb6e",
+                "uuid": "89a161b3-bdf8-5784-a0d4-c83d64272b26",
                 "name": "Amit Mehta",
                 "letter": "A",
                 "attributes": {
@@ -1207,7 +1207,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "16510197-fc79-50a2-95a2-14a1328574ec",
+                "uuid": "8f5292b1-1bf6-5e2b-804a-39c04824766f",
                 "name": "Nico Bellini",
                 "letter": "B",
                 "attributes": {
@@ -1243,7 +1243,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "a2cf2ee1-fc79-5405-bed8-fea8245ed04d",
+                "uuid": "9e8bc45b-b026-56f0-8ae0-739b4b099a51",
                 "name": "Nico Bellini",
                 "letter": "B",
                 "attributes": {
@@ -1259,7 +1259,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "fa99461e-ac47-5031-918d-6bb48d83a2e9",
+                "uuid": "06bb5a13-abda-5be1-84c8-cf53dfdaae3f",
                 "name": "Marco Ferri",
                 "letter": "C",
                 "attributes": {
@@ -1275,7 +1275,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "853ff614-7652-5789-8ebb-ed88cb934d39",
+                "uuid": "3a2be6bf-9a9c-5ac1-824e-05b95cde0b56",
                 "name": "Amit Mehta",
                 "letter": "A",
                 "attributes": {
@@ -1311,7 +1311,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "25ebb28a-052f-5298-9068-03ab998da0f4",
+                "uuid": "a4dd96f8-6a9e-501d-8712-94ab30105dcb",
                 "name": "Marco Ferri",
                 "letter": "C",
                 "attributes": {
@@ -1327,7 +1327,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "853ff614-7652-5789-8ebb-ed88cb934d39",
+                "uuid": "3a2be6bf-9a9c-5ac1-824e-05b95cde0b56",
                 "name": "Amit Mehta",
                 "letter": "A",
                 "attributes": {
@@ -1343,7 +1343,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "16510197-fc79-50a2-95a2-14a1328574ec",
+                "uuid": "8f5292b1-1bf6-5e2b-804a-39c04824766f",
                 "name": "Nico Bellini",
                 "letter": "B",
                 "attributes": {
@@ -1379,7 +1379,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "aa4146fb-b5fd-525c-bd90-f0779e78bc82",
+                "uuid": "d39f0a19-6d42-5e3f-85c7-a2b1f219efa2",
                 "name": "Amit Rao",
                 "letter": "C",
                 "attributes": {
@@ -1395,7 +1395,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "3fcc5d85-e10c-50a0-80a7-c4fdfa365c0b",
+                "uuid": "43db180c-8a4c-5330-bd42-b19f28bb6516",
                 "name": "Yaw Mensah",
                 "letter": "A",
                 "attributes": {
@@ -1411,7 +1411,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "47da9db2-182a-554d-a9ab-f17e1b8e4d9a",
+                "uuid": "bab8e622-40da-54ea-8d9c-29d610fea613",
                 "name": "Vikram Nair",
                 "letter": "B",
                 "attributes": {
@@ -1447,7 +1447,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "3fcc5d85-e10c-50a0-80a7-c4fdfa365c0b",
+                "uuid": "43db180c-8a4c-5330-bd42-b19f28bb6516",
                 "name": "Yaw Mensah",
                 "letter": "A",
                 "attributes": {
@@ -1463,7 +1463,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "dd2bab89-2d4d-5b3c-9300-87a94623ef7b",
+                "uuid": "91941421-8777-5267-8085-9d17cd126ca4",
                 "name": "Amit Rao",
                 "letter": "C",
                 "attributes": {
@@ -1479,7 +1479,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "2599437c-f358-54e0-af4e-6f6c82c8d60f",
+                "uuid": "7e9412c8-d4db-522a-bf93-ac724213ad18",
                 "name": "Vikram Nair",
                 "letter": "B",
                 "attributes": {
@@ -1515,7 +1515,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "aa4146fb-b5fd-525c-bd90-f0779e78bc82",
+                "uuid": "d39f0a19-6d42-5e3f-85c7-a2b1f219efa2",
                 "name": "Amit Rao",
                 "letter": "C",
                 "attributes": {
@@ -1531,7 +1531,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "47da9db2-182a-554d-a9ab-f17e1b8e4d9a",
+                "uuid": "bab8e622-40da-54ea-8d9c-29d610fea613",
                 "name": "Vikram Nair",
                 "letter": "B",
                 "attributes": {
@@ -1547,7 +1547,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "a6ab8cb6-faa5-5286-9e5a-6e71978170ff",
+                "uuid": "2a6dae12-35bb-57cb-beb3-04bc9bd06820",
                 "name": "Yaw Mensah",
                 "letter": "A",
                 "attributes": {
@@ -1583,7 +1583,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "2599437c-f358-54e0-af4e-6f6c82c8d60f",
+                "uuid": "7e9412c8-d4db-522a-bf93-ac724213ad18",
                 "name": "Vikram Nair",
                 "letter": "B",
                 "attributes": {
@@ -1599,7 +1599,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "a6ab8cb6-faa5-5286-9e5a-6e71978170ff",
+                "uuid": "2a6dae12-35bb-57cb-beb3-04bc9bd06820",
                 "name": "Yaw Mensah",
                 "letter": "A",
                 "attributes": {
@@ -1615,7 +1615,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "dd2bab89-2d4d-5b3c-9300-87a94623ef7b",
+                "uuid": "91941421-8777-5267-8085-9d17cd126ca4",
                 "name": "Amit Rao",
                 "letter": "C",
                 "attributes": {
@@ -1651,7 +1651,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "63c01edc-d2db-5729-8fe5-9332fd825d11",
+                "uuid": "af304618-8aae-5734-b21b-3f4498f0aca0",
                 "name": "Pia Russo",
                 "letter": "C",
                 "attributes": {
@@ -1667,7 +1667,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "133ee44e-44b4-5329-a1ca-46a0b1b68c29",
+                "uuid": "cb485634-e840-5def-82cc-7aa38f543338",
                 "name": "Vikram Mehta",
                 "letter": "A",
                 "attributes": {
@@ -1683,7 +1683,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "89def5ab-59d1-5bd9-9db7-2100bbcec047",
+                "uuid": "63d1923e-d5b0-5e83-8b8f-19b985d02f7f",
                 "name": "Astrid Dahl",
                 "letter": "B",
                 "attributes": {
@@ -1719,7 +1719,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "133ee44e-44b4-5329-a1ca-46a0b1b68c29",
+                "uuid": "cb485634-e840-5def-82cc-7aa38f543338",
                 "name": "Vikram Mehta",
                 "letter": "A",
                 "attributes": {
@@ -1735,7 +1735,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "ee37d553-7f51-5adf-abd6-52d5d4eb1ceb",
+                "uuid": "11d6aebb-eb34-51ef-b1a2-8dfadc62bc0c",
                 "name": "Pia Russo",
                 "letter": "C",
                 "attributes": {
@@ -1751,7 +1751,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "ecf5282c-29aa-58d1-8f8d-20a076791936",
+                "uuid": "ca356ed5-f663-5fc9-aea6-d18eaf80135c",
                 "name": "Astrid Dahl",
                 "letter": "B",
                 "attributes": {
@@ -1787,7 +1787,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "b8093be5-e7f1-5429-8e2d-b147d96c3809",
+                "uuid": "e07a5e60-2064-5dfd-953a-4f7c4f5c11cf",
                 "name": "Vikram Mehta",
                 "letter": "A",
                 "attributes": {
@@ -1803,7 +1803,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "63c01edc-d2db-5729-8fe5-9332fd825d11",
+                "uuid": "af304618-8aae-5734-b21b-3f4498f0aca0",
                 "name": "Pia Russo",
                 "letter": "C",
                 "attributes": {
@@ -1819,7 +1819,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "89def5ab-59d1-5bd9-9db7-2100bbcec047",
+                "uuid": "63d1923e-d5b0-5e83-8b8f-19b985d02f7f",
                 "name": "Astrid Dahl",
                 "letter": "B",
                 "attributes": {
@@ -1855,7 +1855,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "ee37d553-7f51-5adf-abd6-52d5d4eb1ceb",
+                "uuid": "11d6aebb-eb34-51ef-b1a2-8dfadc62bc0c",
                 "name": "Pia Russo",
                 "letter": "C",
                 "attributes": {
@@ -1871,7 +1871,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "ecf5282c-29aa-58d1-8f8d-20a076791936",
+                "uuid": "ca356ed5-f663-5fc9-aea6-d18eaf80135c",
                 "name": "Astrid Dahl",
                 "letter": "B",
                 "attributes": {
@@ -1887,7 +1887,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "b8093be5-e7f1-5429-8e2d-b147d96c3809",
+                "uuid": "e07a5e60-2064-5dfd-953a-4f7c4f5c11cf",
                 "name": "Vikram Mehta",
                 "letter": "A",
                 "attributes": {
@@ -1923,7 +1923,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "098c48d3-bf99-5260-87e0-121abc3d6f7c",
+                "uuid": "303be349-58e5-512e-8d92-3f5df6100b14",
                 "name": "Efua Boateng",
                 "letter": "C",
                 "attributes": {
@@ -1939,7 +1939,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "ca74b5ac-9f55-5b9a-a9b8-cdeca8636625",
+                "uuid": "985ca212-59b8-51b3-aa88-1ef7f17896ba",
                 "name": "Yaw Owusu",
                 "letter": "A",
                 "attributes": {
@@ -1955,7 +1955,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "5c46f59e-92ff-5bfd-a4d7-5bb4dc450915",
+                "uuid": "e99e24f5-d5a6-5d41-a72b-bae2375e3951",
                 "name": "Akua Asante",
                 "letter": "B",
                 "attributes": {
@@ -1991,7 +1991,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "ca74b5ac-9f55-5b9a-a9b8-cdeca8636625",
+                "uuid": "985ca212-59b8-51b3-aa88-1ef7f17896ba",
                 "name": "Yaw Owusu",
                 "letter": "A",
                 "attributes": {
@@ -2007,7 +2007,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "296e821d-2ad6-54b3-abb4-745307852a3b",
+                "uuid": "87267a05-e51c-59d1-817c-611bb7dd9010",
                 "name": "Akua Asante",
                 "letter": "B",
                 "attributes": {
@@ -2023,7 +2023,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "17156ae2-2b26-54c7-be2c-cbdfe5308338",
+                "uuid": "43357b60-1b4f-53ea-94ec-3c30d9c5e587",
                 "name": "Efua Boateng",
                 "letter": "C",
                 "attributes": {
@@ -2059,7 +2059,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "098c48d3-bf99-5260-87e0-121abc3d6f7c",
+                "uuid": "303be349-58e5-512e-8d92-3f5df6100b14",
                 "name": "Efua Boateng",
                 "letter": "C",
                 "attributes": {
@@ -2075,7 +2075,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "5c46f59e-92ff-5bfd-a4d7-5bb4dc450915",
+                "uuid": "e99e24f5-d5a6-5d41-a72b-bae2375e3951",
                 "name": "Akua Asante",
                 "letter": "B",
                 "attributes": {
@@ -2091,7 +2091,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "95893fd0-d0e4-5683-8612-63b6835acb71",
+                "uuid": "56112db6-d953-5c16-b9d0-88e684495421",
                 "name": "Yaw Owusu",
                 "letter": "A",
                 "attributes": {
@@ -2127,7 +2127,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "17156ae2-2b26-54c7-be2c-cbdfe5308338",
+                "uuid": "43357b60-1b4f-53ea-94ec-3c30d9c5e587",
                 "name": "Efua Boateng",
                 "letter": "C",
                 "attributes": {
@@ -2143,7 +2143,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "95893fd0-d0e4-5683-8612-63b6835acb71",
+                "uuid": "56112db6-d953-5c16-b9d0-88e684495421",
                 "name": "Yaw Owusu",
                 "letter": "A",
                 "attributes": {
@@ -2159,7 +2159,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "296e821d-2ad6-54b3-abb4-745307852a3b",
+                "uuid": "87267a05-e51c-59d1-817c-611bb7dd9010",
                 "name": "Akua Asante",
                 "letter": "B",
                 "attributes": {
@@ -2195,7 +2195,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "fd18ea7e-7b98-51b3-b579-e7b98e27fe9b",
+                "uuid": "0d7ca920-cb43-5cd4-a6b0-0885748964ae",
                 "name": "Astrid Lund",
                 "letter": "A",
                 "attributes": {
@@ -2211,7 +2211,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "ea6c3b89-ecd8-5afa-89ba-603b06055dea",
+                "uuid": "e24b7b2f-cda4-52a6-a45c-7da821d220b2",
                 "name": "Bjarne Aasen",
                 "letter": "C",
                 "attributes": {
@@ -2227,7 +2227,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "ed9ceae4-58ba-583f-b4e5-991f6647ff73",
+                "uuid": "33d64ccf-579c-5dd5-b5b0-7d34f935e21e",
                 "name": "Nico Greco",
                 "letter": "B",
                 "attributes": {
@@ -2263,7 +2263,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "25e9a427-6873-57fd-9248-8576a9631df8",
+                "uuid": "f90e8196-5a53-5f98-b358-19a56ea932c0",
                 "name": "Nico Greco",
                 "letter": "B",
                 "attributes": {
@@ -2279,7 +2279,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "fd18ea7e-7b98-51b3-b579-e7b98e27fe9b",
+                "uuid": "0d7ca920-cb43-5cd4-a6b0-0885748964ae",
                 "name": "Astrid Lund",
                 "letter": "A",
                 "attributes": {
@@ -2295,7 +2295,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "55544a13-fc6f-5e3e-b8e9-70054d2ab649",
+                "uuid": "e61bc762-af7e-5acb-9de3-6d6e6b609b50",
                 "name": "Bjarne Aasen",
                 "letter": "C",
                 "attributes": {
@@ -2331,7 +2331,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "32ba185a-600d-518a-961e-f93e1d499678",
+                "uuid": "6baacedb-73fc-5c6a-8f54-f4f8750f74d0",
                 "name": "Astrid Lund",
                 "letter": "A",
                 "attributes": {
@@ -2347,7 +2347,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "ed9ceae4-58ba-583f-b4e5-991f6647ff73",
+                "uuid": "33d64ccf-579c-5dd5-b5b0-7d34f935e21e",
                 "name": "Nico Greco",
                 "letter": "B",
                 "attributes": {
@@ -2363,7 +2363,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "ea6c3b89-ecd8-5afa-89ba-603b06055dea",
+                "uuid": "e24b7b2f-cda4-52a6-a45c-7da821d220b2",
                 "name": "Bjarne Aasen",
                 "letter": "C",
                 "attributes": {
@@ -2399,7 +2399,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "32ba185a-600d-518a-961e-f93e1d499678",
+                "uuid": "6baacedb-73fc-5c6a-8f54-f4f8750f74d0",
                 "name": "Astrid Lund",
                 "letter": "A",
                 "attributes": {
@@ -2415,7 +2415,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "25e9a427-6873-57fd-9248-8576a9631df8",
+                "uuid": "f90e8196-5a53-5f98-b358-19a56ea932c0",
                 "name": "Nico Greco",
                 "letter": "B",
                 "attributes": {
@@ -2431,7 +2431,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "55544a13-fc6f-5e3e-b8e9-70054d2ab649",
+                "uuid": "e61bc762-af7e-5acb-9de3-6d6e6b609b50",
                 "name": "Bjarne Aasen",
                 "letter": "C",
                 "attributes": {
@@ -2467,7 +2467,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "f328edd0-9ff6-5e4b-8b3f-15b2c1d29273",
+                "uuid": "828bc71c-46a6-5030-9570-884e99d65d44",
                 "name": "Lia Russo",
                 "letter": "A",
                 "attributes": {
@@ -2483,7 +2483,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "56dc592d-eaa0-57f8-ba55-852b147fe2bb",
+                "uuid": "ceb785cb-8a41-5eca-a172-116e4e76873f",
                 "name": "Kwame Boateng",
                 "letter": "C",
                 "attributes": {
@@ -2499,7 +2499,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "87655c74-270b-5325-9f52-ff985d8232f6",
+                "uuid": "59613ae1-11f6-5896-ac94-927fb61c6261",
                 "name": "Ravi Nair",
                 "letter": "B",
                 "attributes": {
@@ -2535,7 +2535,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "f328edd0-9ff6-5e4b-8b3f-15b2c1d29273",
+                "uuid": "828bc71c-46a6-5030-9570-884e99d65d44",
                 "name": "Lia Russo",
                 "letter": "A",
                 "attributes": {
@@ -2551,7 +2551,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "edc05905-a1c2-5ade-afd4-6664cf6be156",
+                "uuid": "eb343dae-72d2-57eb-a92b-c9f771cd0699",
                 "name": "Ravi Nair",
                 "letter": "B",
                 "attributes": {
@@ -2567,7 +2567,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "12afb80c-70b9-5186-ad6e-3305bd84b29c",
+                "uuid": "9a996bbb-3660-523f-adae-d9ce4a2b22ef",
                 "name": "Kwame Boateng",
                 "letter": "C",
                 "attributes": {
@@ -2603,7 +2603,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "56dc592d-eaa0-57f8-ba55-852b147fe2bb",
+                "uuid": "ceb785cb-8a41-5eca-a172-116e4e76873f",
                 "name": "Kwame Boateng",
                 "letter": "C",
                 "attributes": {
@@ -2619,7 +2619,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "f4703bcf-86ba-5459-a39b-619bd0108d42",
+                "uuid": "261c44a8-c4d3-5170-b4ee-61d3774fceb0",
                 "name": "Lia Russo",
                 "letter": "A",
                 "attributes": {
@@ -2635,7 +2635,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "87655c74-270b-5325-9f52-ff985d8232f6",
+                "uuid": "59613ae1-11f6-5896-ac94-927fb61c6261",
                 "name": "Ravi Nair",
                 "letter": "B",
                 "attributes": {
@@ -2671,7 +2671,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "edc05905-a1c2-5ade-afd4-6664cf6be156",
+                "uuid": "eb343dae-72d2-57eb-a92b-c9f771cd0699",
                 "name": "Ravi Nair",
                 "letter": "B",
                 "attributes": {
@@ -2687,7 +2687,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "f4703bcf-86ba-5459-a39b-619bd0108d42",
+                "uuid": "261c44a8-c4d3-5170-b4ee-61d3774fceb0",
                 "name": "Lia Russo",
                 "letter": "A",
                 "attributes": {
@@ -2703,7 +2703,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "12afb80c-70b9-5186-ad6e-3305bd84b29c",
+                "uuid": "9a996bbb-3660-523f-adae-d9ce4a2b22ef",
                 "name": "Kwame Boateng",
                 "letter": "C",
                 "attributes": {
@@ -2739,7 +2739,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "c780fd40-6d56-5d4a-9a1e-8bd39e714605",
+                "uuid": "12f2c51d-4f8f-501c-b4d1-5a7b2e5ffd81",
                 "name": "Nora Greco",
                 "letter": "B",
                 "attributes": {
@@ -2755,7 +2755,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "8dc72885-a0e4-5929-a715-e50d31f13913",
+                "uuid": "ff506a42-a044-51dc-ac3b-efbb21e9c386",
                 "name": "Lia Bellini",
                 "letter": "C",
                 "attributes": {
@@ -2771,7 +2771,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "45e25d84-0054-597e-b9e9-d0664a677855",
+                "uuid": "6dc5b424-02a8-5301-b032-b3768cdf18b0",
                 "name": "Eira Aasen",
                 "letter": "A",
                 "attributes": {
@@ -2807,7 +2807,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "c0b194f6-d184-5cad-9914-44c4c74a0c6e",
+                "uuid": "2e0da22c-9531-5a79-81e2-58c2497bf4cf",
                 "name": "Nora Greco",
                 "letter": "B",
                 "attributes": {
@@ -2823,7 +2823,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "efc8e966-a616-5e25-b6a3-291f5386f3c5",
+                "uuid": "1d74532b-3203-51ea-bfe4-eb78619fe8f2",
                 "name": "Lia Bellini",
                 "letter": "C",
                 "attributes": {
@@ -2839,7 +2839,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "45e25d84-0054-597e-b9e9-d0664a677855",
+                "uuid": "6dc5b424-02a8-5301-b032-b3768cdf18b0",
                 "name": "Eira Aasen",
                 "letter": "A",
                 "attributes": {
@@ -2875,7 +2875,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "c780fd40-6d56-5d4a-9a1e-8bd39e714605",
+                "uuid": "12f2c51d-4f8f-501c-b4d1-5a7b2e5ffd81",
                 "name": "Nora Greco",
                 "letter": "B",
                 "attributes": {
@@ -2891,7 +2891,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "72f81f2a-4561-54c7-8b00-507c718b2a35",
+                "uuid": "daaf4257-9c07-5f4d-af66-8b6ec8ddcce6",
                 "name": "Eira Aasen",
                 "letter": "A",
                 "attributes": {
@@ -2907,7 +2907,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "8dc72885-a0e4-5929-a715-e50d31f13913",
+                "uuid": "ff506a42-a044-51dc-ac3b-efbb21e9c386",
                 "name": "Lia Bellini",
                 "letter": "C",
                 "attributes": {
@@ -2943,7 +2943,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "c0b194f6-d184-5cad-9914-44c4c74a0c6e",
+                "uuid": "2e0da22c-9531-5a79-81e2-58c2497bf4cf",
                 "name": "Nora Greco",
                 "letter": "B",
                 "attributes": {
@@ -2959,7 +2959,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "72f81f2a-4561-54c7-8b00-507c718b2a35",
+                "uuid": "daaf4257-9c07-5f4d-af66-8b6ec8ddcce6",
                 "name": "Eira Aasen",
                 "letter": "A",
                 "attributes": {
@@ -2975,7 +2975,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "efc8e966-a616-5e25-b6a3-291f5386f3c5",
+                "uuid": "1d74532b-3203-51ea-bfe4-eb78619fe8f2",
                 "name": "Lia Bellini",
                 "letter": "C",
                 "attributes": {
@@ -3011,7 +3011,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "b8a46cbf-81a3-5fa2-a7e5-930522c1d26c",
+                "uuid": "f17657d2-7d80-5c37-af51-ad968cd8d9e5",
                 "name": "Meera Kapoor",
                 "letter": "C",
                 "attributes": {
@@ -3027,7 +3027,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "928806b8-b12a-50ec-9f22-9f4616059117",
+                "uuid": "a6efbccb-7b5e-5dc6-aab4-724e48b0a3b1",
                 "name": "Mara Bellini",
                 "letter": "A",
                 "attributes": {
@@ -3043,7 +3043,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "226cf9d6-0ce0-54cd-b8a2-3ebda11362d9",
+                "uuid": "3fd63784-7368-55b1-a24f-d00f724af48e",
                 "name": "Sita Shah",
                 "letter": "B",
                 "attributes": {
@@ -3079,7 +3079,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "44a26fdc-4f1c-54d9-96b0-fa41c1d0335f",
+                "uuid": "3ccc3858-b427-559a-ac80-ca560ceb1aa9",
                 "name": "Meera Kapoor",
                 "letter": "C",
                 "attributes": {
@@ -3095,7 +3095,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "928806b8-b12a-50ec-9f22-9f4616059117",
+                "uuid": "a6efbccb-7b5e-5dc6-aab4-724e48b0a3b1",
                 "name": "Mara Bellini",
                 "letter": "A",
                 "attributes": {
@@ -3111,7 +3111,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "0ff7010c-f2d6-575f-aa49-3e0c5b2fe769",
+                "uuid": "f8e4be44-10cb-5a61-869d-0a01bd17c78e",
                 "name": "Sita Shah",
                 "letter": "B",
                 "attributes": {
@@ -3147,7 +3147,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "b8a46cbf-81a3-5fa2-a7e5-930522c1d26c",
+                "uuid": "f17657d2-7d80-5c37-af51-ad968cd8d9e5",
                 "name": "Meera Kapoor",
                 "letter": "C",
                 "attributes": {
@@ -3163,7 +3163,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "5f791b17-f0c8-571d-8500-6894b0b7646e",
+                "uuid": "05aa8f58-70c2-5551-90d6-0c39f33ab11c",
                 "name": "Mara Bellini",
                 "letter": "A",
                 "attributes": {
@@ -3179,7 +3179,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "226cf9d6-0ce0-54cd-b8a2-3ebda11362d9",
+                "uuid": "3fd63784-7368-55b1-a24f-d00f724af48e",
                 "name": "Sita Shah",
                 "letter": "B",
                 "attributes": {
@@ -3215,7 +3215,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "0ff7010c-f2d6-575f-aa49-3e0c5b2fe769",
+                "uuid": "f8e4be44-10cb-5a61-869d-0a01bd17c78e",
                 "name": "Sita Shah",
                 "letter": "B",
                 "attributes": {
@@ -3231,7 +3231,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "44a26fdc-4f1c-54d9-96b0-fa41c1d0335f",
+                "uuid": "3ccc3858-b427-559a-ac80-ca560ceb1aa9",
                 "name": "Meera Kapoor",
                 "letter": "C",
                 "attributes": {
@@ -3247,7 +3247,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "5f791b17-f0c8-571d-8500-6894b0b7646e",
+                "uuid": "05aa8f58-70c2-5551-90d6-0c39f33ab11c",
                 "name": "Mara Bellini",
                 "letter": "A",
                 "attributes": {
@@ -3283,7 +3283,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "70539e48-240d-55fe-b041-4f7958c412a2",
+                "uuid": "a026d9d4-857e-5dce-8a34-581693f4eedf",
                 "name": "Meera Shah",
                 "letter": "A",
                 "attributes": {
@@ -3299,7 +3299,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "e044ab1a-8eaf-5b32-a631-3dbc1bb61b65",
+                "uuid": "7de93ef6-e371-51ee-87fb-2810e2981618",
                 "name": "Bjarne Berg",
                 "letter": "C",
                 "attributes": {
@@ -3315,7 +3315,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "ebfc2921-d518-509b-84f4-cdfeddc7084f",
+                "uuid": "77d6d164-10f8-5d1e-937b-b38c43d29042",
                 "name": "Halvar Moe",
                 "letter": "B",
                 "attributes": {
@@ -3351,7 +3351,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "f07079c9-5efb-5587-b18a-16ff8125311e",
+                "uuid": "5619696b-bff8-583e-a593-18412d1629cb",
                 "name": "Halvar Moe",
                 "letter": "B",
                 "attributes": {
@@ -3367,7 +3367,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "9aee003e-566a-5ab4-a456-b2496d689700",
+                "uuid": "c26d9f0a-2760-54ea-92c6-6cc3986d3039",
                 "name": "Bjarne Berg",
                 "letter": "C",
                 "attributes": {
@@ -3383,7 +3383,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "70539e48-240d-55fe-b041-4f7958c412a2",
+                "uuid": "a026d9d4-857e-5dce-8a34-581693f4eedf",
                 "name": "Meera Shah",
                 "letter": "A",
                 "attributes": {
@@ -3419,7 +3419,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "65f70fa1-4ce8-5743-882d-3491ff1458a5",
+                "uuid": "d76e2816-5189-5424-b4e5-6349f6ba9760",
                 "name": "Meera Shah",
                 "letter": "A",
                 "attributes": {
@@ -3435,7 +3435,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "e044ab1a-8eaf-5b32-a631-3dbc1bb61b65",
+                "uuid": "7de93ef6-e371-51ee-87fb-2810e2981618",
                 "name": "Bjarne Berg",
                 "letter": "C",
                 "attributes": {
@@ -3451,7 +3451,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "ebfc2921-d518-509b-84f4-cdfeddc7084f",
+                "uuid": "77d6d164-10f8-5d1e-937b-b38c43d29042",
                 "name": "Halvar Moe",
                 "letter": "B",
                 "attributes": {
@@ -3487,7 +3487,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "f07079c9-5efb-5587-b18a-16ff8125311e",
+                "uuid": "5619696b-bff8-583e-a593-18412d1629cb",
                 "name": "Halvar Moe",
                 "letter": "B",
                 "attributes": {
@@ -3503,7 +3503,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "65f70fa1-4ce8-5743-882d-3491ff1458a5",
+                "uuid": "d76e2816-5189-5424-b4e5-6349f6ba9760",
                 "name": "Meera Shah",
                 "letter": "A",
                 "attributes": {
@@ -3519,7 +3519,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "9aee003e-566a-5ab4-a456-b2496d689700",
+                "uuid": "c26d9f0a-2760-54ea-92c6-6cc3986d3039",
                 "name": "Bjarne Berg",
                 "letter": "C",
                 "attributes": {
@@ -3555,7 +3555,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "d3c1fa47-8d32-553a-b7e9-1d3df0224cc6",
+                "uuid": "aee0886b-bb73-54d7-92c9-20af46d9f59c",
                 "name": "Kwame Sarpong",
                 "letter": "C",
                 "attributes": {
@@ -3571,7 +3571,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "7ccea750-e7f3-5d22-9368-d0c3c9dc4efc",
+                "uuid": "aacb5d95-1bc1-53af-a502-d75f5d09fade",
                 "name": "Yaw Boateng",
                 "letter": "B",
                 "attributes": {
@@ -3587,7 +3587,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "1719c0fb-f7db-5130-97ea-c6bd0e56da0b",
+                "uuid": "604956ec-2518-505f-a69d-1c598d7797ab",
                 "name": "Akua Owusu",
                 "letter": "A",
                 "attributes": {
@@ -3623,7 +3623,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "1719c0fb-f7db-5130-97ea-c6bd0e56da0b",
+                "uuid": "604956ec-2518-505f-a69d-1c598d7797ab",
                 "name": "Akua Owusu",
                 "letter": "A",
                 "attributes": {
@@ -3639,7 +3639,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "b964f9a6-a9ad-5288-b27f-25d0b3b96019",
+                "uuid": "2f3e269f-4cd9-54e9-ae27-2f2c8c849b31",
                 "name": "Yaw Boateng",
                 "letter": "B",
                 "attributes": {
@@ -3655,7 +3655,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "bbf4b1bf-e15a-509e-be30-9c0657bb5f1b",
+                "uuid": "3d2bd5a1-8ff1-5ec5-95ae-b90841e441b6",
                 "name": "Kwame Sarpong",
                 "letter": "C",
                 "attributes": {
@@ -3691,7 +3691,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "7ccea750-e7f3-5d22-9368-d0c3c9dc4efc",
+                "uuid": "aacb5d95-1bc1-53af-a502-d75f5d09fade",
                 "name": "Yaw Boateng",
                 "letter": "B",
                 "attributes": {
@@ -3707,7 +3707,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "d3c1fa47-8d32-553a-b7e9-1d3df0224cc6",
+                "uuid": "aee0886b-bb73-54d7-92c9-20af46d9f59c",
                 "name": "Kwame Sarpong",
                 "letter": "C",
                 "attributes": {
@@ -3723,7 +3723,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "73bd000a-aad9-54a6-a003-fa30792a50c1",
+                "uuid": "e78bcc24-b91d-5a8d-a302-2ec81e5f6bda",
                 "name": "Akua Owusu",
                 "letter": "A",
                 "attributes": {
@@ -3759,7 +3759,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "bbf4b1bf-e15a-509e-be30-9c0657bb5f1b",
+                "uuid": "3d2bd5a1-8ff1-5ec5-95ae-b90841e441b6",
                 "name": "Kwame Sarpong",
                 "letter": "C",
                 "attributes": {
@@ -3775,7 +3775,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "73bd000a-aad9-54a6-a003-fa30792a50c1",
+                "uuid": "e78bcc24-b91d-5a8d-a302-2ec81e5f6bda",
                 "name": "Akua Owusu",
                 "letter": "A",
                 "attributes": {
@@ -3791,7 +3791,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "b964f9a6-a9ad-5288-b27f-25d0b3b96019",
+                "uuid": "2f3e269f-4cd9-54e9-ae27-2f2c8c849b31",
                 "name": "Yaw Boateng",
                 "letter": "B",
                 "attributes": {
@@ -3827,7 +3827,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "0aec291c-5067-596c-87d4-6b1ee7cebcb4",
+                "uuid": "c351126f-ccd1-5a35-8d94-3ddfbba02018",
                 "name": "Lia Conti",
                 "letter": "C",
                 "attributes": {
@@ -3843,7 +3843,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "825f42a5-3bb9-520a-a33c-ce55a8d3f1e7",
+                "uuid": "76a7daf1-8b3d-5f97-b2fc-93b89ebb2fd4",
                 "name": "Sita Mehta",
                 "letter": "A",
                 "attributes": {
@@ -3859,7 +3859,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "78f2f681-2f99-5f42-991a-44434dc744dd",
+                "uuid": "6bd3ecda-d5a6-5e0a-858c-c0c6a9476189",
                 "name": "Astrid Moe",
                 "letter": "B",
                 "attributes": {
@@ -3895,7 +3895,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "b72ebeba-b5ee-51e2-a266-613458985ffc",
+                "uuid": "8078bbf6-3bf0-5222-b73c-1e1200f4ba3b",
                 "name": "Lia Conti",
                 "letter": "C",
                 "attributes": {
@@ -3911,7 +3911,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "825f42a5-3bb9-520a-a33c-ce55a8d3f1e7",
+                "uuid": "76a7daf1-8b3d-5f97-b2fc-93b89ebb2fd4",
                 "name": "Sita Mehta",
                 "letter": "A",
                 "attributes": {
@@ -3927,7 +3927,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "8ad2ccfc-1078-5467-a262-aef17e419167",
+                "uuid": "a1ea1a2b-85f8-54c9-9bee-8da8933f4dcb",
                 "name": "Astrid Moe",
                 "letter": "B",
                 "attributes": {
@@ -3963,7 +3963,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "a8f8cb21-5a8f-582a-ac44-ef8fab61acc8",
+                "uuid": "b5c3d3ec-6f5b-5636-a6fc-27f3ce5e26e2",
                 "name": "Sita Mehta",
                 "letter": "A",
                 "attributes": {
@@ -3979,7 +3979,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "78f2f681-2f99-5f42-991a-44434dc744dd",
+                "uuid": "6bd3ecda-d5a6-5e0a-858c-c0c6a9476189",
                 "name": "Astrid Moe",
                 "letter": "B",
                 "attributes": {
@@ -3995,7 +3995,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "0aec291c-5067-596c-87d4-6b1ee7cebcb4",
+                "uuid": "c351126f-ccd1-5a35-8d94-3ddfbba02018",
                 "name": "Lia Conti",
                 "letter": "C",
                 "attributes": {
@@ -4031,7 +4031,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "b72ebeba-b5ee-51e2-a266-613458985ffc",
+                "uuid": "8078bbf6-3bf0-5222-b73c-1e1200f4ba3b",
                 "name": "Lia Conti",
                 "letter": "C",
                 "attributes": {
@@ -4047,7 +4047,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "a8f8cb21-5a8f-582a-ac44-ef8fab61acc8",
+                "uuid": "b5c3d3ec-6f5b-5636-a6fc-27f3ce5e26e2",
                 "name": "Sita Mehta",
                 "letter": "A",
                 "attributes": {
@@ -4063,7 +4063,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "8ad2ccfc-1078-5467-a262-aef17e419167",
+                "uuid": "a1ea1a2b-85f8-54c9-9bee-8da8933f4dcb",
                 "name": "Astrid Moe",
                 "letter": "B",
                 "attributes": {
@@ -4099,7 +4099,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "a8f1ad69-44f8-529c-be5b-7a272e867134",
+                "uuid": "60881db5-a7b3-5d91-ad28-4e9feba666ee",
                 "name": "Akua Sarpong",
                 "letter": "A",
                 "attributes": {
@@ -4115,7 +4115,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "a2c284fd-f553-50bf-807c-05f06e79d9cc",
+                "uuid": "6239e360-b7fb-5d83-a32e-7837acc026c3",
                 "name": "Abena Asante",
                 "letter": "C",
                 "attributes": {
@@ -4131,7 +4131,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "914cb4a4-186c-5c31-971c-b6c0f59a85e6",
+                "uuid": "0bdba352-900c-59ca-965b-b60485c9803d",
                 "name": "Ama Boateng",
                 "letter": "B",
                 "attributes": {
@@ -4167,7 +4167,7 @@
         "seats": [
             {
                 "place": "focus",
-                "uuid": "a8f1ad69-44f8-529c-be5b-7a272e867134",
+                "uuid": "60881db5-a7b3-5d91-ad28-4e9feba666ee",
                 "name": "Akua Sarpong",
                 "letter": "A",
                 "attributes": {
@@ -4183,7 +4183,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "c77d20a9-abe5-546b-826f-8deadb457908",
+                "uuid": "6ac6b406-c278-5faa-a43a-b63b3fe51f29",
                 "name": "Abena Asante",
                 "letter": "C",
                 "attributes": {
@@ -4199,7 +4199,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "7e167cce-f0ca-5907-af36-832f388745e6",
+                "uuid": "207bdbdd-7293-58b7-a3b0-78c929dd2e9e",
                 "name": "Ama Boateng",
                 "letter": "B",
                 "attributes": {
@@ -4235,7 +4235,7 @@
         "seats": [
             {
                 "place": "duo2",
-                "uuid": "a2c284fd-f553-50bf-807c-05f06e79d9cc",
+                "uuid": "6239e360-b7fb-5d83-a32e-7837acc026c3",
                 "name": "Abena Asante",
                 "letter": "C",
                 "attributes": {
@@ -4251,7 +4251,7 @@
             },
             {
                 "place": "duo1",
-                "uuid": "914cb4a4-186c-5c31-971c-b6c0f59a85e6",
+                "uuid": "0bdba352-900c-59ca-965b-b60485c9803d",
                 "name": "Ama Boateng",
                 "letter": "B",
                 "attributes": {
@@ -4267,7 +4267,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "ee37148a-6bb3-5e09-a79c-542b25fb5e15",
+                "uuid": "3eaccd2d-3890-5a78-b69a-77d11f5d3939",
                 "name": "Akua Sarpong",
                 "letter": "A",
                 "attributes": {
@@ -4303,7 +4303,7 @@
         "seats": [
             {
                 "place": "duo1",
-                "uuid": "7e167cce-f0ca-5907-af36-832f388745e6",
+                "uuid": "207bdbdd-7293-58b7-a3b0-78c929dd2e9e",
                 "name": "Ama Boateng",
                 "letter": "B",
                 "attributes": {
@@ -4319,7 +4319,7 @@
             },
             {
                 "place": "focus",
-                "uuid": "ee37148a-6bb3-5e09-a79c-542b25fb5e15",
+                "uuid": "3eaccd2d-3890-5a78-b69a-77d11f5d3939",
                 "name": "Akua Sarpong",
                 "letter": "A",
                 "attributes": {
@@ -4335,7 +4335,7 @@
             },
             {
                 "place": "duo2",
-                "uuid": "c77d20a9-abe5-546b-826f-8deadb457908",
+                "uuid": "6ac6b406-c278-5faa-a43a-b63b3fe51f29",
                 "name": "Abena Asante",
                 "letter": "C",
                 "attributes": {

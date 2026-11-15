@@ -29,4 +29,10 @@ final class PreparedWave
     {
         return $this->problems === [];
     }
+
+    /** What a preview showed, in one hash: the page applies only a wave that still has it. */
+    public function fingerprint(): string
+    {
+        return hash('sha256', json_encode([$this->manifest?->canonical(), $this->number, $this->from, $this->to, $this->decision]));
+    }
 }

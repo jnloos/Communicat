@@ -7,10 +7,13 @@ use App\Models\User;
 use App\Study\Jobs\ApplyWave;
 use App\Study\Livewire\PlanWavePage;
 use App\Study\Models\StudyWave;
+use App\Study\Planning\Manifest;
+use App\Study\Planning\WavePlanning;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
 use Livewire\Livewire;
+use RuntimeException;
 use Tests\TestCase;
 
 class PlanWavePageTest extends TestCase
@@ -76,10 +79,53 @@ class PlanWavePageTest extends TestCase
         $page->assertSee(__('study::plan.applied', ['total' => 64]));
     }
 
-    private function page(): mixed
+    public function test_confirming_refuses_when_the_form_changed_since_the_preview(): void
+    {
+        Queue::fake();
+        $this->asAdmin();
+
+        $page = $this->page('probe-manifest.json')->set('to', 2)->call('preview')->set('to', 3)
+            ->call('confirmApply')->call('executeConfirmed');
+
+        $this->assertSame(0, StudyWave::count());
+        Queue::assertNothingPushed();
+        $page->assertSet('overview', [])->assertHasErrors('manifest');
+    }
+
+    public function test_confirming_refuses_when_the_upload_changed_since_the_preview(): void
+    {
+        Queue::fake();
+        $this->asAdmin();
+
+        $this->page()->call('preview')
+            ->set('manifest', UploadedFile::fake()->createWithContent('probe.json', ManifestTest::fixture('probe-manifest.json')))
+            ->call('confirmApply')->call('executeConfirmed');
+
+        $this->assertSame(0, StudyWave::count());
+        Queue::assertNothingPushed();
+    }
+
+    public function test_a_failed_apply_is_shown_and_cleared_by_a_successful_retry(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($admin);
+        $wave = StudyWave::record(Manifest::fromJson(ManifestTest::fixture('tiny-manifest.json')), 1, 1, 1, null, $admin->id);
+
+        (new ApplyWave($wave->id))->failed(new RuntimeException('Wave refused: nope'));
+        Livewire::withQueryParams(['applying' => $wave->id])->test(PlanWavePage::class)
+            ->assertSee('Wave refused: nope')
+            ->assertDontSee('wire:poll', escape: false);
+
+        (new ApplyWave($wave->id))->handle(app(WavePlanning::class));
+        $this->assertNull($wave->fresh()->failed_at);
+        $this->assertNull($wave->fresh()->failed_reason);
+        $this->assertNotNull($wave->fresh()->applied_at);
+    }
+
+    private function page(string $fixture = 'tiny-manifest.json'): mixed
     {
         return Livewire::test(PlanWavePage::class)
-            ->set('manifest', UploadedFile::fake()->createWithContent('tiny.json', ManifestTest::fixture('tiny-manifest.json')))
+            ->set('manifest', UploadedFile::fake()->createWithContent($fixture, ManifestTest::fixture($fixture)))
             ->set('wave', 1)
             ->set('from', 1)
             ->set('to', 1);

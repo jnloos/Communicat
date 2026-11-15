@@ -8,6 +8,8 @@ use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\User;
 use App\Study\Models\StudyWave;
+use App\Study\Planning\WavePlanning;
+use App\Study\Planning\WaveRefused;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -71,6 +73,21 @@ class PlanStudyWaveCommandTest extends TestCase
         $this->assertNotNull($wave->applied_at);
         $this->assertSame([1, 1, 'tiny'], [$wave->first_scenario, $wave->last_scenario, $wave->study]);
         $this->assertSame(64, Project::count());
+    }
+
+    public function test_resuming_a_wave_as_another_user_is_refused(): void
+    {
+        $planning = app(WavePlanning::class);
+        $owner = User::factory()->create(['is_admin' => true]);
+        $other = User::factory()->create(['is_admin' => true]);
+        $prepared = $planning->prepare(ManifestTest::fixture('tiny-manifest.json'), 1, 1, 1, null);
+        $planning->record($prepared, $owner);
+
+        $this->assertSame($owner->id, $planning->record($prepared, $owner)->user_id);
+
+        $this->expectException(WaveRefused::class);
+        $this->expectExceptionMessage("resume it with that user, not {$other->id}");
+        $planning->record($prepared, $other);
     }
 
     public static function path(string $fixture): string

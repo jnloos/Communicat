@@ -5,8 +5,6 @@ namespace App\Study\Planning;
 use App\Models\Expert;
 use App\Models\PersonaAttribute;
 use App\Models\Project;
-use App\Models\TagCategory;
-use App\Models\TagScope;
 use App\Models\TagValue;
 use App\Services\Tags\TagNames;
 use App\Study\Models\StudyWave;
@@ -114,9 +112,9 @@ final class PlanCheck
         $this->same($key, "{$label} name", $persona->name, $expert->name);
         $this->same($key, "{$label} description", $persona->description, $expert->description);
 
-        $values = $expert->personaAttributes->mapWithKeys(fn (PersonaAttribute $attribute) => [$attribute->name => $attribute->pivot->value]);
         foreach ($persona->attributes as $name => $value) {
-            $this->same($key, "{$label} attribute {$name}", $value, $values[$name] ?? null);
+            $held = $expert->personaAttributes->first(fn (PersonaAttribute $attribute) => TagNames::same($attribute->name, $name));
+            $this->same($key, "{$label} attribute {$name}", $value, $held?->pivot->value);
         }
 
         $this->tags($key, config('study.persona_tags'), $persona->tags(), $expert->tagValues, "{$label} ");
@@ -154,9 +152,7 @@ final class PlanCheck
     /** Projects tagged with this study that no wave planned. */
     private function strays(string $study, array $planned): void
     {
-        $categoryIds = TagCategory::ofScope(TagScope::Project)->get()
-            ->filter(fn (TagCategory $category) => TagNames::same($category->name, config('study.tags.study')))
-            ->modelKeys();
+        $categoryIds = StudyWave::projectCategoryIds(config('study.tags.study'));
 
         Project::whereHas('tagValues', fn ($query) => $query->whereIn('tag_values.tag_category_id', $categoryIds)->where('tag_values.name', $study))
             ->get(['id', 'uuid', 'title'])

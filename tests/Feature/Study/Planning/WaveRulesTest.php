@@ -38,6 +38,17 @@ class WaveRulesTest extends TestCase
         $this->assertStringContainsString('needs a decision', implode("\n", $this->problems($manifest, 2, 4, 6, '  ')));
     }
 
+    public function test_the_rules_read_the_stored_wave_even_if_its_model_left_the_config(): void
+    {
+        $manifest = $this->manifest();
+        $this->record($manifest, 1, 1, 3)->update(['applied_at' => now()]);
+        $models = config('ai.models');
+        unset($models[$manifest->model()]);
+        config(['ai.models' => $models]);
+
+        $this->assertSame([], $this->problems($manifest, 2, 4, 6, 'Add three scenarios.'));
+    }
+
     public function test_a_changed_core_or_planned_scenario_is_rejected_an_unplanned_change_accepted(): void
     {
         $this->record($this->manifest(), 1, 1, 3)->update(['applied_at' => now()]);

@@ -41,6 +41,10 @@ class PlanWavePage extends Component
     #[Locked]
     public array $overview = [];
 
+    /** PreparedWave::fingerprint() of the last preview: apply() writes only what was shown. */
+    #[Locked]
+    public string $fingerprint = '';
+
     /** The wave being applied, kept in the URL so a reload still shows its progress. */
     #[Url]
     public ?int $applying = null;
@@ -52,7 +56,9 @@ class PlanWavePage extends Component
 
     public function preview(): void
     {
-        $this->overview = app(WavePlanning::class)->preview($this->prepare(), auth()->user());
+        $prepared = $this->prepare();
+        $this->overview = app(WavePlanning::class)->preview($prepared, auth()->user());
+        $this->fingerprint = $prepared->fingerprint();
     }
 
     public function confirmApply(): void
@@ -67,10 +73,18 @@ class PlanWavePage extends Component
         $this->needsConfirmation('apply');
     }
 
-    /** Confirm target: prepares again from the uploaded file, so nothing the browser holds decides what is written. */
+    /** Confirm target: prepares again from the uploaded file, and only what the preview showed is written. */
     public function apply(): void
     {
         $prepared = $this->prepare();
+
+        if (! hash_equals($this->fingerprint, $prepared->fingerprint())) {
+            $this->overview = [];
+            $this->fingerprint = '';
+            $this->addError('manifest', __('study::plan.changed'));
+
+            return;
+        }
 
         if (! $prepared->isAcceptable()) {
             $this->overview = app(WavePlanning::class)->preview($prepared, auth()->user(), withPrompts: false);
