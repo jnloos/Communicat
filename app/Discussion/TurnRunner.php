@@ -6,6 +6,7 @@ use App\Discussion\Metrics\SpokenTurns;
 use App\Discussion\Pipelines\DeclaresDecisionModel;
 use App\Discussion\Pipelines\PipelineRegistry;
 use App\Discussion\Pipelines\TurnPipeline;
+use App\Discussion\Support\CodeProvenance;
 use App\Discussion\Support\PersonaLines;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\Support\TextLength;
@@ -31,6 +32,7 @@ class TurnRunner
         private readonly PipelineRegistry $pipelines,
         private readonly PromptRenderer $prompts,
         private readonly SpokenTurns $spokenTurns,
+        private readonly CodeProvenance $provenance,
     ) {}
 
     public function run(Project $project): TurnResult
@@ -112,10 +114,14 @@ class TurnRunner
             return;
         }
 
+        $model = ModelConfig::fromConfig($project->model);
+
         $project->run_config = [
             'pipeline' => $project->pipeline,
             'stages' => $pipeline->stages(),
-            'model' => ModelConfig::fromConfig($project->model)->toArray(),
+            'model' => $model->toArray(),
+            // Which code and prompt texts this run started with. Older runs lack the key.
+            'provenance' => $this->provenance->toArray($model),
             // A fixed decision maker that is not the team's model (the Jev pipelines): which one,
             // what it decides, and the settings that shape what it answers. Every later request
             // reads this and not the live config. Absent for every other pipeline.
@@ -124,6 +130,9 @@ class TurnRunner
             'summarize_oldest' => $project->summarizeOldest(),
             'system_prompt' => $this->prompts->system(),
             'attribute_visibility' => array_map(fn ($level) => $level->value, PersonaLines::liveVisibilitiesOf($project)),
+            // The prompts read topic and descriptions live; this is the record, and the
+            // locks on a started run (EditProject, Expert::isLocked()) keep the two equal.
+            'topic' => $project->description,
 
             // Who sat where, with which attributes. The role is one of them and the
             // study's manipulation -- a run where one seat reads "Teacher" among
@@ -136,6 +145,7 @@ class TurnRunner
                     'seat' => $expert->pivot?->seat,
                     'expert_id' => $expert->id,
                     'name' => $expert->name,
+                    'description' => $expert->description,
                     // The rendered attribute lines, whatever the visibility, so
                     // PersonaLines reads these and never a template edited later.
                     'attributes' => PersonaLines::snapshotFor($expert),

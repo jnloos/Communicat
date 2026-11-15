@@ -3,6 +3,7 @@
 namespace Tests\Feature\Discussion;
 
 use App\Discussion\Agents\ThinkAgent;
+use App\Discussion\ModelDrifted;
 use App\Discussion\Schemas\ThoughtSchema;
 use App\Discussion\Values\CallStatus;
 use App\Discussion\Values\ModelConfig;
@@ -124,15 +125,19 @@ class OmniRouteChannelTest extends TestCase
         Log::shouldNotHaveReceived('error');
     }
 
-    public function test_a_gateway_answer_from_another_model_is_logged_as_drift_but_the_call_succeeds(): void
+    /** Through the real gateway: the drift guard's exception is not swallowed by the SDK. */
+    public function test_a_gateway_answer_from_another_model_ends_the_run_after_the_call_is_recorded(): void
     {
         Http::fake(['omniroute.test/*' => Http::response($this->chatAnswer(model: 'gpt-5-nano-2025-08-07'))]);
-        Log::spy();
 
-        $this->agent('omniroute-gpt-5.6-luna')->ask('Denk nach.');
+        try {
+            $this->agent('omniroute-gpt-5.6-luna')->ask('Denk nach.');
+            $this->fail('Another model must end the run.');
+        } catch (ModelDrifted $e) {
+            $this->assertSame('gpt-5-nano-2025-08-07', $e->served);
+        }
 
         $this->assertSame('gpt-5-nano-2025-08-07', PromptLog::sole()->model_served);
-        Log::shouldHaveReceived('error')->once();
     }
 
     public function test_a_response_without_cache_figures_or_model_stays_null_not_zero(): void

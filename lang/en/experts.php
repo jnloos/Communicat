@@ -39,6 +39,8 @@ return [
         'delete' => 'Delete Expert',
         'view' => 'Expert',
         'read_only' => 'Only administrators change experts.',
+        'locked' => 'A started run has read this expert, so name, description and attributes stay as they are. Tags can still change; for a changed persona, create a new one.',
+        'save_tags' => 'Save tags',
     ],
 
     'confirm' => [

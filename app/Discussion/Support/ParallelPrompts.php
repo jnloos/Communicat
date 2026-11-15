@@ -2,11 +2,13 @@
 
 namespace App\Discussion\Support;
 
-use App\Discussion\Values\Completion;
+use App\Discussion\PromptFailedInChild;
+use App\Discussion\Values\ChildFailure;
 use Closure;
 use Illuminate\Support\Facades\Concurrency;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Exception\ProcessStartFailedException;
+use Throwable;
 
 /**
  * Runs several prompts at once. The SDK has no batch API — prompt() is
@@ -16,6 +18,11 @@ use Symfony\Component\Process\Exception\ProcessStartFailedException;
  * closure itself (`ProcessDriver::run()` serialises it), so a task must stay a
  * `static` closure capturing only scalars — never `$this`-bound — or the whole
  * bound object gets dragged along and can fail to serialise.
+ *
+ * Every task runs guarded (guarded()): a failure comes back as a ChildFailure
+ * and is thrown here as PromptFailedInChild, on every path alike -- one task,
+ * the sync driver, child processes, the one-after-another fallback -- so the
+ * same error counts the same in every pipeline.
  *
  * Tests must run the sync concurrency driver (see phpunit.xml): a child process
  * sees neither the in-memory SQLite nor the faked agents.
@@ -30,24 +37,58 @@ class ParallelPrompts
      *
      * @param  array<array-key, Closure(): T>  $tasks
      * @return array<array-key, T>
+     *
+     * @throws PromptFailedInChild for the first task that failed
      */
     public function run(array $tasks): array
+    {
+        $results = array_combine(array_keys($tasks), $this->runGuarded(array_values(array_map(self::guarded(...), $tasks))));
+
+        foreach ($results as $result) {
+            if ($result instanceof ChildFailure) {
+                throw $result->toException();
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * The task, failing as a value. Built in a static method so the wrapper binds
+     * no $this; SerializableClosure carries the captured task closure along.
+     *
+     * @template T
+     *
+     * @param  Closure(): T  $task
+     * @return Closure(): (T|ChildFailure)
+     */
+    public static function guarded(Closure $task): Closure
+    {
+        return static function () use ($task) {
+            try {
+                return $task();
+            } catch (Throwable $e) {
+                return ChildFailure::of($e);
+            }
+        };
+    }
+
+    /**
+     * @param  list<Closure(): mixed>  $tasks
+     * @return list<mixed>
+     */
+    private function runGuarded(array $tasks): array
     {
         if (count($tasks) <= 1) {
             return array_map(fn (Closure $task) => $task(), $tasks);
         }
 
-        $keys = array_keys($tasks);
-        $ordered = array_values($tasks);
-
         try {
-            // Concurrency::run returns a list; restore the caller's keys.
-            $results = array_values(Concurrency::run($ordered));
+            // Concurrency::run returns a list in task order.
+            return array_values(Concurrency::run($tasks));
         } catch (ProcessStartFailedException $e) {
-            $results = $this->oneAfterAnother($ordered, $e);
+            return $this->oneAfterAnother($tasks, $e);
         }
-
-        return array_combine($keys, $results);
     }
 
     /**

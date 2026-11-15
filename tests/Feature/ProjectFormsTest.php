@@ -533,4 +533,31 @@ class ProjectFormsTest extends TestCase
         $this->assertSame([$attribute->id => AttributeVisibility::Own], $project->attributeVisibilities());
         $this->assertArrayNotHasKey('changes', $project->run_config);
     }
+
+    /** The description is the topic every prompt reads; run_config.topic records it at the first turn. */
+    public function test_the_description_is_locked_once_the_run_has_started_and_the_title_is_not(): void
+    {
+        $owner = User::factory()->create();
+        $this->actingAs($owner);
+        $project = Project::factory()->create([
+            'user_id' => $owner->id,
+            'description' => 'Handyverbot?',
+            'run_config' => ['pipeline' => 'RoundRobinPipeline'],
+        ]);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->assertSee(__('projects.fields.description_locked'))
+            ->set('form.description', 'Etwas anderes')
+            ->call('save')
+            ->assertHasErrors(['form.description']);
+
+        $this->assertSame('Handyverbot?', $project->fresh()->description);
+
+        Livewire::test(EditProject::class, ['project' => $project])
+            ->set('form.title', 'Neuer Titel')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame('Neuer Titel', $project->fresh()->title);
+    }
 }

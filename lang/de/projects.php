@@ -35,6 +35,7 @@ return [
         'summarize_oldest' => 'Zu verdichtende Nachrichten',
         'summarize_oldest_help' => 'So viele der ältesten Nachrichten wandern dann in das Langzeitgedächtnis; sie muss kleiner als die Schwelle sein.',
         'attribute_visibility_locked' => 'Die Diskussion läuft bereits: Die Sichtbarkeit der Attribute lässt sich nicht mehr ändern.',
+        'description_locked' => 'Die Diskussion läuft bereits: Die Beschreibung ist ihr Thema und lässt sich nicht mehr ändern.',
         'run_started_help' => 'Die Diskussion läuft bereits. Eine Änderung wird im run_config-Snapshot mit der Turn-Nummer festgehalten.',
     ],
 

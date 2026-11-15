@@ -3,6 +3,7 @@
 namespace App\Discussion\Jev;
 
 use App\Discussion\Logging\RecordJevCall;
+use App\Discussion\ModelDrifted;
 use App\Discussion\Support\ModelIdentity;
 use App\Discussion\Values\JevDecisionModel;
 use App\Discussion\Values\JevReply;
@@ -60,6 +61,7 @@ class JevClient
      *
      * @throws JevNotConfigured
      * @throws JevRejected
+     * @throws ModelDrifted
      */
     public function ask(JevDecisionModel $model, string $state, array $questions, Purpose $purpose, ?int $jobLogId, ?int $expertId = null): JevReply
     {
@@ -192,13 +194,13 @@ class JevClient
         return $date === false ? 0 : max(0, ($date - time()) * 1000);
     }
 
-    /** Pinned on purpose; a response that names another version makes noise and does not stop the turn. */
+    /** Pinned on purpose; a response that names another version ends the run, after the call is recorded. */
     private function guardAgainstDrift(JevReply $reply): void
     {
         $served = $reply->servedModel();
 
         if ($served !== null && ! ModelIdentity::matches($reply->model(), $served)) {
-            Log::error('Jev answered with another model version than the one pinned for this study.', ['requested' => $reply->model(), 'served' => $served]);
+            throw new ModelDrifted($reply->model(), $served);
         }
     }
 

@@ -62,6 +62,7 @@ class EditProject extends Component
         Gate::authorize('update', $project);
         $this->form->validate();
         $this->refuseVisibilityChangeAfterStart($project);
+        $this->refuseTopicChangeAfterStart($project);
         $attributes = $this->form->attributes();
 
         $this->noteRunConfigChanges($project, $attributes);
@@ -92,6 +93,19 @@ class EditProject extends Component
 
             throw ValidationException::withMessages([
                 'form.attributeVisibility' => __('projects.fields.attribute_visibility_locked'),
+            ]);
+        }
+    }
+
+    /**
+     * The description is the topic every prompt reads live; run_config.topic records it
+     * at the first turn, and this keeps the two equal. The title is in no prompt.
+     */
+    private function refuseTopicChangeAfterStart(Project $project): void
+    {
+        if ($project->run_config !== null && $this->form->description !== $project->description) {
+            throw ValidationException::withMessages([
+                'form.description' => __('projects.fields.description_locked'),
             ]);
         }
     }

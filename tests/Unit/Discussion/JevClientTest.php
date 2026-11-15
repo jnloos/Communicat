@@ -5,6 +5,7 @@ namespace Tests\Unit\Discussion;
 use App\Discussion\Jev\JevClient;
 use App\Discussion\Jev\JevNotConfigured;
 use App\Discussion\Jev\JevRejected;
+use App\Discussion\ModelDrifted;
 use App\Discussion\Values\CallStatus;
 use App\Discussion\Values\JevDecides;
 use App\Discussion\Values\JevDecisionModel;
@@ -293,5 +294,22 @@ class JevClientTest extends TestCase
 
         $this->assertFalse($this->ask()->succeeded());
         $this->assertSame([500, 1000], $this->sleptMilliseconds(), 'sent three times, so slept twice');
+    }
+
+    /** A pinned version that answers as another one ends the run; the call itself stays on record. */
+    public function test_an_answer_from_another_model_version_throws_model_drifted_after_recording_the_call(): void
+    {
+        FakeJev::key();
+        Http::fake(['api.typesafe.ai/*' => Http::response(['model' => 'jev-2.0.0'] + $this->answerBody())]);
+
+        try {
+            $this->ask();
+            $this->fail('Another model version must end the run.');
+        } catch (ModelDrifted $e) {
+            $this->assertStringContainsString('jev-1.13.0', $e->getMessage());
+            $this->assertStringContainsString('jev-2.0.0', $e->getMessage());
+        }
+
+        $this->assertSame('jev-2.0.0', PromptLog::sole()->checkpoint);
     }
 }

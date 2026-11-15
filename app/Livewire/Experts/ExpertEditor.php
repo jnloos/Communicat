@@ -20,7 +20,8 @@ use Livewire\WithFileUploads;
 /**
  * The expert flyout: every verified user opens it to read a persona, only an
  * admin creates, changes or deletes one (ExpertPolicy). For everyone else it
- * shows the same fields read only.
+ * shows the same fields read only, and so it does for a persona a started run
+ * has read (Expert::isLocked()), whose tags an admin still saves via saveTags().
  */
 class ExpertEditor extends Component
 {
@@ -105,6 +106,19 @@ class ExpertEditor extends Component
 
         $this->expertId = $expert->id;
         $this->avatarUrl = $expert->avatar_url;
+
+        $this->resetForm();
+        Flux::modal('edit-expert')->close();
+        $this->dispatch('expert_modified');
+    }
+
+    /** The way a locked persona's tags change: nothing else of the form is written. */
+    public function saveTags(): void
+    {
+        $expert = Expert::findOrFail($this->expertId);
+        $this->authorize('updateTags', $expert);
+
+        $expert->syncTags($this->tagSelection);
 
         $this->resetForm();
         Flux::modal('edit-expert')->close();
@@ -202,10 +216,14 @@ class ExpertEditor extends Component
     public function render(): mixed
     {
         $expert = is_null($this->expertId) ? null : Expert::find($this->expertId);
+        $mayEdit = $expert === null ? Gate::allows('create', Expert::class) : Gate::allows('update', $expert);
 
         return view('livewire.experts.expert-editor', [
             'isUpdate' => ! is_null($this->expertId),
-            'mayEdit' => $expert === null ? Gate::allows('create', Expert::class) : Gate::allows('update', $expert),
+            'mayEdit' => $mayEdit,
+            'isLocked' => (bool) $expert?->isLocked(),
+            // Only a locked persona's tags save on their own; otherwise they travel with save().
+            'mayEditTagsOnly' => ! $mayEdit && $expert !== null && Gate::allows('updateTags', $expert),
             'mayDelete' => $expert !== null && Gate::allows('delete', $expert),
             'definitions' => PersonaAttribute::ordered()->get(),
             'tagCategories' => TagCategory::ofScope(TagScope::Persona)->with('values')->get(),

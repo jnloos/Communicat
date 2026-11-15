@@ -40,6 +40,53 @@ class Expert extends Model
         'description',
     ];
 
+    /** The fields a prompt reads; tags and avatar reach no model and stay changeable. */
+    private const PROMPT_FIELDS = ['name', 'description'];
+
+    protected static function booted(): void
+    {
+        static::updating(function (Expert $expert): void {
+            if ($expert->isDirty(self::PROMPT_FIELDS)) {
+                $expert->assertUnlocked();
+            }
+        });
+    }
+
+    /**
+     * Whether a started run has read this persona: it sits in a project with a
+     * run_config, or a turn names it (who spoke and then left the run). Its
+     * prompt fields then stay as the run read them. A mass update or delete
+     * past Eloquent bypasses this; the code has none.
+     */
+    public function isLocked(): bool
+    {
+        return $this->exists && (
+            $this->projects()->whereNotNull('run_config')->exists()
+            || JobLog::where('expert_id', $this->id)->exists()
+        );
+    }
+
+    /** @throws PersonaLocked */
+    private function assertUnlocked(): void
+    {
+        if ($this->isLocked()) {
+            throw PersonaLocked::for($this);
+        }
+    }
+
+    /**
+     * Refused here rather than in a deleting hook: HasTags' own deleting hook runs
+     * first and would drop the tags of an expert that then stays.
+     *
+     * @throws PersonaLocked
+     */
+    public function delete(): ?bool
+    {
+        $this->assertUnlocked();
+
+        return parent::delete();
+    }
+
     public function summaries(): HasMany
     {
         return $this->hasMany(Summary::class);
@@ -57,9 +104,11 @@ class Expert extends Model
      * Sets (or with null/blank clears) this expert's value for one attribute.
      *
      * @throws InvalidArgumentException for a value over PersonaAttribute::VALUE_MAX or with a line break
+     * @throws PersonaLocked
      */
     public function setAttributeValue(PersonaAttribute $attribute, ?string $value): void
     {
+        $this->assertUnlocked();
         $value = self::checkedAttributeValue($value);
 
         if ($value === '') {
@@ -79,9 +128,11 @@ class Expert extends Model
      * @param  array<int|string, string|null>  $valuesByAttributeId  attribute id => value
      *
      * @throws InvalidArgumentException as setAttributeValue()
+     * @throws PersonaLocked
      */
     public function syncAttributeValues(array $valuesByAttributeId): void
     {
+        $this->assertUnlocked();
         array_map(self::checkedAttributeValue(...), $valuesByAttributeId);
 
         foreach (PersonaAttribute::whereKey(array_keys($valuesByAttributeId))->get() as $attribute) {

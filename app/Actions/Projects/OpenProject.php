@@ -20,12 +20,15 @@ class OpenProject
      * @param  list<Expert>  $experts  seated in the given order
      * @param  array<int|string, int|string|null>  $tags  category id => value id, as syncTags() takes it
      * @param  array<int, AttributeVisibility|string>|null  $visibilities  attribute id => level; null = Project::defaultAttributeVisibilities()
+     * @param  string|null  $uuid  a uuid fixed in advance (a planned cell); null = HasPublicUuid generates one
      */
-    public function handle(User $owner, array $attributes, array $experts = [], array $tags = [], ?array $visibilities = null): Project
+    public function handle(User $owner, array $attributes, array $experts = [], array $tags = [], ?array $visibilities = null, ?string $uuid = null): Project
     {
         // One transaction, so a forged tag value does not leave a half-created project behind.
-        $project = DB::transaction(function () use ($owner, $attributes, $tags, $visibilities) {
-            $project = Project::create(['user_id' => $owner->id] + $attributes);
+        $project = DB::transaction(function () use ($owner, $attributes, $tags, $visibilities, $uuid) {
+            // forceFill, because the uuid is not mass assignable (HasPublicUuid keeps a preset one).
+            $project = (new Project(['user_id' => $owner->id] + $attributes))->forceFill(['uuid' => $uuid]);
+            $project->save();
             $project->syncTags($tags);
             $project->setAttributeVisibilities($visibilities ?? Project::defaultAttributeVisibilities());
 

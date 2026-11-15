@@ -39,6 +39,8 @@ return [
         'delete' => 'Experte löschen',
         'view' => 'Experte',
         'read_only' => 'Nur Administratoren ändern Experten.',
+        'locked' => 'Ein gestarteter Lauf hat diesen Experten gelesen, darum bleiben Name, Beschreibung und Attribute, wie sie sind. Tags lassen sich weiter ändern; für eine geänderte Persona legen Sie eine neue an.',
+        'save_tags' => 'Tags speichern',
     ],
 
     'confirm' => [

@@ -3,7 +3,7 @@
     <form wire:submit.prevent="save" class="flex flex-1 flex-col gap-6">
         <x-modal-header
             :heading="! $mayEdit ? __('experts.editor.view') : ($isUpdate ? __('experts.editor.update') : __('experts.editor.create'))"
-            :subheading="$mayEdit ? __('experts.editor.subheading') : __('experts.editor.read_only')"
+            :subheading="$mayEdit ? __('experts.editor.subheading') : ($isLocked ? __('experts.editor.locked') : __('experts.editor.read_only'))"
         >
             @if ($isUpdate)
                 {{-- What this modal does to the expert, as opposed to what the form does. --}}
@@ -108,7 +108,7 @@
                 @endif
 
                 @if ($tagCategories->isNotEmpty())
-                    <x-tags.project-accordion-item :values="$chosenTags" :categories="$tagCategories" :disabled="! $mayEdit" />
+                    <x-tags.project-accordion-item :values="$chosenTags" :categories="$tagCategories" :disabled="! $mayEdit && ! $mayEditTagsOnly" />
                 @endif
             </flux:accordion>
         @endif
@@ -119,6 +119,9 @@
                 <flux:button type="submit" variant="primary">
                     {{ $isUpdate ? __('experts.editor.update') : __('experts.editor.create') }}
                 </flux:button>
+            @elseif ($mayEditTagsOnly)
+                <flux:button variant="filled" x-on:click="$store.unsaved.request('edit-expert')">{{ __('common.actions.cancel') }}</flux:button>
+                <flux:button variant="primary" wire:click="saveTags">{{ __('experts.editor.save_tags') }}</flux:button>
             @else
                 <flux:modal.close>
                     <flux:button variant="filled">{{ __('common.actions.close') }}</flux:button>

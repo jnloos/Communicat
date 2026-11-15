@@ -17,9 +17,8 @@ use Throwable;
  * mechanism under study, so it is recorded as interrupted, not failed, and the
  * study runner waits and retries instead of carrying on.
  *
- * Deliberately not here: an HTTP error inside a ParallelPrompts child, which
- * arrives as a TypeError without its status (see "Failure diagnosis" in
- * CLAUDE.md). It may be a refused prompt, so it stays a failed turn.
+ * A failed ParallelPrompts task arrives as PromptFailedInChild, classified by
+ * this same rule where the real exception still existed (ChildFailure::of()).
  */
 final class TransientFailure
 {
@@ -30,6 +29,7 @@ final class TransientFailure
             || $e instanceof BroadcastException
             || $e instanceof ProcessTimedOutException
             || ($e instanceof RequestException && $e->response->serverError())
-            || ($e instanceof QueryException && str_contains($e->getMessage(), 'database is locked'));
+            || ($e instanceof QueryException && str_contains($e->getMessage(), 'database is locked'))
+            || ($e instanceof PromptFailedInChild && $e->failure->transient);
     }
 }

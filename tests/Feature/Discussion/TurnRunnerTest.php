@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Discussion;
 
+use App\Discussion\Agents\SelectorAgent;
 use App\Discussion\Agents\SpeakAgent;
 use App\Discussion\Agents\SummarizeAgent;
 use App\Discussion\Agents\ThinkAgent;
@@ -15,9 +16,13 @@ use App\Models\JobLog;
 use App\Models\Message;
 use App\Models\Project;
 use App\Models\PromptLog;
+use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\Response as HttpResponse;
 use Illuminate\Support\Facades\Event;
 use Laravel\Ai\Exceptions\RateLimitedException;
+use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Tests\Fakes\FakeAgents;
 use Tests\TestCase;
@@ -250,5 +255,65 @@ class TurnRunnerTest extends TestCase
 
         $this->assertSame(12, $config['summarize_threshold']);
         $this->assertSame(5, $config['summarize_oldest']);
+    }
+
+    /** What the run read besides the prompt templates: code, topic, persona cores. */
+    public function test_the_snapshot_records_provenance_topic_and_descriptions(): void
+    {
+        app(TurnRunner::class)->run($this->project);
+
+        $config = $this->project->fresh()->run_config;
+
+        $this->assertSame(['commit', 'dirty', 'laravel_ai', 'endpoint', 'prompt_views'], array_keys($config['provenance']));
+        $this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $config['provenance']['prompt_views']);
+        $this->assertSame($this->project->description, $config['topic']);
+        $this->assertSame(
+            array_map(fn (Expert $expert) => $expert->description, $this->experts),
+            array_column($config['cast'], 'description'),
+        );
+    }
+
+    /** Runs frozen before provenance existed carry none of the new keys and must keep running. */
+    public function test_a_run_with_an_older_snapshot_keeps_running(): void
+    {
+        app(TurnRunner::class)->run($this->project);
+        $config = $this->project->fresh()->run_config;
+        unset($config['provenance'], $config['topic']);
+        $config['cast'] = array_map(fn (array $entry) => array_diff_key($entry, ['description' => true]), $config['cast']);
+        $this->project->forceFill(['run_config' => $config])->save();
+
+        $result = app(TurnRunner::class)->run($this->project->fresh());
+
+        $this->assertFalse($result->stop);
+        $this->assertSame(2, JobLog::where('status', JobStatus::Success)->count());
+        $this->assertArrayNotHasKey('provenance', $this->project->fresh()->run_config);
+    }
+
+    /**
+     * A thinking call fails the same way whether one agent thinks (Orchestrator)
+     * or all of them in parallel (Score): a 5xx is interrupted, a 4xx failed with
+     * its real class and status in job_logs.error.
+     */
+    #[DataProvider('thinkingShapes')]
+    public function test_a_failed_thinking_call_counts_alike_in_every_pipeline(string $pipeline): void
+    {
+        $this->project->update(['pipeline' => $pipeline]);
+        FakeAgents::always(SelectorAgent::class, ['speaker' => $this->experts[0]->promptId, 'reasoning' => 'r']);
+
+        FakeAgents::fails(ThinkAgent::class, new RequestException(new HttpResponse(new Psr7Response(500))));
+        app(TurnRunner::class)->run($this->project->fresh());
+
+        FakeAgents::fails(ThinkAgent::class, new RequestException(new HttpResponse(new Psr7Response(400))));
+        app(TurnRunner::class)->run($this->project->fresh());
+
+        [$serverError, $clientError] = JobLog::orderBy('turn_index')->get()->all();
+        $this->assertSame(JobStatus::Interrupted, $serverError->status);
+        $this->assertSame(JobStatus::Failed, $clientError->status);
+        $this->assertStringContainsString('RequestException (HTTP 400)', $clientError->error);
+    }
+
+    public static function thinkingShapes(): array
+    {
+        return ['one thinker' => ['OrchestratorPipeline'], 'everyone thinks' => ['ScorePipeline']];
     }
 }

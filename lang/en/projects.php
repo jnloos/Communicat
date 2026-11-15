@@ -35,6 +35,7 @@ return [
         'summarize_oldest' => 'Messages to summarize',
         'summarize_oldest_help' => 'That many of the oldest messages then move into the long-term memory; it must be smaller than the threshold.',
         'attribute_visibility_locked' => 'The discussion has already started: the attribute visibility can no longer be changed.',
+        'description_locked' => 'The discussion has already started: the description is its topic and can no longer be changed.',
         'run_started_help' => 'The discussion has already started. A change is recorded in the run_config snapshot with the turn number.',
     ],
 

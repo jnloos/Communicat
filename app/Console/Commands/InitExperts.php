@@ -53,6 +53,7 @@ class InitExperts extends Command
         $updated = 0;
         $skipped = [];
         $skippedAttributes = new SkippedAttributes;
+        $locked = [];
 
         foreach ($experts as $expert) {
             $avatarUrl = ! empty($expert['avatar_url']) ? asset($expert['avatar_url']) : null;
@@ -66,17 +67,24 @@ class InitExperts extends Command
             // conditions -- a rank-and-file seat in a graded scenario -- is one
             // persona, not two, which is why the labels are deduplicated.
             foreach (array_unique($expert['roles']) as $role) {
-                // Find or create the persona, its role and its optional tags and
+                $model = Expert::query()
+                    ->where('name', $expert['name'])
+                    ->whereHas('personaAttributes', fn ($values) => $values
+                        ->where('persona_attributes.id', $roleAttribute->id)
+                        ->where('expert_persona_attribute.value', $role))
+                    ->first() ?? new Expert(['name' => $expert['name']]);
+
+                // A persona a started run has read stays as it was read; the rest of the file still applies.
+                if ($model->isLocked()) {
+                    $locked[] = "{$expert['name']} ({$role})";
+
+                    continue;
+                }
+
+                // Write the persona, its role and its optional tags and
                 // attributes as one unit: a failure half way leaves no persona
                 // without its role, which a rerun would then no longer find.
-                [$model, $unknownTags, $placed] = DB::transaction(function () use ($expert, $role, $avatarUrl, $roleAttribute, $tags, $attributes) {
-                    $model = Expert::query()
-                        ->where('name', $expert['name'])
-                        ->whereHas('personaAttributes', fn ($values) => $values
-                            ->where('persona_attributes.id', $roleAttribute->id)
-                            ->where('expert_persona_attribute.value', $role))
-                        ->first() ?? new Expert(['name' => $expert['name']]);
-
+                [$unknownTags, $placed] = DB::transaction(function () use ($model, $expert, $role, $avatarUrl, $roleAttribute, $tags, $attributes) {
                     $model->fill(['description' => $expert['description'], 'avatar_url' => $avatarUrl])->save();
                     $model->setAttributeValue($roleAttribute, $role);
 
@@ -86,7 +94,7 @@ class InitExperts extends Command
 
                     // Optional {"attribute": "value"}, the same rule: only existing
                     // definitions are used, and a value already set stays.
-                    return [$model, $unknownTags, $attributes->assign($model, $expert['attributes'] ?? [], overwrite: false)];
+                    return [$unknownTags, $attributes->assign($model, $expert['attributes'] ?? [], overwrite: false)];
                 });
 
                 $model->wasRecentlyCreated ? $created++ : $updated++;
@@ -96,6 +104,10 @@ class InitExperts extends Command
         }
 
         $this->info("Experts initialized: {$created} created, {$updated} updated.");
+
+        foreach ($locked as $persona) {
+            $this->warn("Expert is locked by a started run and was skipped: {$persona}");
+        }
 
         foreach (array_unique($skipped) as $pair) {
             $this->warn("Tag does not exist and was skipped: {$pair}");

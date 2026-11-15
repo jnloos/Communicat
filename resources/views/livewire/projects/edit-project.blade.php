@@ -25,7 +25,8 @@
 
         <form wire:submit.prevent="save" class="flex flex-1 flex-col gap-6">
             <flux:input wire:model.defer="form.title" :label="__('common.fields.title')"/>
-            <flux:textarea wire:model.defer="form.description" :label="__('common.fields.description')" rows="10"/>
+            <flux:textarea wire:model.defer="form.description" :label="__('common.fields.description')" rows="10"
+                :disabled="$runStarted" :description="$runStarted ? __('projects.fields.description_locked') : null"/>
 
             @if ($runStarted)
                 <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ __('projects.fields.run_started_help') }}</flux:text>

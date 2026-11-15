@@ -231,7 +231,9 @@ class PersonaAttributesTest extends TestCase
         app(TurnRunner::class)->run($this->project);
 
         $this->gender->update(['self_template' => 'Edited: :value.', 'roster_template' => 'edited :value']);
-        $this->alice->setAttributeValue($this->origin, 'Lagos');
+        // Past the persona lock (setAttributeValue() refuses a started run's persona):
+        // the frozen lines must win even over a value written behind Eloquent's back.
+        $this->alice->personaAttributes()->updateExistingPivot($this->origin->id, ['value' => 'Lagos']);
         $this->alice->unsetRelation('personaAttributes');
 
         $lines = PersonaLines::for($this->project->fresh(), $this->alice->fresh());
@@ -378,7 +380,7 @@ class PersonaAttributesTest extends TestCase
 
         $age = PersonaAttribute::factory()->create(['name' => 'age', 'self_template' => 'You are :value.', 'roster_template' => 'aged :value']);
         $this->project->setAttributeVisibilities([$age->id => AttributeVisibility::All]);
-        $this->alice->setAttributeValue($age, '30');
+        $this->alice->personaAttributes()->attach($age->id, ['value' => '30']); // past the persona lock, as above
         $late = Expert::factory()->create();
         $late->setAttributeValue($age, '40');
         $this->project->addContributingExpert($late);

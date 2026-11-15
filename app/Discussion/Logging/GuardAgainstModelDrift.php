@@ -3,16 +3,17 @@
 namespace App\Discussion\Logging;
 
 use App\Discussion\Agents\StudyAgent;
+use App\Discussion\ModelDrifted;
 use App\Discussion\Support\ModelIdentity;
-use App\Models\JobLog;
-use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Events\StepCompleted;
 
 /**
  * A gateway may answer with another model than the one asked for (a combo, a
- * fallback inside the gateway); the SDK's failover guard cannot see that. This
- * only makes noise and never stops the turn: the study reads
- * prompt_logs.model_served afterwards and decides what to exclude.
+ * fallback inside the gateway); the SDK's failover guard cannot see that. It
+ * throws ModelDrifted, which ends the run (AbortsRun). Registered after
+ * RecordPromptLog, so the call is on record with its model_served first. The SDK
+ * dispatches StepCompleted outside its own catch and rethrows from prompt(), so
+ * the exception reaches TurnRunner (GuardAgainstModelDriftTest drives that path).
  *
  * Providers whose responses only echo the requested id are skipped, since the
  * comparison would hold by construction.
@@ -33,14 +34,6 @@ class GuardAgainstModelDrift
             return;
         }
 
-        $job = $agent->jobLogId === null ? null : JobLog::find($agent->jobLogId);
-
-        Log::error('The model that answered differs from the model asked for; this call is not what the run configured.', [
-            'project_id' => $job?->project_id,
-            'turn_index' => $job?->turn_index,
-            'expert_id' => $agent->expertId,
-            'requested' => $agent->model->model,
-            'served' => $served,
-        ]);
+        throw new ModelDrifted($agent->model->model, $served);
     }
 }
