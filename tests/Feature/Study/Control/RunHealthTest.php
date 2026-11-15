@@ -17,10 +17,11 @@ class RunHealthTest extends TestCase
 
     /**
      * Rows oldest first: s = spoken (success with words), f = failed without words,
-     * F = failed after speaking (Summarize broke), i = interrupted, j = jev_outage (success, no words).
+     * F = failed after speaking (Summarize broke), i = interrupted, j = jev_outage (success, no words),
+     * a = abandoned (closed by the next job after a dead worker or a timeout).
      */
     #[DataProvider('chains')]
-    public function test_it_counts_the_chains_from_the_newest_row(string $rows, int $failed, int $stalled): void
+    public function test_it_counts_the_chains_from_the_newest_row(string $rows, int $failed, int $abandoned, int $stalled): void
     {
         $project = Project::factory()->create();
         foreach (str_split($rows) as $row) {
@@ -30,30 +31,37 @@ class RunHealthTest extends TestCase
         $health = RunHealth::of($project->id);
 
         $this->assertSame($failed, $health->failedInARow);
+        $this->assertSame($abandoned, $health->abandonedInARow);
         $this->assertSame($stalled, $health->stalledInARow);
     }
 
     public static function chains(): array
     {
         return [
-            'no turn yet' => ['', 0, 0],
-            'last turn spoke' => ['ffs', 0, 0],
-            'failed in a row' => ['sfff', 3, 3],
-            'interrupted ends the failed chain, not the stalled one' => ['sffiff', 2, 5],
-            'jev outage stalls but does not fail' => ['sjj', 0, 2],
-            'spoke, then Summarize failed: the chains break' => ['ffFff', 2, 2],
+            'no turn yet' => ['', 0, 0, 0],
+            'last turn spoke' => ['ffs', 0, 0, 0],
+            'failed in a row' => ['sfff', 3, 0, 3],
+            'interrupted ends the failed chain, not the stalled one' => ['sffiff', 2, 0, 5],
+            'jev outage stalls but does not fail' => ['sjj', 0, 0, 2],
+            'spoke, then Summarize failed: the chains break' => ['ffFff', 2, 0, 2],
+            'abandoned in a row' => ['saaa', 0, 3, 3],
+            'a transient interruption ends the abandoned chain' => ['aaia', 0, 1, 4],
+            'a failed turn ends the abandoned chain' => ['aafa', 0, 1, 4],
         ];
     }
 
-    public function test_the_window_is_the_stalled_limit(): void
+    public function test_the_window_covers_the_largest_limit(): void
     {
-        config(['study.run.max_stalled_in_a_row' => 4]);
+        config(['study.run.max_failed_in_a_row' => 2, 'study.run.max_abandoned_in_a_row' => 4]);
         $project = Project::factory()->create();
         foreach (range(1, 6) as $ignored) {
-            $this->log($project, 'f');
+            $this->log($project, 'a');
         }
 
-        $this->assertSame(4, RunHealth::of($project->id)->stalledInARow);
+        $health = RunHealth::of($project->id);
+
+        $this->assertSame(4, $health->abandonedInARow);
+        $this->assertTrue($health->exhausted());
     }
 
     #[DataProvider('backoffs')]
@@ -72,21 +80,31 @@ class RunHealthTest extends TestCase
         return ['none stalled' => [0, 60], 'one' => [1, 60], 'two' => [2, 120], 'four' => [4, 480], 'capped' => [6, 900]];
     }
 
-    public function test_a_run_is_exhausted_at_either_limit(): void
+    public function test_a_run_is_exhausted_by_failed_or_abandoned_turns(): void
     {
-        config(['study.run.max_failed_in_a_row' => 2, 'study.run.max_stalled_in_a_row' => 3]);
+        config(['study.run.max_failed_in_a_row' => 2, 'study.run.max_abandoned_in_a_row' => 2]);
         $failing = Project::factory()->create();
-        $stalling = Project::factory()->create();
+        $abandoned = Project::factory()->create();
         $this->log($failing, 'f');
         $this->log($failing, 'f');
-        $this->log($stalling, 'i');
-        $this->log($stalling, 'j');
+        $this->log($abandoned, 'a');
 
         $this->assertTrue(RunHealth::of($failing->id)->exhausted());
-        $this->assertFalse(RunHealth::of($stalling->id)->exhausted());
+        $this->assertFalse(RunHealth::of($abandoned->id)->exhausted());
 
-        $this->log($stalling, 'i');
-        $this->assertTrue(RunHealth::of($stalling->id)->exhausted());
+        $this->log($abandoned, 'a');
+        $this->assertTrue(RunHealth::of($abandoned->id)->exhausted());
+    }
+
+    /** Infrastructure never gives a run up: transient interruptions and Jev outages, however many. */
+    public function test_interruptions_and_jev_outages_never_exhaust_a_run(): void
+    {
+        $project = Project::factory()->create();
+        foreach (range(1, 30) as $turn) {
+            $this->log($project, $turn % 2 === 0 ? 'i' : 'j');
+        }
+
+        $this->assertFalse(RunHealth::of($project->id)->exhausted());
     }
 
     private function log(Project $project, string $kind): void
@@ -97,6 +115,7 @@ class RunHealthTest extends TestCase
             'F' => [JobStatus::Failed, 10],
             'i' => [JobStatus::Interrupted, null],
             'j' => [JobStatus::Success, null],
+            'a' => [JobStatus::Interrupted, null],
         };
 
         JobLog::create([
@@ -105,6 +124,7 @@ class RunHealthTest extends TestCase
             'status' => $status,
             'started_at' => now(),
             'words' => $words,
+            'error' => $kind === 'a' ? RunHealth::ABANDONED : null,
         ]);
     }
 }

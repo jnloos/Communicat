@@ -27,9 +27,10 @@ use Throwable;
  * the run's next turn itself. One turn per job, so a stop, a restart or a pause waits
  * at most one turn. The batch counterpart of `project:run`: no GenerationLoop.
  *
- * A turn that fails sets back only this run (backoff, and at the limits of RunHealth
- * the run is given up as `superseded`); a global error pauses the whole study through
- * the CircuitBreaker, and a run is never given up while the study is paused.
+ * A turn that fails sets back only this run (backoff, and at the limits of RunHealth,
+ * failed or abandoned turns in a row, the run is given up as `superseded`; an
+ * infrastructure interruption never gives it up); a global error pauses the whole study
+ * through the CircuitBreaker, and a run is never given up while the study is paused.
  */
 class RunStudyProject implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {
@@ -39,6 +40,9 @@ class RunStudyProject implements ShouldBeUniqueUntilProcessing, ShouldQueue
 
     /** Unlimited: a pause release or a pickup after retry_after is no failed attempt. */
     public int $tries = 0;
+
+    /** Unlimited tries, so an exception outside the turn retries for ever: this keeps it from spinning. */
+    public array $backoff = [10, 60, 300];
 
     /** A net against a unique lock orphaned by queue:clear. */
     public int $uniqueFor = 3600;
@@ -66,28 +70,47 @@ class RunStudyProject implements ShouldBeUniqueUntilProcessing, ShouldQueue
             return;
         }
 
-        $project = Project::findOrFail($this->projectId);
+        $project = Project::find($this->projectId);
 
-        // Catches a queue:retry of a run that was given up.
-        if ($giveUp->isMarked($project)) {
+        // A deleted run, or a queue:retry of one that was given up: the chain ends here.
+        if ($project === null || $giveUp->isMarked($project)) {
             return;
         }
 
         // Not WithoutOverlapping: its dontRelease() would drop the successor if another worker
         // took it before this job left the middleware, and the chain would end silently.
-        $delay = Cache::lock("study-run:{$this->projectId}", config('study.run.lock_seconds'))
-            ->get(fn () => $this->turn($runner, $pause, $breaker, $giveUp, $project));
+        $lock = Cache::lock("study-run:{$this->projectId}", config('study.run.lock_seconds'));
 
-        // false: another job holds the run and queues its own successor. null: the chain ends.
-        if (is_int($delay)) {
+        // Another job holds the run and queues its own successor.
+        if (! $lock->get()) {
+            return;
+        }
+
+        try {
+            $delay = $this->nextTurnDelay($runner, $pause, $breaker, $giveUp, $project);
+        } finally {
+            $lock->release();
+        }
+
+        if ($delay !== null) {
             self::dispatch($this->projectId)->delay($delay);
         }
     }
 
-    /** @return int|null seconds until the successor, null for none */
-    private function turn(TurnRunner $runner, PauseFlag $pause, CircuitBreaker $breaker, GiveUp $giveUp, Project $project): ?int
+    /**
+     * Runs one turn, unless the run is given up first.
+     *
+     * @return int|null seconds until the successor, null for none
+     */
+    private function nextTurnDelay(TurnRunner $runner, PauseFlag $pause, CircuitBreaker $breaker, GiveUp $giveUp, Project $project): ?int
     {
         $this->closeAbandonedTurns();
+        $health = RunHealth::of($this->projectId);
+
+        // A turn that kills its worker or outlives the timeout every time would loop for ever.
+        if ($health->abandonedTooOften() && ! $pause->active()) {
+            return $this->giveUp($giveUp, $project, $health);
+        }
 
         try {
             $result = $runner->run($project);
@@ -111,10 +134,11 @@ class RunStudyProject implements ShouldBeUniqueUntilProcessing, ShouldQueue
             throw $e;
         }
 
-        return $this->after($result, $pause, $breaker, $giveUp, $project);
+        return $this->delayAfter($result, $pause, $breaker, $giveUp, $project);
     }
 
-    private function after(TurnResult $result, PauseFlag $pause, CircuitBreaker $breaker, GiveUp $giveUp, Project $project): ?int
+    /** @return int|null seconds until the successor, null for none */
+    private function delayAfter(TurnResult $result, PauseFlag $pause, CircuitBreaker $breaker, GiveUp $giveUp, Project $project): ?int
     {
         if (! $result->stop) {
             $breaker->turnSpoken();
@@ -138,24 +162,31 @@ class RunStudyProject implements ShouldBeUniqueUntilProcessing, ShouldQueue
         // A run caught in an outage is a victim, not waste: never given up while paused,
         // which includes the breaker having tripped in this very turn.
         if ($health->exhausted() && ! $pause->active()) {
-            $giveUp->mark($project);
-            $this->fail(new RuntimeException("Run {$this->projectId} given up: {$health->failedInARow} failed and {$health->stalledInARow} silent turns in a row."));
-
-            return null;
+            return $this->giveUp($giveUp, $project, $health);
         }
 
         // A model failure says nothing about the next turn; an infrastructure one needs time.
         return $result->reason === JobStatus::Failed->value ? 0 : $health->backoffSeconds();
     }
 
+    /** @return null no successor: the chain ends in failed_jobs, the tag keeps study:queue away */
+    private function giveUp(GiveUp $giveUp, Project $project, RunHealth $health): null
+    {
+        $giveUp->mark($project);
+        $this->fail(new RuntimeException("Run {$this->projectId} given up: {$health->failedInARow} failed and {$health->abandonedInARow} abandoned turns in a row."));
+
+        return null;
+    }
+
     /**
-     * A worker that died mid-turn left its job log running. The lock proves no turn of
-     * this run is alive, so the row is dead: close it as interrupted (it counts as stalled).
+     * A worker that died mid-turn, or a turn past its timeout, left its job log running.
+     * The lock proves no turn of this run is alive, so the row is dead: close it as
+     * interrupted, marked abandoned so RunHealth can give up a run that does it again and again.
      */
     private function closeAbandonedTurns(): void
     {
         JobLog::where('project_id', $this->projectId)
             ->where('status', JobStatus::Running)
-            ->update(['status' => JobStatus::Interrupted, 'finished_at' => now(), 'error' => 'Worker stopped mid-turn']);
+            ->update(['status' => JobStatus::Interrupted, 'finished_at' => now(), 'error' => RunHealth::ABANDONED]);
     }
 }

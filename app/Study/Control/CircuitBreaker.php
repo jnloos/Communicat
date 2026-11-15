@@ -28,13 +28,22 @@ class CircuitBreaker
         $this->streak->reset();
     }
 
-    /** A turn without a word; $log is null when it failed before a job log existed. */
+    /**
+     * A turn that stopped on a failure; $log is null when it failed before a job log existed.
+     * One that spoke before it failed (words set, the counting rule) is spoken for the streak.
+     */
     public function turnFailed(int $projectId, ?JobLog $log): void
     {
         $signal = $log?->error === null ? null : $this->fatal->matches($log->error);
 
         if ($signal !== null) {
             $this->trip($signal, $log->error, $projectId);
+        }
+
+        if ($log?->words !== null) {
+            $this->turnSpoken();
+
+            return;
         }
 
         $this->countTowardsStreak($projectId);
@@ -61,6 +70,7 @@ class CircuitBreaker
         }
     }
 
+    /** A pause file that cannot be written throws on through the caller: a breaker that cannot pause must not look fine. */
     private function trip(string $signal, string $reason, ?int $projectId): void
     {
         // Only the call that set the pause reports it, so six workers tripping at once alert once.

@@ -22,6 +22,9 @@ RestartSec=5
 # Let a running turn finish on stop: above the turn timeout (360 s), checked by StudyOpsConfigTest.
 TimeoutStopSec=400
 KillSignal=SIGTERM
+# SIGTERM to the worker only: its ParallelPrompts children finish the turn instead of dying mid-call.
+# SIGKILL after TimeoutStopSec still reaches the whole group.
+KillMode=mixed
 # The whole control group counts, ParallelPrompts children included (worker ~120 MB + up to
 # four children at 60-100 MB). MemoryHigh throttles before the OOM kill; the probe run checks it.
 MemoryHigh=450M

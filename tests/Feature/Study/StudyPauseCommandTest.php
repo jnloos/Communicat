@@ -56,4 +56,28 @@ class StudyPauseCommandTest extends TestCase
             ->expectsOutputToContain('not paused')
             ->assertSuccessful();
     }
+
+    public function test_a_pause_that_cannot_be_written_fails_the_command(): void
+    {
+        config(['study.pause_file' => $this->unwritableDirectory().'/pause.json']);
+
+        $this->artisan('study:pause')
+            ->expectsOutputToContain('Could not')
+            ->assertFailed();
+    }
+
+    public function test_a_pause_that_cannot_be_removed_fails_the_command(): void
+    {
+        $directory = $this->unwritableDirectory();
+        chmod($directory, 0700);
+        config(['study.pause_file' => $directory.'/pause.json']);
+        app(PauseFlag::class)->pause('Key revoked', 'auth', PauseSource::Breaker);
+        chmod($directory, 0500);
+
+        $this->artisan('study:resume')
+            ->expectsOutputToContain('Could not')
+            ->assertFailed();
+
+        $this->assertTrue(app(PauseFlag::class)->active());
+    }
 }

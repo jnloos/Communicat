@@ -3,12 +3,14 @@
 namespace Tests\Feature\Study\Control;
 
 use App\Discussion\ModelDrifted;
+use App\Discussion\Values\JobStatus;
 use App\Models\JobLog;
 use App\Study\Control\CircuitBreaker;
 use App\Study\Control\PauseFlag;
 use App\Study\Control\PauseSource;
 use App\Study\Events\BreakerTripped;
 use Illuminate\Support\Facades\Event;
+use RuntimeException;
 use Tests\Feature\Study\UsesTemporaryPauseFile;
 use Tests\TestCase;
 
@@ -50,6 +52,24 @@ class CircuitBreakerTest extends TestCase
         $this->assertFalse($this->pause->active());
     }
 
+    /** The counting rule: a turn that spoke and then failed in a later stage is spoken. */
+    public function test_a_turn_that_spoke_and_then_failed_resets_the_streak(): void
+    {
+        $this->failTurns(7);
+        $this->breaker->turnFailed(1, new JobLog(['status' => JobStatus::Failed, 'words' => 12, 'error' => 'Summarize: unreadable']));
+        $this->failTurns(7);
+
+        $this->assertFalse($this->pause->active());
+    }
+
+    public function test_a_pause_that_cannot_be_written_is_not_swallowed(): void
+    {
+        config(['study.pause_file' => $this->unwritableDirectory().'/pause.json']);
+
+        $this->expectException(RuntimeException::class);
+        $this->breaker->aborted(1, new ModelDrifted('a', 'b'));
+    }
+
     public function test_an_unexpected_exception_counts_towards_the_streak(): void
     {
         foreach (range(1, 8) as $ignored) {
@@ -82,8 +102,8 @@ class CircuitBreakerTest extends TestCase
         $this->assertStringContainsString('ModelDrifted', $this->pause->state()->reason);
     }
 
-    /** Six workers hit the same dead key at once; the alarm must go out once. */
-    public function test_simultaneous_trips_report_once(): void
+    /** Six workers hit the same dead key one after another; the alarm must go out once. */
+    public function test_a_second_trip_is_not_reported(): void
     {
         foreach (range(1, 6) as $project) {
             $this->breaker->aborted($project, new ModelDrifted('a', 'b'));

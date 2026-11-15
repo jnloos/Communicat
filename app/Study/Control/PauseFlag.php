@@ -4,6 +4,7 @@ namespace App\Study\Control;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\File;
+use RuntimeException;
 
 /**
  * Whether the whole study is paused: a file, storage/app/study/pause.json by default.
@@ -35,14 +36,20 @@ class PauseFlag
     /**
      * True only when this call set the pause. Mode `x` creates the file atomically, so of
      * six workers tripping at once exactly one gets true, and the first reason stays.
+     *
+     * @throws RuntimeException when the file cannot be created: the study would run on unpaused
      */
     public function pause(string $reason, string $signal, PauseSource $source): bool
     {
         File::ensureDirectoryExists(dirname($this->path()));
         $handle = @fopen($this->path(), 'x');
 
-        if ($handle === false) {
+        if ($handle === false && $this->active()) {
             return false;
+        }
+
+        if ($handle === false) {
+            throw new RuntimeException("Could not write the pause file {$this->path()}.");
         }
 
         fwrite($handle, (new PauseState($reason, $signal, $source, CarbonImmutable::now()))->toJson());
@@ -51,10 +58,17 @@ class PauseFlag
         return true;
     }
 
-    /** Also resets the streak: the old one would trip again on the first failed turn. */
+    /**
+     * Also resets the streak: the old one would trip again on the first failed turn.
+     *
+     * @throws RuntimeException when the file stays: the study would stay paused while the caller reports it running
+     */
     public function resume(): void
     {
-        @unlink($this->path());
+        if (! @unlink($this->path()) && $this->active()) {
+            throw new RuntimeException("Could not remove the pause file {$this->path()}.");
+        }
+
         $this->streak->reset();
     }
 

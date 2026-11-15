@@ -8,8 +8,11 @@ use App\Models\ProjectGroup;
 use App\Study\Control\GiveUp;
 use App\Study\Control\PauseFlag;
 use App\Study\Jobs\RunStudyProject;
+use Illuminate\Bus\UniqueLock;
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Cache\Repository as Cache;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Bus;
 use Random\Engine\Xoshiro256StarStar;
 use Random\Randomizer;
 
@@ -45,9 +48,7 @@ class QueueStudyRuns extends Command
         $open = $candidates->whereNotNull('turn_budget')
             ->filter(fn (Project $project) => ($spoken[$project->id] ?? 0) < $project->turn_budget);
 
-        foreach ($this->ordered($open) as $project) {
-            RunStudyProject::dispatch($project->id);
-        }
+        $queued = count(array_filter($this->ordered($open), fn (Project $project) => $this->queue($project->id)));
 
         foreach ($unbudgeted as $project) {
             $this->warn("Skipped project {$project->id}: no turn budget, a study job would never end.");
@@ -58,7 +59,8 @@ class QueueStudyRuns extends Command
         }
 
         $this->table(['', ''], [
-            ['Queued', $open->count()],
+            ['Queued', $queued],
+            ['Already queued', $open->count() - $queued],
             ['Already finished', $projects->count() - $open->count() - $unbudgeted->count() - $superseded->count()],
             ['Skipped, superseded', $superseded->count()],
             ['Skipped, no budget', $unbudgeted->count()],
@@ -66,6 +68,25 @@ class QueueStudyRuns extends Command
         ]);
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Takes the job's unique lock itself, which dispatch() would take silently, so the
+     * summary can tell a queued run from one whose chain is already queued or running.
+     * shortcut: skips PendingDispatch's unique-job context, which only helps a job that cannot
+     * be unserialized (this one holds an int); use dispatch() again if the job ever holds a model.
+     */
+    private function queue(int $projectId): bool
+    {
+        $job = new RunStudyProject($projectId);
+
+        if (! (new UniqueLock(app(Cache::class)))->acquire($job)) {
+            return false;
+        }
+
+        Bus::dispatch($job);
+
+        return true;
     }
 
     /** @return Collection<int, Project>|null */

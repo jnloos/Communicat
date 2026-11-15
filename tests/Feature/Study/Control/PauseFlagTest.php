@@ -5,6 +5,7 @@ namespace Tests\Feature\Study\Control;
 use App\Study\Control\BreakerStreak;
 use App\Study\Control\PauseFlag;
 use App\Study\Control\PauseSource;
+use RuntimeException;
 use Tests\Feature\Study\UsesTemporaryPauseFile;
 use Tests\TestCase;
 
@@ -47,6 +48,29 @@ class PauseFlagTest extends TestCase
 
         $this->assertFalse($this->flag->pause('second', 'streak', PauseSource::Breaker));
         $this->assertSame('first', $this->flag->state()->reason);
+    }
+
+    public function test_a_pause_that_cannot_be_written_throws_and_names_the_path(): void
+    {
+        $path = $this->unwritableDirectory().'/pause.json';
+        config(['study.pause_file' => $path]);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage($path);
+        $this->flag->pause('manual', 'manual', PauseSource::Manual);
+    }
+
+    public function test_a_pause_that_cannot_be_removed_throws_and_names_the_path(): void
+    {
+        $directory = $this->unwritableDirectory();
+        chmod($directory, 0700);
+        config(['study.pause_file' => $directory.'/pause.json']);
+        $this->flag->pause('manual', 'manual', PauseSource::Manual);
+        chmod($directory, 0500);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage($directory.'/pause.json');
+        $this->flag->resume();
     }
 
     public function test_resume_deletes_the_file_and_resets_the_streak(): void

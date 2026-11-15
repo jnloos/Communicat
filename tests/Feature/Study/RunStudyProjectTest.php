@@ -18,6 +18,7 @@ use App\Study\Control\BreakerStreak;
 use App\Study\Control\GiveUp;
 use App\Study\Control\PauseFlag;
 use App\Study\Control\PauseSource;
+use App\Study\Control\RunHealth;
 use App\Study\Events\BreakerTripped;
 use App\Study\Jobs\RunStudyProject;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
@@ -228,7 +229,65 @@ class RunStudyProjectTest extends TestCase
         $this->handle();
 
         $this->assertSame(JobStatus::Interrupted, $dead->fresh()->status);
+        $this->assertSame(RunHealth::ABANDONED, $dead->fresh()->error);
         $this->assertSuccessorAfter(120);
+    }
+
+    /** A turn that kills its worker or times out every time would otherwise loop for ever. */
+    public function test_abandoned_turns_up_to_the_limit_give_up_the_run_before_another_turn(): void
+    {
+        $this->abandonedTurns(2);
+        $this->runningTurn();
+
+        $job = $this->handle();
+
+        $job->assertFailed();
+        $this->assertTrue(app(GiveUp::class)->isMarked($this->project));
+        $this->assertSame(3, JobLog::count());
+        Queue::assertNothingPushed();
+    }
+
+    public function test_abandoned_turns_below_the_limit_carry_on(): void
+    {
+        $this->abandonedTurns(1);
+        $this->runningTurn();
+
+        $job = $this->handle();
+
+        $job->assertNotFailed();
+        $this->assertFalse(app(GiveUp::class)->isMarked($this->project));
+        $this->assertSame(1, JobLog::whereNotNull('words')->count());
+    }
+
+    /** Infrastructure never gives a run up, however long it is down. */
+    public function test_transient_interruptions_never_give_up_the_run(): void
+    {
+        $this->pastTurns(20, JobStatus::Interrupted);
+        FakeAgents::fails(SpeakAgent::class, new ProviderConnectionException('gateway down'));
+
+        $job = $this->handle();
+
+        $job->assertNotFailed();
+        $this->assertFalse(app(GiveUp::class)->isMarked($this->project));
+        $this->assertSuccessorAfter(900);
+    }
+
+    public function test_a_deleted_project_ends_the_chain_quietly(): void
+    {
+        $job = (new RunStudyProject($this->project->id))->withFakeQueueInteractions();
+        $this->project->delete();
+
+        $this->perform($job);
+
+        $job->assertNotFailed();
+        $job->assertNotReleased();
+        Queue::assertNothingPushed();
+    }
+
+    /** $tries = 0 retries an exception outside the turn for ever; the backoff keeps that from spinning. */
+    public function test_a_retried_exception_waits_longer_each_time(): void
+    {
+        $this->assertSame([10, 60, 300], (new RunStudyProject($this->project->id))->backoff);
     }
 
     public function test_it_lands_on_the_study_queue_once_per_run(): void
@@ -258,6 +317,23 @@ class RunStudyProjectTest extends TestCase
     {
         Queue::assertPushed(RunStudyProject::class, 1);
         Queue::assertPushed(RunStudyProject::class, fn (RunStudyProject $job) => $job->projectId === $this->project->id && (int) $job->delay === $seconds);
+    }
+
+    private function abandonedTurns(int $count): void
+    {
+        $this->pastTurns($count, JobStatus::Interrupted);
+        JobLog::query()->update(['error' => RunHealth::ABANDONED]);
+    }
+
+    private function runningTurn(): void
+    {
+        JobLog::create([
+            'job_class' => TurnRunner::class,
+            'project_id' => $this->project->id,
+            'status' => JobStatus::Running,
+            'started_at' => now(),
+            'turn_index' => (int) JobLog::max('turn_index') + 1,
+        ]);
     }
 
     private function pastTurns(int $count, JobStatus $status, ?int $words = null): void

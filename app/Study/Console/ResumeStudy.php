@@ -4,6 +4,7 @@ namespace App\Study\Console;
 
 use App\Study\Control\PauseFlag;
 use Illuminate\Console\Command;
+use RuntimeException;
 
 /** Lifts the pause and resets the breaker's streak; the queued turns continue. */
 class ResumeStudy extends Command
@@ -22,7 +23,14 @@ class ResumeStudy extends Command
             return self::SUCCESS;
         }
 
-        $pause->resume();
+        try {
+            $pause->resume();
+        } catch (RuntimeException $e) {
+            $this->error($e->getMessage().' The study is still paused.');
+
+            return self::FAILURE;
+        }
+
         $source = $state->source?->value ?? 'unknown';
         $this->info("Study resumed. It was paused since {$state->since->toDateTimeString()} by {$source} ({$state->signal}): {$state->reason}");
 

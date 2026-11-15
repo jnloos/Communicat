@@ -60,8 +60,12 @@ class QueueStudyRunsTest extends TestCase
     {
         $project = Project::factory()->create(['turn_budget' => 30]);
 
-        $this->artisan('study:queue', ['projects' => [$project->id]])->assertSuccessful();
-        $this->artisan('study:queue', ['projects' => [$project->id]])->assertSuccessful();
+        $this->artisan('study:queue', ['projects' => [$project->id]])
+            ->expectsTable(...$this->counts(queued: 1, alreadyQueued: 0))
+            ->assertSuccessful();
+        $this->artisan('study:queue', ['projects' => [$project->id]])
+            ->expectsTable(...$this->counts(queued: 0, alreadyQueued: 1))
+            ->assertSuccessful();
 
         Queue::assertPushed(RunStudyProject::class, 1);
     }
@@ -116,6 +120,19 @@ class QueueStudyRunsTest extends TestCase
     public function test_it_refuses_to_queue_nothing(): void
     {
         $this->artisan('study:queue')->assertFailed();
+    }
+
+    /** @return array{0: array<string>, 1: list<list<int|string>>} headers and rows of the summary table */
+    private function counts(int $queued, int $alreadyQueued): array
+    {
+        return [['', ''], [
+            ['Queued', $queued],
+            ['Already queued', $alreadyQueued],
+            ['Already finished', 0],
+            ['Skipped, superseded', 0],
+            ['Skipped, no budget', 0],
+            ['Order', 'by id'],
+        ]];
     }
 
     private function queuedOrder(array $ids, int $seed): array
