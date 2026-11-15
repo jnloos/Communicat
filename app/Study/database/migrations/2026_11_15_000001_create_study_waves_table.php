@@ -17,7 +17,6 @@ return new class extends Migration
             $table->unsignedInteger('number');
             $table->unsignedInteger('first_scenario');
             $table->unsignedInteger('last_scenario');
-            $table->text('decision')->nullable();
             $table->longText('manifest');
             $table->string('manifest_sha256', 64);
             $table->string('core_sha256', 64);

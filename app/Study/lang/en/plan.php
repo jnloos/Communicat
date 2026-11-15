@@ -12,8 +12,6 @@ return [
     'wave' => 'Wave',
     'from' => 'From scenario',
     'to' => 'To scenario',
-    'decision' => 'Decision',
-    'decision_help' => 'Why this wave is planned. Optional.',
     'preview' => 'Preview',
     'apply' => 'Apply wave',
     'confirm_title' => 'Apply this wave?',

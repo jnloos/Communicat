@@ -16,28 +16,26 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * Study-only, removable: see app/Study/README.md.
  *
- * One planned wave of a study: its scenario range, why it was planned (the
- * optional decision) and the canonical copy of the manifest it was
- * planned from. The copies are what lets a later wave prove it changed nothing
+ * One planned wave of a study: its scenario range and the canonical copy of
+ * the manifest it was planned from. The copies are what lets a later wave prove it changed nothing
  * an earlier one planned, and study:check recompute every wave as it was.
  */
 class StudyWave extends Model
 {
     protected $fillable = [
-        'study', 'number', 'first_scenario', 'last_scenario', 'decision',
+        'study', 'number', 'first_scenario', 'last_scenario',
         'manifest', 'manifest_sha256', 'core_sha256', 'user_id', 'project_group_id', 'applied_at', 'failed_reason', 'failed_at',
     ];
 
     protected $casts = ['applied_at' => 'datetime', 'failed_at' => 'datetime'];
 
-    public static function record(Manifest $manifest, int $number, int $from, int $to, ?string $decision, ?int $userId): self
+    public static function record(Manifest $manifest, int $number, int $from, int $to, ?int $userId): self
     {
         return static::create([
             'study' => $manifest->study(),
             'number' => $number,
             'first_scenario' => $from,
             'last_scenario' => $to,
-            'decision' => $decision,
             'manifest' => $manifest->canonical(),
             'manifest_sha256' => $manifest->sha256(),
             'core_sha256' => $manifest->coreHash(),

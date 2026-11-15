@@ -59,6 +59,7 @@ class ProgressPageControlsTest extends TestCase
         $page = Livewire::test(ProgressPage::class)->call('askToPause');
 
         $page->assertSet('pendingMethod', 'pauseStudy');
+        $page->assertDispatched('open-confirm', fn ($name, $params) => $params['label'] === 'Pause' && $params['variant'] === 'danger');
         $this->assertFalse(app(PauseFlag::class)->active());
         $this->assertStringContainsString('(1 runs, 2 turns left)', $page->get('confirmMessage'));
 
@@ -74,7 +75,8 @@ class ProgressPageControlsTest extends TestCase
     {
         app(PauseFlag::class)->pause('lunch', 'manual', PauseSource::Manual);
 
-        Livewire::test(ProgressPage::class)->call('askToResume')->assertSet('pendingMethod', 'resumeStudy')->call('executeConfirmed');
+        Livewire::test(ProgressPage::class)->call('askToResume')->assertSet('pendingMethod', 'resumeStudy')
+            ->assertDispatched('open-confirm', fn ($name, $params) => $params['label'] === 'Resume' && $params['variant'] === 'primary')->call('executeConfirmed');
 
         $this->assertFalse(app(PauseFlag::class)->active());
         $this->assertSame(1, StudyEvent::where('kind', 'manual')->count());

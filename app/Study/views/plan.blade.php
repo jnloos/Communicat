@@ -32,7 +32,6 @@
             <flux:input type="number" min="1" wire:model="from" :label="__('study::plan.from')" />
             <flux:input type="number" min="1" wire:model="to" :label="__('study::plan.to')" />
         </div>
-        <flux:textarea wire:model="decision" rows="3" :label="__('study::plan.decision')" :description="__('study::plan.decision_help')" />
 
         <div class="flex items-center justify-end gap-2">
             <flux:button wire:click="preview" icon="eye">{{ __('study::plan.preview') }}</flux:button>

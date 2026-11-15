@@ -24,6 +24,9 @@ trait NeedsConfirmation
     /** Name of the red confirm button; null keeps the shared "Confirm". */
     public ?string $confirmLabel = null;
 
+    /** Colour of the confirm button: danger (default) or primary, for an action that undoes no harm. */
+    public string $confirmVariant = 'danger';
+
     #[Locked]
     public ?string $pendingMethod = null;
 
@@ -40,6 +43,7 @@ trait NeedsConfirmation
             title: $this->confirmTitle ?? __('common.confirm_dialog.title'),
             message: $this->confirmMessage ?? __('common.confirm_dialog.message'),
             label: $this->confirmLabel ?? __('common.actions.confirm'),
+            variant: $this->confirmVariant === 'primary' ? 'primary' : 'danger',
         );
     }
 

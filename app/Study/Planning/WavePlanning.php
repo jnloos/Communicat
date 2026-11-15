@@ -20,14 +20,13 @@ final class WavePlanning
         private readonly PlanPreview $preview,
     ) {}
 
-    public function prepare(string $json, int $number, int $from, int $to, ?string $decision): PreparedWave
+    public function prepare(string $json, int $number, int $from, int $to): PreparedWave
     {
-        $decision = trim((string) $decision) === '' ? null : trim($decision);
 
         try {
             $manifest = Manifest::fromJson($json);
         } catch (InvalidManifest $exception) {
-            return new PreparedWave(null, $number, $from, $to, $decision, [], $exception->problems);
+            return new PreparedWave(null, $number, $from, $to, [], $exception->problems);
         }
 
         $problems = $this->rules->problems($manifest, $number, $from, $to);
@@ -37,7 +36,7 @@ final class WavePlanning
             $problems = [...$problems, ...$this->writer->problems($manifest, $plans)];
         }
 
-        return new PreparedWave($manifest, $number, $from, $to, $decision, $plans, $problems);
+        return new PreparedWave($manifest, $number, $from, $to, $plans, $problems);
     }
 
     /** @return array<string, mixed> see PlanPreview::of() */
@@ -61,7 +60,7 @@ final class WavePlanning
         $existing = StudyWave::where('study', $wave->manifest->study())->where('number', $wave->number)->first();
 
         if ($existing === null) {
-            return StudyWave::record($wave->manifest, $wave->number, $wave->from, $wave->to, $wave->decision, $owner->id);
+            return StudyWave::record($wave->manifest, $wave->number, $wave->from, $wave->to, $owner->id);
         }
 
         // The runs belong to the user the wave was planned for; resuming as another would silently ignore the request.

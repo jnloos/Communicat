@@ -64,6 +64,6 @@ class DiscordInteractionTest extends TestCase
         $this->disableInteractions();
         $this->refreshApplication();
 
-        $this->postJson('/study/discord/interactions', ['type' => 1])->assertNotFound();
+        $this->postJson('/discord/interactions', ['type' => 1])->assertNotFound();
     }
 }

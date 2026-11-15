@@ -102,7 +102,7 @@ class ProgressPageTest extends TestCase
     {
         $this->asAdmin();
         $planning = app(WavePlanning::class);
-        $planning->apply($planning->record($planning->prepare(ManifestTest::fixture('tiny-manifest.json'), 1, 1, 1, null), auth()->user()));
+        $planning->apply($planning->record($planning->prepare(ManifestTest::fixture('tiny-manifest.json'), 1, 1, 1), auth()->user()));
 
         $report = Livewire::test(ProgressPage::class)->viewData('report');
 

@@ -85,7 +85,7 @@ class StudyServiceProvider extends ServiceProvider
 
         // Outside the web stack: no session, no CSRF; the Ed25519 signature is the protection.
         if (config('study.discord.public_key')) {
-            Route::post('study/discord/interactions', InteractionController::class)
+            Route::post('discord/interactions', InteractionController::class)
                 ->middleware('throttle:60,1')
                 ->name('study.discord.interactions');
         }

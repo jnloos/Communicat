@@ -17,17 +17,17 @@ to depend on it.
 | Pause flag, circuit breaker, per-run health, giving up a run | `Control/` |
 | `BreakerTripped` (fired once per breaker pause, for alerting) | `Events/BreakerTripped.php` |
 | Planning: manifest, pure planner, idempotent writer, check (spec `2026-11-15-studie-planung-design.md`) | `Planning/` |
-| `php artisan study:plan {manifest} --wave=N --scenarios=FROM-TO [--decision=…] [--user=ID] (--dry-run \| --apply)` | `Console/PlanStudyWave.php` |
+| `php artisan study:plan {manifest} --wave=N --scenarios=FROM-TO [--user=ID] (--dry-run \| --apply)` | `Console/PlanStudyWave.php` |
 | `php artisan study:check [--study=main]` (exit FAILURE on any deviation) | `Console/CheckStudyPlan.php` |
 | Planning page `/study/plan` (admins: upload, preview, apply) | `Livewire/PlanWavePage.php`, `views/plan.blade.php` |
 | Writes a confirmed wave, on the app's **default** queue | `Jobs/ApplyWave.php` |
-| Table `study_waves` (one row per wave: range, decision, manifest copy, hashes, group, `applied_at`) | `Models/StudyWave.php`, `database/migrations/` (always loaded) |
+| Table `study_waves` (one row per wave: range, manifest copy, hashes, group, `applied_at`) | `Models/StudyWave.php`, `database/migrations/` (always loaded) |
 | Table `study_events` (monitoring log: kind, level, message; the dashboard's "Latest messages") | `Models/StudyEvent.php`, `database/migrations/` (always loaded) |
 | Read model for dashboard, watcher and `/status` (`StudyProgress` + pause, worker signal, last 10 events) and its text form | `Progress/StudySnapshot.php`, `Progress/StatusText.php` |
 | `php artisan study:watch` (scheduler, every minute): standstill, pause, finished wave, report, then the healthchecks ping | `Console/WatchStudy.php`, `Watch/StudyWatcher.php`, `Watch/DeadMansSwitch.php` |
 | Alert dedup/reminder/all clear in the cache; the way out (`study_events` + Discord + mail, each channel isolated) | `Watch/AlertBook.php`, `Watch/Notifier.php`, `Watch/Alert*.php` |
 | Instant message on `BreakerTripped`; worker heartbeat on `Queue\Events\Looping` | `Watch/AnnounceHalt.php`, `Watch/WorkerHeartbeat.php` |
-| Discord over REST (429 handling), Ed25519 interactions endpoint `POST /study/discord/interactions` (PING, `/status`), `php artisan study:discord-register` | `Discord/`, `Console/RegisterDiscordCommands.php` |
+| Discord over REST (429 handling), Ed25519 interactions endpoint `POST /discord/interactions` (PING, `/status`), `php artisan study:discord-register` | `Discord/`, `Console/RegisterDiscordCommands.php` |
 | Worker unit | `systemd/communicat-study@.service` |
 | Tests | `tests/Feature/Study/` |
 
@@ -42,7 +42,7 @@ experts get uuid5s from run key and persona content, so `WaveWriter` finds them
 again: writing twice changes nothing, an abort resumes, one transaction per
 instance (scenario × block). Wave N > 1 needs wave N−1 applied, the same core
 hash, unchanged earlier scenarios, and the next scenario
-(`WaveRules`); the decision is an optional note. Tags it sets: project `study`, `wave`, `scenario`, `block`,
+(`WaveRules`). Tags it sets: project `study`, `wave`, `scenario`, `block`,
 `focus profile`, `duo profile`, `focus seat`; persona `study`, `first name`,
 `subgroup`. Attributes Role, Gender, Origin are shown `all`, every other
 attribute `none`. Each wave files its runs in the owner's sidebar group

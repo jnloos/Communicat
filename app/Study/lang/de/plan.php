@@ -12,8 +12,6 @@ return [
     'wave' => 'Welle',
     'from' => 'Ab Szenario',
     'to' => 'Bis Szenario',
-    'decision' => 'Entscheidung',
-    'decision_help' => 'Warum diese Welle geplant wird. Freiwillig.',
     'preview' => 'Vorschau',
     'apply' => 'Welle anlegen',
     'confirm_title' => 'Diese Welle anlegen?',

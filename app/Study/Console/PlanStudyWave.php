@@ -22,7 +22,6 @@ class PlanStudyWave extends Command
         {manifest : Path to the study manifest (JSON)}
         {--wave= : Wave number, from 1}
         {--scenarios= : Scenario range FROM-TO}
-        {--decision= : Why this wave is planned (optional)}
         {--user= : Owner of the projects; default the first admin}
         {--dry-run : Show what would be written, write nothing}
         {--apply : Write the wave}';
@@ -43,7 +42,7 @@ class PlanStudyWave extends Command
             return self::FAILURE;
         }
 
-        $wave = $planning->prepare($request['json'], $request['wave'], $request['from'], $request['to'], $this->option('decision'));
+        $wave = $planning->prepare($request['json'], $request['wave'], $request['from'], $request['to']);
         $this->overview($planning->preview($wave, $owner, withPrompts: (bool) $this->option('dry-run')));
 
         if (! $wave->isAcceptable()) {

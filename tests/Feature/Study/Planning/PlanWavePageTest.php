@@ -109,7 +109,7 @@ class PlanWavePageTest extends TestCase
     {
         $admin = User::factory()->create(['is_admin' => true]);
         $this->actingAs($admin);
-        $wave = StudyWave::record(Manifest::fromJson(ManifestTest::fixture('tiny-manifest.json')), 1, 1, 1, null, $admin->id);
+        $wave = StudyWave::record(Manifest::fromJson(ManifestTest::fixture('tiny-manifest.json')), 1, 1, 1, $admin->id);
 
         (new ApplyWave($wave->id))->failed(new RuntimeException('Wave refused: nope'));
         Livewire::withQueryParams(['applying' => $wave->id])->test(PlanWavePage::class)

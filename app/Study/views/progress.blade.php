@@ -6,14 +6,10 @@
         <x-slot:actions>
             <div class="flex items-center gap-3">
                 @if ($snapshot->pause === null)
-                    <span class="inline-flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-300" data-running>
-                        <span class="size-2 rounded-full bg-emerald-500" aria-hidden="true"></span>{{ __('study::progress.running') }}
-                    </span>
                     <flux:button size="sm" icon="pause" wire:click="askToPause" data-pause>{{ __('study::progress.pause') }}</flux:button>
                 @else
                     <flux:button size="sm" icon="play" variant="primary" wire:click="askToResume" data-resume>{{ __('study::progress.resume') }}</flux:button>
                 @endif
-                <x-environment-badge />
                 <flux:button size="sm" icon="plus" :href="route('study.plan')" wire:navigate>{{ __('study::plan.link') }}</flux:button>
                 @if (! empty($report['waves']))
                     <flux:select size="sm" wire:model.live="wave" :aria-label="__('study::progress.wave')">
@@ -48,6 +44,10 @@
             <flux:callout class="mt-6" variant="danger" icon="exclamation-triangle" data-stale
                 :heading="__('study::progress.stale_heading')"
                 :text="__('study::progress.stale', ['minutes' => config('study.stale_after_minutes')])" />
+        @elseif ($snapshot->pause === null && $report['remaining'] > 0)
+            <flux:callout class="mt-6" variant="success" icon="play-circle" data-running
+                :heading="__('study::progress.running_heading')"
+                :text="__('study::progress.running', ['turns' => $report['remaining']])" />
         @endif
 
         <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">

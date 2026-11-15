@@ -80,7 +80,7 @@ class PlanStudyWaveCommandTest extends TestCase
         $planning = app(WavePlanning::class);
         $owner = User::factory()->create(['is_admin' => true]);
         $other = User::factory()->create(['is_admin' => true]);
-        $prepared = $planning->prepare(ManifestTest::fixture('tiny-manifest.json'), 1, 1, 1, null);
+        $prepared = $planning->prepare(ManifestTest::fixture('tiny-manifest.json'), 1, 1, 1);
         $planning->record($prepared, $owner);
 
         $this->assertSame($owner->id, $planning->record($prepared, $owner)->user_id);

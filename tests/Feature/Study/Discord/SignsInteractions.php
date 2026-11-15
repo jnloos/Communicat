@@ -49,6 +49,6 @@ trait SignsInteractions
     {
         $body = json_encode($payload);
 
-        return $this->call('POST', '/study/discord/interactions', server: $this->server($this->signed($body)), content: $body);
+        return $this->call('POST', '/discord/interactions', server: $this->server($this->signed($body)), content: $body);
     }
 }

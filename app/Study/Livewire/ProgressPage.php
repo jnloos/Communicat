@@ -93,7 +93,9 @@ class ProgressPage extends Component
         $progress = app(StudyProgress::class)->read();
         $totals = $progress['totals'] ?? ['total' => 0, 'done' => 0];
 
-        $this->confirmLabel = __("study::progress.{$action}_label");
+        $this->confirmTitle = __("study::progress.{$action}_label");
+        $this->confirmLabel = __("study::progress.{$action}");
+        $this->confirmVariant = $action === 'resume' ? 'primary' : 'danger';
         $this->confirmMessage = __("study::progress.{$action}_message", ['runs' => $totals['total'] - $totals['done'], 'turns' => $progress['remaining'] ?? 0]);
         $this->needsConfirmation($method);
     }

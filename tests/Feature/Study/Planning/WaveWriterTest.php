@@ -148,9 +148,9 @@ class WaveWriterTest extends TestCase
         return Manifest::fromJson(json_encode($data));
     }
 
-    private function write(Manifest $manifest, int $number, int $from, int $to, ?string $decision = null): StudyWave
+    private function write(Manifest $manifest, int $number, int $from, int $to): StudyWave
     {
-        $wave = StudyWave::record($manifest, $number, $from, $to, $decision, $this->owner->id);
+        $wave = StudyWave::record($manifest, $number, $from, $to, $this->owner->id);
         app(WaveWriter::class)->write($wave, $this->owner);
 
         return $wave->refresh();

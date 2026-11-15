@@ -26,7 +26,7 @@ class CheckStudyPlanTest extends TestCase
 
         $owner = User::factory()->create(['is_admin' => true]);
         $planning = app(WavePlanning::class);
-        $planning->apply($planning->record($planning->prepare(ManifestTest::fixture('tiny-manifest.json'), 1, 1, 1, null), $owner));
+        $planning->apply($planning->record($planning->prepare(ManifestTest::fixture('tiny-manifest.json'), 1, 1, 1), $owner));
         $this->project = Project::orderBy('id')->firstOrFail();
     }
 

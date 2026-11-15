@@ -35,7 +35,6 @@ class WaveRulesTest extends TestCase
         $first->update(['applied_at' => now()]);
         $this->assertSame([], $this->problems($manifest, 2, 4, 6));
         $this->assertStringContainsString('must start at scenario 4', implode("\n", $this->problems($manifest, 2, 5, 6)));
-        $this->assertSame([], $this->problems($manifest, 2, 4, 6), 'a decision is optional');
     }
 
     public function test_the_rules_read_the_stored_wave_even_if_its_model_left_the_config(): void
@@ -108,6 +107,6 @@ class WaveRulesTest extends TestCase
 
     private function record(Manifest $manifest, int $number, int $from, int $to): StudyWave
     {
-        return StudyWave::record($manifest, $number, $from, $to, null, null);
+        return StudyWave::record($manifest, $number, $from, $to, null);
     }
 }

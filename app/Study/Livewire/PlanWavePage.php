@@ -35,8 +35,6 @@ class PlanWavePage extends Component
 
     public ?int $to = null;
 
-    public string $decision = '';
-
     /** PlanPreview::of() of the last preview; empty before one. */
     #[Locked]
     public array $overview = [];
@@ -105,10 +103,9 @@ class PlanWavePage extends Component
             'wave' => 'required|integer|min:1',
             'from' => 'required|integer|min:1',
             'to' => 'required|integer|min:1',
-            'decision' => 'nullable|string|max:5000',
         ]);
 
-        return app(WavePlanning::class)->prepare($this->manifest->get(), $this->wave, $this->from, $this->to, $this->decision);
+        return app(WavePlanning::class)->prepare($this->manifest->get(), $this->wave, $this->from, $this->to);
     }
 
     public function render(): mixed

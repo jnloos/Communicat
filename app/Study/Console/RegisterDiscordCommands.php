@@ -33,7 +33,7 @@ class RegisterDiscordCommands extends Command
 
         $scope = config('study.discord.guild_id') ? 'on the server' : 'globally (can take up to an hour)';
         $this->info("/status registered {$scope}.");
-        $this->line('Interactions Endpoint URL for the Developer Portal: '.url('/study/discord/interactions'));
+        $this->line('Interactions Endpoint URL for the Developer Portal: '.url('/discord/interactions'));
 
         return self::SUCCESS;
     }

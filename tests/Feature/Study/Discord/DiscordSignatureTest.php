@@ -33,7 +33,7 @@ class DiscordSignatureTest extends TestCase
         $body = '{"type":1}';
         $headers = $this->signed($body);
 
-        $this->call('POST', '/study/discord/interactions', server: $this->server($headers), content: '{"type":2}')
+        $this->call('POST', '/discord/interactions', server: $this->server($headers), content: '{"type":2}')
             ->assertUnauthorized()->assertContent('');
     }
 
@@ -44,7 +44,7 @@ class DiscordSignatureTest extends TestCase
         $timestamp = (string) time();
         $signature = bin2hex(sodium_crypto_sign_detached($timestamp.$body, sodium_crypto_sign_secretkey($other)));
 
-        $this->call('POST', '/study/discord/interactions', server: $this->server(['signature' => $signature, 'timestamp' => $timestamp]), content: $body)
+        $this->call('POST', '/discord/interactions', server: $this->server(['signature' => $signature, 'timestamp' => $timestamp]), content: $body)
             ->assertUnauthorized();
     }
 
@@ -54,7 +54,7 @@ class DiscordSignatureTest extends TestCase
         $good = $this->signed($body);
 
         foreach ([[], ['signature' => 'abcd', 'timestamp' => $good['timestamp']], ['signature' => str_repeat('z', 128), 'timestamp' => $good['timestamp']], ['signature' => $good['signature']]] as $headers) {
-            $this->call('POST', '/study/discord/interactions', server: $this->server($headers), content: $body)->assertUnauthorized();
+            $this->call('POST', '/discord/interactions', server: $this->server($headers), content: $body)->assertUnauthorized();
         }
     }
 
@@ -62,7 +62,7 @@ class DiscordSignatureTest extends TestCase
     {
         $body = '{"type":1}';
 
-        $this->call('POST', '/study/discord/interactions', server: $this->server($this->signed($body, time() - 301)), content: $body)
+        $this->call('POST', '/discord/interactions', server: $this->server($this->signed($body, time() - 301)), content: $body)
             ->assertUnauthorized();
     }
 
