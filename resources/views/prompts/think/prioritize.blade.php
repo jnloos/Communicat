@@ -10,4 +10,10 @@ Record in the thought:
 
 Carry over from your previous short-term memory what still applies, and strike what is done. At most six sentences, no conversational contribution, no address.
 
-Urgency is a number from {{ $lowest }} to {{ $highest }}: {{ $lowest }} if you have nothing to contribute, {{ $highest }} if your contribution is absolutely necessary right now. Do not justify it, just give the number.
+Urgency is a number from {{ $lowest }} to {{ $highest }}:
+0 – you would rather listen now.
+1–3 – you could add something, but it can wait.
+4–6 – you have a relevant point the group has not heard yet.
+7–8 – you have an important point, or the conversation has just turned to your area.
+9 – you must speak now: you were asked directly, or something said is wrong and needs correcting.
+Do not justify it, just give the number.

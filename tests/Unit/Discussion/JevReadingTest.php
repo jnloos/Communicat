@@ -3,7 +3,6 @@
 namespace Tests\Unit\Discussion;
 
 use App\Discussion\Jev\JevBidder;
-use App\Discussion\Schemas\ThoughtWithPrioritySchema;
 use App\Discussion\Values\JevBid;
 use App\Discussion\Values\JevChoice;
 use App\Discussion\Values\JevScore;
@@ -107,8 +106,8 @@ class JevReadingTest extends TestCase
         $this->assertFalse((new JevBid(1.0, null, null, 1))->unreadable());
     }
 
-    public function test_the_levels_cover_exactly_the_scale_of_the_bids(): void
+    public function test_jev_bids_on_its_own_five_levels(): void
     {
-        $this->assertCount(ThoughtWithPrioritySchema::HIGHEST - ThoughtWithPrioritySchema::LOWEST + 1, JevBidder::LEVELS);
+        $this->assertCount(5, JevBidder::LEVELS);
     }
 }

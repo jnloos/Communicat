@@ -4,6 +4,7 @@ namespace Tests\Unit\Discussion;
 
 use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\Jev\JevNotConfigured;
+use App\Discussion\Schemas\ThoughtWithPrioritySchema;
 use App\Discussion\Selectors\HighestBidSelector;
 use App\Discussion\Stages\JevBids;
 use App\Discussion\Stages\ThinkAndPrioritize;
@@ -177,7 +178,7 @@ class JevBidsTest extends TestCase
         $data = [
             'expert' => $this->experts[0], 'project' => $this->project->fresh(), 'experts' => $this->project->contributingExperts(),
             'memory' => new MemoryView([['position' => null, 'name' => 'Alice', 'token' => 'E1', 'addressee' => null, 'content' => 'Ein Beitrag.']], 'GESPEICHERTER GEDANKE', 'Eine Zusammenfassung.'),
-            'thought' => 'GEDANKE VON JETZT', 'lowest' => 1, 'highest' => 5,
+            'thought' => 'GEDANKE VON JETZT', 'lowest' => ThoughtWithPrioritySchema::LOWEST, 'highest' => ThoughtWithPrioritySchema::HIGHEST,
         ];
         $team = app(PromptRenderer::class)->render('prompts.think.prioritize', $data);
         $bid = app(PromptRenderer::class)->render('prompts.jev.bid', $data);

@@ -74,9 +74,18 @@ class ThinkAndPrioritizeTest extends TestCase
         $this->assertNull($payload->thoughtOf($this->project->contributingExperts()->first())->priority);
     }
 
-    public function test_a_priority_outside_one_to_five_counts_as_unreadable(): void
+    public function test_zero_is_a_readable_priority(): void
     {
-        FakeAgents::always(ThinkAgent::class, ['thought' => 'Mein Gedanke.', 'priority' => 9]);
+        FakeAgents::always(ThinkAgent::class, ['thought' => 'Mein Gedanke.', 'priority' => 0]);
+
+        $payload = $this->prioritize();
+
+        $this->assertSame(0, $payload->thoughtOf($this->project->contributingExperts()->first())->priority);
+    }
+
+    public function test_a_priority_outside_zero_to_nine_counts_as_unreadable(): void
+    {
+        FakeAgents::always(ThinkAgent::class, ['thought' => 'Mein Gedanke.', 'priority' => 10]);
 
         $payload = $this->prioritize();
 

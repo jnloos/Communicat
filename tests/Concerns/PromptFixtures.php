@@ -2,6 +2,7 @@
 
 namespace Tests\Concerns;
 
+use App\Discussion\Schemas\ThoughtWithPrioritySchema;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\Values\AttributeVisibility;
 use App\Discussion\Values\MemoryView;
@@ -70,8 +71,8 @@ trait PromptFixtures
             'memory' => new MemoryView([], '', ''),
             'proposal' => 'A draft.',
             'thought' => 'A thought.',
-            'lowest' => 1,
-            'highest' => 5,
+            'lowest' => ThoughtWithPrioritySchema::LOWEST,
+            'highest' => ThoughtWithPrioritySchema::HIGHEST,
             'drafts' => ['E11' => ['name' => 'Alice Fixture', 'draft' => 'First draft.'], 'E12' => ['name' => 'Bob Fixture', 'draft' => 'Second draft.']],
         ];
     }

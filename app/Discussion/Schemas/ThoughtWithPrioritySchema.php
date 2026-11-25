@@ -13,9 +13,9 @@ use Illuminate\Contracts\JsonSchema\JsonSchema;
  */
 class ThoughtWithPrioritySchema implements ResponseSchema
 {
-    public const LOWEST = 1;
+    public const LOWEST = 0;
 
-    public const HIGHEST = 5;
+    public const HIGHEST = 9;
 
     public function fields(JsonSchema $schema): array
     {
@@ -28,7 +28,7 @@ class ThoughtWithPrioritySchema implements ResponseSchema
                 ->min(self::LOWEST)
                 ->max(self::HIGHEST)
                 ->description(sprintf(
-                    'How urgently you need the floor now: %d if you have nothing to add, %d if your contribution is indispensable. The number alone, no reasoning.',
+                    'How urgently you need the floor now: %d if you would rather listen, %d if you must speak now. The number alone, no reasoning.',
                     self::LOWEST,
                     self::HIGHEST,
                 ))

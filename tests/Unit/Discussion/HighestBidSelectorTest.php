@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Discussion;
 
+use App\Discussion\Schemas\ThoughtWithPrioritySchema;
 use App\Discussion\Selectors\HighestBidSelector;
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\Selection;
@@ -70,7 +71,7 @@ class HighestBidSelectorTest extends TestCase
         $selection = $this->select([0 => null, 1 => 2, 2 => 3]);
 
         $this->assertSame($this->experts[2]->id, $selection->speaker->id);
-        $this->assertSame(1, $selection->signals['bids'][$this->experts[0]->promptId]);
+        $this->assertSame(ThoughtWithPrioritySchema::LOWEST, $selection->signals['bids'][$this->experts[0]->promptId]);
         $this->assertSame([$this->experts[0]->promptId], $selection->signals['fallbacks']);
     }
 

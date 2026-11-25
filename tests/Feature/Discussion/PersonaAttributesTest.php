@@ -5,6 +5,7 @@ namespace Tests\Feature\Discussion;
 use App\Discussion\Agents\SpeakAgent;
 use App\Discussion\Agents\SummarizeAgent;
 use App\Discussion\Agents\ThinkAgent;
+use App\Discussion\Schemas\ThoughtWithPrioritySchema;
 use App\Discussion\Support\PersonaLines;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\TurnRunner;
@@ -86,7 +87,7 @@ class PersonaAttributesTest extends TestCase
         return [
             'speak' => $renderer->render('prompts.speak', $common + ['proposal' => 'A draft.']),
             'think.speaker' => $renderer->render('prompts.think.speaker', $common),
-            'think.prioritize' => $renderer->render('prompts.think.prioritize', $common + ['lowest' => 1, 'highest' => 5]),
+            'think.prioritize' => $renderer->render('prompts.think.prioritize', $common + ['lowest' => ThoughtWithPrioritySchema::LOWEST, 'highest' => ThoughtWithPrioritySchema::HIGHEST]),
             'think.propose' => $renderer->render('prompts.think.propose', $common),
             'orchestrator' => $renderer->render('prompts.select.orchestrator', $common),
             'judge' => $renderer->render('prompts.select.judge', $common + ['drafts' => ['E1' => ['name' => 'Alice', 'draft' => 'x']]]),

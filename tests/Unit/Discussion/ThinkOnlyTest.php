@@ -4,6 +4,7 @@ namespace Tests\Unit\Discussion;
 
 use App\Discussion\Agents\ThinkAgent;
 use App\Discussion\ParseFailure;
+use App\Discussion\Schemas\ThoughtWithPrioritySchema;
 use App\Discussion\Stages\ThinkOnly;
 use App\Discussion\Support\PromptRenderer;
 use App\Discussion\TurnPayload;
@@ -69,8 +70,8 @@ class ThinkOnlyTest extends TestCase
             'project' => $this->project,
             'expert' => $this->experts[0],
             'memory' => new MemoryView([], '', ''),
-            'lowest' => 1,
-            'highest' => 5,
+            'lowest' => ThoughtWithPrioritySchema::LOWEST,
+            'highest' => ThoughtWithPrioritySchema::HIGHEST,
         ] + $renderer->participants($this->project);
 
         $bidding = $renderer->render('prompts.think.prioritize', $data);

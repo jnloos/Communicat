@@ -2,7 +2,7 @@
 
 namespace App\Discussion\Selectors;
 
-use App\Discussion\Schemas\ThoughtWithPrioritySchema;
+use App\Discussion\Jev\JevBidder;
 use App\Discussion\Support\TieBreaker;
 use App\Discussion\TurnPayload;
 use App\Discussion\Values\Selection;
@@ -44,8 +44,8 @@ class JevBidSelector implements SpeakerSelector
                 $fallbacks[] = $token;
             }
 
-            $exact[$token] = $score ?? (float) ThoughtWithPrioritySchema::LOWEST;
-            $bids[$token] = $payload->thoughtOf($expert)?->priority ?? ThoughtWithPrioritySchema::LOWEST;
+            $exact[$token] = $score ?? (float) JevBidder::LOWEST;
+            $bids[$token] = $payload->thoughtOf($expert)?->priority ?? JevBidder::LOWEST;
         }
 
         $top = max($exact);

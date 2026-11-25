@@ -9,8 +9,9 @@ use Laravel\Ai\Classification\Score;
 
 /**
  * Jev's answer to "how urgently does this agent want the floor now", for one
- * agent, on the scale of the agents' own bids (1 to 5, the levels worded like
- * the bidding prompt's anchors). One request per agent: the state is that
+ * agent, on Jev's own five-level scale (1 to 5). The team's bid runs 0 to 9
+ * since 25.11.2026; Jev Score never asks the team for a bid, so the two scales
+ * never meet in one turn. One request per agent: the state is that
  * agent's own view, so a bid stays an agent's, not a ranking of the group.
  *
  * The state (prompts/jev/bid) is written to the agent ("you"), so the question
@@ -22,7 +23,10 @@ class JevBidder
 
     public const INSTRUCTIONS = 'How urgently do you want to take the floor right now?';
 
-    /** Lowest level first; the count must equal ThoughtWithPrioritySchema::HIGHEST - LOWEST + 1. */
+    /** Jev's lowest level as JevScore counts it; what an unreadable Jev bid counts as. */
+    public const LOWEST = 1;
+
+    /** Lowest level first; JevScore reads them as LOWEST to count(LEVELS). */
     public const LEVELS = [
         'Nothing to contribute right now.',
         'Little to contribute right now.',
