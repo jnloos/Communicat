@@ -48,6 +48,15 @@ class PlanStudyWaveCommandTest extends TestCase
         $this->assertSame(0, StudyWave::count());
     }
 
+    public function test_a_study_folder_by_name_plans_like_its_manifest(): void
+    {
+        $this->artisan('study:plan', ['manifest' => 'main', '--wave' => 1, '--scenarios' => '1-1', '--dry-run' => true])
+            ->expectsOutputToContain('Focus seat')
+            ->assertSuccessful();
+
+        $this->assertSame(0, StudyWave::count());
+    }
+
     public function test_it_needs_exactly_one_of_dry_run_and_apply(): void
     {
         $arguments = ['manifest' => self::path('tiny-manifest.json'), '--wave' => 1, '--scenarios' => '1-1'];

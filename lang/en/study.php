@@ -3,6 +3,12 @@
 // The study's pages and alerts: __('study.plan.…'), __('study.progress.…'), __('study.watch.…').
 return [
     'plan' => [
+        'source' => 'Source',
+        'source_folder' => 'Study folder',
+        'source_upload' => 'Upload a file',
+        'folder' => 'Study folder',
+        'folder_hint' => 'From resources/study/manifests: study.json, names.json and scenarios/sNN.json.',
+        'no_folders' => 'There is no study folder under resources/study/manifests yet.',
         'heading' => 'Plan a wave',
         'subheading' => 'Upload the study manifest, check the preview, then apply the wave.',
         'link' => 'Plan a wave',

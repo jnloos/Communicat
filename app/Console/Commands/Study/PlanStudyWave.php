@@ -3,6 +3,8 @@
 namespace App\Console\Commands\Study;
 
 use App\Console\Commands\Concerns\ResolvesActingUser;
+use App\Services\Study\Planning\InvalidManifest;
+use App\Services\Study\Planning\ManifestFolder;
 use App\Services\Study\Planning\PlanPreview;
 use App\Services\Study\Planning\WavePlanning;
 use Illuminate\Console\Command;
@@ -19,7 +21,7 @@ class PlanStudyWave extends Command
     use ResolvesActingUser;
 
     protected $signature = 'study:plan
-        {manifest : Path to the study manifest (JSON)}
+        {manifest : A study folder (by name under resources/study/manifests, or a path) or a manifest JSON file}
         {--wave= : Wave number, from 1}
         {--scenarios= : Scenario range FROM-TO}
         {--user= : Owner of the projects; default the first admin}
@@ -61,8 +63,18 @@ class PlanStudyWave extends Command
     private function request(): ?array
     {
         $path = $this->argument('manifest');
-        if (! is_file($path)) {
-            $this->error("No manifest at {$path}.");
+        $folder = is_dir($path) ? $path : (in_array($path, ManifestFolder::names(), true) ? ManifestFolder::path($path) : null);
+
+        if ($folder === null && ! is_file($path)) {
+            $this->error("No manifest or study folder at {$path}.");
+
+            return null;
+        }
+
+        try {
+            $json = $folder === null ? file_get_contents($path) : ManifestFolder::assemble($folder);
+        } catch (InvalidManifest $exception) {
+            $this->error(implode("\n", $exception->problems));
 
             return null;
         }
@@ -73,7 +85,7 @@ class PlanStudyWave extends Command
             return null;
         }
 
-        return ['json' => file_get_contents($path), 'wave' => (int) $this->option('wave'), 'from' => (int) $range[1], 'to' => (int) $range[2]];
+        return ['json' => $json, 'wave' => (int) $this->option('wave'), 'from' => (int) $range[1], 'to' => (int) $range[2]];
     }
 
     private function overview(array $preview): void

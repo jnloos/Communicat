@@ -5,10 +5,13 @@ namespace App\Livewire\Study;
 use App\Jobs\ApplyWave;
 use App\Livewire\Concerns\NeedsConfirmation;
 use App\Models\StudyWave;
+use App\Services\Study\Planning\InvalidManifest;
+use App\Services\Study\Planning\ManifestFolder;
 use App\Services\Study\Planning\PreparedWave;
 use App\Services\Study\Planning\WavePlanning;
 use App\Services\Transfer\UploadLimit;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -18,7 +21,7 @@ use Livewire\WithFileUploads;
 /**
  * Thesis study, see docs/study.md.
  *
- * Upload a manifest, preview a wave exactly as study:plan --dry-run shows it,
+ * Pick a study folder (resources/study/manifests) or upload a manifest, preview a wave exactly as study:plan --dry-run shows it,
  * then apply it: the wave row is recorded here and ApplyWave writes the runs in
  * the background, because thousands of runs outlast a web request. Admins only:
  * the route checks it for the first request, boot() for every update after it.
@@ -26,6 +29,11 @@ use Livewire\WithFileUploads;
 class PlanWavePage extends Component
 {
     use NeedsConfirmation, WithFileUploads;
+
+    /** Where the manifest comes from: a study folder in the repository, or an uploaded file. */
+    public string $source = 'folder';
+
+    public ?string $folder = null;
 
     public ?TemporaryUploadedFile $manifest = null;
 
@@ -50,6 +58,12 @@ class PlanWavePage extends Component
     public function boot(): void
     {
         Gate::authorize('admin');
+    }
+
+    public function mount(): void
+    {
+        $this->folder = ManifestFolder::names()[0] ?? null;
+        $this->source = $this->folder === null ? 'upload' : 'folder';
     }
 
     public function preview(): void
@@ -98,14 +112,24 @@ class PlanWavePage extends Component
 
     private function prepare(): PreparedWave
     {
+        $fromFolder = $this->source === 'folder';
+
         $this->validate([
-            'manifest' => 'required|file|max:'.UploadLimit::kilobytes(),
+            'source' => ['required', Rule::in(['folder', 'upload'])],
+            'folder' => $fromFolder ? ['required', Rule::in(ManifestFolder::names())] : ['nullable'],
+            'manifest' => $fromFolder ? ['nullable'] : ['required', 'file', 'max:'.UploadLimit::kilobytes()],
             'wave' => 'required|integer|min:1',
             'from' => 'required|integer|min:1',
             'to' => 'required|integer|min:1',
         ]);
 
-        return app(WavePlanning::class)->prepare($this->manifest->get(), $this->wave, $this->from, $this->to);
+        try {
+            $json = $fromFolder ? ManifestFolder::assemble(ManifestFolder::path($this->folder)) : $this->manifest->get();
+        } catch (InvalidManifest $exception) {
+            return new PreparedWave(null, $this->wave, $this->from, $this->to, [], $exception->problems);
+        }
+
+        return app(WavePlanning::class)->prepare($json, $this->wave, $this->from, $this->to);
     }
 
     public function render(): mixed
@@ -116,6 +140,7 @@ class PlanWavePage extends Component
             'applyingWave' => $wave,
             'written' => $wave?->writtenRuns(),
             'maxMegabytes' => UploadLimit::megabytes(),
+            'folders' => ManifestFolder::names(),
         ])->title(__('study.plan.heading'));
     }
 }

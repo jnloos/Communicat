@@ -18,10 +18,10 @@ its pages off.
 | Pause flag, circuit breaker, per-run health, giving up a run, queued runs | `app/Services/Study/Control/` |
 | `BreakerTripped` (fired once per breaker pause, for alerting) | `app/Events/BreakerTripped.php` |
 | Planning: manifest, pure planner, seat table, idempotent writer, check (spec `2026-11-15-studie-planung-design.md`) | `app/Services/Study/Planning/` |
-| Manifests: one folder per study, `build.sh` assembles `manifest.json` | `resources/study/manifests/` |
+| Manifests: one folder per study (`study.json`, `names.json`, `scenarios/sNN.json`), read directly by `study:plan` and the plan page; `study:manifest` / `build.sh` write the joined file | `resources/study/manifests/`, `app/Services/Study/Planning/ManifestFolder.php`, `app/Console/Commands/Study/BuildStudyManifest.php` |
 | `php artisan study:plan {manifest} --wave=N --scenarios=FROM-TO [--user=ID] (--dry-run \| --apply)` | `app/Console/Commands/Study/PlanStudyWave.php` |
 | `php artisan study:check [--study=main]` (exit FAILURE on any deviation) | `app/Console/Commands/Study/CheckStudyPlan.php` |
-| Planning page `/study/plan` (admins: upload, preview, apply) | `app/Livewire/Study/PlanWavePage.php`, `resources/views/study/plan.blade.php` |
+| Planning page `/study/plan` (admins: study folder or upload, preview, apply) | `app/Livewire/Study/PlanWavePage.php`, `resources/views/study/plan.blade.php` |
 | Writes a confirmed wave, on the app's **default** queue | `app/Jobs/ApplyWave.php` |
 | Table `study_waves` (one row per wave: range, manifest copy, hashes, group, `applied_at`) | `app/Models/StudyWave.php`, `database/migrations/2026_11_15_*` |
 | Table `study_events` (monitoring log: kind, level, message; the dashboard's "Latest messages") | `app/Models/StudyEvent.php`, `database/migrations/2026_11_15_*` |

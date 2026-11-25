@@ -1,4 +1,4 @@
-{{-- Thesis study, see docs/study.md. Upload, preview, confirm; the writing runs in ApplyWave. --}}
+{{-- Thesis study, see docs/study.md. Folder or upload, preview, confirm; the writing runs in ApplyWave. --}}
 @php($failed = $applyingWave?->hasFailed() ?? false)
 @php($writing = $applyingWave !== null && ! $applyingWave->isApplied() && ! $failed)
 
@@ -20,11 +20,28 @@
     @endif
 
     <flux:card class="mt-6 space-y-4">
-        <flux:file-upload wire:model="manifest" accept=".json,application/json" :label="__('study.plan.manifest')">
-            <flux:file-upload.dropzone inline role="button" :aria-label="__('study.plan.manifest')"
-                :heading="$manifest?->getClientOriginalName() ?? __('study.plan.dropzone_heading')"
-                :text="__('study.plan.dropzone_text', ['mb' => $maxMegabytes])" />
-        </flux:file-upload>
+        <flux:radio.group wire:model.live="source" variant="segmented" :label="__('study.plan.source')">
+            <flux:radio value="folder" :label="__('study.plan.source_folder')" />
+            <flux:radio value="upload" :label="__('study.plan.source_upload')" />
+        </flux:radio.group>
+
+        @if ($source === 'folder')
+            @if ($folders === [])
+                <flux:text data-no-folders>{{ __('study.plan.no_folders') }}</flux:text>
+            @else
+                <flux:select wire:model="folder" :label="__('study.plan.folder')" :description="__('study.plan.folder_hint')">
+                    @foreach ($folders as $name)
+                        <flux:select.option :value="$name">{{ $name }}</flux:select.option>
+                    @endforeach
+                </flux:select>
+            @endif
+        @else
+            <flux:file-upload wire:model="manifest" accept=".json,application/json" :label="__('study.plan.manifest')">
+                <flux:file-upload.dropzone inline role="button" :aria-label="__('study.plan.manifest')"
+                    :heading="$manifest?->getClientOriginalName() ?? __('study.plan.dropzone_heading')"
+                    :text="__('study.plan.dropzone_text', ['mb' => $maxMegabytes])" />
+            </flux:file-upload>
+        @endif
 
         <div class="grid gap-4 sm:grid-cols-3">
             <flux:input type="number" min="1" wire:model="wave" :label="__('study.plan.wave')" />

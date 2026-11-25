@@ -44,6 +44,32 @@ class PlanWavePageTest extends TestCase
         $this->assertSame(0, Project::count());
     }
 
+    public function test_a_study_folder_is_the_default_source_and_previews_like_an_upload(): void
+    {
+        $this->asAdmin();
+
+        Livewire::test(PlanWavePage::class)
+            ->assertSet('source', 'folder')
+            ->assertSet('folder', 'main')
+            ->assertSee('probegptsix')
+            ->set('wave', 1)->set('from', 1)->set('to', 1)
+            ->call('preview')
+            ->assertHasNoErrors()
+            ->assertSee('Should the community garden replace half of its individual plots with a shared orchard?');
+
+        $this->assertSame(0, Project::count());
+    }
+
+    public function test_only_a_listed_folder_is_read(): void
+    {
+        $this->asAdmin();
+
+        Livewire::test(PlanWavePage::class)
+            ->set('folder', '../../../.env')->set('wave', 1)->set('from', 1)->set('to', 1)
+            ->call('preview')
+            ->assertHasErrors('folder');
+    }
+
     public function test_a_refused_wave_shows_why_and_cannot_be_applied(): void
     {
         $this->asAdmin();
@@ -125,6 +151,7 @@ class PlanWavePageTest extends TestCase
     private function page(string $fixture = 'tiny-manifest.json'): mixed
     {
         return Livewire::test(PlanWavePage::class)
+            ->set('source', 'upload')
             ->set('manifest', UploadedFile::fake()->createWithContent($fixture, ManifestTest::fixture($fixture)))
             ->set('wave', 1)
             ->set('from', 1)

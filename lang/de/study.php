@@ -3,6 +3,12 @@
 // The study's pages and alerts: __('study.plan.…'), __('study.progress.…'), __('study.watch.…').
 return [
     'plan' => [
+        'source' => 'Quelle',
+        'source_folder' => 'Studienordner',
+        'source_upload' => 'Datei hochladen',
+        'folder' => 'Studienordner',
+        'folder_hint' => 'Aus resources/study/manifests: study.json, names.json und scenarios/sNN.json.',
+        'no_folders' => 'Unter resources/study/manifests liegt noch kein Studienordner.',
         'heading' => 'Welle planen',
         'subheading' => 'Studiendatei hochladen, Vorschau prüfen, dann die Welle anlegen.',
         'link' => 'Welle planen',
