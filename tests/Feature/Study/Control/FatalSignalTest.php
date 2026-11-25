@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Study\Control;
 
-use App\Study\Control\FatalSignal;
+use App\Services\Study\Control\FatalSignal;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 

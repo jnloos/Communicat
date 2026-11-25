@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Study\Watch;
 
-use App\Study\Watch\StudyWatcher;
+use App\Services\Study\Watch\StudyWatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;

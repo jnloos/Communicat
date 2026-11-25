@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Study;
 
+use App\Livewire\Study\ProgressPage;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
@@ -9,9 +10,8 @@ use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
 use App\Models\User;
-use App\Study\Control\GiveUp;
-use App\Study\Livewire\ProgressPage;
-use App\Study\Planning\WavePlanning;
+use App\Services\Study\Control\GiveUp;
+use App\Services\Study\Planning\WavePlanning;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
@@ -31,7 +31,7 @@ class ProgressPageTest extends TestCase
 
         $this->actingAs(User::factory()->create(['is_admin' => true]))->get('/study')
             ->assertOk()
-            ->assertSee(__('study::progress.heading'))
+            ->assertSee(__('study.progress.heading'))
             ->assertSee(route('study.progress'));
     }
 
@@ -89,12 +89,12 @@ class ProgressPageTest extends TestCase
         JobLog::query()->update(['finished_at' => now()->subHour()]);
         DB::table('failed_jobs')->insert([
             'uuid' => 'x', 'connection' => 'study', 'queue' => 'study', 'failed_at' => now(),
-            'payload' => '{"data":{"command":"O:28:\"App\\\\Study\\\\Jobs\\\\RunStudyProject\":1:{s:9:\"projectId\";i:'.$project->id.';}"}}',
+            'payload' => '{"data":{"command":"O:28:\"App\\\\Jobs\\\\RunStudyProject\":1:{s:9:\"projectId\";i:'.$project->id.';}"}}',
             'exception' => "RuntimeException: Project {$project->id} stopped: failed\n#0 trace",
         ]);
         $this->cell('ScorePipeline', $this->value('focus profile', 'S+G+E+'), $this->value('duo profile', 'S+G+E+'), spoken: 0);
 
-        $report = Livewire::test(ProgressPage::class)->assertSee(__('study::progress.stale_heading'))->viewData('report');
+        $report = Livewire::test(ProgressPage::class)->assertSee(__('study.progress.stale_heading'))->viewData('report');
 
         $this->assertSame(1, $report['totals']['given_up']);
         $this->assertSame($project->id, $report['failedJobs'][0]['project']);
@@ -107,7 +107,7 @@ class ProgressPageTest extends TestCase
         $project = $this->cell('ScorePipeline', $this->value('focus profile', 'S+G+E+'), $this->value('duo profile', 'S+G+E+'), spoken: 1);
         DB::table('failed_jobs')->insert([
             'uuid' => 'y', 'connection' => 'study', 'queue' => 'study', 'failed_at' => now(),
-            'payload' => '{"data":{"command":"O:28:\"App\\\\Study\\\\Jobs\\\\RunStudyProject\":1:{s:9:\"projectId\";i:'.$project->id.';}"}}',
+            'payload' => '{"data":{"command":"O:28:\"App\\\\Jobs\\\\RunStudyProject\":1:{s:9:\"projectId\";i:'.$project->id.';}"}}',
             'exception' => "Illuminate\\Database\\QueryException: database is locked\n#0 trace",
         ]);
 

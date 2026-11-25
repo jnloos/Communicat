@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Study;
 
+use App\Livewire\Study\ProgressPage;
+use App\Models\StudyEvent;
 use App\Models\User;
-use App\Study\Control\PauseFlag;
-use App\Study\Control\PauseSource;
-use App\Study\Livewire\ProgressPage;
-use App\Study\Models\StudyEvent;
+use App\Services\Study\Control\PauseFlag;
+use App\Services\Study\Control\PauseSource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
@@ -56,7 +56,7 @@ class ProgressPageControlsTest extends TestCase
     {
         Livewire::test(ProgressPage::class)
             ->assertSee('data-running', false)
-            ->assertSee(__('study::progress.running_idle'));
+            ->assertSee(__('study.progress.running_idle'));
 
         app(PauseFlag::class)->pause('manual', 'manual', PauseSource::Manual);
 

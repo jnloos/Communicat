@@ -5,11 +5,11 @@ namespace Tests\Feature\Study\Planning;
 use App\Models\Expert;
 use App\Models\PersonaAttribute;
 use App\Models\Project;
+use App\Models\StudyWave;
 use App\Models\TagCategory;
 use App\Models\User;
-use App\Study\Models\StudyWave;
-use App\Study\Planning\WavePlanning;
-use App\Study\Planning\WaveRefused;
+use App\Services\Study\Planning\WavePlanning;
+use App\Services\Study\Planning\WaveRefused;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

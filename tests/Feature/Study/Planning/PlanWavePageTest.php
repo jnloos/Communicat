@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Study\Planning;
 
+use App\Jobs\ApplyWave;
+use App\Livewire\Study\PlanWavePage;
 use App\Models\Project;
+use App\Models\StudyWave;
 use App\Models\User;
-use App\Study\Jobs\ApplyWave;
-use App\Study\Livewire\PlanWavePage;
-use App\Study\Models\StudyWave;
-use App\Study\Planning\Manifest;
-use App\Study\Planning\WavePlanning;
+use App\Services\Study\Planning\Manifest;
+use App\Services\Study\Planning\WavePlanning;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
@@ -25,7 +25,7 @@ class PlanWavePageTest extends TestCase
         $this->actingAs(User::factory()->create())->get('/study/plan')->assertForbidden();
 
         $this->actingAs(User::factory()->create(['is_admin' => true]));
-        $this->get('/study/plan')->assertOk()->assertSee(__('study::plan.heading'));
+        $this->get('/study/plan')->assertOk()->assertSee(__('study.plan.heading'));
         $this->get('/study')->assertSee(route('study.plan'));
     }
 
@@ -36,7 +36,7 @@ class PlanWavePageTest extends TestCase
         $this->page()
             ->call('preview')
             ->assertHasNoErrors()
-            ->assertSee(__('study::plan.runs'))
+            ->assertSee(__('study.plan.runs'))
             ->assertSee('ScorePipeline')
             ->assertSee('=== ABOUT YOU ===')
             ->assertSee('Should the village library open on Sundays?');
@@ -64,7 +64,7 @@ class PlanWavePageTest extends TestCase
         $wave = StudyWave::sole();
         $this->assertSame(['tiny', 1, 1, 1], [$wave->study, $wave->number, $wave->first_scenario, $wave->last_scenario]);
         Queue::assertPushed(ApplyWave::class, fn (ApplyWave $job) => $job->waveId === $wave->id);
-        $page->assertSee(__('study::plan.applying', ['done' => 0, 'total' => 64]));
+        $page->assertSee(__('study.plan.applying', ['done' => 0, 'total' => 64]));
     }
 
     public function test_the_progress_counts_the_written_runs_until_the_wave_is_applied(): void
@@ -76,7 +76,7 @@ class PlanWavePageTest extends TestCase
 
         $this->assertNotNull(StudyWave::sole()->applied_at);
         $this->assertSame(64, StudyWave::sole()->writtenRuns());
-        $page->assertSee(__('study::plan.applied', ['total' => 64]));
+        $page->assertSee(__('study.plan.applied', ['total' => 64]));
     }
 
     public function test_confirming_refuses_when_the_form_changed_since_the_preview(): void

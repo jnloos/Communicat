@@ -6,7 +6,7 @@ use App\Discussion\TurnRunner;
 use App\Discussion\Values\JobStatus;
 use App\Models\JobLog;
 use App\Models\Project;
-use App\Study\Control\RunHealth;
+use App\Services\Study\Control\RunHealth;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;

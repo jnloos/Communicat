@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Study\Control;
 
-use App\Study\Control\PauseFlag;
-use App\Study\Control\PauseSource;
+use App\Services\Study\Control\PauseFlag;
+use App\Services\Study\Control\PauseSource;
 use RuntimeException;
 use Tests\Feature\Study\UsesTemporaryPauseFile;
 use Tests\TestCase;

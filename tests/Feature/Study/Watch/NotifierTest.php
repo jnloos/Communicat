@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Study\Watch;
 
-use App\Study\Models\StudyEvent;
-use App\Study\Watch\Alert;
-use App\Study\Watch\AlertLevel;
-use App\Study\Watch\Notifier;
+use App\Models\StudyEvent;
+use App\Services\Study\Watch\Alert;
+use App\Services\Study\Watch\AlertLevel;
+use App\Services\Study\Watch\Notifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;

@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\Study\Watch;
 
+use App\Events\BreakerTripped;
 use App\Models\Project;
-use App\Study\Control\PauseFlag;
-use App\Study\Control\PauseSource;
-use App\Study\Events\BreakerTripped;
-use App\Study\Models\StudyEvent;
-use App\Study\Watch\StudyWatcher;
+use App\Models\StudyEvent;
+use App\Services\Study\Control\PauseFlag;
+use App\Services\Study\Control\PauseSource;
+use App\Services\Study\Watch\StudyWatcher;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;

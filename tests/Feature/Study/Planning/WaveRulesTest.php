@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Study\Planning;
 
-use App\Study\Models\StudyWave;
-use App\Study\Planning\Manifest;
-use App\Study\Planning\WaveRules;
+use App\Models\StudyWave;
+use App\Services\Study\Planning\Manifest;
+use App\Services\Study\Planning\WaveRules;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

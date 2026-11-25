@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Study\Discord;
 
-use App\Study\Discord\DiscordClient;
-use App\Study\Discord\DiscordRejected;
-use App\Study\Discord\DiscordUnavailable;
+use App\Services\Discord\DiscordClient;
+use App\Services\Discord\DiscordRejected;
+use App\Services\Discord\DiscordUnavailable;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Sleep;

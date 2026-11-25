@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\Study\Planning;
 
-use App\Study\Planning\Manifest;
-use App\Study\Planning\Planner;
-use App\Study\Planning\Pot;
-use App\Study\Planning\RunPlan;
+use App\Services\Study\Planning\Manifest;
+use App\Services\Study\Planning\Planner;
+use App\Services\Study\Planning\Pot;
+use App\Services\Study\Planning\RunPlan;
 use Tests\TestCase;
 
 /** A manifest with "seating": "table": fixed seats, the description follows the seat (handout 26.11. §2). */

@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Study\Planning;
 
-use App\Study\Planning\InvalidManifest;
-use App\Study\Planning\Manifest;
-use App\Study\Planning\Planner;
+use App\Services\Study\Planning\InvalidManifest;
+use App\Services\Study\Planning\Manifest;
+use App\Services\Study\Planning\Planner;
 use Closure;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;

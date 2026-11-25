@@ -4,12 +4,12 @@ namespace Tests\Feature\Study\Control;
 
 use App\Discussion\ModelDrifted;
 use App\Discussion\Values\JobStatus;
+use App\Events\BreakerTripped;
 use App\Models\JobLog;
-use App\Study\Control\BreakerStreak;
-use App\Study\Control\CircuitBreaker;
-use App\Study\Control\PauseFlag;
-use App\Study\Control\PauseSource;
-use App\Study\Events\BreakerTripped;
+use App\Services\Study\Control\BreakerStreak;
+use App\Services\Study\Control\CircuitBreaker;
+use App\Services\Study\Control\PauseFlag;
+use App\Services\Study\Control\PauseSource;
 use Illuminate\Support\Facades\Event;
 use RuntimeException;
 use Tests\Feature\Study\UsesTemporaryPauseFile;

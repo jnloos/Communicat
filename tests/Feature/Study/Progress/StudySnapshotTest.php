@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Study\Progress;
 
-use App\Study\Control\PauseFlag;
-use App\Study\Control\PauseSource;
-use App\Study\Models\StudyEvent;
-use App\Study\Progress\StatusText;
-use App\Study\Progress\StudySnapshot;
+use App\Models\StudyEvent;
+use App\Services\Study\Control\PauseFlag;
+use App\Services\Study\Control\PauseSource;
+use App\Services\Study\Progress\StatusText;
+use App\Services\Study\Progress\StudySnapshot;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\Feature\Study\BuildsStudyCells;

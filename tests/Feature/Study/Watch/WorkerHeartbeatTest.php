@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Study\Watch;
 
-use App\Study\Control\PauseFlag;
-use App\Study\Control\PauseSource;
+use App\Services\Study\Control\PauseFlag;
+use App\Services\Study\Control\PauseSource;
 use Illuminate\Queue\Events\Looping;
 use Illuminate\Support\Facades\Cache;
 use Tests\Feature\Study\UsesTemporaryPauseFile;

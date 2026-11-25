@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Study;
 
-use App\Study\Control\PauseFlag;
-use App\Study\Control\PauseSource;
-use App\Study\Jobs\RunStudyProject;
+use App\Jobs\RunStudyProject;
+use App\Services\Study\Control\PauseFlag;
+use App\Services\Study\Control\PauseSource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;

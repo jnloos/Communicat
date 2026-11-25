@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Study;
 
-use App\Study\Progress\StatusText;
-use App\Study\Progress\StudySnapshot;
+use App\Services\Study\Progress\StatusText;
+use App\Services\Study\Progress\StudySnapshot;
 use FilesystemIterator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use RecursiveDirectoryIterator;
@@ -21,15 +21,30 @@ class StudyBlindnessTest extends TestCase
     use RefreshDatabase;
     use UsesTemporaryPauseFile;
 
+    /** Every place the study's code lives (docs/study.md); the monitoring and the pages read through these. */
+    private const STUDY_CODE = [
+        'app/Services/Study', 'app/Services/Discord', 'app/Console/Commands/Study', 'app/Livewire/Study',
+        'app/Jobs/RunStudyProject.php', 'app/Jobs/ApplyWave.php', 'app/Models/StudyWave.php', 'app/Models/StudyEvent.php',
+        'app/Events/BreakerTripped.php', 'app/Http/Controllers/DiscordInteractionController.php', 'app/Providers/StudyServiceProvider.php',
+        'resources/views/study', 'lang/de/study.php', 'lang/en/study.php', 'config/study.php', 'routes/study.php',
+    ];
+
     private const FORBIDDEN = '/SpeakingShares|ShareReport|ShareTrajectory|Metrics\\\\Questions|Gini|SpeakerShare|Trajectory/';
 
     public function test_no_module_file_touches_a_share_metric(): void
     {
         $hits = [];
 
-        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator(base_path('app/Study'), FilesystemIterator::SKIP_DOTS)) as $file) {
-            if (preg_match('/\.php$/', $file->getFilename()) && preg_match(self::FORBIDDEN, file_get_contents($file->getPathname()), $match)) {
-                $hits[] = "{$file->getPathname()}: {$match[0]}";
+        foreach (self::STUDY_CODE as $path) {
+            $this->assertFileExists(base_path($path), 'A study path moved; update STUDY_CODE.');
+            $files = is_dir(base_path($path))
+                ? iterator_to_array(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(base_path($path), FilesystemIterator::SKIP_DOTS)))
+                : [new \SplFileInfo(base_path($path))];
+
+            foreach ($files as $file) {
+                if (preg_match('/\.php$/', $file->getFilename()) && preg_match(self::FORBIDDEN, file_get_contents($file->getPathname()), $match)) {
+                    $hits[] = "{$file->getPathname()}: {$match[0]}";
+                }
             }
         }
 

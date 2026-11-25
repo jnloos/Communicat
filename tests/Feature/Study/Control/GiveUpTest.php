@@ -5,7 +5,7 @@ namespace Tests\Feature\Study\Control;
 use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\TagScope;
-use App\Study\Control\GiveUp;
+use App\Services\Study\Control\GiveUp;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

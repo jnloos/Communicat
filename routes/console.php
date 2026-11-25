@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // 60 min: an archive run takes minutes; a crashed run frees its lock before the next tick after one cycle.
 Schedule::command('prompts:prune')->hourly()->withoutOverlapping(60);
+
+// Study monitoring (docs/study.md): only while STUDY_MODULE is on.
+Schedule::command('study:watch')->everyMinute()->withoutOverlapping(5)->when(fn () => config('study.enabled'));

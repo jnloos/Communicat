@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Study\Planning;
 
-use App\Study\Planning\Manifest;
-use App\Study\Planning\PersonaPlan;
-use App\Study\Planning\Planner;
-use App\Study\Planning\Pot;
-use App\Study\Planning\RunPlan;
+use App\Services\Study\Planning\Manifest;
+use App\Services\Study\Planning\PersonaPlan;
+use App\Services\Study\Planning\Planner;
+use App\Services\Study\Planning\Pot;
+use App\Services\Study\Planning\RunPlan;
 use Tests\TestCase;
 
 /** The invariants of spec section 2.5, each on the probe manifest. */

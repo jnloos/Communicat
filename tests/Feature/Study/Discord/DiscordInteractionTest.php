@@ -50,7 +50,7 @@ class DiscordInteractionTest extends TestCase
 
         $this->assertSame(64, $response->json('data.flags'));
         $this->assertStringNotContainsString('1/1', $response->json('data.content'));
-        $this->assertSame(__('study::watch.discord.wrong_channel'), $response->json('data.content'));
+        $this->assertSame(__('study.watch.discord.wrong_channel'), $response->json('data.content'));
     }
 
     public function test_an_unknown_command_is_a_bad_request(): void

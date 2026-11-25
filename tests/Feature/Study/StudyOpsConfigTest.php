@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Study;
 
-use App\Study\Control\RunHealth;
-use App\Study\StudyServiceProvider;
+use App\Providers\StudyServiceProvider;
+use App\Services\Study\Control\RunHealth;
 use Laravel\Pail\Files;
 use Tests\TestCase;
 
@@ -21,7 +21,7 @@ class StudyOpsConfigTest extends TestCase
 
     public function test_systemd_lets_a_running_turn_finish_on_stop(): void
     {
-        $unit = file_get_contents(base_path('app/Study/systemd/communicat-study@.service'));
+        $unit = file_get_contents(base_path('deploy/systemd/communicat-study@.service'));
 
         $this->assertMatchesRegularExpression('/^TimeoutStopSec=(\d+)$/m', $unit);
         preg_match('/^TimeoutStopSec=(\d+)$/m', $unit, $match);
@@ -31,7 +31,7 @@ class StudyOpsConfigTest extends TestCase
     /** SIGTERM to the worker only: ParallelPrompts children finish the turn instead of dying with it. */
     public function test_systemd_stops_only_the_worker_process(): void
     {
-        $unit = file_get_contents(base_path('app/Study/systemd/communicat-study@.service'));
+        $unit = file_get_contents(base_path('deploy/systemd/communicat-study@.service'));
 
         $this->assertMatchesRegularExpression('/^KillMode=mixed$/m', $unit);
     }

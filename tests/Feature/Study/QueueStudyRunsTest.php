@@ -2,14 +2,14 @@
 
 namespace Tests\Feature\Study;
 
+use App\Jobs\RunStudyProject;
 use App\Models\Expert;
 use App\Models\JobLog;
 use App\Models\Project;
 use App\Models\User;
-use App\Study\Control\GiveUp;
-use App\Study\Control\PauseFlag;
-use App\Study\Control\PauseSource;
-use App\Study\Jobs\RunStudyProject;
+use App\Services\Study\Control\GiveUp;
+use App\Services\Study\Control\PauseFlag;
+use App\Services\Study\Control\PauseSource;
 use Illuminate\Bus\UniqueLock;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -190,7 +190,7 @@ class QueueStudyRunsTest extends TestCase
     {
         DB::table('jobs')->insert([
             'queue' => 'study', 'attempts' => 0, 'reserved_at' => null, 'available_at' => now()->timestamp, 'created_at' => now()->timestamp,
-            'payload' => '{"data":{"command":"O:28:\"App\\\\Study\\\\Jobs\\\\RunStudyProject\":1:{s:9:\"projectId\";i:'.$projectId.';}"}}',
+            'payload' => '{"data":{"command":"O:28:\"App\\\\Jobs\\\\RunStudyProject\":1:{s:9:\"projectId\";i:'.$projectId.';}"}}',
         ]);
     }
 }

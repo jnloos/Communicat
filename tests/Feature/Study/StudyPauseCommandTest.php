@@ -2,8 +2,8 @@
 
 namespace Tests\Feature\Study;
 
-use App\Study\Control\PauseFlag;
-use App\Study\Control\PauseSource;
+use App\Services\Study\Control\PauseFlag;
+use App\Services\Study\Control\PauseSource;
 use Tests\TestCase;
 
 class StudyPauseCommandTest extends TestCase

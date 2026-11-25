@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Services\Study\Planning;
+
+use RuntimeException;
+
+/**
+ * Thesis study, see docs/study.md.
+ *
+ * A manifest that cannot plan a study, with every problem found, so one upload
+ * shows all of them instead of one per attempt.
+ */
+class InvalidManifest extends RuntimeException
+{
+    /** @param  list<string>  $problems */
+    public function __construct(public readonly array $problems)
+    {
+        parent::__construct("Invalid manifest:\n- ".implode("\n- ", $problems));
+    }
+}

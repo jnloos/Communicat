@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Study\Progress;
 
-use App\Study\Progress\ErrorClass;
+use App\Services\Study\Progress\ErrorClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
