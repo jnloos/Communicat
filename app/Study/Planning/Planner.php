@@ -15,6 +15,9 @@ final class Planner
     /** Focus status, duo status, in their fixed order. */
     public const STATUS_CELLS = ['hh', 'hl', 'lh', 'll'];
 
+    /** Without a seat table each role reads its own description. */
+    private const LETTERS_BY_ROLE = ['focus' => 'A', 'duo1' => 'B', 'duo2' => 'C'];
+
     /**
      * Scenario after scenario, then block, status cell and pipeline.
      *
@@ -29,10 +32,15 @@ final class Planner
         for ($scenario = $from; $scenario <= $to; $scenario++) {
             for ($block = 1; $block <= Pot::BLOCKS; $block++) {
                 foreach (self::STATUS_CELLS as $statuses) {
-                    $personas = $this->cast($manifest, $names, $scenario, $block, $statuses);
+                    foreach ($manifest->pipelines() as $index => $pipeline) {
+                        $key = RunPlan::keyOf($manifest->study(), $scenario, $block, $statuses, $pipeline);
+                        // A seat table fixes the seats, and the description follows the seat; otherwise
+                        // seats are drawn per run, also between the pipelines of an instance, and never balanced.
+                        $seats = $manifest->seatsByTable() ? SeatTable::seats($scenario, $block, $index) : $draws->shuffle(NameDraw::PLACES, 'seats', $key);
+                        $letters = $manifest->seatsByTable() ? SeatTable::letters($seats) : self::LETTERS_BY_ROLE;
+                        $personas = $this->cast($manifest, $names, $scenario, $block, $statuses, $letters);
 
-                    foreach ($manifest->pipelines() as $pipeline) {
-                        $runs[] = $this->run($manifest, $draws, $scenario, $block, $statuses, $pipeline, $personas);
+                        $runs[] = $this->run($manifest, $draws, $key, $scenario, $block, $statuses, $pipeline, $seats, $personas);
                     }
                 }
             }
@@ -41,11 +49,12 @@ final class Planner
         return $runs;
     }
 
-    /** @param  array{focus: PersonaPlan, duo1: PersonaPlan, duo2: PersonaPlan}  $personas */
-    private function run(Manifest $manifest, Draws $draws, int $scenario, int $block, string $statuses, string $pipeline, array $personas): RunPlan
+    /**
+     * @param  list<'focus'|'duo1'|'duo2'>  $seats
+     * @param  array{focus: PersonaPlan, duo1: PersonaPlan, duo2: PersonaPlan}  $personas
+     */
+    private function run(Manifest $manifest, Draws $draws, string $key, int $scenario, int $block, string $statuses, string $pipeline, array $seats, array $personas): RunPlan
     {
-        $key = RunPlan::keyOf($manifest->study(), $scenario, $block, $statuses, $pipeline);
-
         return new RunPlan(
             study: $manifest->study(),
             scenario: $scenario,
@@ -54,8 +63,7 @@ final class Planner
             duoStatus: $statuses[1],
             pipeline: $pipeline,
             seed: $draws->seed($key),
-            // Drawn per run, also between the pipelines of an instance, and never balanced.
-            seats: $draws->shuffle(NameDraw::PLACES, 'seats', $key),
+            seats: $seats,
             personas: $personas,
             topic: $manifest->scenario($scenario)['topic'],
             model: $manifest->model(),
@@ -63,14 +71,17 @@ final class Planner
         );
     }
 
-    /** @return array{focus: PersonaPlan, duo1: PersonaPlan, duo2: PersonaPlan} */
-    private function cast(Manifest $manifest, NameDraw $names, int $scenario, int $block, string $statuses): array
+    /**
+     * @param  array{focus: string, duo1: string, duo2: string}  $letters  place => description letter
+     * @return array{focus: PersonaPlan, duo1: PersonaPlan, duo2: PersonaPlan}
+     */
+    private function cast(Manifest $manifest, NameDraw $names, int $scenario, int $block, string $statuses, array $letters): array
     {
         $content = $manifest->scenario($scenario);
-        $letters = ['focus' => 'A', 'duo1' => 'B', 'duo2' => 'C'];
         $cast = [];
 
-        foreach ($letters as $place => $letter) {
+        foreach (NameDraw::PLACES as $place) {
+            $letter = $letters[$place];
             $status = $place === 'focus' ? $statuses[0] : $statuses[1];
             $drawn = $names->at($scenario, $block, $place);
 

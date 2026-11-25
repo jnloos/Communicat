@@ -91,6 +91,12 @@ final class Manifest
         return $this->data['pipelines'];
     }
 
+    /** "seating": "table" — seats and descriptions from SeatTable; absent, seats are drawn and the focus reads A. */
+    public function seatsByTable(): bool
+    {
+        return ($this->data['seating'] ?? null) === 'table';
+    }
+
     /** @return array<string, array{self: string, roster: string}> Role, Gender, Origin */
     public function attributes(): array
     {

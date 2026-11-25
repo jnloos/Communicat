@@ -37,6 +37,7 @@ final class ManifestProblems
     {
         $check = new self;
         $check->header($data);
+        $check->seating($data);
         $check->attributes($data['attributes'] ?? null);
         $check->genders($data['genders'] ?? null);
 
@@ -75,6 +76,22 @@ final class ManifestProblems
         foreach (array_unique(array_diff_assoc($pipelines, array_unique($pipelines))) as $duplicate) {
             $this->problems[] = "Duplicate pipeline {$duplicate}.";
         }
+    }
+
+    private function seating(array $data): void
+    {
+        if (! array_key_exists('seating', $data)) {
+            return;
+        }
+
+        if ($data['seating'] !== 'table') {
+            $this->problems[] = 'seating must be "table" or left out.';
+
+            return;
+        }
+
+        $pipelines = $data['pipelines'] ?? null;
+        $this->require(is_array($pipelines) && count($pipelines) === 3, 'seating "table" needs exactly 3 pipelines.');
     }
 
     private function attributes(mixed $attributes): void

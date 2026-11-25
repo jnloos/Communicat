@@ -113,6 +113,16 @@ class WaveWriterTest extends TestCase
         $this->assertSame(0, TagCategory::count());
     }
 
+    public function test_a_seat_table_writes_one_record_per_title_and_seat_under_one_name(): void
+    {
+        $this->write(PlannerSeatTableTest::tableManifest(), 1, 1, 1);
+
+        $this->assertSame(16 * 4 * 3, Project::count());
+        // Per instance: focus 2 titles × 3 seats, each duo member 2 titles × 2 seats.
+        $this->assertSame(16 * (6 + 4 + 4), Expert::count());
+        $this->assertSame(16 * 3, Expert::distinct()->count('name'));
+    }
+
     public function test_a_planned_name_held_by_another_persona_refuses(): void
     {
         $name = (new Planner)->plan(self::tiny(), 1, 1)[40]->personas['duo2']->name;

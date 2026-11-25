@@ -69,7 +69,8 @@ final class WaveWriter
     }
 
     /**
-     * The runs of one instance (scenario × block) and their six personas. Public
+     * The runs of one instance (scenario × block) and their personas (six, or up to
+     * fourteen with a seat table, where the description follows the seat). Public
      * for the preview, which writes one instance and rolls it back.
      *
      * @param  list<RunPlan>  $runs

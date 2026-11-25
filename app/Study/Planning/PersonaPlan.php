@@ -10,7 +10,9 @@ use Ramsey\Uuid\Uuid;
  * One planned persona: name, description and the three attributes, plus the
  * tags the analysis reads (spec 2.4). Its uuid addresses its content (study included, so a probe and the main study never share a record), so the
  * same persona in another status cell or pipeline of its instance is the same
- * record, and a record edited by hand no longer matches its plan.
+ * record as long as title and description agree, and a record edited by hand no
+ * longer matches its plan. With a seat table the description follows the seat,
+ * so one person can be up to three records per title in an instance.
  */
 final class PersonaPlan
 {
@@ -28,7 +30,7 @@ final class PersonaPlan
 
     /**
      * @param  array{Role: string, Gender: string, Origin: string}  $attributes
-     * @param  string  $letter  which of the scenario's descriptions: A (focus), B, C (duo)
+     * @param  string  $letter  which of the scenario's descriptions: A (focus), B, C (duo); with a seat table, the seat's
      */
     public function __construct(
         DrawnName $drawn,

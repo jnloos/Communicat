@@ -58,7 +58,7 @@ class PlannerInvariantsTest extends TestCase
                 $this->assertSame($titles[$run->duoStatus === 'h' ? 'high' : 'low'], $run->personas['duo2']->attributes['Role']);
             }
 
-            // A persona is the same record in the 2 status cells × 3 pipelines it belongs to.
+            // Without a seat table a persona is the same record in the 2 status cells × 3 pipelines it belongs to.
             $this->assertCount(2, array_unique(array_map(fn (RunPlan $run) => $run->personas['focus']->uuid, $runs)));
         }
 
