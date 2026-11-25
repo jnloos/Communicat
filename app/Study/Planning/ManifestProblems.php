@@ -55,7 +55,8 @@ final class ManifestProblems
     private function header(array $data): void
     {
         $this->require(($data['schema'] ?? null) === 1, 'schema must be 1.');
-        $this->require(is_string($data['study'] ?? null) && preg_match('/^[a-z]+$/', $data['study']) === 1, 'study must be lower-case letters a-z.');
+        $study = $data['study'] ?? null;
+        $this->require(is_string($study) && preg_match('/^[a-z]+$/', $study) === 1, 'study must be lower-case letters a-z only (no digits, hyphens or spaces), got '.json_encode($study, JSON_UNESCAPED_UNICODE).'.');
         $this->require(is_int($data['master_seed'] ?? null) && $data['master_seed'] > 0, 'master_seed must be a positive integer.');
         $this->require(is_int($data['turn_budget'] ?? null) && $data['turn_budget'] >= 1, 'turn_budget must be an integer of at least 1.');
 

@@ -76,6 +76,22 @@ class PlannerInvariantsTest extends TestCase
         }
     }
 
+    public function test_exactly_the_focus_place_carries_the_focus_tag_with_and_without_a_seat_table(): void
+    {
+        foreach ([$this->plan, (new Planner)->plan(PlannerSeatTableTest::tableManifest(), 1, 1)] as $plan) {
+            $byUuid = [];
+            foreach ($plan as $run) {
+                foreach ($run->personas as $place => $persona) {
+                    $this->assertSame($place === 'focus' ? 'true' : 'false', $persona->tags()['focus'], $run->key);
+                    $byUuid[$persona->uuid][$persona->tags()['focus']] = true;
+                }
+            }
+
+            // A record is the focus or not, wherever it sits.
+            $this->assertSame([1], array_values(array_unique(array_map('count', $byUuid))));
+        }
+    }
+
     public function test_4_no_full_name_in_two_instances_and_no_shared_first_or_last_name_within_one(): void
     {
         $instanceOf = [];

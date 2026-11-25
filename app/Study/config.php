@@ -27,6 +27,8 @@ return [
         'study' => 'study',
         'first_name' => 'first name',
         'subgroup' => 'subgroup',
+        // "true" on the persona in the focus place of its runs, "false" on the duo: the thesis templates read it.
+        'focus' => 'focus persona',
     ],
 
     // No finished turn for this long while runs are open: the page warns that the workers stand still.

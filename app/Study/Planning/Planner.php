@@ -95,6 +95,7 @@ final class Planner
                 letter: $letter,
                 description: $content['descriptions'][$letter],
                 study: $manifest->study(),
+                focus: $place === 'focus',
             );
         }
 

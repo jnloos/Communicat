@@ -61,8 +61,10 @@ class WaveWriterTest extends TestCase
         $focus = $project->experts->firstWhere('uuid', $run->personas['focus']->uuid);
         $this->assertSame($run->personas['focus']->name, $focus->name);
         $this->assertSame($run->personas['focus']->attributes, $focus->personaAttributes->pluck('pivot.value', 'name')->only(['Role', 'Gender', 'Origin'])->all());
-        $this->assertSame(['study' => 'tiny', 'first name' => $run->personas['focus']->firstNameId, 'subgroup' => $run->personas['focus']->subgroup],
-            $this->tagsOf($focus, ['study', 'first name', 'subgroup']));
+        $this->assertSame(['study' => 'tiny', 'first name' => $run->personas['focus']->firstNameId, 'subgroup' => $run->personas['focus']->subgroup, 'focus persona' => 'true'],
+            $this->tagsOf($focus, ['study', 'first name', 'subgroup', 'focus persona']));
+        $duo = $project->experts->firstWhere('uuid', $run->personas['duo1']->uuid);
+        $this->assertSame(['focus persona' => 'false'], $this->tagsOf($duo, ['focus persona']));
 
         $this->assertTrue($wave->group->projects()->whereKey($project->id)->exists());
         $this->assertSame('Studie tiny · Welle 1', $wave->group->name);
@@ -111,6 +113,21 @@ class WaveWriterTest extends TestCase
         $this->assertSame(0, Project::count());
         $this->assertSame(0, Expert::count());
         $this->assertSame(0, TagCategory::count());
+    }
+
+    /** A wave applied before the focus tag existed gets it when applied again; nothing else moves. */
+    public function test_applying_again_adds_a_missing_focus_tag(): void
+    {
+        $wave = $this->write(self::tiny(), 1, 1, 1);
+        $focusUuid = (new Planner)->plan(self::tiny(), 1, 1)[0]->personas['focus']->uuid;
+        $expert = Expert::where('uuid', $focusUuid)->firstOrFail();
+        $expert->tagValues()->detach($expert->tagValues->firstWhere('category.name', 'focus persona'));
+        $projects = Project::count();
+
+        app(WaveWriter::class)->write($wave, $this->owner);
+
+        $this->assertSame(['focus persona' => 'true'], $this->tagsOf($expert->refresh(), ['focus persona']));
+        $this->assertSame($projects, Project::count());
     }
 
     public function test_a_seat_table_writes_one_record_per_title_and_seat_under_one_name(): void

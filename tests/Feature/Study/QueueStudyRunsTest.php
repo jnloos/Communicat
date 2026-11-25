@@ -10,6 +10,8 @@ use App\Study\Control\GiveUp;
 use App\Study\Control\PauseFlag;
 use App\Study\Control\PauseSource;
 use App\Study\Jobs\RunStudyProject;
+use Illuminate\Bus\UniqueLock;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -63,11 +65,39 @@ class QueueStudyRunsTest extends TestCase
         $this->artisan('study:queue', ['projects' => [$project->id]])
             ->expectsTable(...$this->counts(queued: 1, alreadyQueued: 0))
             ->assertSuccessful();
+        $this->jobRow($project->id); // what the database queue writes, which Queue::fake() does not
         $this->artisan('study:queue', ['projects' => [$project->id]])
             ->expectsTable(...$this->counts(queued: 0, alreadyQueued: 1))
             ->assertSuccessful();
 
         Queue::assertPushed(RunStudyProject::class, 1);
+    }
+
+    /** A job failed while being reserved keeps its unique lock but has no row: its chain is gone. */
+    public function test_a_unique_lock_without_a_job_row_is_stale_and_released(): void
+    {
+        $project = Project::factory()->create(['turn_budget' => 30]);
+        (new UniqueLock(app(Repository::class)))->acquire(new RunStudyProject($project->id));
+
+        $this->artisan('study:queue', ['projects' => [$project->id]])
+            ->expectsOutputToContain("Run {$project->id}: released a stale unique lock")
+            ->expectsTable(...$this->counts(queued: 1, alreadyQueued: 0))
+            ->assertSuccessful();
+
+        Queue::assertPushed(RunStudyProject::class, 1);
+    }
+
+    public function test_a_unique_lock_with_a_job_row_is_really_queued(): void
+    {
+        $project = Project::factory()->create(['turn_budget' => 30]);
+        (new UniqueLock(app(Repository::class)))->acquire(new RunStudyProject($project->id));
+        $this->jobRow($project->id);
+
+        $this->artisan('study:queue', ['projects' => [$project->id]])
+            ->expectsTable(...$this->counts(queued: 0, alreadyQueued: 1))
+            ->assertSuccessful();
+
+        Queue::assertNothingPushed();
     }
 
     public function test_it_queues_while_paused_and_says_so(): void
@@ -153,6 +183,14 @@ class QueueStudyRunsTest extends TestCase
             'started_at' => now(),
             'expert_id' => Expert::factory()->create()->id,
             'words' => 5,
+        ]);
+    }
+
+    private function jobRow(int $projectId): void
+    {
+        DB::table('jobs')->insert([
+            'queue' => 'study', 'attempts' => 0, 'reserved_at' => null, 'available_at' => now()->timestamp, 'created_at' => now()->timestamp,
+            'payload' => '{"data":{"command":"O:28:\"App\\\\Study\\\\Jobs\\\\RunStudyProject\":1:{s:9:\"projectId\";i:'.$projectId.';}"}}',
         ]);
     }
 }

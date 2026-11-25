@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Pail\Files;
 use Livewire\Livewire;
 
 /**
@@ -53,6 +54,21 @@ class StudyServiceProvider extends ServiceProvider
         $this->app->singleton(WorkerHeartbeat::class);
     }
 
+    /**
+     * Pail (dev only) copies every log line into storage/pail/*.pail and unlinks a stale
+     * one non-atomically: study workers logging at once race on it, and the warning fails
+     * the turn. A study worker has no live viewer, so it gets an empty directory instead.
+     * Here in boot(), so it overrides Pail's own binding whatever the provider order.
+     */
+    public function silencePail(): void
+    {
+        $argv = $_SERVER['argv'] ?? [];
+
+        if (class_exists(Files::class) && ($argv[1] ?? null) === 'queue:work' && in_array(RunStudyProject::CONNECTION, $argv, true)) {
+            $this->app->singleton(Files::class, fn () => new Files(storage_path('framework/no-pail')));
+        }
+    }
+
     public function boot(): void
     {
         // Always, like the queue connection: the schema must not depend on the switch.
@@ -65,6 +81,8 @@ class StudyServiceProvider extends ServiceProvider
         // Always, like the connection: a paused study worker takes no job and retries none
         // (Worker::daemon sleeps --sleep instead), so 3,000 queued turns do not spin.
         Queue::looping(fn (Looping $event) => $event->connectionName === RunStudyProject::CONNECTION && $this->app->make(PauseFlag::class)->active() ? false : null);
+
+        $this->silencePail();
 
         if (! config('study.enabled')) {
             return;

@@ -44,6 +44,10 @@ return [
             'busy_timeout' => (int) env('DB_BUSY_TIMEOUT', 10000),
             'journal_mode' => env('DB_JOURNAL_MODE', 'wal'),
             'synchronous' => env('DB_SYNCHRONOUS', 'normal'),
+            // A deferred transaction that reads, then writes (the queue's pop) fails at once with
+            // SQLITE_BUSY when another worker wrote in between, without waiting busy_timeout.
+            // IMMEDIATE takes the write lock at BEGIN, where busy_timeout applies. PHP >= 8.4.
+            'transaction_mode' => env('DB_TRANSACTION_MODE', 'IMMEDIATE'),
         ],
 
         'mysql' => [

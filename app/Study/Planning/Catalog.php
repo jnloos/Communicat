@@ -142,6 +142,7 @@ final class Catalog
             'study' => $this->distinct($plans, fn (RunPlan $run) => $run->study),
             'first_name' => $this->distinct($personas->all(), fn (PersonaPlan $persona) => $persona->firstNameId),
             'subgroup' => $this->distinct($personas->all(), fn (PersonaPlan $persona) => $persona->subgroup),
+            'focus' => ['true', 'false'],
         ];
     }
 

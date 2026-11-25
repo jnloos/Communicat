@@ -9,6 +9,7 @@ use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Models\TagValue;
 use App\Models\User;
+use App\Study\Control\GiveUp;
 use App\Study\Livewire\ProgressPage;
 use App\Study\Planning\WavePlanning;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -84,6 +85,7 @@ class ProgressPageTest extends TestCase
     {
         $this->asAdmin();
         $project = $this->cell('ScorePipeline', $this->value('focus profile', 'S+G+E+'), $this->value('duo profile', 'S+G+E+'), spoken: 1);
+        app(GiveUp::class)->mark($project);
         JobLog::query()->update(['finished_at' => now()->subHour()]);
         DB::table('failed_jobs')->insert([
             'uuid' => 'x', 'connection' => 'study', 'queue' => 'study', 'failed_at' => now(),
@@ -95,6 +97,23 @@ class ProgressPageTest extends TestCase
         $report = Livewire::test(ProgressPage::class)->assertSee(__('study::progress.stale_heading'))->viewData('report');
 
         $this->assertSame(1, $report['totals']['given_up']);
+        $this->assertSame($project->id, $report['failedJobs'][0]['project']);
+    }
+
+    /** DatabaseQueue::pop leaves a failed_jobs row for a run whose chain goes on: only the tag gives up. */
+    public function test_a_failed_job_alone_does_not_give_up_a_run(): void
+    {
+        $this->asAdmin();
+        $project = $this->cell('ScorePipeline', $this->value('focus profile', 'S+G+E+'), $this->value('duo profile', 'S+G+E+'), spoken: 1);
+        DB::table('failed_jobs')->insert([
+            'uuid' => 'y', 'connection' => 'study', 'queue' => 'study', 'failed_at' => now(),
+            'payload' => '{"data":{"command":"O:28:\"App\\\\Study\\\\Jobs\\\\RunStudyProject\":1:{s:9:\"projectId\";i:'.$project->id.';}"}}',
+            'exception' => "Illuminate\\Database\\QueryException: database is locked\n#0 trace",
+        ]);
+
+        $report = Livewire::test(ProgressPage::class)->viewData('report');
+
+        $this->assertSame(0, $report['totals']['given_up']);
         $this->assertSame($project->id, $report['failedJobs'][0]['project']);
     }
 

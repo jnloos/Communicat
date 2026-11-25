@@ -3,6 +3,8 @@
 namespace Tests\Feature\Study;
 
 use App\Study\Control\RunHealth;
+use App\Study\StudyServiceProvider;
+use Laravel\Pail\Files;
 use Tests\TestCase;
 
 /** The order the job's safety rests on: Timeout < Lock < retry_after, and systemd waits longer than a turn. */
@@ -35,6 +37,30 @@ class StudyOpsConfigTest extends TestCase
     }
 
     /** A chain longer than RunHealth reads could never reach its limit. */
+    /** A stale storage/pail/*.pail made concurrent study workers race on its unlink and fail turns. */
+    public function test_a_study_worker_writes_no_pail_file_other_processes_still_do(): void
+    {
+        $argv = $_SERVER['argv'];
+        $stale = storage_path('pail/'.uniqid('test-').'.pail');
+        @mkdir(dirname($stale), 0755, true);
+        touch($stale);
+
+        try {
+            $_SERVER['argv'] = ['artisan', 'queue:work', 'study', '--queue=study'];
+            (new StudyServiceProvider($this->app))->silencePail();
+            $this->assertCount(0, app(Files::class)->all());
+
+            $this->app->forgetInstance(Files::class);
+            $this->app->singleton(Files::class, fn () => new Files(storage_path('pail')));
+            $_SERVER['argv'] = ['artisan', 'queue:work', 'database'];
+            (new StudyServiceProvider($this->app))->silencePail();
+            $this->assertNotCount(0, app(Files::class)->all());
+        } finally {
+            $_SERVER['argv'] = $argv;
+            @unlink($stale);
+        }
+    }
+
     public function test_run_health_reads_far_enough_for_every_give_up_limit(): void
     {
         $this->assertGreaterThanOrEqual(config('study.run.max_failed_in_a_row'), RunHealth::lookback());

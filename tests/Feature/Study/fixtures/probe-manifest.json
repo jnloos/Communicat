@@ -14,7 +14,7 @@
             "roster": ":value"
         },
         "Origin": {
-            "self": "You are from :value.",
+            "self": "You grew up in :value.",
             "roster": "from :value"
         }
     },

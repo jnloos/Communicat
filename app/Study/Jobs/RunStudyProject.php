@@ -14,6 +14,8 @@ use App\Study\Control\GiveUp;
 use App\Study\Control\PauseFlag;
 use App\Study\Control\RunHealth;
 use Illuminate\Bus\Queueable;
+use Illuminate\Bus\UniqueLock;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -95,6 +97,22 @@ class RunStudyProject implements ShouldBeUniqueUntilProcessing, ShouldQueue
         if ($delay !== null) {
             self::dispatch($this->projectId)->delay($delay);
         }
+    }
+
+    /**
+     * Laravel also fails a job whose reservation threw (DatabaseQueue::pop on a locked
+     * database) before handle() ran: no successor follows and, for a job unique until
+     * processing, its lock stays. A transient cause is no reason to end the chain, so
+     * release the lock and queue the run again. Every other failure ends the chain on purpose.
+     */
+    public function failed(?Throwable $e): void
+    {
+        if ($e === null || ! TransientFailure::is($e)) {
+            return;
+        }
+
+        (new UniqueLock(app(Repository::class)))->release($this);
+        self::dispatch($this->projectId);
     }
 
     /**

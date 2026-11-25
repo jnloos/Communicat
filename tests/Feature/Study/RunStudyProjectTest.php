@@ -21,12 +21,16 @@ use App\Study\Control\PauseSource;
 use App\Study\Control\RunHealth;
 use App\Study\Events\BreakerTripped;
 use App\Study\Jobs\RunStudyProject;
+use Illuminate\Bus\UniqueLock;
+use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Ai\Exceptions\ProviderConnectionException;
+use PDOException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use RuntimeException;
 use Tests\Fakes\FakeAgents;
@@ -298,6 +302,27 @@ class RunStudyProjectTest extends TestCase
         $this->assertInstanceOf(ShouldBeUniqueUntilProcessing::class, new RunStudyProject($this->project->id));
         Queue::connection('study')->assertPushedOn('study', RunStudyProject::class);
         Queue::assertPushed(RunStudyProject::class, 1);
+    }
+
+    /** DatabaseQueue::pop fails a job whose reservation hit a locked database; the chain must go on. */
+    public function test_a_job_failed_while_being_reserved_releases_its_lock_and_queues_the_run_again(): void
+    {
+        $job = new RunStudyProject($this->project->id);
+        $lock = new UniqueLock(app(Repository::class));
+        $lock->acquire($job);
+
+        $job->failed(new QueryException('sqlite', 'update "jobs"', [], new PDOException('SQLSTATE[HY000]: General error: 5 database is locked')));
+
+        Queue::assertPushed(RunStudyProject::class, fn (RunStudyProject $pushed) => $pushed->projectId === $this->project->id);
+    }
+
+    public function test_any_other_failure_ends_the_chain(): void
+    {
+        $job = new RunStudyProject($this->project->id);
+
+        $job->failed(new RuntimeException("Project {$this->project->id} stopped: unknown"));
+
+        Queue::assertNothingPushed();
     }
 
     private function handle(): RunStudyProject

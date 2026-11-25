@@ -4,60 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6482c7b2-24b5-4a9c-8edd-15bf704d4f2b" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Livewire/Debug/JobDebugFlyout.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Debug/JobDebugFlyout.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Livewire/Projects/StatisticsFlyout.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Projects/StatisticsFlyout.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Livewire/Statistics/QuestionEditor.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Livewire/Statistics/QuestionEditor.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Models/PersonaAttribute.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/PersonaAttribute.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/composer.json" beforeDir="false" afterPath="$PROJECT_DIR$/composer.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/composer.lock" beforeDir="false" afterPath="$PROJECT_DIR$/composer.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lang/de/common.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/common.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lang/de/debug.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/debug.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lang/de/navigation.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/navigation.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lang/de/statistics.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/statistics.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lang/de/transfer.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/de/transfer.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lang/en/common.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/common.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lang/en/debug.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/debug.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lang/en/navigation.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/navigation.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lang/en/statistics.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/statistics.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/lang/en/transfer.php" beforeDir="false" afterPath="$PROJECT_DIR$/lang/en/transfer.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/css/app.css" beforeDir="false" afterPath="$PROJECT_DIR$/resources/css/app.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/components/debug/job-report.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/components/debug/job-report.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/components/layouts/app/sidebar.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/components/layouts/app/sidebar.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/components/layouts/auth/simple.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/components/layouts/auth/simple.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/components/projects/run-settings.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/components/projects/run-settings.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/livewire/debug/job-debug-flyout.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/debug/job-debug-flyout.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/livewire/debug/job-debug-panel.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/debug/job-debug-panel.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/livewire/experts/expert-list.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/experts/expert-list.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/livewire/projects/control-chat.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/projects/control-chat.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/livewire/projects/project-navigation.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/projects/project-navigation.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/livewire/projects/select-contributors.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/projects/select-contributors.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/livewire/projects/statistics-flyout.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/projects/statistics-flyout.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/livewire/settings/attributes.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/settings/attributes.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/livewire/settings/tags.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/settings/tags.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/livewire/settings/transfer.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/settings/transfer.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/livewire/statistics/question-editor.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/statistics/question-editor.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/livewire/statistics/statistics-page.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/livewire/statistics/statistics-page.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/prompts/speak.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/prompts/speak.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/prompts/summarize.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/prompts/summarize.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/prompts/system.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/prompts/system.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Feature/Debug/JobDebugFlyoutTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Debug/JobDebugFlyoutTest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Feature/Debug/JobDebugPanelTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Debug/JobDebugPanelTest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Feature/Discussion/PersonaAttributesTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Discussion/PersonaAttributesTest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Feature/Discussion/PersonaLinesFrozenTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Discussion/PersonaLinesFrozenTest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Feature/Discussion/PromptGoldenTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Discussion/PromptGoldenTest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Feature/Projects/ProjectNavigationTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Projects/ProjectNavigationTest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Feature/Projects/StatisticsFlyoutTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Projects/StatisticsFlyoutTest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Feature/Settings/AttributesPageTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Settings/AttributesPageTest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Feature/Statistics/StatisticsPageTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Feature/Statistics/StatisticsPageTest.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Fixtures/prompts/speak.txt" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Fixtures/prompts/speak.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Fixtures/prompts/think.prioritize.memory.txt" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Fixtures/prompts/think.prioritize.memory.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Fixtures/prompts/think.prioritize.txt" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Fixtures/prompts/think.prioritize.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Fixtures/prompts/think.propose.txt" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Fixtures/prompts/think.propose.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Fixtures/prompts/think.speaker.txt" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Fixtures/prompts/think.speaker.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/Unit/Discussion/JevBidsTest.php" beforeDir="false" afterPath="$PROJECT_DIR$/tests/Unit/Discussion/JevBidsTest.php" afterDir="false" />
-    </list>
+    <list default="true" id="6482c7b2-24b5-4a9c-8edd-15bf704d4f2b" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -68,8 +15,7 @@
     <execution />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="978" />
-    <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
+    <option name="cachedIndexableFilesCount" value="1145" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -281,28 +227,28 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;Studie-JanNiclas-Loosen&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/janniclas/Projekte/LA-Communicat&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "Studie-JanNiclas-Loosen",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "/home/janniclas/Projekte/CI-Thielke",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration name="Main" type="PHPUnitRunConfigurationType" factoryName="PHPUnit">
       <TestRunner configuration_file="$PROJECT_DIR$/phpunit.xml" scope="XML" use_alternative_configuration_file="true" />
@@ -312,8 +258,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-37e91769500f-intellij.indexing.shared.core-IU-261.25134.95" />
-        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-IU-261.25134.95" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-PS-261.25134.104" />
+        <option value="bundled-php-predefined-a98d8de5180a-6bbb74dbab74-com.jetbrains.php.sharedIndexes-PS-261.25134.104" />
       </set>
     </attachedChunks>
   </component>
@@ -334,6 +280,7 @@
       <workItem from="1792499890357" duration="747000" />
       <workItem from="1792567132710" duration="4000" />
       <workItem from="1793700267409" duration="1000" />
+      <workItem from="1795032099395" duration="27000" />
     </task>
     <servers />
   </component>

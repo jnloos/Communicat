@@ -45,7 +45,7 @@ Eine JSON-Datei je Studie (`main` oder `probe`). Sie enthält von Anfang an alle
   "attributes": {
     "Role":   { "self": "You are :value.",      "roster": ":value" },
     "Gender": { "self": "You are a :value.",    "roster": ":value" },
-    "Origin": { "self": "You are from :value.", "roster": "from :value" }
+    "Origin": { "self": "You grew up in :value.", "roster": "from :value" }
   },
   "genders": { "G+": "man", "G-": "woman" },
   "subgroups": {

@@ -9,6 +9,8 @@ use App\Models\Project;
 use App\Models\TagCategory;
 use App\Models\TagScope;
 use App\Services\Tags\TagNames;
+use App\Study\Control\GiveUp;
+use App\Study\Control\QueuedRuns;
 use App\Study\Jobs\RunStudyProject;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +28,7 @@ use Illuminate\Support\Facades\DB;
  */
 class StudyProgress
 {
-    public function __construct(private readonly SpokenTurns $spokenTurns) {}
+    public function __construct(private readonly SpokenTurns $spokenTurns, private readonly GiveUp $giveUp) {}
 
     public function read(?int $waveId = null): array
     {
@@ -46,7 +48,8 @@ class StudyProgress
 
         $projects = Project::whereKey($tags->keys()->all())->get(['id', 'pipeline', 'turn_budget']);
         $spoken = $this->spokenTurns->counts($projects);
-        $givenUp = $this->givenUpProjectIds();
+        // The superseded tag, not failed_jobs: a job failed while being reserved leaves a row there for a run that goes on.
+        $givenUp = array_fill_keys($this->giveUp->markedAmong($projects->modelKeys()), true);
 
         $runs = $projects->map(fn (Project $project) => [
             'pipeline' => $project->pipeline,
@@ -76,7 +79,7 @@ class StudyProgress
             'disruptions' => $this->disruptions($ids),
             'queued' => DB::table('jobs')->where('queue', RunStudyProject::CONNECTION)->count(),
             'failedJobs' => DB::table('failed_jobs')->where('queue', RunStudyProject::CONNECTION)->latest('failed_at')->limit(20)->get(['payload', 'exception', 'failed_at'])
-                ->map(fn ($row) => ['project' => $this->projectIdIn($row->payload), 'reason' => strtok($row->exception, "\n"), 'at' => $row->failed_at])
+                ->map(fn ($row) => ['project' => QueuedRuns::projectIdIn($row->payload), 'reason' => strtok($row->exception, "\n"), 'at' => $row->failed_at])
                 ->all(),
         ];
     }
@@ -146,21 +149,5 @@ class StudyProgress
             ->countBy(fn (JobLog $log) => $log->status->value.' · '.ErrorClass::of($log->error))
             ->sortDesc()
             ->all();
-    }
-
-    /** @return array<int, true> */
-    private function givenUpProjectIds(): array
-    {
-        return DB::table('failed_jobs')->where('queue', RunStudyProject::CONNECTION)->pluck('payload')
-            ->map(fn (string $payload) => $this->projectIdIn($payload))
-            ->filter()
-            ->mapWithKeys(fn (int $id) => [$id => true])
-            ->all();
-    }
-
-    /** The project id inside a serialised RunStudyProject payload. */
-    private function projectIdIn(string $payload): ?int
-    {
-        return preg_match('/projectId\\\\?";i:(\d+);/', $payload, $match) ? (int) $match[1] : null;
     }
 }

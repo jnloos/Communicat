@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\ProjectGroup;
 use App\Study\Control\GiveUp;
 use App\Study\Control\PauseFlag;
+use App\Study\Control\QueuedRuns;
 use App\Study\Jobs\RunStudyProject;
 use Illuminate\Bus\UniqueLock;
 use Illuminate\Console\Command;
@@ -33,7 +34,7 @@ class QueueStudyRuns extends Command
 
     protected $description = 'Queue the unfinished study runs on the study queue.';
 
-    public function handle(SpokenTurns $spokenTurns, GiveUp $giveUp, PauseFlag $pause): int
+    public function handle(SpokenTurns $spokenTurns, GiveUp $giveUp, PauseFlag $pause, QueuedRuns $queuedRuns): int
     {
         $projects = $this->projects();
 
@@ -48,7 +49,8 @@ class QueueStudyRuns extends Command
         $open = $candidates->whereNotNull('turn_budget')
             ->filter(fn (Project $project) => ($spoken[$project->id] ?? 0) < $project->turn_budget);
 
-        $queued = count(array_filter($this->ordered($open), fn (Project $project) => $this->queue($project->id)));
+        $pending = $queuedRuns->ids();
+        $queued = count(array_filter($this->ordered($open), fn (Project $project) => $this->queue($project->id, $pending)));
 
         foreach ($unbudgeted as $project) {
             $this->warn("Skipped project {$project->id}: no turn budget, a study job would never end.");
@@ -73,15 +75,28 @@ class QueueStudyRuns extends Command
     /**
      * Takes the job's unique lock itself, which dispatch() would take silently, so the
      * summary can tell a queued run from one whose chain is already queued or running.
+     * A lock without a job row is stale (its job failed while being reserved): released,
+     * so the run is queued again. A running job keeps its row until its successor is queued.
      * shortcut: skips PendingDispatch's unique-job context, which only helps a job that cannot
      * be unserialized (this one holds an int); use dispatch() again if the job ever holds a model.
      */
-    private function queue(int $projectId): bool
+    /** @param  array<int, true>  $pending  runs with a job row */
+    private function queue(int $projectId, array $pending): bool
     {
         $job = new RunStudyProject($projectId);
+        $lock = new UniqueLock(app(Cache::class));
 
-        if (! (new UniqueLock(app(Cache::class)))->acquire($job)) {
-            return false;
+        if (! $lock->acquire($job)) {
+            if (isset($pending[$projectId])) {
+                return false;
+            }
+
+            $this->warn("Run {$projectId}: released a stale unique lock (no job row).");
+            $lock->release($job);
+
+            if (! $lock->acquire($job)) {
+                return false;
+            }
         }
 
         Bus::dispatch($job);

@@ -38,6 +38,7 @@ final class PersonaPlan
         public readonly string $letter,
         public readonly string $description,
         public readonly string $study,
+        public readonly bool $focus,
     ) {
         $this->name = $drawn->fullName();
         $this->firstName = $drawn->firstName;
@@ -53,7 +54,7 @@ final class PersonaPlan
     /** @return array<string, string> config('study.persona_tags') key => value */
     public function tags(): array
     {
-        return ['study' => $this->study, 'first_name' => $this->firstNameId, 'subgroup' => $this->subgroup];
+        return ['study' => $this->study, 'first_name' => $this->firstNameId, 'subgroup' => $this->subgroup, 'focus' => $this->focus ? 'true' : 'false'];
     }
 
     public function toArray(): array
