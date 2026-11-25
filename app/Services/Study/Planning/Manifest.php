@@ -91,10 +91,16 @@ final class Manifest
         return $this->data['pipelines'];
     }
 
-    /** "seating": "table" — seats and descriptions from SeatTable; absent, seats are drawn and the focus reads A. */
-    public function seatsByTable(): bool
+    /** "seating": "block" — the focus seat is drawn per scenario and block and the description follows the seat; absent, seats are drawn per run and the focus reads A. */
+    public function seatsByBlock(): bool
     {
-        return ($this->data['seating'] ?? null) === 'table';
+        return ($this->data['seating'] ?? null) === 'block';
+    }
+
+    /** "name_draw": "reuse" — a full name may come back in another instance; absent, every full name is handed out once. */
+    public function reusesNames(): bool
+    {
+        return ($this->data['name_draw'] ?? null) === 'reuse';
     }
 
     /** @return array<string, array{self: string, roster: string}> Role, Gender, Origin */

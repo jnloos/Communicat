@@ -81,18 +81,13 @@ final class ManifestProblems
 
     private function seating(array $data): void
     {
-        if (! array_key_exists('seating', $data)) {
-            return;
+        if (array_key_exists('seating', $data) && $data['seating'] !== 'block') {
+            $this->problems[] = 'seating must be "block" or left out.';
         }
 
-        if ($data['seating'] !== 'table') {
-            $this->problems[] = 'seating must be "table" or left out.';
-
-            return;
+        if (array_key_exists('name_draw', $data) && $data['name_draw'] !== 'reuse') {
+            $this->problems[] = 'name_draw must be "reuse" or left out.';
         }
-
-        $pipelines = $data['pipelines'] ?? null;
-        $this->require(is_array($pipelines) && count($pipelines) === 3, 'seating "table" needs exactly 3 pipelines.');
     }
 
     private function attributes(mixed $attributes): void

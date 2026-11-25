@@ -64,8 +64,8 @@ class ManifestTest extends TestCase
             'unknown model' => [fn (array $m) => ['model' => 'nobody-1'] + $m, 'Unknown model nobody-1'],
             'unknown pipeline' => [fn (array $m) => ['pipelines' => ['ScorePipeline', 'NoSuchPipeline']] + $m, 'Unknown pipeline NoSuchPipeline'],
             'duplicate pipeline' => [fn (array $m) => ['pipelines' => ['ScorePipeline', 'ScorePipeline']] + $m, 'Duplicate pipeline ScorePipeline'],
-            'unknown seating' => [fn (array $m) => ['seating' => 'random'] + $m, 'seating must be "table" or left out'],
-            'seat table without three pipelines' => [fn (array $m) => ['seating' => 'table', 'pipelines' => ['ScorePipeline', 'OrchestratorPipeline']] + $m, 'seating "table" needs exactly 3 pipelines'],
+            'unknown seating' => [fn (array $m) => ['seating' => 'table'] + $m, 'seating must be "block" or left out'],
+            'unknown name draw' => [fn (array $m) => ['name_draw' => 'unique'] + $m, 'name_draw must be "reuse" or left out'],
             'line break' => [function (array $m) {
                 $m['scenarios'][0]['titles']['high'] = "Head\nLibrarian";
 

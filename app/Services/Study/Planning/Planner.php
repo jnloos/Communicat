@@ -15,8 +15,11 @@ final class Planner
     /** Focus status, duo status, in their fixed order. */
     public const STATUS_CELLS = ['hh', 'hl', 'lh', 'll'];
 
-    /** Without a seat table each role reads its own description. */
+    /** Drawn seats per run: each role reads its own description. */
     private const LETTERS_BY_ROLE = ['focus' => 'A', 'duo1' => 'B', 'duo2' => 'C'];
+
+    /** Seated by block: the description follows the seat, 1 → A, 2 → B, 3 → C. */
+    private const LETTERS_BY_SEAT = ['A', 'B', 'C'];
 
     /**
      * Scenario after scenario, then block, status cell and pipeline.
@@ -32,12 +35,14 @@ final class Planner
         for ($scenario = $from; $scenario <= $to; $scenario++) {
             for ($block = 1; $block <= Pot::BLOCKS; $block++) {
                 foreach (self::STATUS_CELLS as $statuses) {
-                    foreach ($manifest->pipelines() as $index => $pipeline) {
+                    foreach ($manifest->pipelines() as $pipeline) {
                         $key = RunPlan::keyOf($manifest->study(), $scenario, $block, $statuses, $pipeline);
-                        // A seat table fixes the seats, and the description follows the seat; otherwise
-                        // seats are drawn per run, also between the pipelines of an instance, and never balanced.
-                        $seats = $manifest->seatsByTable() ? SeatTable::seats($scenario, $block, $index) : $draws->shuffle(NameDraw::PLACES, 'seats', $key);
-                        $letters = $manifest->seatsByTable() ? SeatTable::letters($seats) : self::LETTERS_BY_ROLE;
+                        // Seated by block, the focus seat is drawn once per scenario and block and the description
+                        // follows the seat; otherwise seats are drawn per run. Never balanced.
+                        $seats = $manifest->seatsByBlock()
+                            ? $this->blockSeats($draws, $manifest->study(), $scenario, $block)
+                            : $draws->shuffle(NameDraw::PLACES, 'seats', $key);
+                        $letters = $manifest->seatsByBlock() ? array_combine($seats, self::LETTERS_BY_SEAT) : self::LETTERS_BY_ROLE;
                         $personas = $this->cast($manifest, $names, $scenario, $block, $statuses, $letters);
 
                         $runs[] = $this->run($manifest, $draws, $key, $scenario, $block, $statuses, $pipeline, $seats, $personas);
@@ -47,6 +52,22 @@ final class Planner
         }
 
         return $runs;
+    }
+
+    /**
+     * The focus seat, drawn with neither status cell nor pipeline in the key, so the focus keeps it
+     * over all twelve runs of a block and the seat cancels out of the status and the pipeline
+     * comparison alike; the duo takes the other seats, duo1 the lower one.
+     *
+     * @return list<'focus'|'duo1'|'duo2'> places in seat order
+     */
+    private function blockSeats(Draws $draws, string $study, int $scenario, int $block): array
+    {
+        $seats = ['duo1', 'duo2'];
+        $focus = $draws->shuffle([0, 1, 2], 'focus-seat', $study, $scenario, $block)[0];
+        array_splice($seats, $focus, 0, 'focus');
+
+        return $seats;
     }
 
     /**

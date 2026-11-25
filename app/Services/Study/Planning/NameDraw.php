@@ -18,7 +18,7 @@ final class NameDraw
 
     private readonly Draws $draws;
 
-    /** @var array<string, true> full names handed out, across all pots */
+    /** @var array<string, true> full names handed out, across all pots (with "name_draw": "reuse", in the current scenario) */
     private array $used = [];
 
     /** @var array<string, true> */
@@ -56,12 +56,15 @@ final class NameDraw
     private function seat(int $scenario): void
     {
         $subgroups = $this->subgroups($scenario);
+        if ($this->manifest->reusesNames()) {
+            $this->used = [];
+        }
 
         for ($block = 1; $block <= Pot::BLOCKS; $block++) {
             $cast = [];
             foreach (self::PLACES as $place) {
                 $pot = $place === 'focus' ? Pot::focusOf($block) : Pot::duoOf($block);
-                $cast[$place] = $this->pick($pot, $subgroups[$block][$place], $cast)
+                $cast[$place] = $this->pick($pot, $subgroups[$block][$place], $cast, $scenario, $block, $place)
                     ?? throw new InvalidManifest(["Scenario {$scenario}: no name left in pot {$pot->gender()}{$pot->ethnicity()}, subgroup {$subgroups[$block][$place]}."]);
             }
             $this->names[$scenario][$block] = $cast;
@@ -110,14 +113,22 @@ final class NameDraw
      * The first pair in drawn order that is not excluded, not handed out yet, and
      * shares neither first nor last name with anyone already in this cast: two
      * "Müller" would read as a family, two "Thomas" make an address ambiguous.
+     * With "name_draw": "reuse" a name is used up only within its scenario: every
+     * place draws afresh from all pairs, so a name comes back in later scenarios and
+     * its own effect can be estimated (the runs are stateless, a model meets no name
+     * twice), while one scenario never holds two people of one name.
      *
      * @param  array<string, DrawnName>  $cast
      */
-    private function pick(Pot $pot, string $subgroup, array $cast): ?DrawnName
+    private function pick(Pot $pot, string $subgroup, array $cast, int $scenario, int $block, string $place): ?DrawnName
     {
         $gender = $pot->gender();
-        $pairs = &$this->candidates["{$gender}|{$subgroup}"];
-        $pairs ??= $this->pairs($gender, $subgroup);
+        if ($this->manifest->reusesNames()) {
+            $pairs = $this->draws->shuffle($this->sortedPairs($gender, $subgroup), 'names-reused', $scenario, $block, $place);
+        } else {
+            $pairs = &$this->candidates["{$gender}|{$subgroup}"];
+            $pairs ??= $this->draws->shuffle($this->sortedPairs($gender, $subgroup), 'names', $gender, $subgroup);
+        }
         $firstNames = array_map(fn (DrawnName $name) => $name->firstName, $cast);
         $lastNames = array_map(fn (DrawnName $name) => $name->lastName, $cast);
 
@@ -138,8 +149,8 @@ final class NameDraw
         return null;
     }
 
-    /** Every first × last pair of the subgroup, sorted by id, then shuffled once. */
-    private function pairs(string $gender, string $subgroup): array
+    /** Every first × last pair of the subgroup, sorted by id. */
+    private function sortedPairs(string $gender, string $subgroup): array
     {
         $byId = fn (array $a, array $b) => strcmp($a['id'], $b['id']);
         $firstNames = $this->manifest->firstNames($subgroup, $gender);
@@ -154,6 +165,6 @@ final class NameDraw
             }
         }
 
-        return $this->draws->shuffle($pairs, 'names', $gender, $subgroup);
+        return $pairs;
     }
 }

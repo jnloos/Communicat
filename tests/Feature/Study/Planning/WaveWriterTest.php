@@ -130,13 +130,20 @@ class WaveWriterTest extends TestCase
         $this->assertSame($projects, Project::count());
     }
 
-    public function test_a_seat_table_writes_one_record_per_title_and_seat_under_one_name(): void
+    public function test_block_seating_writes_one_record_per_title_and_seat_under_one_name(): void
     {
-        $this->write(PlannerSeatTableTest::tableManifest(), 1, 1, 1);
+        $manifest = PlannerBlockSeatingTest::blockManifest();
+        $this->write($manifest, 1, 1, 1);
 
         $this->assertSame(16 * 4 * 3, Project::count());
-        // Per instance: focus 2 titles × 3 seats, each duo member 2 titles × 2 seats.
-        $this->assertSame(16 * (6 + 4 + 4), Expert::count());
+        // One record per person, title and drawn seat (the description follows the seat).
+        $records = [];
+        foreach ((new Planner)->plan($manifest, 1, 1) as $run) {
+            foreach ($run->personas as $persona) {
+                $records[$persona->uuid] = true;
+            }
+        }
+        $this->assertSame(count($records), Expert::count());
         $this->assertSame(16 * 3, Expert::distinct()->count('name'));
     }
 
@@ -163,10 +170,27 @@ class WaveWriterTest extends TestCase
         $this->assertSame(64, Project::whereHas('tagValues', fn ($q) => $q->where('name', '2')->whereHas('category', fn ($c) => $c->where('name', 'wave')))->count());
     }
 
-    /** The tiny manifest; appended: a second scenario after the first, same core. */
-    public static function tiny(bool $appended = false): Manifest
+    /** A name of wave 1 that comes back in wave 2 is this study's own persona, not a foreign one. */
+    public function test_with_name_reuse_wave_2_may_bring_back_a_name_of_wave_1(): void
+    {
+        $this->write(self::tiny(reuse: true), 1, 1, 1)->update(['applied_at' => now()]);
+        $namesOfWave1 = Expert::pluck('name')->unique()->all();
+
+        $this->write(self::tiny(appended: true, reuse: true), 2, 2, 2);
+
+        $this->assertSame(128, Project::count());
+        $namesOfWave2 = array_map(fn ($run) => $run->personas['focus']->name, (new Planner)->plan(self::tiny(appended: true, reuse: true), 2, 2));
+        $this->assertNotEmpty(array_intersect($namesOfWave1, $namesOfWave2), 'No name came back, so the test proves nothing.');
+    }
+
+    /** The tiny manifest; appended: a second scenario after the first, same core; reuse: "name_draw": "reuse". */
+    public static function tiny(bool $appended = false, bool $reuse = false): Manifest
     {
         $data = json_decode(ManifestTest::fixture('tiny-manifest.json'), true);
+
+        if ($reuse) {
+            $data['name_draw'] = 'reuse';
+        }
 
         if ($appended) {
             $data['scenarios'][] = ['id' => 2, 'topic' => 'Should the market move to the square?'] + array_slice($data['scenarios'][0], 2);

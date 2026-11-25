@@ -17,7 +17,7 @@ its pages off.
 | `php artisan study:pause {reason?}`, `php artisan study:resume` | `app/Console/Commands/Study/PauseStudy.php`, `ResumeStudy.php` |
 | Pause flag, circuit breaker, per-run health, giving up a run, queued runs | `app/Services/Study/Control/` |
 | `BreakerTripped` (fired once per breaker pause, for alerting) | `app/Events/BreakerTripped.php` |
-| Planning: manifest, pure planner, seat table, idempotent writer, check (spec `2026-11-15-studie-planung-design.md`) | `app/Services/Study/Planning/` |
+| Planning: manifest, pure planner (`"seating": "block"`: focus seat drawn per scenario and block; `"name_draw": "reuse"`: names come back across scenarios, unique within one), idempotent writer, check (spec `2026-11-15-studie-planung-design.md`) | `app/Services/Study/Planning/` |
 | Manifests: one folder per study (`study.json`, `names.json`, `scenarios/sNN.json`), read directly by `study:plan` and the plan page; `study:manifest` / `build.sh` write the joined file | `resources/study/manifests/`, `app/Services/Study/Planning/ManifestFolder.php`, `app/Console/Commands/Study/BuildStudyManifest.php` |
 | `php artisan study:plan {manifest} --wave=N --scenarios=FROM-TO [--user=ID] (--dry-run \| --apply)` | `app/Console/Commands/Study/PlanStudyWave.php` |
 | `php artisan study:check [--study=main]` (exit FAILURE on any deviation) | `app/Console/Commands/Study/CheckStudyPlan.php` |

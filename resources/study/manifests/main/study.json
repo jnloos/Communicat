@@ -27,5 +27,6 @@
     "G+": "man",
     "G-": "woman"
   },
-  "seating": "table"
+  "seating": "block",
+  "name_draw": "reuse"
 }

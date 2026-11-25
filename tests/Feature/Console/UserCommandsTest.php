@@ -18,9 +18,26 @@ class UserCommandsTest extends TestCase
             ->expectsQuestion('Enter the email', 'ada@example.test')
             ->expectsQuestion('Enter the password', 'geheim-genug')
             ->expectsQuestion('Confirm the password', 'geheim-genug')
+            ->expectsConfirmation('Make this user an admin?', 'no')
             ->assertSuccessful();
 
-        $this->assertTrue(Hash::check('geheim-genug', User::where('email', 'ada@example.test')->sole()->password));
+        $user = User::where('email', 'ada@example.test')->sole();
+        $this->assertTrue(Hash::check('geheim-genug', $user->password));
+        $this->assertFalse($user->is_admin);
+    }
+
+    public function test_create_user_can_make_an_admin(): void
+    {
+        $this->artisan('auth:create-user')
+            ->expectsQuestion('Enter the name', 'Ada')
+            ->expectsQuestion('Enter the email', 'ada@example.test')
+            ->expectsQuestion('Enter the password', 'geheim-genug')
+            ->expectsQuestion('Confirm the password', 'geheim-genug')
+            ->expectsConfirmation('Make this user an admin?', 'yes')
+            ->expectsOutputToContain('Admin Ada')
+            ->assertSuccessful();
+
+        $this->assertTrue(User::where('email', 'ada@example.test')->sole()->is_admin);
     }
 
     public function test_create_user_refuses_passwords_that_differ(): void

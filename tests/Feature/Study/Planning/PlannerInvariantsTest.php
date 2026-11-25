@@ -58,7 +58,7 @@ class PlannerInvariantsTest extends TestCase
                 $this->assertSame($titles[$run->duoStatus === 'h' ? 'high' : 'low'], $run->personas['duo2']->attributes['Role']);
             }
 
-            // Without a seat table a persona is the same record in the 2 status cells × 3 pipelines it belongs to.
+            // Seats drawn per run: a persona is the same record in the 2 status cells × 3 pipelines it belongs to.
             $this->assertCount(2, array_unique(array_map(fn (RunPlan $run) => $run->personas['focus']->uuid, $runs)));
         }
 
@@ -78,7 +78,7 @@ class PlannerInvariantsTest extends TestCase
 
     public function test_exactly_the_focus_place_carries_the_focus_tag_with_and_without_a_seat_table(): void
     {
-        foreach ([$this->plan, (new Planner)->plan(PlannerSeatTableTest::tableManifest(), 1, 1)] as $plan) {
+        foreach ([$this->plan, (new Planner)->plan(PlannerBlockSeatingTest::blockManifest(), 1, 1)] as $plan) {
             $byUuid = [];
             foreach ($plan as $run) {
                 foreach ($run->personas as $place => $persona) {

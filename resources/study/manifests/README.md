@@ -12,7 +12,7 @@ resources/study/manifests/build.sh main                             # the same, 
 ```
 <study>/
   study.json            study (a-z), schema, master_seed, model, turn_budget, pipelines,
-                        attributes (Role, Gender, Origin templates), genders, optional "seating": "table"
+                        attributes (Role, Gender, Origin templates), genders, optional "seating": "block" and "name_draw": "reuse"
   names.json            subgroups, first_names, last_names, excluded_full_names
   scenarios/s01.json    id 1: topic, titles (high, low), descriptions (A, B, C)
   scenarios/s02.json    id 2 …, numbered without gaps; the file name and "id" must agree

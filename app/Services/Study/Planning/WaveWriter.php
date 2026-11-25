@@ -36,7 +36,7 @@ final class WaveWriter
      */
     public function problems(Manifest $manifest, array $plans): array
     {
-        return [...$this->catalog->problems($manifest), ...$this->foreignNames($plans)];
+        return [...$this->catalog->problems($manifest), ...$this->foreignNames($manifest, $plans)];
     }
 
     /**
@@ -70,7 +70,7 @@ final class WaveWriter
 
     /**
      * The runs of one instance (scenario × block) and their personas (six, or up to
-     * fourteen with a seat table, where the description follows the seat). Public
+     * fourteen seated by block, where the description follows the seat). Public
      * for the preview, which writes one instance and rolls it back.
      *
      * @param  list<RunPlan>  $runs
@@ -130,16 +130,29 @@ final class WaveWriter
     /**
      * Planned full names that another persona already carries (a pilot or probe
      * persona): two people of one name in the data could not be told apart.
+     * A name may come back from an earlier wave of this study under another uuid
+     * (another scenario's title and text), so this study's own personas are read
+     * from every scenario up to the last one planned, not from these plans alone.
      *
      * @param  list<RunPlan>  $plans
      * @return list<string>
      */
-    private function foreignNames(array $plans): array
+    private function foreignNames(Manifest $manifest, array $plans): array
     {
+        $last = max([0, ...array_map(fn (RunPlan $run) => $run->scenario, $plans)]);
+        $own = $last === 0 ? [] : (new Planner)->plan($manifest, 1, $last);
+
         $planned = [];
         foreach ($plans as $run) {
             foreach ($run->personas as $persona) {
-                $planned[$persona->name][$persona->uuid] = true;
+                $planned[$persona->name] = [];
+            }
+        }
+        foreach ($own as $run) {
+            foreach ($run->personas as $persona) {
+                if (isset($planned[$persona->name])) {
+                    $planned[$persona->name][$persona->uuid] = true;
+                }
             }
         }
 

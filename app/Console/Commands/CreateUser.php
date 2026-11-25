@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\User;
 use Illuminate\Console\Command;
 
+use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\text;
 
@@ -27,10 +28,18 @@ class CreateUser extends Command
             return self::FAILURE;
         }
 
-        // The model's 'hashed' cast hashes the password.
-        $user = User::create(['name' => $name, 'email' => $email, 'password' => $password]);
+        $isAdmin = confirm('Make this user an admin?', default: false);
 
-        $this->info("User {$user->name} ({$user->email}) created successfully!");
+        // The model's 'hashed' cast hashes the password.
+        $user = User::create([
+            'name' => $name,
+            'email' => $email,
+            'password' => $password,
+            'is_admin' => $isAdmin,
+        ]);
+
+        $role = $user->is_admin ? 'Admin' : 'User';
+        $this->info("{$role} {$user->name} ({$user->email}) created successfully!");
 
         return self::SUCCESS;
     }
