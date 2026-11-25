@@ -44,7 +44,8 @@ instance (scenario × block). Wave N > 1 needs wave N−1 applied, the same core
 hash, unchanged earlier scenarios, and the next scenario
 (`WaveRules`). Tags it sets: project `study`, `wave`, `scenario`, `block`,
 `focus profile`, `duo profile`, `focus seat`; persona `study`, `first name`,
-`subgroup`. Attributes Role, Gender, Origin are shown `all`, every other
+`subgroup`, `focus persona` (`true` on the focus place, `false` on the duo; a wave
+applied before 25.11.2026 gets it by applying it again). Attributes Role, Gender, Origin are shown `all`, every other
 attribute `none`. Each wave files its runs in the owner's sidebar group
 `Studie {study} · Welle {n}`, so `study:queue --group=<id>` takes them; queue
 only after `applied_at` is set (the page shows it). It shows operations only, never a share or an effect: looking at it
@@ -84,9 +85,16 @@ itself. Workers and web app must share the host and be able to write
 **Workers.** Six units (`systemctl enable --now communicat-study@{1..6}`),
 `KillMode=mixed`, `TimeoutStopSec=400` above the turn timeout of 360 s, `MemoryMax=550M` per unit
 (children included). The turn timeout needs `ext-pcntl`. Order the tests pin:
-timeout 360 < lock 420 < `retry_after` 480. After a manual `queue:clear study` the
-unique locks block `study:queue` for up to an hour: run `php artisan cache:clear`
-(the pause file survives it) or wait.
+timeout 360 < lock 420 < `retry_after` 480. A unique lock without a job row (after
+`queue:clear study`, or a job failed while being reserved) is released by `study:queue`
+itself, which reads the queue table (`Control\QueuedRuns`); never `cache:clear`, it also
+drops the `study-run:{id}` locks of running turns. On SQLite the connection uses
+`transaction_mode` IMMEDIATE (PHP >= 8.4), so a worker that finds the database locked
+while reserving a job waits instead of failing it; should one still fail that way,
+`RunStudyProject::failed()` releases the lock and queues the run again. The progress page
+counts a run as given up by its `superseded` tag, not by a `failed_jobs` row. Study
+workers write no Pail file (`StudyServiceProvider::silencePail()`): concurrent workers raced
+on unlinking a stale one and failed turns.
 
 **Monitoring** (spec `2026-11-15-studie-ueberwachung-design.md`). The bot reports and
 answers `/status`; it controls nothing (pause and resume: dashboard buttons, which go
