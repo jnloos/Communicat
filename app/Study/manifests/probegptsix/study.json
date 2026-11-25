@@ -1,0 +1,30 @@
+{
+  "study": "probegptsix",
+  "schema": 1,
+  "master_seed": 20261124,
+  "model": "openai-gpt-6-luna",
+  "turn_budget": 30,
+  "pipelines": [
+    "ScorePipeline",
+    "OrchestratorPipeline",
+    "BlindQualityPipeline"
+  ],
+  "attributes": {
+    "Role": {
+      "self": "You are :value.",
+      "roster": ":value"
+    },
+    "Gender": {
+      "self": "You are a :value.",
+      "roster": ":value"
+    },
+    "Origin": {
+      "self": "You grew up in :value.",
+      "roster": "from :value"
+    }
+  },
+  "genders": {
+    "G+": "man",
+    "G-": "woman"
+  }
+}

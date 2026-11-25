@@ -82,6 +82,10 @@ turns in a row without a word over all runs (cache, 6 h TTL). It never lifts
 itself. Workers and web app must share the host and be able to write
 `storage/app/study`.
 
+**Manifests.** One folder per study under `app/Study/manifests/` (`study.json`, `names.json`,
+`scenarios/sNN.json`); `app/Study/manifests/build.sh <folder>` builds the `manifest.json` that
+`study:plan` reads (see the README there).
+
 **Workers.** Six units (`systemctl enable --now communicat-study@{1..6}`),
 `KillMode=mixed`, `TimeoutStopSec=400` above the turn timeout of 360 s, `MemoryMax=550M` per unit
 (children included). The turn timeout needs `ext-pcntl`. Order the tests pin:

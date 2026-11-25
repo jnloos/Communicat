@@ -1,0 +1,13 @@
+{
+  "id": 1,
+  "topic": "Should the community garden replace half of its individual plots with a shared orchard?",
+  "titles": {
+    "high": "Garden Chair",
+    "low": "New Member"
+  },
+  "descriptions": {
+    "A": "You know the budget for this decision in detail. You do not know how the members feel about it.",
+    "B": "You know how the members feel about it. You do not know what it would cost.",
+    "C": "You know what neighbouring groups decided. You do not know the local constraints."
+  }
+}
